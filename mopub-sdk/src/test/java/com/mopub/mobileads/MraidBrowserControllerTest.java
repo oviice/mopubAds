@@ -51,18 +51,18 @@ import static org.mockito.Mockito.verify;
 @RunWith(SdkTestRunner.class)
 public class MraidBrowserControllerTest {
     private MraidBrowserController subject;
-    private MraidView view;
+    private MraidView mraidView;
     private Context context;
-    private MraidView.OnOpenListener onOpenListener;
+    private MraidView.MraidListener mraidListener;
 
     @Before
     public void setUp() throws Exception {
         context = new Activity();
-        view = new MraidView(context, null);
-        onOpenListener = mock(MraidView.OnOpenListener.class);
-        view.setOnOpenListener(onOpenListener);
+        mraidView = new MraidView(context, null);
+        mraidListener = mock(MraidView.MraidListener.class);
+        mraidView.setMraidListener(mraidListener);
 
-        subject = new MraidBrowserController(view);
+        subject = new MraidBrowserController(mraidView);
     }
 
     @Test
@@ -110,7 +110,7 @@ public class MraidBrowserControllerTest {
 
         subject.open(applicationUrl);
 
-        verify(onOpenListener).onOpen(eq(view));
+        verify(mraidListener).onOpen(eq(mraidView));
     }
 
     @Test
@@ -119,6 +119,6 @@ public class MraidBrowserControllerTest {
 
         subject.open(applicationUrl);
 
-        verify(onOpenListener).onOpen(eq(view));
+        verify(mraidListener).onOpen(eq(mraidView));
     }
 }

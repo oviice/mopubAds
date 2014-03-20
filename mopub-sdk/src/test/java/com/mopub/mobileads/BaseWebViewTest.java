@@ -110,4 +110,15 @@ public class BaseWebViewTest {
         verify(parent).removeView(eq(subject));
         assertThat(shadow.wasDestroyCalled()).isTrue();
     }
+
+    @Test
+    public void destroy_shouldSetTheCorrectStateVariable() {
+        subject = new BaseWebView(context);
+
+        assertThat(subject.mIsDestroyed).isFalse();
+
+        subject.destroy();
+
+        assertThat(subject.mIsDestroyed).isTrue();
+    }
 }

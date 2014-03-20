@@ -27,7 +27,6 @@ Integration instructions are available on the [wiki](https://github.com/mopub/mo
 
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for details.
 
-  - Updated InMobi custom events
   - Bug fixes
 
 ### Changes to InMobi Custom Event Integrations

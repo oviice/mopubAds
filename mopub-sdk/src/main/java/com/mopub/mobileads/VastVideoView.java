@@ -125,6 +125,7 @@ class VastVideoView extends BaseVideoView {
                     }
 
                     Intent mraidBrowserIntent = new Intent(context, MraidBrowser.class);
+                    mraidBrowserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     mraidBrowserIntent.putExtra(MraidBrowser.URL_EXTRA, mClickThroughUrl);
                     context.startActivity(mraidBrowserIntent);
                 }

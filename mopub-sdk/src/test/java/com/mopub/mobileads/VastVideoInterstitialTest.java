@@ -51,10 +51,12 @@ import org.robolectric.shadows.ShadowLocalBroadcastManager;
 import java.io.*;
 import java.util.*;
 
+import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
 import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
-import static com.mopub.mobileads.BaseInterstitialActivity.ACTION_INTERSTITIAL_DISMISS;
-import static com.mopub.mobileads.BaseInterstitialActivity.ACTION_INTERSTITIAL_SHOW;
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_SHOW;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiverTest.getIntentForActionAndIdentifier;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
 import static com.mopub.mobileads.MoPubErrorCode.VIDEO_DOWNLOAD_ERROR;
 import static com.mopub.mobileads.VastVideoView.VIDEO_CLICK_THROUGH_TRACKERS;
@@ -76,6 +78,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.stub;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.withSettings;
 
 @RunWith(SdkTestRunner.class)
 public class VastVideoInterstitialTest extends ResponseBodyInterstitialTest {
@@ -88,6 +91,7 @@ public class VastVideoInterstitialTest extends ResponseBodyInterstitialTest {
     private VastManager vastManager;
     private String videoUrl;
     private VastVideoDownloadTask vastVideoDownloadTask;
+    private long broadcastIdentifier;
 
     @Before
     public void setUp() throws Exception {
@@ -105,6 +109,11 @@ public class VastVideoInterstitialTest extends ResponseBodyInterstitialTest {
         serverExtras.put(AdFetcher.HTML_RESPONSE_BODY_KEY, Uri.encode(expectedResponse));
 
         response = new TestHttpResponseWithHeaders(200, expectedResponse);
+
+        broadcastIdentifier = 2222;
+        final AdConfiguration adConfiguration = mock(AdConfiguration.class, withSettings().serializable());
+        stub(adConfiguration.getBroadcastIdentifier()).toReturn(broadcastIdentifier);
+        localExtras.put(AD_CONFIGURATION_KEY, adConfiguration);
     }
 
     @After
@@ -162,13 +171,12 @@ public class VastVideoInterstitialTest extends ResponseBodyInterstitialTest {
     public void loadInterstitial_shouldConnectListenerToBroadcastReceiver() throws Exception {
         subject.loadInterstitial(context, customEventInterstitialListener, localExtras, serverExtras);
 
-        Intent intent;
-        intent = new Intent(ACTION_INTERSTITIAL_SHOW);
+        Intent intent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_SHOW, broadcastIdentifier);
         ShadowLocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 
         verify(customEventInterstitialListener).onInterstitialShown();
 
-        intent = new Intent(ACTION_INTERSTITIAL_DISMISS);
+        intent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_DISMISS, broadcastIdentifier);
         ShadowLocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 
         verify(customEventInterstitialListener).onInterstitialDismissed();

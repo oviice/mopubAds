@@ -1,6 +1,8 @@
 package com.mopub.mobileads.util.vast;
 
 import android.os.AsyncTask;
+import android.util.Log;
+
 import com.mopub.mobileads.factories.HttpClientFactory;
 import com.mopub.mobileads.util.HttpClients;
 import com.mopub.mobileads.util.Strings;
@@ -125,7 +127,7 @@ public class VastManager {
         }
     }
 
-    private String processVastFollowingRedirect(String vastXml) throws IOException, SAXException, ParserConfigurationException {
+    private String processVastFollowingRedirect(String vastXml) throws Exception {
         VastXmlManager xmlManager = new VastXmlManager();
         xmlManager.parseVastXml(vastXml);
 
@@ -160,12 +162,8 @@ public class VastManager {
                         vastXml = processVastFollowingRedirect(vastXml);
                     }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (SAXException e) {
-                e.printStackTrace();
-            } catch (ParserConfigurationException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                Log.d("MoPub", "Failed to parse VAST XML", e);
             }
 
             return null;

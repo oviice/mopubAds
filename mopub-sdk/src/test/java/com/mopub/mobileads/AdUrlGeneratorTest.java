@@ -42,9 +42,12 @@ import android.os.Build;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import com.mopub.mobileads.test.support.SdkTestRunner;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.robolectric.shadows.ShadowConnectivityManager;
 import org.robolectric.shadows.ShadowNetworkInfo;
 import org.robolectric.shadows.ShadowTelephonyManager;
@@ -60,10 +63,12 @@ import static android.net.ConnectivityManager.TYPE_MOBILE_SUPL;
 import static android.net.ConnectivityManager.TYPE_WIFI;
 import static android.telephony.TelephonyManager.NETWORK_TYPE_UNKNOWN;
 import static com.mopub.mobileads.AdUrlGenerator.MoPubNetworkType;
+import static com.mopub.mobileads.AdUrlGenerator.TwitterAppInstalledStatus;
 import static com.mopub.mobileads.util.Strings.isEmpty;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.robolectric.Robolectric.application;
 import static org.robolectric.Robolectric.shadowOf;
+import static org.mockito.Mockito.doReturn;
 
 @RunWith(SdkTestRunner.class)
 public class AdUrlGeneratorTest {
@@ -86,6 +91,11 @@ public class AdUrlGeneratorTest {
         configuration = application.getResources().getConfiguration();
         shadowTelephonyManager = shadowOf((TelephonyManager) application.getSystemService(Context.TELEPHONY_SERVICE));
         shadowConnectivityManager = shadowOf((ConnectivityManager) application.getSystemService(Context.CONNECTIVITY_SERVICE));
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        AdUrlGenerator.setTwitterAppInstalledStatus(TwitterAppInstalledStatus.UNKNOWN);
     }
 
     @Test
@@ -247,6 +257,45 @@ public class AdUrlGeneratorTest {
     }
 
     @Test
+    public void generateAdUrl_whenTwitterIsNotInstalled_shouldProcessAndNotSetTwitterInstallStatusOnFirstRequest() throws Exception {
+        AdUrlBuilder urlBuilder = new AdUrlBuilder(expectedUdidSha);
+
+        AdUrlGenerator spySubject = Mockito.spy(subject);
+        AdUrlGenerator.setTwitterAppInstalledStatus(TwitterAppInstalledStatus.UNKNOWN);
+        doReturn(TwitterAppInstalledStatus.NOT_INSTALLED).when(spySubject).getTwitterAppInstallStatus();
+
+        String adUrl = spySubject.generateUrlString("ads.mopub.com");
+
+        assertThat(adUrl).isEqualTo(urlBuilder.withTwitterAppInstalledStatus(TwitterAppInstalledStatus.NOT_INSTALLED).build());
+    }
+
+    @Test
+    public void generateAdUrl_whenTwitterIsInstalled_shouldProcessAndSetTwitterInstallStatusOnFirstRequest() throws Exception {
+        AdUrlBuilder urlBuilder = new AdUrlBuilder(expectedUdidSha);
+
+        AdUrlGenerator spySubject = Mockito.spy(subject);
+        AdUrlGenerator.setTwitterAppInstalledStatus(TwitterAppInstalledStatus.UNKNOWN);
+        doReturn(TwitterAppInstalledStatus.INSTALLED).when(spySubject).getTwitterAppInstallStatus();
+
+        String adUrl = spySubject.generateUrlString("ads.mopub.com");
+
+        assertThat(adUrl).isEqualTo(urlBuilder.withTwitterAppInstalledStatus(TwitterAppInstalledStatus.INSTALLED).build());
+    }
+
+    @Test
+    public void generateAdUrl_shouldNotProcessTwitterInstallStatusIfStatusIsAlreadySet() throws Exception {
+        AdUrlBuilder urlBuilder = new AdUrlBuilder(expectedUdidSha);
+
+        AdUrlGenerator spySubject = Mockito.spy(subject);
+        AdUrlGenerator.setTwitterAppInstalledStatus(TwitterAppInstalledStatus.NOT_INSTALLED);
+        doReturn(TwitterAppInstalledStatus.INSTALLED).when(spySubject).getTwitterAppInstallStatus();
+
+        String adUrl = spySubject.generateUrlString("ads.mopub.com");
+
+        assertThat(adUrl).isEqualTo(urlBuilder.withTwitterAppInstalledStatus(TwitterAppInstalledStatus.NOT_INSTALLED).build());
+    }
+
+    @Test
     public void generateAdUrl_shouldTolerateNullActiveNetwork() throws Exception {
         AdUrlBuilder urlBuilder = new AdUrlBuilder(expectedUdidSha);
         shadowConnectivityManager.setActiveNetworkInfo(null);
@@ -278,6 +327,7 @@ public class AdUrlGeneratorTest {
         private String carrierName = "";
         private MoPubNetworkType networkType = MoPubNetworkType.MOBILE;
         private int externalStoragePermission;
+        private TwitterAppInstalledStatus twitterAppInstalledStatus = TwitterAppInstalledStatus.UNKNOWN;
 
         public AdUrlBuilder(String expectedUdidSha) {
             this.expectedUdidSha = expectedUdidSha;
@@ -304,7 +354,9 @@ public class AdUrlGeneratorTest {
                     paramIfNotEmpty("cn", carrierName) +
                     "&ct=" + networkType +
                     "&av=1.0" +
-                    "&android_perms_ext_storage=" + externalStoragePermission;
+                    "&android_perms_ext_storage=" + externalStoragePermission +
+                    ((twitterAppInstalledStatus == TwitterAppInstalledStatus.INSTALLED) ? "&ts=1" : "");
+
         }
 
         public AdUrlBuilder withAdUnitId(String adUnitId) {
@@ -350,6 +402,11 @@ public class AdUrlGeneratorTest {
 
         public AdUrlBuilder withExternalStoragePermission(boolean enabled) {
             this.externalStoragePermission = enabled ? 1 : 0;
+            return this;
+        }
+
+        public AdUrlBuilder withTwitterAppInstalledStatus(TwitterAppInstalledStatus status) {
+            this.twitterAppInstalledStatus = status;
             return this;
         }
 

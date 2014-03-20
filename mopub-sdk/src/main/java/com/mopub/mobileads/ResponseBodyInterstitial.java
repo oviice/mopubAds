@@ -43,6 +43,7 @@ abstract class ResponseBodyInterstitial extends CustomEventInterstitial {
     private EventForwardingBroadcastReceiver mBroadcastReceiver;
     protected Context mContext;
     protected AdConfiguration mAdConfiguration;
+    long mBroadcastIdentifier;
 
     abstract protected void extractExtras(Map<String, String> serverExtras);
     abstract protected void preRenderHtml(CustomEventInterstitialListener customEventInterstitialListener);
@@ -65,7 +66,11 @@ abstract class ResponseBodyInterstitial extends CustomEventInterstitial {
         }
 
         mAdConfiguration = AdConfiguration.extractFromMap(localExtras);
-        mBroadcastReceiver = new EventForwardingBroadcastReceiver(customEventInterstitialListener);
+        if (mAdConfiguration != null) {
+            mBroadcastIdentifier = mAdConfiguration.getBroadcastIdentifier();
+        }
+
+        mBroadcastReceiver = new EventForwardingBroadcastReceiver(customEventInterstitialListener, mBroadcastIdentifier);
         mBroadcastReceiver.register(context);
 
         preRenderHtml(customEventInterstitialListener);

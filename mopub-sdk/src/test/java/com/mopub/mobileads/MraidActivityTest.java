@@ -33,6 +33,7 @@
 package com.mopub.mobileads;
 
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.view.View;
@@ -49,16 +50,21 @@ import org.mockito.ArgumentCaptor;
 import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowLocalBroadcastManager;
 
+import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
 import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
-import static com.mopub.mobileads.BaseInterstitialActivity.ACTION_INTERSTITIAL_DISMISS;
-import static com.mopub.mobileads.BaseInterstitialActivity.HTML_INTERSTITIAL_INTENT_FILTER;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.getHtmlInterstitialIntentFilter;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiverTest.getIntentForActionAndIdentifier;
 import static com.mopub.mobileads.MraidView.MraidListener;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.stub;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.withSettings;
 import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(SdkTestRunner.class)
@@ -175,13 +181,13 @@ public class MraidActivityTest extends BaseInterstitialActivityTest {
 
     @Test
     public void onDestroy_DestroyMraidView() throws Exception {
-        Intent expectedIntent = new Intent(ACTION_INTERSTITIAL_DISMISS);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, HTML_INTERSTITIAL_INTENT_FILTER);
+        Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_DISMISS, subject.getBroadcastIdentifier());
+        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
 
         subject.onCreate(null);
         subject.onDestroy();
 
-        verify(broadcastReceiver).onReceive(eq(subject), eq(expectedIntent));
+        verify(broadcastReceiver).onReceive(any(Context.class), eq(expectedIntent));
         verify(mraidView).destroy();
         assertThat(getContentView(subject).getChildCount()).isEqualTo(0);
     }
@@ -232,6 +238,26 @@ public class MraidActivityTest extends BaseInterstitialActivityTest {
         baseMraidListener.onClose(null, null);
 
         verify(mraidView).loadUrl(eq("javascript:webviewDidClose();"));
+    }
+
+    @Test
+    public void baseMraidListenerOnOpen_shouldBroadcastClickEvent() throws Exception {
+        Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_CLICK, testBroadcastIdentifier);
+        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
+
+        subject.onCreate(null);
+        resetMockedView(mraidView);
+
+        ArgumentCaptor<MraidListener> captor = ArgumentCaptor.forClass(MraidListener.class);
+        View actualAdView = subject.getAdView();
+
+        assertThat(actualAdView).isSameAs(mraidView);
+        verify(mraidView).setMraidListener(captor.capture());
+
+        MraidListener baseMraidListener = captor.getValue();
+        baseMraidListener.onOpen(null);
+
+        verify(broadcastReceiver).onReceive(any(Context.class), eq(expectedIntent));
     }
 
     @Test
@@ -290,6 +316,11 @@ public class MraidActivityTest extends BaseInterstitialActivityTest {
         Intent mraidActivityIntent = new Intent();
         mraidActivityIntent.setComponent(new ComponentName("", ""));
         mraidActivityIntent.putExtra(HTML_RESPONSE_BODY_KEY, expectedSource);
+
+        adConfiguration = mock(AdConfiguration.class, withSettings().serializable());
+        stub(adConfiguration.getBroadcastIdentifier()).toReturn(testBroadcastIdentifier);
+        mraidActivityIntent.putExtra(AD_CONFIGURATION_KEY, adConfiguration);
+
         return mraidActivityIntent;
     }
 }

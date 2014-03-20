@@ -45,19 +45,23 @@ import org.robolectric.shadows.ShadowLocalBroadcastManager;
 
 import java.util.*;
 
+import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
 import static com.mopub.mobileads.AdFetcher.CLICKTHROUGH_URL_KEY;
 import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.AdFetcher.REDIRECT_URL_KEY;
 import static com.mopub.mobileads.AdFetcher.SCROLLABLE_KEY;
-import static com.mopub.mobileads.BaseInterstitialActivity.ACTION_INTERSTITIAL_DISMISS;
-import static com.mopub.mobileads.BaseInterstitialActivity.ACTION_INTERSTITIAL_SHOW;
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_SHOW;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiverTest.getIntentForActionAndIdentifier;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.stub;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.withSettings;
 
 @RunWith(SdkTestRunner.class)
 public class HtmlInterstitialTest extends ResponseBodyInterstitialTest {
@@ -67,6 +71,7 @@ public class HtmlInterstitialTest extends ResponseBodyInterstitialTest {
     private Map<String,String> serverExtras;
     private HtmlInterstitialWebView htmlInterstitialWebView;
     private String expectedResponse;
+    private long broadcastIdentifier;
 
     @Before
     public void setUp() throws Exception {
@@ -79,6 +84,11 @@ public class HtmlInterstitialTest extends ResponseBodyInterstitialTest {
         localExtras = new HashMap<String, Object>();
         serverExtras = new HashMap<String, String>();
         serverExtras.put(HTML_RESPONSE_BODY_KEY, Uri.encode(expectedResponse));
+
+        broadcastIdentifier = 2222;
+        final AdConfiguration adConfiguration = mock(AdConfiguration.class, withSettings().serializable());
+        stub(adConfiguration.getBroadcastIdentifier()).toReturn(broadcastIdentifier);
+        localExtras.put(AD_CONFIGURATION_KEY, adConfiguration);
     }
 
     @Test
@@ -104,7 +114,6 @@ public class HtmlInterstitialTest extends ResponseBodyInterstitialTest {
 
     @Test
     public void showInterstitial_withMinimumExtras_shouldStartMoPubActivityWithDefaults() throws Exception {
-
         subject.loadInterstitial(context, customEventInterstitialListener, localExtras, serverExtras);
         subject.showInterstitial();
 
@@ -139,13 +148,12 @@ public class HtmlInterstitialTest extends ResponseBodyInterstitialTest {
     public void loadInterstitial_shouldConnectListenerToBroadcastReceiver() throws Exception {
         subject.loadInterstitial(context, customEventInterstitialListener, localExtras, serverExtras);
 
-        Intent intent;
-        intent = new Intent(ACTION_INTERSTITIAL_SHOW);
+        Intent intent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_SHOW, subject.mAdConfiguration.getBroadcastIdentifier());
         ShadowLocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 
         verify(customEventInterstitialListener).onInterstitialShown();
 
-        intent = new Intent(ACTION_INTERSTITIAL_DISMISS);
+        intent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_DISMISS, subject.mAdConfiguration.getBroadcastIdentifier());
         ShadowLocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 
         verify(customEventInterstitialListener).onInterstitialDismissed();

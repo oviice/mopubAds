@@ -33,11 +33,8 @@
 package com.mopub.mobileads;
 
 import android.app.Activity;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -54,12 +51,6 @@ import static com.mopub.mobileads.resource.Drawables.INTERSTITIAL_CLOSE_BUTTON_N
 import static com.mopub.mobileads.resource.Drawables.INTERSTITIAL_CLOSE_BUTTON_PRESSED;
 
 abstract class BaseInterstitialActivity extends Activity {
-    public static final String ACTION_INTERSTITIAL_FAIL = "com.mopub.action.interstitial.fail";
-    public static final String ACTION_INTERSTITIAL_SHOW = "com.mopub.action.interstitial.show";
-    public static final String ACTION_INTERSTITIAL_DISMISS = "com.mopub.action.interstitial.dismiss";
-    public static final String ACTION_INTERSTITIAL_CLICK = "com.mopub.action.interstitial.click";
-    public static final IntentFilter HTML_INTERSTITIAL_INTENT_FILTER = createHtmlInterstitialIntentFilter();
-
     enum JavaScriptWebViewCallbacks {
         WEB_VIEW_DID_APPEAR("javascript:webviewDidAppear();"),
         WEB_VIEW_DID_CLOSE("javascript:webviewDidClose();");
@@ -81,6 +72,7 @@ abstract class BaseInterstitialActivity extends Activity {
     private RelativeLayout mLayout;
     private int mButtonSize;
     private int mButtonPadding;
+    private long mBroadcastIdentifier;
 
     public abstract View getAdView();
 
@@ -101,6 +93,11 @@ abstract class BaseInterstitialActivity extends Activity {
         mLayout.addView(getAdView(), adViewLayout);
         setContentView(mLayout);
 
+        final AdConfiguration adConfiguration = getAdConfiguration();
+        if (adConfiguration != null) {
+            mBroadcastIdentifier = adConfiguration.getBroadcastIdentifier();
+        }
+
         createInterstitialCloseButton();
     }
 
@@ -108,6 +105,10 @@ abstract class BaseInterstitialActivity extends Activity {
     protected void onDestroy() {
         mLayout.removeAllViews();
         super.onDestroy();
+    }
+
+    long getBroadcastIdentifier() {
+        return mBroadcastIdentifier;
     }
 
     protected void showInterstitialCloseButton() {
@@ -118,11 +119,6 @@ abstract class BaseInterstitialActivity extends Activity {
         mCloseButton.setVisibility(INVISIBLE);
     }
 
-    protected void broadcastInterstitialAction(String action) {
-        Intent intent = new Intent(action);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-    }
-
     protected AdConfiguration getAdConfiguration() {
         AdConfiguration adConfiguration;
         try {
@@ -131,15 +127,6 @@ abstract class BaseInterstitialActivity extends Activity {
             adConfiguration = null;
         }
         return adConfiguration;
-    }
-
-    private static IntentFilter createHtmlInterstitialIntentFilter() {
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(ACTION_INTERSTITIAL_FAIL);
-        intentFilter.addAction(ACTION_INTERSTITIAL_SHOW);
-        intentFilter.addAction(ACTION_INTERSTITIAL_DISMISS);
-        intentFilter.addAction(ACTION_INTERSTITIAL_CLICK);
-        return intentFilter;
     }
 
     private void createInterstitialCloseButton() {

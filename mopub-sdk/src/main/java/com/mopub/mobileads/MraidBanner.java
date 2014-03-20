@@ -89,6 +89,10 @@ class MraidBanner extends CustomEventBanner {
         mBannerListener.onBannerClicked();
     }
 
+    private void onOpen() {
+        mBannerListener.onBannerClicked();
+    }
+
     private void onClose() {
         mBannerListener.onBannerCollapsed();
     }
@@ -107,6 +111,9 @@ class MraidBanner extends CustomEventBanner {
             }
             public void onExpand(MraidView view) {
                 MraidBanner.this.onExpand();
+            }
+            public void onOpen(MraidView view) {
+                MraidBanner.this.onOpen();
             }
             public void onClose(MraidView view, ViewState newViewState) {
                 MraidBanner.this.onClose();

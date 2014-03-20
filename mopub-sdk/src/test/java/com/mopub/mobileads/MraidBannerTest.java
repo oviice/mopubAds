@@ -129,6 +129,14 @@ public class MraidBannerTest {
     }
 
     @Test
+    public void bannerMraidListener_onOpen_shouldNotifyBannerClicked() throws Exception {
+        MraidListener mraidListener = captureMraidListener();
+        mraidListener.onOpen(null);
+
+        verify(bannerListener).onBannerClicked();
+    }
+
+    @Test
     public void bannerMraidListener_onClose_shouldNotifyBannerCollapsed() throws Exception {
         MraidListener mraidListener = captureMraidListener();
         mraidListener.onClose(null, null);

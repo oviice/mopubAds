@@ -34,6 +34,7 @@ package com.mopub.mobileads;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.StateListDrawable;
 import android.view.View;
@@ -46,12 +47,15 @@ import org.junit.Test;
 import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowLocalBroadcastManager;
 
-import static com.mopub.mobileads.BaseInterstitialActivity.ACTION_INTERSTITIAL_DISMISS;
-import static com.mopub.mobileads.BaseInterstitialActivity.ACTION_INTERSTITIAL_SHOW;
-import static com.mopub.mobileads.BaseInterstitialActivity.HTML_INTERSTITIAL_INTENT_FILTER;
+import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_SHOW;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.getHtmlInterstitialIntentFilter;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiverTest.getIntentForActionAndIdentifier;
 import static com.mopub.mobileads.resource.Drawables.INTERSTITIAL_CLOSE_BUTTON_NORMAL;
 import static com.mopub.mobileads.resource.Drawables.INTERSTITIAL_CLOSE_BUTTON_PRESSED;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -66,20 +70,21 @@ public class BaseInterstitialActivityTest {
     protected BaseInterstitialActivity subject;
     protected BroadcastReceiver broadcastReceiver;
     protected AdConfiguration adConfiguration;
+    protected long testBroadcastIdentifier;
 
     public void setup() {
         broadcastReceiver = mock(BroadcastReceiver.class);
-        adConfiguration = mock(AdConfiguration.class);
+        testBroadcastIdentifier = 2222;
     }
 
     @Test
     public void onCreate_shouldBroadcastInterstitialShow() throws Exception {
-        Intent expectedIntent = new Intent(ACTION_INTERSTITIAL_SHOW);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, HTML_INTERSTITIAL_INTENT_FILTER);
+        Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_SHOW, testBroadcastIdentifier);
+        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
 
         subject.onCreate(null);
 
-        verify(broadcastReceiver).onReceive(eq(subject), eq(expectedIntent));
+        verify(broadcastReceiver).onReceive(any(Context.class), eq(expectedIntent));
     }
 
     @Test
@@ -148,19 +153,19 @@ public class BaseInterstitialActivityTest {
 
     @Test
     public void onDestroy_shouldBroadcastInterstitialDismiss() throws Exception {
-        Intent expectedIntent = new Intent(ACTION_INTERSTITIAL_DISMISS);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, HTML_INTERSTITIAL_INTENT_FILTER);
+        Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_DISMISS, testBroadcastIdentifier);
+        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
 
         subject.onCreate(null);
         subject.onDestroy();
 
-        verify(broadcastReceiver).onReceive(eq(subject), eq(expectedIntent));
+        verify(broadcastReceiver).onReceive(any(Context.class), eq(expectedIntent));
     }
 
     @Test
     public void getAdConfiguration_shouldReturnAdConfigurationFromIntent() throws Exception {
         Intent intent = new Intent();
-        intent.putExtra(AdFetcher.AD_CONFIGURATION_KEY, adConfiguration);
+        intent.putExtra(AD_CONFIGURATION_KEY, adConfiguration);
 
         subject.onCreate(null);
         subject.setIntent(intent);

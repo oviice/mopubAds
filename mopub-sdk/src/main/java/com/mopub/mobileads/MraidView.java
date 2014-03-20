@@ -78,7 +78,6 @@ public class MraidView extends BaseWebView implements UserClickListener {
     static class MraidListenerInfo {
         private MraidListener mMraidListener;
         private OnCloseButtonStateChangeListener mOnCloseButtonListener;
-        private OnOpenListener mOnOpenListener;
     }
     private MraidListenerInfo mListenerInfo;
 
@@ -271,14 +270,6 @@ public class MraidView extends BaseWebView implements UserClickListener {
         return mListenerInfo.mOnCloseButtonListener;
     }
     
-    public void setOnOpenListener(OnOpenListener listener) {
-        mListenerInfo.mOnOpenListener = listener;
-    }
-    
-    public OnOpenListener getOnOpenListener() {
-        return mListenerInfo.mOnOpenListener;
-    }
-    
     // JavaScript injection ////////////////////////////////////////////////////////////////////////
     
     protected void injectJavaScript(String js) {
@@ -401,6 +392,7 @@ public class MraidView extends BaseWebView implements UserClickListener {
         public void onReady(MraidView view);
         public void onFailure(MraidView view);
         public void onExpand(MraidView view);
+        public void onOpen(MraidView view);
         public void onClose(MraidView view, ViewState newViewState);
     }
 
@@ -408,15 +400,12 @@ public class MraidView extends BaseWebView implements UserClickListener {
         @Override public void onReady(MraidView view) { }
         @Override public void onFailure(MraidView view) { }
         @Override public void onExpand(MraidView view) { }
+        @Override public void onOpen(MraidView view) { }
         @Override public void onClose(MraidView view, ViewState newViewState) { }
     }
 
     public interface OnCloseButtonStateChangeListener {
         public void onCloseButtonStateChange(MraidView view, boolean enabled);
-    }
-    
-    public interface OnOpenListener {
-        public void onOpen(MraidView view);
     }
 
     public boolean getIsVisible() {

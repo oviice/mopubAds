@@ -60,6 +60,8 @@ import static com.mopub.mobileads.util.ResponseHeader.REFRESH_TIME;
 import static com.mopub.mobileads.util.ResponseHeader.WIDTH;
 
 public class AdConfiguration implements Serializable {
+    private static final long serialVersionUID = 0L;
+
     private static final int MINIMUM_REFRESH_TIME_MILLISECONDS = 10000;
     private static final int DEFAULT_REFRESH_TIME_MILLISECONDS = 60000;
     private static final String mPlatform = "Android";
@@ -71,6 +73,7 @@ public class AdConfiguration implements Serializable {
     private final String mDeviceModel;
     private final int mPlatformVersion;
 
+    private long mBroadcastIdentifier;
     private String mResponseString;
     private String mAdUnitId;
 
@@ -116,6 +119,7 @@ public class AdConfiguration implements Serializable {
             mDeviceLocale = null;
         }
 
+        mBroadcastIdentifier = Utils.generateUniqueId();
         mDeviceModel = Build.MANUFACTURER + " " + Build.MODEL;
         mPlatformVersion = VersionCode.currentApiLevel().getApiLevel();
         mSdkVersion = MoPub.SDK_VERSION;
@@ -185,6 +189,10 @@ public class AdConfiguration implements Serializable {
 
     void setResponseString(String responseString) {
         mResponseString = responseString;
+    }
+
+    long getBroadcastIdentifier() {
+        return mBroadcastIdentifier;
     }
 
     /*
@@ -290,6 +298,7 @@ public class AdConfiguration implements Serializable {
     }
 
     private void setDefaults() {
+        mBroadcastIdentifier = 0;
         mAdUnitId = null;
         mResponseString = null;
         mAdType = null;

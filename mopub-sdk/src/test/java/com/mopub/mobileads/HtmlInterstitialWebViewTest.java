@@ -38,17 +38,20 @@ import com.mopub.mobileads.test.support.SdkTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.robolectric.Robolectric;
 
 import java.lang.reflect.Method;
 
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
 import static com.mopub.mobileads.HtmlInterstitialWebView.HtmlInterstitialWebViewListener;
+import static com.mopub.mobileads.HtmlInterstitialWebView.MOPUB_JS_INTERFACE_NAME;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.robolectric.Robolectric.shadowOf;
 
@@ -97,7 +100,7 @@ public class HtmlInterstitialWebViewTest {
     public void init_shouldAddJavascriptInterface() throws Exception {
         subject.init(customEventInterstitialListener, isScrollable, clickthroughUrl, redirectUrl);
 
-        Object javascriptInterface = shadowOf(subject).getJavascriptInterface("mopubUriInterface");
+        Object javascriptInterface = shadowOf(subject).getJavascriptInterface(MOPUB_JS_INTERFACE_NAME);
         assertThat(javascriptInterface).isNotNull();
 
         Method fireFinishLoad = javascriptInterface.getClass().getDeclaredMethod("fireFinishLoad");
@@ -108,5 +111,29 @@ public class HtmlInterstitialWebViewTest {
 
         Robolectric.unPauseMainLooper();
         verify(customEventInterstitialListener).onInterstitialLoaded();
+    }
+
+    @Test
+    public void destroy_shouldRemoveJavascriptInterface() {
+        HtmlInterstitialWebView spySubject = spy(subject);
+
+        spySubject.destroy();
+
+        verify(spySubject).removeJavascriptInterface(MOPUB_JS_INTERFACE_NAME);
+    }
+
+    @Test
+    public void destroy_shouldPreventJavascriptInterfaceFromNotifyingListener() throws Exception{
+        subject.init(customEventInterstitialListener, isScrollable, clickthroughUrl, redirectUrl);
+
+        Object javascriptInterface = shadowOf(subject).getJavascriptInterface(MOPUB_JS_INTERFACE_NAME);
+        assertThat(javascriptInterface).isNotNull();
+
+        subject.setIsDestroyed(true);
+
+        Method fireFinishLoad = javascriptInterface.getClass().getDeclaredMethod("fireFinishLoad");
+        fireFinishLoad.invoke(javascriptInterface);
+
+        verify(customEventInterstitialListener, never()).onInterstitialLoaded();
     }
 }

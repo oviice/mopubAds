@@ -70,7 +70,7 @@ class HtmlWebViewClient extends WebViewClient {
         Log.d("MoPub", "Ad clicked. Click URL: " + url);
 
         // this is added because http/s can also be intercepted
-        if (!isWebSiteUrl(url) && canHandleApplicationUrl(url)) {
+        if (!isWebSiteUrl(url) && Utils.canHandleApplicationUrl(mContext, url)) {
             if (launchApplicationUrl(url)) {
                 return true;
             }
@@ -175,21 +175,6 @@ class HtmlWebViewClient extends WebViewClient {
         return url.startsWith("http://") || url.startsWith("https://");
     }
 
-    private boolean canHandleApplicationUrl(String url) {
-        // Determine which activities can handle the intent
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-
-        // If there are no relevant activities, don't follow the link
-        if (!Utils.deviceCanHandleIntent(mContext, intent)) {
-            Log.w("MoPub", "Could not handle application specific action: " + url + ". " +
-                    "You may be running in the emulator or another device which does not " +
-                    "have the required application.");
-            return false;
-        }
-
-        return true;
-    }
-
     private String urlWithClickTrackingRedirect(String url) {
         if (mClickthroughUrl == null) {
             return url;
@@ -254,24 +239,12 @@ class HtmlWebViewClient extends WebViewClient {
             return false;
         }
 
-        boolean wasIntentStarted = executeIntent(context, intent, errorMessage);
+        boolean wasIntentStarted = Utils.executeIntent(context, intent, errorMessage);
         if (wasIntentStarted) {
             mHtmlWebViewListener.onClicked();
             mHtmlWebView.onResetUserClick();
         }
 
         return wasIntentStarted;
-    }
-
-    private boolean executeIntent(Context context, Intent intent, String errorMessage) {
-        try {
-            context.startActivity(intent);
-        } catch (Exception e) {
-            Log.d("MoPub", (errorMessage != null)
-                    ? errorMessage
-                    : "Unable to start intent.");
-            return false;
-        }
-        return true;
     }
 }

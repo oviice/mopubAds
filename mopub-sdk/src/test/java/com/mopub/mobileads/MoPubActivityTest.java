@@ -34,6 +34,7 @@ package com.mopub.mobileads;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.view.View;
 import android.webkit.WebViewClient;
@@ -52,10 +53,11 @@ import static com.mopub.mobileads.AdFetcher.CLICKTHROUGH_URL_KEY;
 import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.AdFetcher.REDIRECT_URL_KEY;
 import static com.mopub.mobileads.AdFetcher.SCROLLABLE_KEY;
-import static com.mopub.mobileads.BaseInterstitialActivity.ACTION_INTERSTITIAL_CLICK;
-import static com.mopub.mobileads.BaseInterstitialActivity.ACTION_INTERSTITIAL_FAIL;
-import static com.mopub.mobileads.BaseInterstitialActivity.HTML_INTERSTITIAL_INTENT_FILTER;
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_FAIL;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.getHtmlInterstitialIntentFilter;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiverTest.getIntentForActionAndIdentifier;
 import static com.mopub.mobileads.HtmlInterstitialWebView.MoPubUriJavascriptFireFinishLoadListener;
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -64,7 +66,9 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.stub;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.withSettings;
 import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(SdkTestRunner.class)
@@ -81,6 +85,10 @@ public class MoPubActivityTest extends BaseInterstitialActivityTest {
     @Before
     public void setUp() throws Exception {
         super.setup();
+
+        adConfiguration = mock(AdConfiguration.class, withSettings().serializable());
+        stub(adConfiguration.getBroadcastIdentifier()).toReturn(testBroadcastIdentifier);
+
         Intent moPubActivityIntent = createMoPubActivityIntent(EXPECTED_HTML_DATA, EXPECTED_IS_SCROLLABLE, EXPECTED_REDIRECT_URL, EXPECTED_CLICKTHROUGH_URL, adConfiguration);
         htmlInterstitialWebView = TestHtmlInterstitialWebViewFactory.getSingletonMock();
         resetMockedView(htmlInterstitialWebView);
@@ -214,26 +222,26 @@ public class MoPubActivityTest extends BaseInterstitialActivityTest {
     public void getAdView_shouldSetUpForBroadcastingClicks() throws Exception {
         subject.getAdView();
         BroadcastReceiver broadcastReceiver = mock(BroadcastReceiver.class);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, HTML_INTERSTITIAL_INTENT_FILTER);
+        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
 
         TestHtmlInterstitialWebViewFactory.getLatestListener().onInterstitialClicked();
 
         ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
-        verify(broadcastReceiver).onReceive(eq(subject), intentCaptor.capture());
+        verify(broadcastReceiver).onReceive(any(Context.class), intentCaptor.capture());
         Intent intent = intentCaptor.getValue();
-        assertThat(intent.getAction()).isEqualTo(BaseInterstitialActivity.ACTION_INTERSTITIAL_CLICK);
+        assertThat(intent.getAction()).isEqualTo(ACTION_INTERSTITIAL_CLICK);
     }
 
     @Test
     public void getAdView_shouldSetUpForBroadcastingFail() throws Exception {
         subject.getAdView();
         BroadcastReceiver broadcastReceiver = mock(BroadcastReceiver.class);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, HTML_INTERSTITIAL_INTENT_FILTER);
+        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
 
         TestHtmlInterstitialWebViewFactory.getLatestListener().onInterstitialFailed(UNSPECIFIED);
 
         ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
-        verify(broadcastReceiver).onReceive(eq(subject), intentCaptor.capture());
+        verify(broadcastReceiver).onReceive(any(Context.class), intentCaptor.capture());
         Intent intent = intentCaptor.getValue();
         assertThat(intent.getAction()).isEqualTo(ACTION_INTERSTITIAL_FAIL);
 
@@ -251,25 +259,25 @@ public class MoPubActivityTest extends BaseInterstitialActivityTest {
 
     @Test
     public void broadcastingInterstitialListener_onInterstitialFailed_shouldBroadcastFailAndFinish() throws Exception {
-        Intent expectedIntent = new Intent(ACTION_INTERSTITIAL_FAIL);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, HTML_INTERSTITIAL_INTENT_FILTER);
+        Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_FAIL, testBroadcastIdentifier);
+        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
 
         MoPubActivity.BroadcastingInterstitialListener broadcastingInterstitialListener = ((MoPubActivity) subject).new BroadcastingInterstitialListener();
         broadcastingInterstitialListener.onInterstitialFailed(null);
 
-        verify(broadcastReceiver).onReceive(eq(subject), eq(expectedIntent));
+        verify(broadcastReceiver).onReceive(any(Context.class), eq(expectedIntent));
         assertThat(shadowOf(subject).isFinishing()).isTrue();
     }
 
     @Test
     public void broadcastingInterstitialListener_onInterstitialClicked_shouldBroadcastClick() throws Exception {
-        Intent expectedIntent = new Intent(ACTION_INTERSTITIAL_CLICK);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, HTML_INTERSTITIAL_INTENT_FILTER);
+        Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_CLICK, testBroadcastIdentifier);
+        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
 
         MoPubActivity.BroadcastingInterstitialListener broadcastingInterstitialListener = ((MoPubActivity) subject).new BroadcastingInterstitialListener();
         broadcastingInterstitialListener.onInterstitialClicked();
 
-        verify(broadcastReceiver).onReceive(eq(subject), eq(expectedIntent));
+        verify(broadcastReceiver).onReceive(any(Context.class), eq(expectedIntent));
     }
 
     private Intent createMoPubActivityIntent(String htmlData, boolean isScrollable, String redirectUrl, String clickthroughUrl, AdConfiguration adConfiguration) {

@@ -86,7 +86,7 @@ public class AdConfigurationTest {
     }
 
     @Test
-    public void constructor_shouldDeviceLocale() throws Exception {
+    public void constructor_shouldSetDeviceLocale() throws Exception {
         Robolectric.getShadowApplication().getResources().getConfiguration().locale = Locale.FRANCE;
 
         subject = new AdConfiguration(context);
@@ -108,6 +108,11 @@ public class AdConfigurationTest {
         assertThat(subject.getDeviceModel()).isNotNull();
         assertThat(subject.getPlatformVersion()).isEqualTo(Build.VERSION.SDK_INT);
         assertThat(subject.getSdkVersion()).isEqualTo(MoPub.SDK_VERSION);
+    }
+
+    @Test
+    public void constructor_shouldSetBroadcastIdentifier() throws Exception {
+        assertThat(subject.getBroadcastIdentifier()).isGreaterThan(0);
     }
 
     @Test
@@ -184,7 +189,7 @@ public class AdConfigurationTest {
     }
 
     @Test
-    public void caddHttpResponsee_shouldSetRefreshTimeToMinimumOf10Seconds() throws Exception {
+    public void addHttpResponse_shouldSetRefreshTimeToMinimumOf10Seconds() throws Exception {
         httpResponse.addHeader("X-Refreshtime", "0");
 
         subject.addHttpResponse(httpResponse);
@@ -224,6 +229,7 @@ public class AdConfigurationTest {
         subject.addHttpResponse(httpResponse);
         subject.cleanup();
 
+        assertThat(subject.getBroadcastIdentifier()).isEqualTo(0);
         assertThat(subject.getAdUnitId()).isNull();
         assertThat(subject.getResponseString()).isNull();
         assertThat(subject.getAdType()).isNull();

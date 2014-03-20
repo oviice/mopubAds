@@ -13,6 +13,14 @@
   - All `WebView`s are removed from their parents before `destroy()`; fixes [GitHub issue #38](https://github.com/mopub/mopub-android-sdk/issues/38)
   - Removed previously-deprecated `HTML5AdView`
   
+### Version 1.17.3 (Mar 19, 2014)
+
+  - Added safeguards to prevent two different `MoPubInterstitial` objects from listening in on one other's lifecycle callbacks
+  - Disabled Javascript loading into `destroy()`ed `WebView`s; fixes [GitHub issue #62](https://github.com/mopub/mopub-android-sdk/issues/62)
+  - Fixed an `IllegalArgumentException` resulting from VAST videos with malformed redirect tags
+  - MRAID ads that utilize `mraid.open()` now correctly record a click event
+  - Added missing `FLAG_ACTIVITY_NEW_TASK` to `VastVideoView`'s intent creation; fixes part of [GitHub issue #56](https://github.com/mopub/mopub-android-sdk/issues/56)
+  
 ### Version 1.17.2 (Feb 20, 2014)
 
   - Updated InMobi custom events to support InMobi SDK 4.0.3+ only

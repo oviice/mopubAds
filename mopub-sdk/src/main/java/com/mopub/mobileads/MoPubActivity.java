@@ -50,6 +50,11 @@ import static com.mopub.mobileads.AdFetcher.SCROLLABLE_KEY;
 import static com.mopub.mobileads.BaseInterstitialActivity.JavaScriptWebViewCallbacks.WEB_VIEW_DID_APPEAR;
 import static com.mopub.mobileads.BaseInterstitialActivity.JavaScriptWebViewCallbacks.WEB_VIEW_DID_CLOSE;
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_FAIL;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_SHOW;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.broadcastAction;
 import static com.mopub.mobileads.HtmlWebViewClient.MOPUB_FAIL_LOAD;
 import static com.mopub.mobileads.HtmlWebViewClient.MOPUB_FINISH_LOAD;
 
@@ -118,14 +123,15 @@ public class MoPubActivity extends BaseInterstitialActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        broadcastInterstitialAction(ACTION_INTERSTITIAL_SHOW);
+
+        broadcastAction(this, getBroadcastIdentifier(), ACTION_INTERSTITIAL_SHOW);
     }
 
     @Override
     protected void onDestroy() {
         mHtmlInterstitialWebView.loadUrl(WEB_VIEW_DID_CLOSE.getUrl());
         mHtmlInterstitialWebView.destroy();
-        broadcastInterstitialAction(ACTION_INTERSTITIAL_DISMISS);
+        broadcastAction(this, getBroadcastIdentifier(), ACTION_INTERSTITIAL_DISMISS);
         super.onDestroy();
     }
 
@@ -137,7 +143,7 @@ public class MoPubActivity extends BaseInterstitialActivity {
 
         @Override
         public void onInterstitialFailed(MoPubErrorCode errorCode) {
-            broadcastInterstitialAction(ACTION_INTERSTITIAL_FAIL);
+            broadcastAction(MoPubActivity.this, getBroadcastIdentifier(), ACTION_INTERSTITIAL_FAIL);
             finish();
         }
 
@@ -147,7 +153,7 @@ public class MoPubActivity extends BaseInterstitialActivity {
 
         @Override
         public void onInterstitialClicked() {
-            broadcastInterstitialAction(ACTION_INTERSTITIAL_CLICK);
+            broadcastAction(MoPubActivity.this, getBroadcastIdentifier(), ACTION_INTERSTITIAL_CLICK);
         }
 
         @Override

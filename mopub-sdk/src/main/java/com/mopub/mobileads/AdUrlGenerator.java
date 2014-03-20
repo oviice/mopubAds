@@ -65,6 +65,15 @@ public class AdUrlGenerator extends BaseUrlGenerator {
     public static final String DEVICE_ORIENTATION_SQUARE = "s";
     public static final String DEVICE_ORIENTATION_UNKNOWN = "u";
     public static final int UNKNOWN_NETWORK_TYPE = 0x00000008; // Equivalent to TYPE_DUMMY introduced in API level 14. Will generate the "unknown" code
+
+    public static enum TwitterAppInstalledStatus {
+        UNKNOWN,
+        NOT_INSTALLED,
+        INSTALLED,
+    }
+
+    private static TwitterAppInstalledStatus sTwitterAppInstalledStatus = TwitterAppInstalledStatus.UNKNOWN;
+
     private Context mContext;
     private TelephonyManager mTelephonyManager;
     private ConnectivityManager mConnectivityManager;
@@ -151,7 +160,23 @@ public class AdUrlGenerator extends BaseUrlGenerator {
 
         setExternalStoragePermission(isStorePictureSupported(mContext));
 
+        setTwitterAppInstalledFlag();
+
         return getFinalUrlString();
+    }
+
+    private void setTwitterAppInstalledFlag() {
+        if (sTwitterAppInstalledStatus == TwitterAppInstalledStatus.UNKNOWN) {
+            sTwitterAppInstalledStatus = getTwitterAppInstallStatus();
+        }
+
+        if (sTwitterAppInstalledStatus == TwitterAppInstalledStatus.INSTALLED) {
+            addParam("ts", "1");
+        }
+    }
+
+    TwitterAppInstalledStatus getTwitterAppInstallStatus() {
+        return Utils.canHandleTwitterUrl(mContext) ? TwitterAppInstalledStatus.INSTALLED : TwitterAppInstalledStatus.NOT_INSTALLED;
     }
 
     private void setAdUnitId(String adUnitId) {
@@ -301,4 +326,8 @@ public class AdUrlGenerator extends BaseUrlGenerator {
         }
     }
 
+    @Deprecated // for testing
+    static void setTwitterAppInstalledStatus(TwitterAppInstalledStatus status) {
+        sTwitterAppInstalledStatus = status;
+    }
 }

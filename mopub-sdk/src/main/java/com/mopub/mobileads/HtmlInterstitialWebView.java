@@ -41,6 +41,8 @@ import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitia
 public class HtmlInterstitialWebView extends BaseHtmlWebView {
     private Handler mHandler;
 
+    protected static final String MOPUB_JS_INTERFACE_NAME = "mopubUriInterface";
+
     interface MoPubUriJavascriptFireFinishLoadListener {
         abstract void onInterstitialLoaded();
     }
@@ -61,7 +63,9 @@ public class HtmlInterstitialWebView extends BaseHtmlWebView {
         addMoPubUriJavascriptInterface(new MoPubUriJavascriptFireFinishLoadListener() {
             @Override
             public void onInterstitialLoaded() {
-                customEventInterstitialListener.onInterstitialLoaded();
+                if (!mIsDestroyed) {
+                    customEventInterstitialListener.onInterstitialLoaded();
+                }
             }
         });
     }
@@ -92,11 +96,19 @@ public class HtmlInterstitialWebView extends BaseHtmlWebView {
                         moPubUriJavascriptFireFinishLoadListener.onInterstitialLoaded();
                     }
                 });
+
                 return true;
             }
         }
 
-        addJavascriptInterface(new MoPubUriJavascriptInterface(), "mopubUriInterface");
+        addJavascriptInterface(new MoPubUriJavascriptInterface(), MOPUB_JS_INTERFACE_NAME);
+    }
+
+    @Override
+    public void destroy() {
+        removeJavascriptInterface(MOPUB_JS_INTERFACE_NAME);
+
+        super.destroy();
     }
 
     static class HtmlInterstitialWebViewListener implements HtmlWebViewListener {

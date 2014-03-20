@@ -86,4 +86,17 @@ public class UtilsTest {
 
         assertThat(Utils.deviceCanHandleIntent(context, otherIntent)).isFalse();
     }
+
+    @Test
+    public void generateUniqueId_withMultipleInvocations_shouldReturnUniqueValues() throws Exception {
+        final int expectedIdCount = 100;
+
+        Set<Long> ids = new HashSet<Long>(expectedIdCount);
+        for (int i = 0; i < expectedIdCount; i++) {
+            final long id = Utils.generateUniqueId();
+            ids.add(id);
+        }
+
+        assertThat(ids).hasSize(expectedIdCount);
+    }
 }

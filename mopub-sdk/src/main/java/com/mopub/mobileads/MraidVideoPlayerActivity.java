@@ -42,6 +42,11 @@ import android.view.View;
 import java.util.*;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_FAIL;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_SHOW;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.broadcastAction;
 
 public class MraidVideoPlayerActivity extends BaseInterstitialActivity implements BaseVideoView.BaseVideoViewListener {
     static final String VIDEO_URL = "video_url";
@@ -139,7 +144,7 @@ public class MraidVideoPlayerActivity extends BaseInterstitialActivity implement
         hideInterstitialCloseButton();
         mVideoView.start();
 
-        broadcastVastInterstitialAction(ACTION_INTERSTITIAL_SHOW);
+        broadcastVastAction(ACTION_INTERSTITIAL_SHOW);
     }
 
     @Override
@@ -156,7 +161,7 @@ public class MraidVideoPlayerActivity extends BaseInterstitialActivity implement
 
     @Override
     protected void onDestroy() {
-        broadcastVastInterstitialAction(ACTION_INTERSTITIAL_DISMISS);
+        broadcastVastAction(ACTION_INTERSTITIAL_DISMISS);
         super.onDestroy();
     }
 
@@ -168,7 +173,7 @@ public class MraidVideoPlayerActivity extends BaseInterstitialActivity implement
         } else if ("mraid".equals(clazz)) {
             return new MraidVideoView(this, getIntent(), this);
         } else {
-            broadcastInterstitialAction(ACTION_INTERSTITIAL_FAIL);
+            broadcastAction(this, getBroadcastIdentifier(), ACTION_INTERSTITIAL_FAIL);
             finish();
             return new BaseVideoView(this) {};
         }
@@ -187,7 +192,7 @@ public class MraidVideoPlayerActivity extends BaseInterstitialActivity implement
     public void videoError(boolean shouldFinish) {
         Log.d("MoPub", "Error: video can not be played.");
         showInterstitialCloseButton();
-        broadcastInterstitialAction(ACTION_INTERSTITIAL_FAIL);
+        broadcastAction(this, getBroadcastIdentifier(), ACTION_INTERSTITIAL_FAIL);
         if (shouldFinish) {
             finish();
         }
@@ -203,7 +208,7 @@ public class MraidVideoPlayerActivity extends BaseInterstitialActivity implement
 
     @Override
     public void videoClicked() {
-        broadcastInterstitialAction(ACTION_INTERSTITIAL_CLICK);
+        broadcastAction(this, getBroadcastIdentifier(), ACTION_INTERSTITIAL_CLICK);
     }
 
     /*
@@ -211,9 +216,9 @@ public class MraidVideoPlayerActivity extends BaseInterstitialActivity implement
      * VastVideoViews, however, do not have a "splash screen", so this is their only opportunity to
      * relay the shown/dismissed callback.
      */
-    private void broadcastVastInterstitialAction(String action) {
+    private void broadcastVastAction(final String action) {
         if (mVideoView instanceof VastVideoView) {
-            broadcastInterstitialAction(action);
+            broadcastAction(this, getBroadcastIdentifier(), action);
         }
     }
 }
