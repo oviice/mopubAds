@@ -46,13 +46,8 @@ import java.text.SimpleDateFormat;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
-import static android.net.ConnectivityManager.TYPE_ETHERNET;
-import static android.net.ConnectivityManager.TYPE_MOBILE;
-import static android.net.ConnectivityManager.TYPE_MOBILE_DUN;
-import static android.net.ConnectivityManager.TYPE_MOBILE_HIPRI;
-import static android.net.ConnectivityManager.TYPE_MOBILE_MMS;
-import static android.net.ConnectivityManager.TYPE_MOBILE_SUPL;
 import static android.net.ConnectivityManager.TYPE_WIFI;
+import static android.net.ConnectivityManager.TYPE_MOBILE;
 import static com.mopub.mobileads.AdUrlGenerator.MoPubNetworkType.ETHERNET;
 import static com.mopub.mobileads.AdUrlGenerator.MoPubNetworkType.MOBILE;
 import static com.mopub.mobileads.AdUrlGenerator.MoPubNetworkType.UNKNOWN;
@@ -64,7 +59,14 @@ public class AdUrlGenerator extends BaseUrlGenerator {
     public static final String DEVICE_ORIENTATION_LANDSCAPE = "l";
     public static final String DEVICE_ORIENTATION_SQUARE = "s";
     public static final String DEVICE_ORIENTATION_UNKNOWN = "u";
-    public static final int UNKNOWN_NETWORK_TYPE = 0x00000008; // Equivalent to TYPE_DUMMY introduced in API level 14. Will generate the "unknown" code
+
+    // From ConnectivityManager
+    public static final int TYPE_DUMMY = 0x8;
+    public static final int TYPE_ETHERNET = 0x9;
+    public static final int TYPE_MOBILE_DUN = 0x4;
+    public static final int TYPE_MOBILE_HIPRI = 0x5;
+    public static final int TYPE_MOBILE_MMS = 0x2;
+    public static final int TYPE_MOBILE_SUPL = 0x3;
 
     public static enum TwitterAppInstalledStatus {
         UNKNOWN,
@@ -311,9 +313,9 @@ public class AdUrlGenerator extends BaseUrlGenerator {
     private int getActiveNetworkType() {
         if (mContext.checkCallingOrSelfPermission(ACCESS_NETWORK_STATE) == PERMISSION_GRANTED) {
             NetworkInfo activeNetworkInfo = mConnectivityManager.getActiveNetworkInfo();
-            return activeNetworkInfo != null ? activeNetworkInfo.getType() : UNKNOWN_NETWORK_TYPE;
+            return activeNetworkInfo != null ? activeNetworkInfo.getType() : TYPE_DUMMY;
         }
-        return UNKNOWN_NETWORK_TYPE;
+        return TYPE_DUMMY;
     }
 
     private static String addKeyword(String keywords, String addition) {

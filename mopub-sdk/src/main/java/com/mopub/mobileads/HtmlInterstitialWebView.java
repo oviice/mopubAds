@@ -32,11 +32,14 @@
 
 package com.mopub.mobileads;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Handler;
 import android.webkit.JavascriptInterface;
 
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
+import static com.mopub.mobileads.util.VersionCode.HONEYCOMB;
+import static com.mopub.mobileads.util.VersionCode.currentApiLevel;
 
 public class HtmlInterstitialWebView extends BaseHtmlWebView {
     private Handler mHandler;
@@ -104,9 +107,12 @@ public class HtmlInterstitialWebView extends BaseHtmlWebView {
         addJavascriptInterface(new MoPubUriJavascriptInterface(), MOPUB_JS_INTERFACE_NAME);
     }
 
+    @TargetApi(11)
     @Override
     public void destroy() {
-        removeJavascriptInterface(MOPUB_JS_INTERFACE_NAME);
+        if (currentApiLevel().isAtLeast(HONEYCOMB)) {
+            removeJavascriptInterface(MOPUB_JS_INTERFACE_NAME);
+        }
 
         super.destroy();
     }

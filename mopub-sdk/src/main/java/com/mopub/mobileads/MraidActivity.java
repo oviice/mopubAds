@@ -32,6 +32,7 @@
 
 package com.mopub.mobileads;
 
+import android.annotation.TargetApi;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -157,6 +158,7 @@ public class MraidActivity extends BaseInterstitialActivity {
         return mMraidView;
     }
 
+    @TargetApi(11)
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

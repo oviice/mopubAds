@@ -21,6 +21,10 @@
   - MRAID ads that utilize `mraid.open()` now correctly record a click event
   - Added missing `FLAG_ACTIVITY_NEW_TASK` to `VastVideoView`'s intent creation; fixes part of [GitHub issue #56](https://github.com/mopub/mopub-android-sdk/issues/56)
   
+###### Version 1.17.3.1 (Mar 24, 2014)
+
+  - Restricted use of methods and fields that require API 4+ (`WebView#removeJavascriptInterface` and `ConnectivityManager`'s connection types)
+  
 ### Version 1.17.2 (Feb 20, 2014)
 
   - Updated InMobi custom events to support InMobi SDK 4.0.3+ only
