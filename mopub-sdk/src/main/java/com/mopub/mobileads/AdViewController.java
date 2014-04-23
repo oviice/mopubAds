@@ -35,7 +35,6 @@ package com.mopub.mobileads;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
@@ -43,18 +42,20 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
-import com.mopub.mobileads.MoPubView.LocationAwareness;
+
+import com.mopub.common.util.Dips;
 import com.mopub.mobileads.factories.AdFetcherFactory;
 import com.mopub.mobileads.factories.HttpClientFactory;
-import com.mopub.mobileads.util.Dips;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-import java.math.BigDecimal;
 import java.util.*;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
+import static com.mopub.common.LocationService.*;
+import static com.mopub.common.GpsHelper.*;
 import static com.mopub.mobileads.MoPubView.DEFAULT_LOCATION_PRECISION;
 
 public class AdViewController {
@@ -68,8 +69,9 @@ public class AdViewController {
     private static WeakHashMap<View,Boolean> sViewShouldHonorServerDimensions = new WeakHashMap<View, Boolean>();;
 
     private final Context mContext;
+    private GpsHelperListener mGpsHelperListener;
     private MoPubView mMoPubView;
-    private final AdUrlGenerator mUrlGenerator;
+    private final WebViewAdUrlGenerator mUrlGenerator;
     private AdFetcher mAdFetcher;
     private AdConfiguration mAdConfiguration;
     private final Runnable mRefreshRunnable;
@@ -83,7 +85,7 @@ public class AdViewController {
     private boolean mAutoRefreshEnabled = true;
     private String mKeywords;
     private Location mLocation;
-    private LocationAwareness mLocationAwareness = LocationAwareness.LOCATION_AWARENESS_NORMAL;
+    private LocationAwareness mLocationAwareness = LocationAwareness.NORMAL;
     private int mLocationPrecision = DEFAULT_LOCATION_PRECISION;
     private boolean mIsFacebookSupported = true;
     private boolean mIsTesting;
@@ -100,10 +102,14 @@ public class AdViewController {
         mContext = context;
         mMoPubView = view;
 
-        mUrlGenerator = new AdUrlGenerator(context);
+        mUrlGenerator = new WebViewAdUrlGenerator(context);
         mAdConfiguration = new AdConfiguration(mContext);
 
         mAdFetcher = AdFetcherFactory.create(this, mAdConfiguration.getUserAgent());
+
+        mGpsHelperListener = new AdViewControllerGpsHelperListener();
+
+        asyncFetchAdvertisingInfo(mContext);
 
         mRefreshRunnable = new Runnable() {
             public void run() {
@@ -132,11 +138,13 @@ public class AdViewController {
         }
 
         if (mLocation == null) {
-            mLocation = getLastKnownLocation();
+            mLocation = getLastKnownLocation(mContext, mLocationPrecision, mLocationAwareness);
         }
 
-        String adUrl = generateAdUrl();
-        loadNonJavascript(adUrl);
+        // If we have access to Google Play Services (GPS) but the advertising info
+        // is not cached then guarantee we get it before building the ad request url
+        // in the callback, this is a requirement from Google
+        asyncFetchAdvertisingInfoIfNotCached(mContext, mGpsHelperListener);
     }
 
     void loadNonJavascript(String url) {
@@ -470,65 +478,17 @@ public class AdViewController {
         }
     }
 
-    /*
-     * Returns the last known location of the device using its GPS and network location providers.
-     * May be null if:
-     * - Location permissions are not requested in the Android manifest file
-     * - The location providers don't exist
-     * - Location awareness is disabled in the parent MoPubView
-     */
-    private Location getLastKnownLocation() {
-        Location result;
-
-        if (mLocationAwareness == LocationAwareness.LOCATION_AWARENESS_DISABLED) {
-            return null;
+    class AdViewControllerGpsHelperListener implements GpsHelperListener {
+        @Override
+        public void onFetchAdInfoCompleted() {
+            String adUrl = generateAdUrl();
+            loadNonJavascript(adUrl);
         }
+    }
 
-        LocationManager lm = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
-        Location gpsLocation = null;
-        try {
-            gpsLocation = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        } catch (SecurityException e) {
-            Log.d("MoPub", "Failed to retrieve GPS location: access appears to be disabled.");
-        } catch (IllegalArgumentException e) {
-            Log.d("MoPub", "Failed to retrieve GPS location: device has no GPS provider.");
-        }
-
-        Location networkLocation = null;
-        try {
-            networkLocation = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        } catch (SecurityException e) {
-            Log.d("MoPub", "Failed to retrieve network location: access appears to be disabled.");
-        } catch (IllegalArgumentException e) {
-            Log.d("MoPub", "Failed to retrieve network location: device has no network provider.");
-        }
-
-        if (gpsLocation == null && networkLocation == null) {
-            return null;
-        }
-        else if (gpsLocation != null && networkLocation != null) {
-            if (gpsLocation.getTime() > networkLocation.getTime()) result = gpsLocation;
-            else result = networkLocation;
-        }
-        else if (gpsLocation != null) result = gpsLocation;
-        else result = networkLocation;
-
-        // Truncate latitude/longitude to the number of digits specified by locationPrecision.
-        if (mLocationAwareness == LocationAwareness.LOCATION_AWARENESS_TRUNCATED) {
-            double lat = result.getLatitude();
-            double truncatedLat = BigDecimal.valueOf(lat)
-                    .setScale(mLocationPrecision, BigDecimal.ROUND_HALF_DOWN)
-                    .doubleValue();
-            result.setLatitude(truncatedLat);
-
-            double lon = result.getLongitude();
-            double truncatedLon = BigDecimal.valueOf(lon)
-                    .setScale(mLocationPrecision, BigDecimal.ROUND_HALF_DOWN)
-                    .doubleValue();
-            result.setLongitude(truncatedLon);
-        }
-
-        return result;
+    @Deprecated
+    void setGpsHelperListener(GpsHelperListener gpsHelperListener) {
+        mGpsHelperListener = gpsHelperListener;
     }
 
     @Deprecated

@@ -42,7 +42,7 @@ import com.google.ads.AdRequest;
 import com.google.ads.AdRequest.ErrorCode;
 import com.google.ads.AdSize;
 import com.google.ads.AdView;
-import com.mopub.mobileads.util.Views;
+import com.mopub.common.util.Views;
 
 import java.util.*;
 

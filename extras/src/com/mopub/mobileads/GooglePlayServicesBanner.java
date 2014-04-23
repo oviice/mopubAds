@@ -5,7 +5,7 @@ import android.util.Log;
 
 import java.util.Map;
 
-import com.mopub.mobileads.util.Views;
+import com.mopub.common.util.Views;
 
 import com.google.android.gms.ads.*;
 

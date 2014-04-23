@@ -45,8 +45,8 @@ import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowWebView;
 
 import static android.webkit.WebSettings.PluginState;
-import static com.mopub.mobileads.util.VersionCode.HONEYCOMB_MR2;
-import static com.mopub.mobileads.util.VersionCode.ICE_CREAM_SANDWICH;
+import static com.mopub.common.util.VersionCode.HONEYCOMB_MR2;
+import static com.mopub.common.util.VersionCode.ICE_CREAM_SANDWICH;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;

@@ -51,8 +51,8 @@ import org.robolectric.shadows.ShadowEnvironment;
 
 import java.util.*;
 
-import static com.mopub.mobileads.util.VersionCode.HONEYCOMB_MR2;
-import static com.mopub.mobileads.util.VersionCode.ICE_CREAM_SANDWICH;
+import static com.mopub.common.util.VersionCode.HONEYCOMB_MR2;
+import static com.mopub.common.util.VersionCode.ICE_CREAM_SANDWICH;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;

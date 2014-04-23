@@ -33,8 +33,9 @@
 package com.mopub.mobileads;
 
 import android.util.Log;
+
+import com.mopub.common.util.AsyncTasks;
 import com.mopub.mobileads.factories.AdFetchTaskFactory;
-import com.mopub.mobileads.util.AsyncTasks;
 
 /*
  * AdFetcher is a delegate of an AdViewController that handles loading ad data over a

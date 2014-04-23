@@ -39,8 +39,8 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import static com.mopub.mobileads.ViewGestureDetector.UserClickListener;
-import static com.mopub.mobileads.util.VersionCode.ICE_CREAM_SANDWICH;
-import static com.mopub.mobileads.util.VersionCode.currentApiLevel;
+import static com.mopub.common.util.VersionCode.ICE_CREAM_SANDWICH;
+import static com.mopub.common.util.VersionCode.currentApiLevel;
 
 public class BaseHtmlWebView extends BaseWebView implements UserClickListener {
     private final ViewGestureDetector mViewGestureDetector;

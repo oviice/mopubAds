@@ -33,6 +33,8 @@
 package com.mopub.mobileads;
 
 import android.app.Activity;
+
+import com.mopub.common.LocationService;
 import com.mopub.mobileads.test.support.TestAdViewControllerFactory;
 import com.mopub.mobileads.test.support.TestCustomEventInterstitialAdapterFactory;
 import org.junit.Before;
@@ -42,11 +44,11 @@ import org.junit.runner.RunWith;
 import java.math.BigDecimal;
 import java.util.*;
 
+import static com.mopub.common.LocationService.*;
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;
 import static com.mopub.mobileads.MoPubErrorCode.CANCELLED;
 import static com.mopub.mobileads.MoPubErrorCode.INTERNAL_ERROR;
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
-import static com.mopub.mobileads.MoPubView.LocationAwareness.LOCATION_AWARENESS_NORMAL;
 import static com.mopub.mobileads.util.ResponseHeader.CUSTOM_EVENT_DATA;
 import static com.mopub.mobileads.util.ResponseHeader.CUSTOM_EVENT_HTML_DATA;
 import static com.mopub.mobileads.util.ResponseHeader.CUSTOM_EVENT_NAME;
@@ -127,8 +129,8 @@ public class MoPubInterstitialTest {
     @Test
     public void setLocationAwarenessTest() throws Exception {
         subject.setInterstitialView(interstitialView);
-        subject.setLocationAwareness(LOCATION_AWARENESS_NORMAL);
-        verify(interstitialView).setLocationAwareness(eq(LOCATION_AWARENESS_NORMAL));
+        subject.setLocationAwareness(LocationAwareness.NORMAL);
+        verify(interstitialView).setLocationAwareness(eq(LocationAwareness.NORMAL));
     }
 
     @Test

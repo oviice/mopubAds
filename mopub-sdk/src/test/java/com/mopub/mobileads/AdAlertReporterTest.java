@@ -40,7 +40,7 @@ import android.net.Uri;
 import android.view.View;
 import android.widget.TextView;
 import com.mopub.mobileads.test.support.SdkTestRunner;
-import com.mopub.mobileads.test.support.TestDateAndTime;
+import com.mopub.common.util.test.support.TestDateAndTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

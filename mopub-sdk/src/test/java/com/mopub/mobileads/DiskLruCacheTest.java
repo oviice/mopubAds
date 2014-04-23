@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 
+import com.mopub.common.util.Utils;
 import com.mopub.mobileads.test.support.SdkTestRunner;
 
 import org.junit.After;

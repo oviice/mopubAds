@@ -32,6 +32,10 @@
 
 package com.mopub.mobileads.test.support;
 
+import com.mopub.common.factories.MethodBuilderFactory;
+import com.mopub.common.util.DateAndTime;
+import com.mopub.common.util.test.support.TestDateAndTime;
+import com.mopub.common.util.test.support.TestMethodBuilderFactory;
 import com.mopub.mobileads.factories.AdFetcherFactory;
 import com.mopub.mobileads.factories.AdViewControllerFactory;
 import com.mopub.mobileads.factories.CustomEventBannerAdapterFactory;
@@ -46,7 +50,7 @@ import com.mopub.mobileads.factories.MraidViewFactory;
 import com.mopub.mobileads.factories.VastManagerFactory;
 import com.mopub.mobileads.factories.VastVideoDownloadTaskFactory;
 import com.mopub.mobileads.factories.ViewGestureDetectorFactory;
-import com.mopub.mobileads.util.DateAndTime;
+
 import org.junit.runners.model.InitializationError;
 import org.mockito.MockitoAnnotations;
 import org.robolectric.DefaultTestLifecycle;
@@ -82,6 +86,7 @@ public class SdkTestRunner extends RobolectricTestRunner {
             ViewGestureDetectorFactory.setInstance(new TestViewGestureDetectorFactory());
             VastManagerFactory.setInstance(new TestVastManagerFactory());
             VastVideoDownloadTaskFactory.setInstance(new TestVastVideoDownloadTaskFactory());
+            MethodBuilderFactory.setInstance(new TestMethodBuilderFactory());
 
             MockitoAnnotations.initMocks(test);
         }

@@ -38,8 +38,8 @@ import android.os.Handler;
 import android.webkit.JavascriptInterface;
 
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
-import static com.mopub.mobileads.util.VersionCode.HONEYCOMB;
-import static com.mopub.mobileads.util.VersionCode.currentApiLevel;
+import static com.mopub.common.util.VersionCode.HONEYCOMB;
+import static com.mopub.common.util.VersionCode.currentApiLevel;
 
 public class HtmlInterstitialWebView extends BaseHtmlWebView {
     private Handler mHandler;

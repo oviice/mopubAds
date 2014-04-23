@@ -32,7 +32,7 @@
 
 package com.mopub.mobileads.test.support;
 
-import com.mopub.mobileads.util.Streams;
+import com.mopub.common.util.Streams;
 
 import java.io.*;
 

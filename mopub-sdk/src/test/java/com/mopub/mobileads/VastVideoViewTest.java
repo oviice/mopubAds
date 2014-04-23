@@ -37,6 +37,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.view.View;
+
+import com.mopub.common.MoPubBrowser;
 import com.mopub.mobileads.test.support.GestureUtils;
 import com.mopub.mobileads.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
@@ -190,7 +192,7 @@ public class VastVideoViewTest {
     }
 
     @Test
-    public void onTouch_withTouchUp_whenVideoLessThan16Seconds_andClickAfterEnd_shouldStartMraidBrowser() throws Exception {
+    public void onTouch_withTouchUp_whenVideoLessThan16Seconds_andClickAfterEnd_shouldStartMoPubBrowser() throws Exception {
         Intent intent = createIntentForVastVideo();
         addExtrasToStub(intent, VIDEO_CLICK_THROUGH_URL, "http://clickThroughUrl");
 
@@ -207,8 +209,8 @@ public class VastVideoViewTest {
 
         Intent nextStartedActivity = Robolectric.getShadowApplication().getNextStartedActivity();
         assertThat(nextStartedActivity).isNotNull();
-        assertThat(nextStartedActivity.getStringExtra(MraidBrowser.URL_EXTRA)).isEqualTo("http://clickThroughUrl");
-        assertThat(nextStartedActivity.getComponent().getClassName()).isEqualTo("com.mopub.mobileads.MraidBrowser");
+        assertThat(nextStartedActivity.getStringExtra(MoPubBrowser.DESTINATION_URL_KEY)).isEqualTo("http://clickThroughUrl");
+        assertThat(nextStartedActivity.getComponent().getClassName()).isEqualTo("com.mopub.common.MoPubBrowser");
     }
 
     @Test
@@ -232,7 +234,7 @@ public class VastVideoViewTest {
     }
 
     @Test
-    public void onTouch_withTouchUp_whenVideoLongerThan16Seconds_andClickAfter5Seconds_shouldStartMraidBrowser() throws Exception {
+    public void onTouch_withTouchUp_whenVideoLongerThan16Seconds_andClickAfter5Seconds_shouldStartMoPubBrowser() throws Exception {
         Intent intent = createIntentForVastVideo();
         addExtrasToStub(intent, VIDEO_CLICK_THROUGH_URL, "http://clickThroughUrl");
 
@@ -249,8 +251,8 @@ public class VastVideoViewTest {
 
         Intent nextStartedActivity = Robolectric.getShadowApplication().getNextStartedActivity();
         assertThat(nextStartedActivity).isNotNull();
-        assertThat(nextStartedActivity.getStringExtra(MraidBrowser.URL_EXTRA)).isEqualTo("http://clickThroughUrl");
-        assertThat(nextStartedActivity.getComponent().getClassName()).isEqualTo("com.mopub.mobileads.MraidBrowser");
+        assertThat(nextStartedActivity.getStringExtra(MoPubBrowser.DESTINATION_URL_KEY)).isEqualTo("http://clickThroughUrl");
+        assertThat(nextStartedActivity.getComponent().getClassName()).isEqualTo("com.mopub.common.MoPubBrowser");
     }
 
     @Test

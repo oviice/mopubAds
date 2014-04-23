@@ -39,6 +39,8 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+
+import com.mopub.common.MoPubBrowser;
 import com.mopub.mobileads.util.HttpUtils;
 
 import java.util.*;
@@ -124,10 +126,10 @@ class VastVideoView extends BaseVideoView {
                         mBaseVideoViewListener.videoClicked();
                     }
 
-                    Intent mraidBrowserIntent = new Intent(context, MraidBrowser.class);
-                    mraidBrowserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    mraidBrowserIntent.putExtra(MraidBrowser.URL_EXTRA, mClickThroughUrl);
-                    context.startActivity(mraidBrowserIntent);
+                    Intent moPubBrowserIntent = new Intent(context, MoPubBrowser.class);
+                    moPubBrowserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    moPubBrowserIntent.putExtra(MoPubBrowser.DESTINATION_URL_KEY, mClickThroughUrl);
+                    context.startActivity(moPubBrowserIntent);
                 }
 
                 return true;

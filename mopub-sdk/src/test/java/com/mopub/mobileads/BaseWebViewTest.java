@@ -44,9 +44,9 @@ import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowWebView;
 
-import static com.mopub.mobileads.util.VersionCode.ECLAIR_MR1;
-import static com.mopub.mobileads.util.VersionCode.FROYO;
-import static com.mopub.mobileads.util.VersionCode.JELLY_BEAN_MR2;
+import static com.mopub.common.util.VersionCode.ECLAIR_MR1;
+import static com.mopub.common.util.VersionCode.FROYO;
+import static com.mopub.common.util.VersionCode.JELLY_BEAN_MR2;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;

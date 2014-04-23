@@ -33,17 +33,17 @@
 package com.mopub.mobileads.test;
 
 import android.test.ActivityInstrumentationTestCase2;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+
+import com.mopub.common.MoPubBrowser;
 import com.mopub.mobileads.MoPubActivity;
 import com.mopub.mobileads.MoPubErrorCode;
 import com.mopub.mobileads.MoPubInterstitial;
 import com.mopub.mobileads.MoPubView;
-import com.mopub.mobileads.MraidBrowser;
-import com.mopub.mobileads.robotium.*;
 import com.mopub.mobileads.robotium.R;
 import com.robotium.solo.Solo;
+import com.mopub.mobileads.robotium.RobotiumTestSupportActivity;
 
 import static com.mopub.mobileads.MoPubInterstitial.InterstitialAdListener;
 
@@ -98,7 +98,7 @@ public class RobotiumTestSupportActivityTest extends ActivityInstrumentationTest
         Thread.sleep(NETWORK_SLEEP_TIME);
         assertTrue("Banner was not clicked.", listener.bannerWasClicked());
 
-        solo.assertCurrentActivity("expected an MraidBrowser", MraidBrowser.class);
+        solo.assertCurrentActivity("expected a MoPubBrowser", MoPubBrowser.class);
     }
 
     public void testMoPubInterstitialLoadShowAndClick() throws Exception {
@@ -117,7 +117,7 @@ public class RobotiumTestSupportActivityTest extends ActivityInstrumentationTest
 
         solo.clickOnView(solo.getCurrentActivity().findViewById(android.R.id.content));
         Thread.sleep(NETWORK_SLEEP_TIME);
-        solo.assertCurrentActivity("expected MraidBrowser", MraidBrowser.class);
+        solo.assertCurrentActivity("expected MoPubBrowser", MoPubBrowser.class);
     }
 
     public void testMoPubInterstitialLoadShowAndDismissWithCloseButton() throws Exception {

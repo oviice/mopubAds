@@ -80,9 +80,9 @@ import static com.mopub.mobileads.MraidCommandFactory.MraidJavascriptCommand.STO
 import static com.mopub.mobileads.MraidCommandStorePicture.MIME_TYPE_HEADER;
 import static com.mopub.mobileads.MraidVideoPlayerActivityTest.assertMraidVideoPlayerActivityStarted;
 import static com.mopub.mobileads.util.Mraids.ANDROID_CALENDAR_CONTENT_TYPE;
-import static com.mopub.mobileads.util.VersionCode.ECLAIR;
-import static com.mopub.mobileads.util.VersionCode.FROYO;
-import static com.mopub.mobileads.util.VersionCode.ICE_CREAM_SANDWICH;
+import static com.mopub.common.util.VersionCode.ECLAIR;
+import static com.mopub.common.util.VersionCode.FROYO;
+import static com.mopub.common.util.VersionCode.ICE_CREAM_SANDWICH;
 import static java.io.File.*;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;

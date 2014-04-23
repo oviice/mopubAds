@@ -35,24 +35,31 @@ package com.mopub.mobileads;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+
+import com.mopub.common.BaseUrlGenerator;
+import com.mopub.common.GpsHelper;
+import com.mopub.common.SharedPreferencesHelper;
 import com.mopub.mobileads.factories.HttpClientFactory;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-import static android.content.Context.MODE_PRIVATE;
-
 public class MoPubConversionTracker {
     private static final String TRACK_HOST = "ads.mopub.com";
     private static final String TRACK_HANDLER = "/m/open";
-    private static final String PREFERENCE_NAME = "mopubSettings";
 
     private Context mContext;
     private String mIsTrackedKey;
     private SharedPreferences mSharedPreferences;
     private String mPackageName;
+    private ConversionTrackerGpsHelperListener mConversionTrackerGpsHelperListener;
+
+    public MoPubConversionTracker() {
+        mConversionTrackerGpsHelperListener = new ConversionTrackerGpsHelperListener();
+    }
 
     public void reportAppOpen(Context context) {
         if (context == null) {
@@ -62,10 +69,10 @@ public class MoPubConversionTracker {
         mContext = context;
         mPackageName = mContext.getPackageName();
         mIsTrackedKey = mPackageName + " tracked";
-        mSharedPreferences = mContext.getSharedPreferences(PREFERENCE_NAME, MODE_PRIVATE);
+        mSharedPreferences = SharedPreferencesHelper.getSharedPreferences(mContext);
 
         if (!isAlreadyTracked()) {
-            new Thread(new TrackOpen()).start();
+            GpsHelper.asyncFetchAdvertisingInfo(mContext, mConversionTrackerGpsHelperListener);
         } else {
             Log.d("MoPub", "Conversion already tracked");
         }
@@ -83,6 +90,7 @@ public class MoPubConversionTracker {
             setApiVersion("6");
             setPackageId(mPackageName);
             setUdid(getUdidFromContext(mContext));
+            setDoNotTrack(GpsHelper.isLimitAdTrackingEnabled(mContext));
             setAppVersion(getAppVersionFromContext(mContext));
             return getFinalUrlString();
         }
@@ -124,6 +132,13 @@ public class MoPubConversionTracker {
                     .edit()
                     .putBoolean(mIsTrackedKey, true)
                     .commit();
+        }
+    }
+
+    class ConversionTrackerGpsHelperListener implements GpsHelper.GpsHelperListener {
+        @Override
+        public void onFetchAdInfoCompleted() {
+            new Thread(new TrackOpen()).start();
         }
     }
 }

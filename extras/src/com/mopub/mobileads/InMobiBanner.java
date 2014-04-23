@@ -10,7 +10,7 @@ import com.inmobi.monetization.IMErrorCode;
 import com.mopub.mobileads.CustomEventBanner;
 import com.mopub.mobileads.MoPub;
 import com.mopub.mobileads.MoPubErrorCode;
-import com.mopub.mobileads.util.Views;
+import com.mopub.common.util.Views;
 
 import java.util.*;
 

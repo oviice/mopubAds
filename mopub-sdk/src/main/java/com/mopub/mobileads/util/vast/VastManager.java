@@ -3,17 +3,15 @@ package com.mopub.mobileads.util.vast;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.mopub.common.util.Strings;
 import com.mopub.mobileads.factories.HttpClientFactory;
 import com.mopub.mobileads.util.HttpClients;
-import com.mopub.mobileads.util.Strings;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.*;
 import java.util.*;
 
 public class VastManager {

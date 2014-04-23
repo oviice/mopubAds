@@ -4,8 +4,10 @@ import android.content.Context;
 import android.net.Uri;
 import android.support.v4.util.LruCache;
 import android.util.Log;
-import com.mopub.mobileads.util.Files;
-import com.mopub.mobileads.util.Streams;
+
+import com.mopub.common.util.Files;
+import com.mopub.common.util.Streams;
+import com.mopub.common.util.Utils;
 
 import java.io.*;
 

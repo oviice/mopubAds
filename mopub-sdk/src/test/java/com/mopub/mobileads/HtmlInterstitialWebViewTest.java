@@ -47,8 +47,8 @@ import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitia
 import static com.mopub.mobileads.HtmlInterstitialWebView.HtmlInterstitialWebViewListener;
 import static com.mopub.mobileads.HtmlInterstitialWebView.MOPUB_JS_INTERFACE_NAME;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
-import static com.mopub.mobileads.util.VersionCode.GINGERBREAD_MR1;
-import static com.mopub.mobileads.util.VersionCode.HONEYCOMB;
+import static com.mopub.common.util.VersionCode.GINGERBREAD_MR1;
+import static com.mopub.common.util.VersionCode.HONEYCOMB;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;

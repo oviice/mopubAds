@@ -39,6 +39,8 @@ import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.webkit.WebView;
+
+import com.mopub.common.MoPubBrowser;
 import com.mopub.mobileads.test.support.SdkTestRunner;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,7 +49,6 @@ import org.mockito.ArgumentCaptor;
 import org.robolectric.Robolectric;
 
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
-import static com.mopub.mobileads.MraidBrowser.URL_EXTRA;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
@@ -190,7 +191,7 @@ public class HtmlWebViewClientTest {
     }
 
     @Test
-    public void shouldOverrideUrlLoading_withCustomApplicationIntent_withUserClick_butCanNotHandleCustomIntent_shouldDefaultToMraidBrowser() throws Exception {
+    public void shouldOverrideUrlLoading_withCustomApplicationIntent_withUserClick_butCanNotHandleCustomIntent_shouldDefaultToMoPubBrowser() throws Exception {
         String customUrl = "myintent://something";
         stub(htmlWebView.wasClicked()).toReturn(true);
         subject = new HtmlWebViewClient(htmlWebViewListener, htmlWebView, null, null);
@@ -201,7 +202,7 @@ public class HtmlWebViewClientTest {
         verify(htmlWebViewListener).onClicked();
         Intent startedIntent = Robolectric.getShadowApplication().getNextStartedActivity();
         assertThat(startedIntent).isNotNull();
-        assertThat(startedIntent.getComponent().getClassName()).isEqualTo("com.mopub.mobileads.MraidBrowser");
+        assertThat(startedIntent.getComponent().getClassName()).isEqualTo("com.mopub.common.MoPubBrowser");
     }
 
     @Test
@@ -215,8 +216,8 @@ public class HtmlWebViewClientTest {
         verify(htmlWebViewListener).onClicked();
 
         Intent startedActivity = assertActivityStarted();
-        assertThat(startedActivity.getComponent().getClassName()).isEqualTo("com.mopub.mobileads.MraidBrowser");
-        assertThat(startedActivity.getStringExtra(URL_EXTRA)).isEqualTo(validUrl);
+        assertThat(startedActivity.getComponent().getClassName()).isEqualTo("com.mopub.common.MoPubBrowser");
+        assertThat(startedActivity.getStringExtra(MoPubBrowser.DESTINATION_URL_KEY)).isEqualTo(validUrl);
         assertThat(startedActivity.getData()).isNull();
     }
 
@@ -241,7 +242,7 @@ public class HtmlWebViewClientTest {
         subject.shouldOverrideUrlLoading(htmlWebView, validUrl);
 
         Intent startedActivity = assertActivityStarted();
-        assertThat(startedActivity.getStringExtra(URL_EXTRA)).isEqualTo("clickthrough&r=http%3A%2F%2Fwww.mopub.com");
+        assertThat(startedActivity.getStringExtra(MoPubBrowser.DESTINATION_URL_KEY)).isEqualTo("clickthrough&r=http%3A%2F%2Fwww.mopub.com");
     }
 
     @Test
@@ -262,8 +263,8 @@ public class HtmlWebViewClientTest {
         subject.shouldOverrideUrlLoading(htmlWebView, "");
 
         Intent startedActivity = assertActivityStarted();
-        assertThat(startedActivity.getComponent().getClassName()).isEqualTo("com.mopub.mobileads.MraidBrowser");
-        assertThat(startedActivity.getStringExtra(URL_EXTRA)).isEqualTo("about:blank");
+        assertThat(startedActivity.getComponent().getClassName()).isEqualTo("com.mopub.common.MoPubBrowser");
+        assertThat(startedActivity.getStringExtra(MoPubBrowser.DESTINATION_URL_KEY)).isEqualTo("about:blank");
         assertThat(startedActivity.getData()).isNull();
     }
 
@@ -310,8 +311,8 @@ public class HtmlWebViewClientTest {
         subject.shouldOverrideUrlLoading(htmlWebView, opaqueNativeBrowserUriString);
 
         Intent startedActivity = assertActivityStarted();
-        assertThat(startedActivity.getComponent().getClassName()).isEqualTo("com.mopub.mobileads.MraidBrowser");
-        assertThat(startedActivity.getStringExtra(URL_EXTRA)).isEqualTo(opaqueNativeBrowserUriString);
+        assertThat(startedActivity.getComponent().getClassName()).isEqualTo("com.mopub.common.MoPubBrowser");
+        assertThat(startedActivity.getStringExtra(MoPubBrowser.DESTINATION_URL_KEY)).isEqualTo(opaqueNativeBrowserUriString);
         assertThat(startedActivity.getData()).isNull();
         verify(htmlWebViewListener).onClicked();
     }
@@ -364,9 +365,9 @@ public class HtmlWebViewClientTest {
         verify(view).stopLoading();
 
         Intent intent = Robolectric.getShadowApplication().getNextStartedActivity();
-        assertThat(intent.getStringExtra(MraidBrowser.URL_EXTRA)).isEqualTo(url);
+        assertThat(intent.getStringExtra(MoPubBrowser.DESTINATION_URL_KEY)).isEqualTo(url);
         assertThat(intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isNotEqualTo(0);
-        assertThat(intent.getComponent().getClassName()).isEqualTo("com.mopub.mobileads.MraidBrowser");
+        assertThat(intent.getComponent().getClassName()).isEqualTo("com.mopub.common.MoPubBrowser");
     }
 
     @Test
@@ -393,9 +394,9 @@ public class HtmlWebViewClientTest {
         verify(view).stopLoading();
 
         Intent intent = Robolectric.getShadowApplication().getNextStartedActivity();
-        assertThat(intent.getStringExtra(MraidBrowser.URL_EXTRA)).isEqualTo(expectedTrackingUrl);
+        assertThat(intent.getStringExtra(MoPubBrowser.DESTINATION_URL_KEY)).isEqualTo(expectedTrackingUrl);
         assertThat(intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isNotEqualTo(0);
-        assertThat(intent.getComponent().getClassName()).isEqualTo("com.mopub.mobileads.MraidBrowser");
+        assertThat(intent.getComponent().getClassName()).isEqualTo("com.mopub.common.MoPubBrowser");
     }
 
     @Test
@@ -411,7 +412,7 @@ public class HtmlWebViewClientTest {
     }
 
     @Test
-    public void onPageStarted_whenLoadedUrlStartsWithRedirectAndHasClickthrough_withUserClick_whenMraidBrowserCannotHandleIntent_shouldOpenInNativeBrowser() throws Exception {
+    public void onPageStarted_whenLoadedUrlStartsWithRedirectAndHasClickthrough_withUserClick_whenMoPubBrowserCannotHandleIntent_shouldOpenInNativeBrowser() throws Exception {
         Context mockContext = mock(Context.class);
         stub(htmlWebView.wasClicked()).toReturn(true);
         stub(htmlWebView.getContext()).toReturn(mockContext);

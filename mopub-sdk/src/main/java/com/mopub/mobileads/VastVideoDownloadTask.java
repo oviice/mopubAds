@@ -34,9 +34,11 @@ package com.mopub.mobileads;
 
 import android.os.AsyncTask;
 import android.util.Log;
+
+import com.mopub.common.util.Streams;
 import com.mopub.mobileads.factories.HttpClientFactory;
 import com.mopub.mobileads.util.HttpClients;
-import com.mopub.mobileads.util.Streams;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;

@@ -2,10 +2,13 @@ package com.mopub.mobileads;
 
 import android.app.Activity;
 import android.net.Uri;
+
+import com.mopub.common.util.Streams;
+import com.mopub.common.util.Utils;
 import com.mopub.mobileads.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.StreamUtils;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
-import com.mopub.mobileads.util.Streams;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;

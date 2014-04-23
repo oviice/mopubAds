@@ -27,14 +27,28 @@ Integration instructions are available on the [wiki](https://github.com/mopub/mo
 
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for details.
 
-  - Bug fixes
-
-### Changes to InMobi Custom Event Integrations
-**Important**: As of version 1.17.2.0, the InMobi custom events packaged with the MoPub SDK only support InMobi version 4.0.3 and up. Follow the instructions [here](https://www.inmobi.com/support/integration/23817448/22051163/android-sdk-integration-guide/) to integrate InMobi version 4.0.3 and up. If you would like to continue to use a prior version of the InMobi SDK, do not update the custom event files and follow the instructions [here](https://www.inmobi.com/support/art/23806682/22095493/mopub-adaptor-android-sdk-integration-guide/) to integrate.
+  - **Native Ads** public release; integration instructions and documentation available on the [GitHub wiki](https://github.com/mopub/mopub-android-sdk/wiki/Native-Ads-Integration)
+  - Changed minimum supported Android version to Froyo (Android 2.2, API level 8)
+  - Added support for Google Play Services advertising identifier
+  - Renamed the `com.mopub.mobileads.MraidBrowser` Activity to `com.mopub.common.MoPubBrowser`.
+       - **Important Note:** This change requires a modification to the `AndroidManifest`. The updated set of requisite activity permissions are as follows:
+      
+      	```      	      	
+    <activity android:name="com.mopub.common.MoPubBrowser"
+				android:configChanges="keyboardHidden|orientation"/>
+    <activity android:name="com.mopub.mobileads.MoPubActivity"
+            	android:configChanges="keyboardHidden|orientation"/>
+    <activity android:name="com.mopub.mobileads.MraidActivity"
+            	android:configChanges="keyboardHidden|
+	<activity android:name="com.mopub.mobileads.MraidVideoPlayerActivity"
+            	android:configChanges="keyboardHidden|orientation"/>
+		```  
+  - Upgraded the bundled `android-support-v4` library to r19.1.
+      - **Note for Maven users:** Newer versions of the `android-support-v4` artifact are unavailable on Maven central, so we have included a small script to update the version in your local artifact repository. Please navigate to the `mopub-sdk` directory, and run `scripts/mavenize_support_library`.
 
 ## Requirements
 
-Android 1.6 and up
+Android 2.2 and up
 
 ## License
 

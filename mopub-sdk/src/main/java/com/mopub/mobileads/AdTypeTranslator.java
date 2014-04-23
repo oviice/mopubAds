@@ -32,16 +32,9 @@
 
 package com.mopub.mobileads;
 
-import android.content.Context;
-
-import static com.mopub.mobileads.AdTypeTranslator.CustomEventType.ADMOB_BANNER;
-import static com.mopub.mobileads.AdTypeTranslator.CustomEventType.ADMOB_INTERSTITIAL;
-import static com.mopub.mobileads.AdTypeTranslator.CustomEventType.GOOGLE_PLAY_BANNER;
-import static com.mopub.mobileads.AdTypeTranslator.CustomEventType.GOOGLE_PLAY_INTERSTITIAL;
-import static com.mopub.mobileads.util.Reflection.MethodBuilder;
+import com.mopub.common.GpsHelper;
 
 public class AdTypeTranslator {
-    private static final int GOOGLE_PLAY_SUCCESS_CODE = 0;
 
     public enum CustomEventType {
         ADMOB_BANNER("admob_native_banner", "com.mopub.mobileads.GoogleAdMobBanner"),
@@ -100,7 +93,7 @@ public class AdTypeTranslator {
                     : CustomEventType.fromString(adType + "_banner");
 
             if (moPubView != null) {
-                customEventType = convertAdMobToGooglePlay(moPubView.getContext(), customEventType);
+                customEventType = GpsHelper.convertAdMobToGooglePlayServices(moPubView.getContext(), customEventType);
             }
         }
 
@@ -109,43 +102,5 @@ public class AdTypeTranslator {
 
     private static boolean isInterstitial(MoPubView moPubView) {
         return moPubView instanceof MoPubInterstitial.MoPubInterstitialView;
-    }
-
-    private static CustomEventType convertAdMobToGooglePlay(Context context, CustomEventType customEventType) {
-        // In both cases, only check if GooglePlayServices is available if absolutely necessary
-        if (customEventType == ADMOB_BANNER &&
-                classFound(GOOGLE_PLAY_BANNER) &&
-                isGooglePlayServicesAvailable(context)) {
-            return GOOGLE_PLAY_BANNER;
-        } else if (customEventType == ADMOB_INTERSTITIAL &&
-                classFound(GOOGLE_PLAY_INTERSTITIAL) &&
-                isGooglePlayServicesAvailable(context)) {
-            return GOOGLE_PLAY_INTERSTITIAL;
-        }
-
-        return customEventType;
-    }
-
-    private static boolean classFound(CustomEventType customEventType) {
-        try {
-            Class.forName(customEventType.toString());
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
-    }
-
-    private static boolean isGooglePlayServicesAvailable(Context context) {
-        try {
-            MethodBuilder methodBuilder = new MethodBuilder(null, "isGooglePlayServicesAvailable")
-                    .setStatic(Class.forName("com.google.android.gms.common.GooglePlayServicesUtil"))
-                    .addParam(Context.class, context);
-
-            Object result = methodBuilder.execute();
-
-            return (result != null && (Integer) result == GOOGLE_PLAY_SUCCESS_CODE);
-        } catch (Exception exception) {
-            return false;
-        }
     }
 }
