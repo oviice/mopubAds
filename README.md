@@ -39,7 +39,7 @@ Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/mast
     <activity android:name="com.mopub.mobileads.MoPubActivity"
             	android:configChanges="keyboardHidden|orientation"/>
     <activity android:name="com.mopub.mobileads.MraidActivity"
-            	android:configChanges="keyboardHidden|
+            	android:configChanges="keyboardHidden|orientation"/>
 	<activity android:name="com.mopub.mobileads.MraidVideoPlayerActivity"
             	android:configChanges="keyboardHidden|orientation"/>
 		```  
