@@ -426,7 +426,7 @@ class MraidDisplayController extends MraidAbstractController {
     }
 
     protected void showVideo(String videoUrl) {
-        MraidVideoPlayerActivity.startMraid(getContext(), videoUrl);
+        MraidVideoPlayerActivity.startMraid(getContext(), videoUrl, getMraidView().getAdConfiguration());
     }
 
     protected void getCurrentPosition(){

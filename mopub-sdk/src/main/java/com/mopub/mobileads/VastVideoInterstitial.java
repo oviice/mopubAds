@@ -92,8 +92,8 @@ class VastVideoInterstitial extends ResponseBodyInterstitial implements VastMana
                 mVideoCompleteTrackers,
                 mImpressionTrackers,
                 mClickThroughUrl,
-                mClickTrackers
-        );
+                mClickTrackers,
+                mAdConfiguration);
     }
 
     @Override

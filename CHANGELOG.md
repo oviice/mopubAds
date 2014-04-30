@@ -12,12 +12,17 @@
     <activity android:name="com.mopub.mobileads.MoPubActivity"
                 android:configChanges="keyboardHidden|orientation"/>
     <activity android:name="com.mopub.mobileads.MraidActivity"
-                android:configChanges="keyboardHidden|
+                android:configChanges="keyboardHidden|orientation"/>
 	<activity android:name="com.mopub.mobileads.MraidVideoPlayerActivity"
                 android:configChanges="keyboardHidden|orientation"/>
 		```  
   - Upgraded the bundled `android-support-v4` library to r19.1.
       - **Note for Maven users:** Newer versions of the `android-support-v4` artifact are unavailable on Maven central, so we have included a small script to update the version in your local artifact repository. Please navigate to the `mopub-sdk` directory, and run `scripts/mavenize_support_library`.
+      
+###### Version 2.0.1 (Apr 30, 2014)
+
+  - Fixed cases where VAST Video Interstitials were failing to fire `InterstitialAdListener` callbacks; fixes [GitHub issue #78](https://github.com/mopub/mopub-android-sdk/issues/78)
+  - Simplified click tracking logic for HTML ads
 
 ## Version 1.17 (Nov 20, 2013)
 

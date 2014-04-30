@@ -70,7 +70,6 @@ class HtmlWebViewClient extends WebViewClient {
             return true;
         }
 
-        url = urlWithClickTrackingRedirect(url);
         Log.d("MoPub", "Ad clicked. Click URL: " + url);
 
         // this is added because http/s can also be intercepted
@@ -88,7 +87,6 @@ class HtmlWebViewClient extends WebViewClient {
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
         // If the URL being loaded shares the redirectUrl prefix, open it in the browser.
         if (mRedirectUrl != null && url.startsWith(mRedirectUrl)) {
-            url = urlWithClickTrackingRedirect(url);
             view.stopLoading();
             showMoPubBrowserForUrl(url);
         }
@@ -177,15 +175,6 @@ class HtmlWebViewClient extends WebViewClient {
 
     private boolean isWebSiteUrl(String url) {
         return url.startsWith("http://") || url.startsWith("https://");
-    }
-
-    private String urlWithClickTrackingRedirect(String url) {
-        if (mClickthroughUrl == null) {
-            return url;
-        } else {
-            String encodedUrl = Uri.encode(url);
-            return mClickthroughUrl + "&r=" + encodedUrl;
-        }
     }
 
     private boolean launchApplicationUrl(String url) {

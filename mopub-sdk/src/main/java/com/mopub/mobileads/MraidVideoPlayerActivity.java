@@ -42,6 +42,7 @@ import android.view.View;
 import java.util.*;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_FAIL;
@@ -54,8 +55,8 @@ public class MraidVideoPlayerActivity extends BaseInterstitialActivity implement
 
     private BaseVideoView mVideoView;
 
-    static void startMraid(Context context, String videoUrl) {
-        Intent intentVideoPlayerActivity = createIntentMraid(context, videoUrl);
+    static void startMraid(Context context, String videoUrl, AdConfiguration adConfiguration) {
+        Intent intentVideoPlayerActivity = createIntentMraid(context, videoUrl, adConfiguration);
         try {
             context.startActivity(intentVideoPlayerActivity);
         } catch (ActivityNotFoundException e) {
@@ -63,11 +64,12 @@ public class MraidVideoPlayerActivity extends BaseInterstitialActivity implement
         }
     }
 
-    static Intent createIntentMraid(Context context, String videoUrl) {
+    static Intent createIntentMraid(Context context, String videoUrl, AdConfiguration adConfiguration) {
         Intent intentVideoPlayerActivity = new Intent(context, MraidVideoPlayerActivity.class);
         intentVideoPlayerActivity.setFlags(FLAG_ACTIVITY_NEW_TASK);
         intentVideoPlayerActivity.putExtra(VIDEO_CLASS_EXTRAS_KEY, "mraid");
         intentVideoPlayerActivity.putExtra(VIDEO_URL, videoUrl);
+        intentVideoPlayerActivity.putExtra(AD_CONFIGURATION_KEY, adConfiguration);
         return intentVideoPlayerActivity;
     }
 
@@ -81,7 +83,8 @@ public class MraidVideoPlayerActivity extends BaseInterstitialActivity implement
             ArrayList<String> videoCompleteTrackers,
             ArrayList<String> impressionTrackers,
             String clickThroughUrl,
-            ArrayList<String> clickThroughTrackers) {
+            ArrayList<String> clickThroughTrackers,
+            AdConfiguration adConfiguration) {
 
         if (videoUrl == null) {
             return;
@@ -97,7 +100,8 @@ public class MraidVideoPlayerActivity extends BaseInterstitialActivity implement
                 videoCompleteTrackers,
                 impressionTrackers,
                 clickThroughUrl,
-                clickThroughTrackers);
+                clickThroughTrackers,
+                adConfiguration);
         try {
             context.startActivity(intentVideoPlayerActivity);
         } catch (ActivityNotFoundException e) {
@@ -115,7 +119,8 @@ public class MraidVideoPlayerActivity extends BaseInterstitialActivity implement
             ArrayList<String> videoCompleteTrackers,
             ArrayList<String> impressionTrackers,
             String clickThroughUrl,
-            ArrayList<String> clickThroughTrackers) {
+            ArrayList<String> clickThroughTrackers,
+            AdConfiguration adConfiguration) {
         Intent intentVideoPlayerActivity = new Intent(context, MraidVideoPlayerActivity.class);
         intentVideoPlayerActivity.setFlags(FLAG_ACTIVITY_NEW_TASK);
         intentVideoPlayerActivity.putExtra(VIDEO_CLASS_EXTRAS_KEY, "vast");
@@ -128,6 +133,7 @@ public class MraidVideoPlayerActivity extends BaseInterstitialActivity implement
         intentVideoPlayerActivity.putStringArrayListExtra(VastVideoView.VIDEO_IMPRESSION_TRACKERS, impressionTrackers);
         intentVideoPlayerActivity.putExtra(VastVideoView.VIDEO_CLICK_THROUGH_URL, clickThroughUrl);
         intentVideoPlayerActivity.putStringArrayListExtra(VastVideoView.VIDEO_CLICK_THROUGH_TRACKERS, clickThroughTrackers);
+        intentVideoPlayerActivity.putExtra(AD_CONFIGURATION_KEY, adConfiguration);
         return intentVideoPlayerActivity;
     }
 

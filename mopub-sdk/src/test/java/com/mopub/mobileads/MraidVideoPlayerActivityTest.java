@@ -53,6 +53,9 @@ import java.util.*;
 
 import static com.mopub.mobileads.MraidVideoPlayerActivity.VIDEO_URL;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.withSettings;
 import static org.robolectric.Robolectric.buildActivity;
 import static org.robolectric.Robolectric.shadowOf;
 
@@ -68,6 +71,8 @@ public class MraidVideoPlayerActivityTest {
     private String videoUrl;
     private String clickThroughUrl;
     private MraidVideoPlayerActivity subject;
+    private AdConfiguration adConfiguration;
+    private long testBroadcastIdentifier;
 
     public static void assertMraidVideoPlayerActivityStarted(String className, String expectedURI) {
         Intent intent = Robolectric.getShadowApplication().getNextStartedActivity();
@@ -94,6 +99,10 @@ public class MraidVideoPlayerActivityTest {
         clickThroughTrackers = new ArrayList<String>();
         videoUrl = "http://video";
         clickThroughUrl = "clickThrough";
+
+        testBroadcastIdentifier = 4321;
+        adConfiguration = mock(AdConfiguration.class, withSettings().serializable());
+        stub(adConfiguration.getBroadcastIdentifier()).toReturn(testBroadcastIdentifier);
     }
 
     @After
@@ -105,7 +114,7 @@ public class MraidVideoPlayerActivityTest {
     public void startMraid_shouldStartVideoPlayer() throws Exception {
         setUpMraidSubject();
 
-        MraidVideoPlayerActivity.startMraid(new Activity(), "http://mraidVideo");
+        MraidVideoPlayerActivity.startMraid(new Activity(), "http://mraidVideo", adConfiguration);
 
         assertMraidVideoPlayerActivityStarted("com.mopub.mobileads.MraidVideoPlayerActivity", "http://mraidVideo");
     }
@@ -124,7 +133,8 @@ public class MraidVideoPlayerActivityTest {
                 videoCompleteTrackers,
                 impressionTrackers,
                 clickThroughUrl,
-                clickThroughTrackers);
+                clickThroughTrackers,
+                adConfiguration);
 
         assertMraidVideoPlayerActivityStarted("com.mopub.mobileads.MraidVideoPlayerActivity", "http://vastVideo");
     }
@@ -277,7 +287,7 @@ public class MraidVideoPlayerActivityTest {
 
     private void setUpMraidSubject() {
         subject = buildActivity(MraidVideoPlayerActivity.class)
-                .withIntent(MraidVideoPlayerActivity.createIntentMraid(new Activity(), videoUrl))
+                .withIntent(MraidVideoPlayerActivity.createIntentMraid(new Activity(), videoUrl, adConfiguration))
                 .create()
                 .get();
     }
@@ -293,7 +303,8 @@ public class MraidVideoPlayerActivityTest {
                         videoCompleteTrackers,
                         impressionTrackers,
                         clickThroughUrl,
-                        clickThroughTrackers))
+                        clickThroughTrackers,
+                        adConfiguration))
                 .create()
                 .get();
     }

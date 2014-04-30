@@ -35,6 +35,7 @@ package com.mopub.mobileads;
 import android.app.Activity;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -97,6 +98,8 @@ abstract class BaseInterstitialActivity extends Activity {
         final AdConfiguration adConfiguration = getAdConfiguration();
         if (adConfiguration != null) {
             mBroadcastIdentifier = adConfiguration.getBroadcastIdentifier();
+        } else {
+            Log.d("MoPub", "Unable to obtain broadcast identifier. Interstitial interactions cannot be tracked.");
         }
 
         createInterstitialCloseButton();
