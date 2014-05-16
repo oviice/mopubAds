@@ -42,11 +42,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-
 import com.mopub.common.util.Strings;
 import com.mopub.mobileads.factories.HttpClientFactory;
 import com.mopub.mobileads.resource.MraidJavascript;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;

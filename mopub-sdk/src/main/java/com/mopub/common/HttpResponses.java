@@ -1,4 +1,4 @@
-package com.mopub.nativeads;
+package com.mopub.common;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -6,20 +6,19 @@ import android.graphics.BitmapFactory;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-class HttpResponses {
+public final class HttpResponses {
     private HttpResponses() {}
 
-    static Bitmap asBitmap(final DownloadResponse downloadResponse) {
+    public static Bitmap asBitmap(final DownloadResponse downloadResponse) {
         if (downloadResponse == null) {
             return null;
         }
 
         final byte[] bytes = downloadResponse.getByteArray();
-        final int contentLength = (int) downloadResponse.getContentLength();
-        return BitmapFactory.decodeByteArray(bytes, 0, contentLength);
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
     }
 
-    static JSONObject asJsonObject(final DownloadResponse downloadResponse) {
+    public static JSONObject asJsonObject(final DownloadResponse downloadResponse) {
         if (downloadResponse == null) {
             return null;
         }
@@ -34,7 +33,7 @@ class HttpResponses {
         }
     }
 
-    static String asResponseString(final DownloadResponse downloadResponse) {
+    public static String asResponseString(final DownloadResponse downloadResponse) {
         if (downloadResponse == null) {
             return null;
         }

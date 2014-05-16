@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import com.mopub.common.util.MoPubLog;
+import com.mopub.common.CacheService;
 import com.mopub.common.util.Streams;
 
 import java.io.ByteArrayOutputStream;
@@ -13,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.mopub.nativeads.ImageTaskManager.ImageTaskManagerListener;
-import static com.mopub.nativeads.util.Utils.MoPubLog;
 import static java.util.Map.Entry;
 
 class ImageService {
@@ -45,7 +46,7 @@ class ImageService {
                     new ImageDiskTaskManagerListener(imageServiceListener, cacheBitmaps)
             );
         } catch (IllegalArgumentException e) {
-            MoPubLog("Unable to initialize ImageDiskTaskManager", e);
+            MoPubLog.d("Unable to initialize ImageDiskTaskManager", e);
             imageServiceListener.onFail();
             return;
         }
@@ -55,7 +56,7 @@ class ImageService {
 
     static void putBitmapsInCache(final Map<String, Bitmap> bitmaps) {
         for (final Entry<String, Bitmap> entry : bitmaps.entrySet()) {
-            MoPubLog("Caching bitmap: " + entry.getKey());
+            MoPubLog.d("Caching bitmap: " + entry.getKey());
             putBitmapInCache(entry.getKey(), entry.getValue());
         }
     }
@@ -137,7 +138,7 @@ class ImageService {
                             new ImageNetworkTaskManagerListener(mImageServiceListener, mBitmaps)
                     );
                 } catch (IllegalArgumentException e) {
-                    MoPubLog("Unable to initialize ImageDownloadTaskManager", e);
+                    MoPubLog.d("Unable to initialize ImageDownloadTaskManager", e);
                     mImageServiceListener.onFail();
                     return;
                 }

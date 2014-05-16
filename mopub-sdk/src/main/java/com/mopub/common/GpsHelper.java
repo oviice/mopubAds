@@ -2,9 +2,8 @@ package com.mopub.common;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
-
 import com.mopub.common.factories.MethodBuilderFactory;
+import com.mopub.common.util.MoPubLog;
 
 import static com.mopub.common.util.Reflection.MethodBuilder;
 import static com.mopub.common.util.Reflection.classFound;
@@ -116,7 +115,7 @@ public class GpsHelper {
                         updateSharedPreferences(context, adInfo);
                     }
                 } catch (Exception exception) {
-                    Log.d("MoPub", "Unable to obtain AdvertisingIdClient.getAdvertisingIdInfo()");
+                    MoPubLog.d("Unable to obtain AdvertisingIdClient.getAdvertisingIdInfo()");
                 } finally {
                     if (gpsHelperListener != null) {
                         gpsHelperListener.onFetchAdInfoCompleted();

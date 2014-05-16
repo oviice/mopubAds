@@ -65,7 +65,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
-
 import com.mopub.common.util.Streams;
 import com.mopub.mobileads.MraidView.ExpansionStyle;
 import com.mopub.mobileads.MraidView.NativeCloseButtonStyle;
@@ -74,7 +73,6 @@ import com.mopub.mobileads.MraidView.ViewState;
 import com.mopub.mobileads.factories.HttpClientFactory;
 import com.mopub.mobileads.util.HttpResponses;
 import com.mopub.mobileads.util.Mraids;
-
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -86,6 +84,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static com.mopub.common.util.Drawables.INTERSTITIAL_CLOSE_BUTTON_NORMAL;
+import static com.mopub.common.util.Drawables.INTERSTITIAL_CLOSE_BUTTON_PRESSED;
 import static com.mopub.mobileads.MraidCommandFactory.MraidJavascriptCommand.CREATE_CALENDAR_EVENT;
 import static com.mopub.mobileads.MraidCommandFactory.MraidJavascriptCommand.EXPAND;
 import static com.mopub.mobileads.MraidCommandFactory.MraidJavascriptCommand.GET_CURRENT_POSITION;
@@ -95,8 +95,6 @@ import static com.mopub.mobileads.MraidCommandFactory.MraidJavascriptCommand.GET
 import static com.mopub.mobileads.MraidCommandFactory.MraidJavascriptCommand.STORE_PICTURE;
 import static com.mopub.mobileads.MraidCommandStorePicture.MIME_TYPE_HEADER;
 import static com.mopub.mobileads.MraidView.BaseMraidListener;
-import static com.mopub.common.util.Drawables.INTERSTITIAL_CLOSE_BUTTON_NORMAL;
-import static com.mopub.common.util.Drawables.INTERSTITIAL_CLOSE_BUTTON_PRESSED;
 import static com.mopub.mobileads.util.Mraids.ANDROID_CALENDAR_CONTENT_TYPE;
 import static com.mopub.mobileads.util.Mraids.isCalendarAvailable;
 import static com.mopub.mobileads.util.Mraids.isInlineVideoAvailable;

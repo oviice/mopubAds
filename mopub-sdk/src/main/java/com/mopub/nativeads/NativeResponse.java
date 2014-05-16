@@ -2,6 +2,8 @@ package com.mopub.nativeads;
 
 import android.widget.ImageView;
 
+import com.mopub.common.util.MoPubLog;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,7 +25,6 @@ import static com.mopub.nativeads.NativeResponse.Parameter.MAIN_IMAGE;
 import static com.mopub.nativeads.NativeResponse.Parameter.TEXT;
 import static com.mopub.nativeads.NativeResponse.Parameter.TITLE;
 import static com.mopub.nativeads.NativeResponse.Parameter.isImageKey;
-import static com.mopub.nativeads.util.Utils.MoPubLog;
 import static java.util.Map.Entry;
 
 public final class NativeResponse {
@@ -276,12 +277,12 @@ public final class NativeResponse {
                     mText = (String) value;
                     break;
                 default:
-                    MoPubLog("Unable to add JSON key to internal mapping: " + key.name);
+                    MoPubLog.d("Unable to add JSON key to internal mapping: " + key.name);
                     break;
             }
         } catch (ClassCastException e) {
             if (!key.required) {
-                MoPubLog("Ignoring class cast exception for optional defined key: " + key.name);
+                MoPubLog.d("Ignoring class cast exception for optional defined key: " + key.name);
             } else {
                 throw e;
             }
@@ -304,7 +305,7 @@ public final class NativeResponse {
                 mImpressionTrackers.add(trackers.getString(i));
             } catch (JSONException e) {
                 // This will only occur if we access a non-existent index in JSONArray.
-                MoPubLog("Unable to parse impression trackers.");
+                MoPubLog.d("Unable to parse impression trackers.");
             }
         }
     }

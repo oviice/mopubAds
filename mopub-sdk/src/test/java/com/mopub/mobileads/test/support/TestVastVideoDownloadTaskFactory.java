@@ -32,11 +32,9 @@
 
 package com.mopub.mobileads.test.support;
 
-import com.mopub.mobileads.DiskLruCache;
 import com.mopub.mobileads.VastVideoDownloadTask;
 import com.mopub.mobileads.factories.VastVideoDownloadTaskFactory;
 
-import static com.mopub.mobileads.VastVideoDownloadTask.OnDownloadCompleteListener;
 import static org.mockito.Mockito.mock;
 
 public class TestVastVideoDownloadTaskFactory extends VastVideoDownloadTaskFactory {
@@ -47,7 +45,7 @@ public class TestVastVideoDownloadTaskFactory extends VastVideoDownloadTaskFacto
     }
 
     @Override
-    protected VastVideoDownloadTask internalCreate(OnDownloadCompleteListener onDownloadCompleteListener, DiskLruCache diskLruCache) {
+    protected VastVideoDownloadTask internalCreate(VastVideoDownloadTask.VastVideoDownloadTaskListener vastVideoDownloadTaskListener) {
         return singletonMock;
     }
 }

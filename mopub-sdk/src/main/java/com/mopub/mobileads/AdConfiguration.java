@@ -36,12 +36,10 @@ import android.content.Context;
 import android.os.Build;
 import android.provider.Settings;
 import android.webkit.WebView;
-
 import com.mopub.common.MoPub;
 import com.mopub.common.util.DateAndTime;
 import com.mopub.common.util.Utils;
 import com.mopub.common.util.VersionCode;
-
 import org.apache.http.HttpResponse;
 
 import java.io.*;

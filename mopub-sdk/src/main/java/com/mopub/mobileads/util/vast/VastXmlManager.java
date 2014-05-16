@@ -1,77 +1,156 @@
 package com.mopub.mobileads.util.vast;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.util.*;
 
 class VastXmlManager {
     private static final String ROOT_TAG = "MPMoVideoXMLDocRoot";
     private static final String ROOT_TAG_OPEN = "<" + ROOT_TAG + ">";
     private static final String ROOT_TAG_CLOSE = "</" + ROOT_TAG + ">";
 
-    enum VastElementName {
-        IMPRESSION_TRACKER ("Impression"),
-        VIDEO_TRACKER ("Tracking"),
-        CLICK_THROUGH ("ClickThrough"),
-        CLICK_TRACKER ("ClickTracking"),
-        MEDIA_FILE ("MediaFile"),
-        VAST_AD_TAG ("VASTAdTagURI"),
-        MP_IMPRESSION_TRACKER ("MP_TRACKING_URL");
+    // Element names
+    private static final String IMPRESSION_TRACKER = "Impression";
+    private static final String VIDEO_TRACKER = "Tracking";
+    private static final String CLICK_THROUGH = "ClickThrough";
+    private static final String CLICK_TRACKER = "ClickTracking";
+    private static final String MEDIA_FILE = "MediaFile";
+    private static final String VAST_AD_TAG = "VASTAdTagURI";
+    private static final String MP_IMPRESSION_TRACKER = "MP_TRACKING_URL";
+    private static final String COMPANION = "Companion";
 
-        private final String name;
+    // Attribute names
+    private static final String EVENT = "event";
+    private static final String WIDTH = "width";
+    private static final String HEIGHT = "height";
 
-        private VastElementName(String name) {
-            this.name = name;
+    // Attibute values
+    private static final String START = "start";
+    private static final String FIRST_QUARTILE = "firstQuartile";
+    private static final String MIDPOINT = "midpoint";
+    private static final String THIRD_QUARTILE = "thirdQuartile";
+    private static final String COMPLETE = "complete";
+
+    // This class currently assumes an image type companion ad since that is what we are supporting
+    class ImageCompanionAdXmlManager {
+        // Element name
+        private static final String TRACKING_EVENTS = "TrackingEvents";
+        private static final String COMPANION_STATIC_RESOURCE = "StaticResource";
+        private static final String COMPANION_CLICK_THROUGH = "CompanionClickThrough";
+        // Attribute value
+        private static final String CREATIVE_VIEW = "creativeView";
+        // Attribute name
+        private static final String CREATIVE_TYPE = "creativeType";
+        private final Node mCompanionNode;
+
+        ImageCompanionAdXmlManager(final Node companionNode) throws IllegalArgumentException {
+            if (companionNode == null) {
+                throw new IllegalArgumentException("Companion node cannot be null");
+            }
+            mCompanionNode = companionNode;
         }
 
-        public String getName() {
-            return this.name;
-        }
-    };
-
-    enum VastElementAttributeName {
-        EVENT ("event");
-
-        private final String name;
-
-        private VastElementAttributeName(String name) {
-            this.name = name;
+        Integer getWidth() {
+            return XmlUtils.getAttributeValueAsInt(mCompanionNode, WIDTH);
         }
 
-        public String getName() {
-            return this.name;
-        }
-    };
-
-    enum VastElementAttributeValue {
-        START ("start"),
-        FIRST_QUARTILE ("firstQuartile"),
-        MIDPOINT ("midpoint"),
-        THIRD_QUARTILE ("thirdQuartile"),
-        COMPLETE ("complete");
-
-        private final String value;
-
-        private VastElementAttributeValue(String value) {
-            this.value = value;
+        Integer getHeight() {
+            return XmlUtils.getAttributeValueAsInt(mCompanionNode, HEIGHT);
         }
 
-        public String getValue() {
-            return this.value;
+        String getType() {
+            final Node node = XmlUtils.getFirstMatchingChildNode(
+                    mCompanionNode,
+                    COMPANION_STATIC_RESOURCE
+            );
+            return XmlUtils.getAttributeValue(node, CREATIVE_TYPE);
         }
-    };
+
+        String getImageUrl() {
+            final Node node = XmlUtils.getFirstMatchingChildNode(
+                    mCompanionNode,
+                    COMPANION_STATIC_RESOURCE
+            );
+            return XmlUtils.getNodeValue(node);
+        }
+
+        String getClickThroughUrl() {
+            final Node node = XmlUtils.getFirstMatchingChildNode(
+                    mCompanionNode,
+                    COMPANION_CLICK_THROUGH
+            );
+            return XmlUtils.getNodeValue(node);
+        }
+
+        List<String> getClickTrackers() {
+            final List<String> companionAdClickTrackers = new ArrayList<String>();
+            final Node node = XmlUtils.getFirstMatchingChildNode(
+                    mCompanionNode,
+                    TRACKING_EVENTS
+            );
+
+            if (node == null) {
+                return companionAdClickTrackers;
+            }
+
+            final List<Node> trackerNodes = XmlUtils.getMatchingChildNodes(
+                    node,
+                    VIDEO_TRACKER,
+                    EVENT,
+                    Arrays.asList(CREATIVE_VIEW)
+            );
+
+            for (final Node trackerNode : trackerNodes) {
+                if (trackerNode.getFirstChild() != null) {
+                    companionAdClickTrackers.add(trackerNode.getFirstChild().getNodeValue().trim());
+                }
+            }
+
+            return companionAdClickTrackers;
+        }
+    }
+
+    class MediaXmlManager {
+        // Attribute names
+        private static final String DELIVERY = "delivery";
+        private static final String VIDEO_TYPE  = "type";
+        private final Node mMediaNode;
+
+        MediaXmlManager(final Node mediaNode) throws IllegalArgumentException {
+            if (mediaNode == null) {
+                throw new IllegalArgumentException("Media node cannot be null");
+            }
+            mMediaNode = mediaNode;
+        }
+
+        String getDelivery() {
+            return XmlUtils.getAttributeValue(mMediaNode, DELIVERY);
+        }
+
+        Integer getWidth() {
+            return XmlUtils.getAttributeValueAsInt(mMediaNode, WIDTH);
+        }
+
+        Integer getHeight() {
+            return XmlUtils.getAttributeValueAsInt(mMediaNode, HEIGHT);
+        }
+
+        String getType() {
+            return XmlUtils.getAttributeValue(mMediaNode, VIDEO_TYPE);
+        }
+
+        String getMediaUrl() {
+            return XmlUtils.getNodeValue(mMediaNode);
+        }
+    }
 
     private Document mVastDoc;
 
@@ -91,103 +170,72 @@ class VastXmlManager {
     }
 
     String getVastAdTagURI() {
-        List<String> uriWrapper = getStringDataAsList(VastElementName.VAST_AD_TAG);
+        List<String> uriWrapper = XmlUtils.getStringDataAsList(mVastDoc, VAST_AD_TAG);
         return (uriWrapper.size() > 0) ? uriWrapper.get(0) : null;
     }
 
     List<String> getImpressionTrackers() {
-        List<String> impressionTrackers = getStringDataAsList(VastElementName.IMPRESSION_TRACKER);
-        impressionTrackers.addAll(getStringDataAsList(VastElementName.MP_IMPRESSION_TRACKER));
+        List<String> impressionTrackers = XmlUtils.getStringDataAsList(mVastDoc, IMPRESSION_TRACKER);
+        impressionTrackers.addAll(XmlUtils.getStringDataAsList(mVastDoc, MP_IMPRESSION_TRACKER));
 
         return impressionTrackers;
     }
 
     List<String> getVideoStartTrackers() {
-        return getVideoTrackerByAttribute(VastElementAttributeValue.START);
+        return getVideoTrackerByAttribute(START);
     }
 
     List<String> getVideoFirstQuartileTrackers() {
-        return getVideoTrackerByAttribute(VastElementAttributeValue.FIRST_QUARTILE);
+        return getVideoTrackerByAttribute(FIRST_QUARTILE);
     }
 
     List<String> getVideoMidpointTrackers() {
-        return getVideoTrackerByAttribute(VastElementAttributeValue.MIDPOINT);
+        return getVideoTrackerByAttribute(MIDPOINT);
     }
 
     List<String> getVideoThirdQuartileTrackers() {
-        return getVideoTrackerByAttribute(VastElementAttributeValue.THIRD_QUARTILE);
+        return getVideoTrackerByAttribute(THIRD_QUARTILE);
     }
 
     List<String> getVideoCompleteTrackers() {
-        return getVideoTrackerByAttribute(VastElementAttributeValue.COMPLETE);
+        return getVideoTrackerByAttribute(COMPLETE);
     }
 
     String getClickThroughUrl() {
-        List<String> clickUrlWrapper = getStringDataAsList(VastElementName.CLICK_THROUGH);
+        List<String> clickUrlWrapper = XmlUtils.getStringDataAsList(mVastDoc, CLICK_THROUGH);
         return (clickUrlWrapper.size() > 0) ? clickUrlWrapper.get(0) : null;
     }
 
     List<String> getClickTrackers() {
-        return getStringDataAsList(VastElementName.CLICK_TRACKER);
+        return XmlUtils.getStringDataAsList(mVastDoc, CLICK_TRACKER);
     }
 
     String getMediaFileUrl() {
-        List<String> urlWrapper = getStringDataAsList(VastElementName.MEDIA_FILE);
+        List<String> urlWrapper = XmlUtils.getStringDataAsList(mVastDoc, MEDIA_FILE);
         return (urlWrapper.size() > 0) ? urlWrapper.get(0) : null;
     }
 
-    private List<String> getVideoTrackerByAttribute(VastElementAttributeValue attributeValue) {
-        return getStringDataAsList(VastElementName.VIDEO_TRACKER, VastElementAttributeName.EVENT, attributeValue);
+    List<MediaXmlManager> getMediaXmlManagers() {
+        final NodeList nodes = mVastDoc.getElementsByTagName(MEDIA_FILE);
+        final List<MediaXmlManager> mediaXmlManagers =
+                new ArrayList<MediaXmlManager>(nodes.getLength());
+        for (int i = 0; i < nodes.getLength(); ++i) {
+            mediaXmlManagers.add(new MediaXmlManager(nodes.item(i)));
+        }
+        return mediaXmlManagers;
     }
 
-    private List<String> getStringDataAsList(VastElementName elementName) {
-        return getStringDataAsList(elementName, null, null);
+    List<ImageCompanionAdXmlManager> getCompanionAdXmlManagers() {
+        final NodeList nodes = mVastDoc.getElementsByTagName(COMPANION);
+        final List<ImageCompanionAdXmlManager> imageCompanionAdXmlManagers =
+                new ArrayList<ImageCompanionAdXmlManager>(nodes.getLength());
+        for (int i = 0; i < nodes.getLength(); ++i) {
+            imageCompanionAdXmlManagers.add(new ImageCompanionAdXmlManager(nodes.item(i)));
+        }
+        return imageCompanionAdXmlManagers;
     }
 
-    private List<String> getStringDataAsList(VastElementName elementName, VastElementAttributeName attributeName, VastElementAttributeValue attributeValue) {
-        ArrayList<String> results = new ArrayList<String>();
-
-        if (mVastDoc == null) {
-            return results;
-        }
-
-        NodeList nodes = mVastDoc.getElementsByTagName(elementName.getName());
-
-        if (nodes == null) {
-            return results;
-        }
-
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Node node = nodes.item(i);
-
-            if (node != null && nodeMatchesFilter(node, attributeName, attributeValue)) {
-                // since we parsed with coalescing set to true, CDATA is added as the child of the element
-                Node textChild = node.getFirstChild();
-                if (textChild != null) {
-                    String textValue = textChild.getNodeValue();
-                    if (textValue != null) {
-                        results.add(textValue.trim());
-                    }
-                }
-            }
-        }
-
-        return results;
-    }
-
-    private boolean nodeMatchesFilter(Node node, VastElementAttributeName attributeName, VastElementAttributeValue attributeValue) {
-        if (attributeName == null || attributeValue == null) {
-            return true;
-        }
-
-        NamedNodeMap attrMap = node.getAttributes();
-        if (attrMap != null) {
-            Node attrNode = attrMap.getNamedItem(attributeName.getName());
-            if (attrNode != null && attributeValue.getValue().equals(attrNode.getNodeValue())) {
-                return true;
-            }
-        }
-
-        return false;
+    private List<String> getVideoTrackerByAttribute(final String attributeValue) {
+        return XmlUtils.getStringDataAsList(mVastDoc, VIDEO_TRACKER, EVENT, attributeValue);
     }
 }

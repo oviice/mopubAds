@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 
+import com.mopub.common.CacheService;
+import com.mopub.common.CacheServiceTest;
 import com.mopub.nativeads.test.support.SdkTestRunner;
 
 import org.junit.After;
@@ -132,7 +134,7 @@ public class ImageDiskTaskManagerTest {
     @Test
     public void execute_withPopulatedDiskCache_shouldReturnImagesInMap() throws Exception {
         CacheService.initializeCaches(context);
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
         CacheService.putToDiskCache(url1, imageData1.getBytes());
         CacheService.putToDiskCache(url2, imageData2.getBytes());
 
@@ -147,7 +149,7 @@ public class ImageDiskTaskManagerTest {
     @Test
     public void execute_withPartiallyPopulatedDiskCache_shouldReturnSomeImagesInMap() throws Exception {
         CacheService.initializeCaches(context);
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
         CacheService.putToDiskCache(url1, imageData1.getBytes());
 
         new ImageDiskTaskManager(list, imageTaskManagerListener).execute();

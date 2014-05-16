@@ -27,24 +27,11 @@ Integration instructions are available on the [wiki](https://github.com/mopub/mo
 
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for details.
 
-  - **Native Ads** public release; integration instructions and documentation available on the [GitHub wiki](https://github.com/mopub/mopub-android-sdk/wiki/Native-Ads-Integration)
-  - Changed minimum supported Android version to Froyo (Android 2.2, API level 8)
-  - Added support for Google Play Services advertising identifier
-  - Renamed the `com.mopub.mobileads.MraidBrowser` Activity to `com.mopub.common.MoPubBrowser`.
-       - **Important Note:** This change requires a modification to the `AndroidManifest`. The updated set of requisite activity permissions are as follows:
-      
-      	```      	      	
-    <activity android:name="com.mopub.common.MoPubBrowser"
-				android:configChanges="keyboardHidden|orientation"/>
-    <activity android:name="com.mopub.mobileads.MoPubActivity"
-            	android:configChanges="keyboardHidden|orientation"/>
-    <activity android:name="com.mopub.mobileads.MraidActivity"
-            	android:configChanges="keyboardHidden|orientation"/>
-	<activity android:name="com.mopub.mobileads.MraidVideoPlayerActivity"
-            	android:configChanges="keyboardHidden|orientation"/>
-		```  
-  - Upgraded the bundled `android-support-v4` library to r19.1.
-      - **Note for Maven users:** Newer versions of the `android-support-v4` artifact are unavailable on Maven central, so we have included a small script to update the version in your local artifact repository. Please navigate to the `mopub-sdk` directory, and run `scripts/mavenize_support_library`.
+  - Added custom events for Facebook ads. `FacebookBanner` and `FacebookInterstitial` can be found in the extras directory of the SDK (`/extras/src/com/mopub/mobileads`). For more information, please see the [help page for Facebook custom events](http://help.mopub.com/customer/portal/articles/1552301-how-to-integrate-facebook-audience-network-using-custom-events).
+  - Significant improvements to video ads
+    - Added overlay including a "Learn More" button, video length, and time left until the video may be skipped
+    - Added support for companion banners (shown upon video completion)
+  - Added Logcat warnings (and Toasts for debug builds) in cases where all necessary Activity permissions haven't been added to the `AndroidManifest`
 
 ## Requirements
 

@@ -1,185 +1,248 @@
 package com.mopub.mobileads.util.vast;
 
-import android.os.AsyncTask;
-import android.util.Log;
-
-import com.mopub.common.util.Strings;
-import com.mopub.mobileads.factories.HttpClientFactory;
-import com.mopub.mobileads.util.HttpClients;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
+import android.content.Context;
+import android.view.Display;
+import android.view.WindowManager;
+import com.mopub.common.CacheService;
+import com.mopub.common.util.AsyncTasks;
+import com.mopub.mobileads.VastVideoDownloadTask;
 
 import java.util.*;
 
-public class VastManager {
-    static final int MAX_TIMES_TO_FOLLOW_VAST_REDIRECT = 20; // more than reasonable number of nested VAST urls to follow
-    static final int VAST_REDIRECT_TIMEOUT_MILLISECONDS = 30 * 1000; // 30 seconds
+import static com.mopub.mobileads.VastVideoDownloadTask.VastVideoDownloadTaskListener;
+import static com.mopub.mobileads.util.vast.VastXmlManagerAggregator.VastXmlManagerAggregatorListener;
 
-    private List<String> mImpressionTrackers;
-    private List<String> mVideoStartTrackers;
-    private List<String> mVideoFirstQuartileTrackers;
-    private List<String> mVideoMidpointTrackers;
-    private List<String> mVideoThirdQuartileTrackers;
-    private List<String> mVideoCompleteTrackers;
-    private String mClickThroughUrl;
-    private List<String> mClickTrackers;
-    private String mMediaFileUrl;
-
-    private int mTimesFollowedVastRedirect;
-    private HttpClient mHttpClient;
-    private VastManagerListener mListener;
-
-    private ProcessVastBackgroundTask mVastBackgroundTask;
-
-    public VastManager() {
-        mImpressionTrackers = new ArrayList<String>();
-        mVideoStartTrackers = new ArrayList<String>();
-        mVideoFirstQuartileTrackers = new ArrayList<String>();
-        mVideoMidpointTrackers = new ArrayList<String>();
-        mVideoThirdQuartileTrackers = new ArrayList<String>();
-        mVideoCompleteTrackers = new ArrayList<String>();
-        mClickTrackers = new ArrayList<String>();
-
-        mHttpClient = HttpClientFactory.create(VAST_REDIRECT_TIMEOUT_MILLISECONDS);
+public class VastManager implements VastXmlManagerAggregatorListener {
+    public interface VastManagerListener {
+        public void onVastVideoConfigurationPrepared(final VastVideoConfiguration vastVideoConfiguration);
     }
 
-    public void processVast(String vastXml, VastManagerListener listener) {
-        if (mVastBackgroundTask == null) {
-            mListener = listener;
-            mVastBackgroundTask = new ProcessVastBackgroundTask();
-            mVastBackgroundTask.execute(vastXml);
+    private static final double ASPECT_RATIO_WEIGHT = 40;
+    private static final double AREA_WEIGHT = 60;
+    private static final List<String> VIDEO_MIME_TYPES =
+            Arrays.asList("video/mp4", "video/3gpp");
+    private static final List<String> COMPANION_IMAGE_MIME_TYPES =
+            Arrays.asList("image/jpeg", "image/png", "image/bmp", "image/gif");
+
+    private VastManagerListener mVastManagerListener;
+
+    private VastXmlManagerAggregator mVastXmlManagerAggregator;
+    private double mScreenAspectRatio;
+    private int mScreenArea;
+
+    public VastManager(final Context context) {
+        initializeScreenDimensions(context);
+    }
+
+    public void prepareVastVideoConfiguration(final String vastXml, final VastManagerListener vastManagerListener) {
+        if (mVastXmlManagerAggregator == null) {
+            mVastManagerListener = vastManagerListener;
+            mVastXmlManagerAggregator = new VastXmlManagerAggregator(this);
+            AsyncTasks.safeExecuteOnExecutor(mVastXmlManagerAggregator, vastXml);
         }
-    }
-
-    public List<String> getImpressionTrackers() {
-        return mImpressionTrackers;
-    }
-
-    public List<String> getVideoStartTrackers() {
-        return mVideoStartTrackers;
-    }
-
-    public List<String> getVideoFirstQuartileTrackers() {
-        return mVideoFirstQuartileTrackers;
-    }
-
-    public List<String> getVideoMidpointTrackers() {
-        return mVideoMidpointTrackers;
-    }
-
-    public List<String> getVideoThirdQuartileTrackers() {
-        return mVideoThirdQuartileTrackers;
-    }
-
-    public List<String> getVideoCompleteTrackers() {
-        return mVideoCompleteTrackers;
-    }
-
-    public String getClickThroughUrl() {
-        return mClickThroughUrl;
-    }
-
-    public List<String> getClickTrackers() {
-        return mClickTrackers;
-    }
-
-    public String getMediaFileUrl() {
-        return mMediaFileUrl;
     }
 
     public void cancel() {
-        if (mVastBackgroundTask != null) {
-            mVastBackgroundTask.cancel(true);
+        if (mVastXmlManagerAggregator != null) {
+            mVastXmlManagerAggregator.cancel(true);
+            mVastXmlManagerAggregator = null;
         }
     }
 
-    private void vastProcessComplete(boolean canceled) {
-        HttpClients.safeShutdown(mHttpClient);
-
-        mTimesFollowedVastRedirect = 0;
-        mVastBackgroundTask = null;
-
-        if (!canceled) {
-            mListener.onComplete(this);
+    @Override
+    public void onAggregationComplete(final List<VastXmlManager> vastXmlManagers) {
+        mVastXmlManagerAggregator = null;
+        if (vastXmlManagers == null) {
+            if (mVastManagerListener != null) {
+                mVastManagerListener.onVastVideoConfigurationPrepared(null);
+            }
+            return;
         }
+
+        final VastVideoConfiguration vastVideoConfiguration =
+                createVastVideoConfigurationFromXml(vastXmlManagers);
+
+        if (updateDiskMediaFileUrl(vastVideoConfiguration)) {
+            if (mVastManagerListener != null) {
+                mVastManagerListener.onVastVideoConfigurationPrepared(vastVideoConfiguration);
+            }
+            return;
+        }
+
+        final VastVideoDownloadTask vastVideoDownloadTask = new VastVideoDownloadTask(
+                new VastVideoDownloadTaskListener() {
+                    @Override
+                    public void onComplete(boolean success) {
+                        if (success && updateDiskMediaFileUrl(vastVideoConfiguration)) {
+                            if (mVastManagerListener != null) {
+                                mVastManagerListener.onVastVideoConfigurationPrepared(vastVideoConfiguration);
+                            }
+                        } else {
+                            if (mVastManagerListener != null) {
+                                mVastManagerListener.onVastVideoConfigurationPrepared(null);
+                            }
+                        }
+                    }
+                }
+        );
+
+        AsyncTasks.safeExecuteOnExecutor(
+                vastVideoDownloadTask,
+                vastVideoConfiguration.getNetworkMediaFileUrl()
+        );
     }
 
-    private void loadVastDataFromXml(VastXmlManager xmlManager) {
-        mImpressionTrackers.addAll(xmlManager.getImpressionTrackers());
-        mVideoStartTrackers.addAll(xmlManager.getVideoStartTrackers());
-        mVideoFirstQuartileTrackers.addAll(xmlManager.getVideoFirstQuartileTrackers());
-        mVideoMidpointTrackers.addAll(xmlManager.getVideoMidpointTrackers());
-        mVideoThirdQuartileTrackers.addAll(xmlManager.getVideoThirdQuartileTrackers());
-        mVideoCompleteTrackers.addAll(xmlManager.getVideoCompleteTrackers());
-        mClickTrackers.addAll(xmlManager.getClickTrackers());
-
-        if (mClickThroughUrl == null) {
-            mClickThroughUrl = xmlManager.getClickThroughUrl();
+    private boolean updateDiskMediaFileUrl(final VastVideoConfiguration vastVideoConfiguration) {
+        final String networkMediaFileUrl = vastVideoConfiguration.getNetworkMediaFileUrl();
+        if (CacheService.containsKeyDiskCache(networkMediaFileUrl)) {
+            final String filePathDiskCache = CacheService.getFilePathDiskCache(networkMediaFileUrl);
+            vastVideoConfiguration.setDiskMediaFileUrl(filePathDiskCache);
+            return true;
         }
-
-        if (mMediaFileUrl == null) {
-            mMediaFileUrl = xmlManager.getMediaFileUrl();
-        }
+        return false;
     }
 
-    private String processVastFollowingRedirect(String vastXml) throws Exception {
-        VastXmlManager xmlManager = new VastXmlManager();
-        xmlManager.parseVastXml(vastXml);
+    private void initializeScreenDimensions(final Context context) {
+        // This currently assumes that all vast videos will be played in landscape
+        final Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+        int x = display.getWidth();
+        int y = display.getHeight();
 
-        // add relevant vast data from this document
-        loadVastDataFromXml(xmlManager);
+        // For landscape, width is always greater than height
+        int screenWidth = Math.max(x, y);
+        int screenHeight = Math.min(x, y);
+        mScreenAspectRatio = (double) screenWidth / screenHeight;
+        mScreenArea = screenWidth * screenHeight;
+    }
 
-        String redirectUrl = xmlManager.getVastAdTagURI();
-        if (redirectUrl != null && mTimesFollowedVastRedirect < MAX_TIMES_TO_FOLLOW_VAST_REDIRECT) {
-            mTimesFollowedVastRedirect++;
+    private VastVideoConfiguration createVastVideoConfigurationFromXml(final List<VastXmlManager> xmlManagers) {
+        final VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
 
-            HttpGet httpget = new HttpGet(redirectUrl);
-            HttpResponse response = mHttpClient.execute(httpget);
-            HttpEntity entity = response.getEntity();
-            return (entity != null) ? Strings.fromStream(entity.getContent()) : null;
+        final List<VastXmlManager.MediaXmlManager> mediaXmlManagers = new ArrayList<VastXmlManager.MediaXmlManager>();
+        final List<VastXmlManager.ImageCompanionAdXmlManager> companionXmlManagers = new ArrayList<VastXmlManager.ImageCompanionAdXmlManager>();
+        for (VastXmlManager xmlManager : xmlManagers) {
+            vastVideoConfiguration.addImpressionTrackers(xmlManager.getImpressionTrackers());
+
+            vastVideoConfiguration.addStartTrackers(xmlManager.getVideoStartTrackers());
+            vastVideoConfiguration.addFirstQuartileTrackers(xmlManager.getVideoFirstQuartileTrackers());
+            vastVideoConfiguration.addMidpointTrackers(xmlManager.getVideoMidpointTrackers());
+            vastVideoConfiguration.addThirdQuartileTrackers(xmlManager.getVideoThirdQuartileTrackers());
+            vastVideoConfiguration.addCompleteTrackers(xmlManager.getVideoCompleteTrackers());
+
+            vastVideoConfiguration.addClickTrackers(xmlManager.getClickTrackers());
+
+            if (vastVideoConfiguration.getClickThroughUrl() == null) {
+                vastVideoConfiguration.setClickThroughUrl(xmlManager.getClickThroughUrl());
+            }
+
+            mediaXmlManagers.addAll(xmlManager.getMediaXmlManagers());
+            companionXmlManagers.addAll(xmlManager.getCompanionAdXmlManagers());
         }
 
+        vastVideoConfiguration.setNetworkMediaFileUrl(getBestMediaFileUrl(mediaXmlManagers));
+        vastVideoConfiguration.setVastCompanionAd(getBestCompanionAd(companionXmlManagers));
+
+        return vastVideoConfiguration;
+    }
+
+    String getBestMediaFileUrl(final List<VastXmlManager.MediaXmlManager> managers) {
+        final List<VastXmlManager.MediaXmlManager> mediaXmlManagers = new ArrayList<VastXmlManager.MediaXmlManager>(managers);
+        double bestMediaFitness = Double.POSITIVE_INFINITY;
+        String bestMediaFileUrl = null;
+
+        final Iterator<VastXmlManager.MediaXmlManager> xmlManagerIterator = mediaXmlManagers.iterator();
+        while (xmlManagerIterator.hasNext()) {
+            final VastXmlManager.MediaXmlManager mediaXmlManager = xmlManagerIterator.next();
+
+            final String mediaType = mediaXmlManager.getType();
+            final String mediaUrl = mediaXmlManager.getMediaUrl();
+            if (!VIDEO_MIME_TYPES.contains(mediaType) || mediaUrl == null) {
+                xmlManagerIterator.remove();
+                continue;
+            }
+
+            final Integer mediaWidth = mediaXmlManager.getWidth();
+            final Integer mediaHeight = mediaXmlManager.getHeight();
+            if (mediaWidth == null || mediaWidth <= 0 || mediaHeight == null || mediaHeight <= 0) {
+                continue;
+            }
+
+            final double mediaFitness = calculateFitness(mediaWidth, mediaHeight);
+            if (mediaFitness < bestMediaFitness) {
+                bestMediaFitness = mediaFitness;
+                bestMediaFileUrl = mediaUrl;
+            }
+        }
+
+        if (bestMediaFileUrl == null && !mediaXmlManagers.isEmpty()) {
+            bestMediaFileUrl = mediaXmlManagers.get(0).getMediaUrl();
+        }
+
+        return bestMediaFileUrl;
+    }
+
+    VastCompanionAd getBestCompanionAd(final List<VastXmlManager.ImageCompanionAdXmlManager> managers) {
+        final List<VastXmlManager.ImageCompanionAdXmlManager> companionXmlManagers =
+                new ArrayList<VastXmlManager.ImageCompanionAdXmlManager>(managers);
+        double bestCompanionFitness = Double.POSITIVE_INFINITY;
+        VastXmlManager.ImageCompanionAdXmlManager bestCompanionXmlManager = null;
+
+        final Iterator<VastXmlManager.ImageCompanionAdXmlManager> xmlManagerIterator = companionXmlManagers.iterator();
+        while (xmlManagerIterator.hasNext()) {
+            final VastXmlManager.ImageCompanionAdXmlManager companionXmlManager = xmlManagerIterator.next();
+
+            final String imageType = companionXmlManager.getType();
+            final String imageUrl = companionXmlManager.getImageUrl();
+            if (!COMPANION_IMAGE_MIME_TYPES.contains(imageType) || imageUrl == null) {
+                xmlManagerIterator.remove();
+                continue;
+            }
+
+            final Integer imageWidth = companionXmlManager.getWidth();
+            final Integer imageHeight = companionXmlManager.getHeight();
+            if (imageWidth == null || imageWidth <= 0 || imageHeight == null || imageHeight <= 0) {
+                continue;
+            }
+
+            final double companionFitness = calculateFitness(imageWidth, imageHeight);
+            if (companionFitness < bestCompanionFitness) {
+                bestCompanionFitness = companionFitness;
+                bestCompanionXmlManager = companionXmlManager;
+            }
+        }
+
+        if (bestCompanionXmlManager == null && !companionXmlManagers.isEmpty()) {
+            bestCompanionXmlManager = companionXmlManagers.get(0);
+        }
+
+        if (bestCompanionXmlManager != null) {
+            return new VastCompanionAd(
+                    bestCompanionXmlManager.getWidth(),
+                    bestCompanionXmlManager.getHeight(),
+                    bestCompanionXmlManager.getImageUrl(),
+                    bestCompanionXmlManager.getClickThroughUrl(),
+                    new ArrayList<String>(bestCompanionXmlManager.getClickTrackers())
+            );
+        }
         return null;
     }
 
-    public interface VastManagerListener {
-        public void onComplete(VastManager vastManager);
-    }
-
-    private class ProcessVastBackgroundTask extends AsyncTask<String, Void, Void> {
-        @Override
-        protected Void doInBackground(String... strings) {
-            try {
-                if (strings != null && strings.length > 0) {
-                    String vastXml = strings[0];
-
-                    while (vastXml != null && vastXml.length() > 0 && !isCancelled()) {
-                        vastXml = processVastFollowingRedirect(vastXml);
-                    }
-                }
-            } catch (Exception e) {
-                Log.d("MoPub", "Failed to parse VAST XML", e);
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            vastProcessComplete(false);
-        }
-
-        @Override
-        protected void onCancelled() {
-            vastProcessComplete(true);
-        }
+    private double calculateFitness(final int width, final int height) {
+        final double mediaAspectRatio = (double) width / height;
+        final int mediaArea = width * height;
+        final double aspectRatioRatio = mediaAspectRatio / mScreenAspectRatio;
+        final double areaRatio = (double) mediaArea / mScreenArea;
+        return ASPECT_RATIO_WEIGHT * Math.abs(Math.log(aspectRatioRatio))
+                + AREA_WEIGHT * Math.abs(Math.log(areaRatio));
     }
 
     @Deprecated // for testing
-    void setTimesFollowedVastRedirect(int timesFollowedVastRedirect) {
-        mTimesFollowedVastRedirect = timesFollowedVastRedirect;
+    int getScreenArea() {
+        return mScreenArea;
+    }
+
+    @Deprecated // for testing
+    double getScreenAspectRatio() {
+        return mScreenAspectRatio;
     }
 }

@@ -33,5 +33,5 @@
 package com.mopub.common;
 
 public class MoPub {
-    public static final String SDK_VERSION = "2.0.1";
+    public static final String SDK_VERSION = "2.1";
 }

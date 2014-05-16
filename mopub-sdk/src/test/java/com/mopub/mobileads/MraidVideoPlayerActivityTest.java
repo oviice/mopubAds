@@ -33,308 +33,198 @@
 package com.mopub.mobileads;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
-import android.media.MediaPlayer;
+import android.content.pm.ActivityInfo;
+import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.RelativeLayout;
-import android.widget.VideoView;
+import android.widget.ImageView;
+
+import com.mopub.common.MoPubBrowser;
 import com.mopub.mobileads.test.support.SdkTestRunner;
-import org.junit.After;
+import com.mopub.mobileads.util.vast.VastVideoConfiguration;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
-import org.robolectric.shadows.ShadowLog;
-import org.robolectric.shadows.ShadowVideoView;
+import org.robolectric.shadows.ShadowActivity;
 
-import java.util.*;
-
-import static com.mopub.mobileads.MraidVideoPlayerActivity.VIDEO_URL;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
-import static org.robolectric.Robolectric.buildActivity;
 import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(SdkTestRunner.class)
 public class MraidVideoPlayerActivityTest {
-    private ArrayList<String> videoStartTrackers;
-    private ArrayList<String> videoFirstQuartileTrackers;
-    private ArrayList<String> videoMidpointTrackers;
-    private ArrayList<String> videoThirdQuartileTrackers;
-    private ArrayList<String> videoCompleteTrackers;
-    private ArrayList<String> impressionTrackers;
-    private ArrayList<String> clickThroughTrackers;
-    private String videoUrl;
-    private String clickThroughUrl;
+    private static final String VAST = "vast";
+    private static final String MRAID = "mraid";
+
     private MraidVideoPlayerActivity subject;
-    private AdConfiguration adConfiguration;
     private long testBroadcastIdentifier;
-
-    public static void assertMraidVideoPlayerActivityStarted(String className, String expectedURI) {
-        Intent intent = Robolectric.getShadowApplication().getNextStartedActivity();
-        assertThat(intent.getComponent().getClassName()).isEqualTo(className);
-        assertThat(intent.getStringExtra(VIDEO_URL)).isEqualTo(expectedURI);
-        assertThat(intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isNotEqualTo(0);
-    }
-
-    public static void assertVastVideoPlayerActivityStarted(String className, String expectedURI) {
-        Intent intent = Robolectric.getShadowApplication().getNextStartedActivity();
-        assertThat(intent.getComponent().getClassName()).isEqualTo(className);
-        assertThat(intent.getStringExtra(VIDEO_URL)).isEqualTo(expectedURI);
-        assertThat(intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isNotEqualTo(0);
-    }
+    private Intent intent;
+    private Context context;
+    private BaseVideoViewController baseVideoViewController;
 
     @Before
     public void setup() {
-        videoStartTrackers = new ArrayList<String>();
-        videoFirstQuartileTrackers = new ArrayList<String>();
-        videoMidpointTrackers = new ArrayList<String>();
-        videoThirdQuartileTrackers = new ArrayList<String>();
-        videoCompleteTrackers = new ArrayList<String>();
-        impressionTrackers = new ArrayList<String>();
-        clickThroughTrackers = new ArrayList<String>();
-        videoUrl = "http://video";
-        clickThroughUrl = "clickThrough";
+        context = new Activity();
+        intent = new Intent(context, MraidVideoPlayerActivity.class);
 
-        testBroadcastIdentifier = 4321;
-        adConfiguration = mock(AdConfiguration.class, withSettings().serializable());
-        stub(adConfiguration.getBroadcastIdentifier()).toReturn(testBroadcastIdentifier);
+        testBroadcastIdentifier = 1001;
+        AdConfiguration adConfiguration = mock(AdConfiguration.class, withSettings().serializable());
+        when(adConfiguration.getBroadcastIdentifier()).thenReturn(testBroadcastIdentifier);
+        intent.putExtra(AdFetcher.AD_CONFIGURATION_KEY, adConfiguration);
+
+        baseVideoViewController = mock(BaseVideoViewController.class);
     }
 
-    @After
-    public void tearDown() {
+    @Test
+    public void onCreate_withVastExtraKey_shouldUseVastVideoViewController() throws Exception {
+        initializeSubjectForVast();
+
+        assertThat(subject.getBaseVideoViewController()).isInstanceOf(VastVideoViewController.class);
+    }
+
+    @Test
+    public void onCreate_withMraidExtraKey_shouldUseMraidVideoViewController() throws Exception {
+        initializeSubjectForMraid();
+
+        assertThat(subject.getBaseVideoViewController()).isInstanceOf(MraidVideoViewController.class);
+    }
+
+    @Ignore("pending: this is currently impossible to write")
+    @Test
+    public void onCreate_shouldForwardOnCreateToViewController() throws Exception {
+        initializeSubjectWithMockViewController();
 
     }
 
     @Test
-    public void startMraid_shouldStartVideoPlayer() throws Exception {
-        setUpMraidSubject();
+    public void onPause_shouldForwardOnPauseToViewController() throws Exception {
+        initializeSubjectWithMockViewController();
 
-        MraidVideoPlayerActivity.startMraid(new Activity(), "http://mraidVideo", adConfiguration);
+        subject.onPause();
 
-        assertMraidVideoPlayerActivityStarted("com.mopub.mobileads.MraidVideoPlayerActivity", "http://mraidVideo");
-    }
-
-    @Ignore("pending")
-    @Test
-    public void startVast_shouldStartVideoPlayer() throws Exception {
-        setUpVastSubject();
-
-        MraidVideoPlayerActivity.startVast(new Activity(),
-                videoUrl,
-                videoStartTrackers,
-                videoFirstQuartileTrackers,
-                videoMidpointTrackers,
-                videoThirdQuartileTrackers,
-                videoCompleteTrackers,
-                impressionTrackers,
-                clickThroughUrl,
-                clickThroughTrackers,
-                adConfiguration);
-
-        assertMraidVideoPlayerActivityStarted("com.mopub.mobileads.MraidVideoPlayerActivity", "http://vastVideo");
+        verify(baseVideoViewController).onPause();
     }
 
     @Test
-    public void startVast_WithAllTrackers_shouldStartVideoPlayerWithAllTrackers() throws Exception {
+    public void onResume_shouldForwardOnResumeToViewController() throws Exception {
+        initializeSubjectWithMockViewController();
 
+        subject.onResume();
+
+        verify(baseVideoViewController).onResume();
     }
 
     @Test
-    public void startVast_WithMissingTrackers_shouldStartVideoPlayerAndNotBlowUp() throws Exception {
+    public void onDestroy_shouldForwardOnDestroyToViewController() throws Exception {
+        initializeSubjectWithMockViewController();
 
+        subject.onDestroy();
+
+        verify(baseVideoViewController).onDestroy();
     }
 
     @Test
-    public void getAdView_withMraidVideoClassName_shouldCreateMraidVideoView() throws Exception {
+    public void onActivityResult_shouldForwardOnActivityResultToViewController() throws Exception {
+        initializeSubjectWithMockViewController();
 
-    }
-    @Test
-    public void getAdView_withVastVideoClassName_shouldCreateVastVideoView() throws Exception {
+        int expectedRequestCode = -100;
+        int expectedResultCode = 200;
+        Intent expectedData = new Intent("arbitrary_data");
+        subject.onActivityResult(expectedRequestCode, expectedResultCode, expectedData);
 
-    }
-
-    @Ignore("pending")
-    @Test
-    public void onCreate_shouldSetupVideoView() throws Exception {
-        VideoView videoView = findVideoView();
-        ShadowVideoView shadowVideoView = shadowOf(videoView);
-        assertThat(videoView).isNotNull();
-        assertThat(shadowVideoView.getVideoPath()).isEqualTo("http://video");
-        assertThat(shadowVideoView.getCurrentVideoState()).isEqualTo(ShadowVideoView.START);
-    }
-
-    @Ignore("pending")
-    @Test
-    public void onCreate_shouldCenterVideoView() throws Exception {
-        VideoView videoView = findVideoView();
-
-        RelativeLayout.LayoutParams videoLayout = (RelativeLayout.LayoutParams) videoView.getLayoutParams();
-        assertThat(videoLayout.getRules()[RelativeLayout.CENTER_IN_PARENT]).isNotEqualTo(0);
+        verify(baseVideoViewController).onActivityResult(
+                eq(expectedRequestCode),
+                eq(expectedResultCode),
+                eq(expectedData)
+        );
     }
 
     @Test
-    public void onCreate_shouldBroadcastInterstitialShow() throws Exception {
+    public void onSetContentView_shouldActuallySetContentView() throws Exception {
+        initializeSubjectWithMockViewController();
+        final View expectedView = new ImageView(context);
 
+        subject.onSetContentView(expectedView);
+
+        assertThat(shadowOf(subject).getContentView()).isEqualTo(expectedView);
     }
 
     @Test
-    public void onCreate_shouldHideInterstitialCloseButton() throws Exception {
+    public void onSetRequestedOrientation_shouldActuallySetRequestedOrientation() throws Exception {
+        initializeSubjectWithMockViewController();
 
+        subject.onSetRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+
+        assertThat(subject.getRequestedOrientation()).isEqualTo(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
     }
 
     @Test
-    public void onCreate_shouldStartVideoView() throws Exception {
+    public void onFinish_shouldActuallyCallFinish() throws Exception {
+        initializeSubjectWithMockViewController();
 
+        subject.onFinish();
+
+        assertThat(subject.isFinishing());
     }
 
     @Test
-    public void onResume_withMraidVideoView_shouldCallSuperOnResumeThenCallVideoViewOnResume() throws Exception {
+    public void onStartActivityForResult_shouldStartAnActivityWithRelevantRequestCodeAndExtras() throws Exception {
+        initializeSubjectWithMockViewController();
 
+        final Bundle expectedExtras = new Bundle();
+        expectedExtras.putString("hello", "goodbye");
+
+        subject.onStartActivityForResult(MoPubBrowser.class, 100, expectedExtras);
+
+        final ShadowActivity.IntentForResult intentForResult = shadowOf(subject).getNextStartedActivityForResult();
+
+        assertThat(intentForResult.intent.getComponent().getClassName()).isEqualTo("com.mopub.common.MoPubBrowser");
+        assertThat(intentForResult.intent.getExtras()).isEqualTo(expectedExtras);
+        assertThat(intentForResult.requestCode).isEqualTo(100);
     }
 
     @Test
-    public void onResume_withVastVideoView_shouldCallSuperOnResumeThenCallVideoViewOnResume() throws Exception {
+    public void onStartActivityForResult_withNullClass_shouldNotStartAnActivity() throws Exception {
+        initializeSubjectWithMockViewController();
 
+        subject.onStartActivityForResult(null, 100, new Bundle());
+
+        final ShadowActivity.IntentForResult intentForResult = shadowOf(subject).getNextStartedActivityForResult();
+        assertThat(intentForResult).isNull();
     }
 
-    @Test
-    public void onPause_withMraidVideoView_shouldCallVideoViewOnPauseThenCallSuperOnPause() throws Exception {
+    private void initializeSubjectForMraid() {
+        intent.putExtra(BaseVideoPlayerActivity.VIDEO_CLASS_EXTRAS_KEY, "mraid");
 
-    }
-
-    @Test
-    public void onPause_withVastVideoView_shouldCallVideoViewOnPauseThenCallSuperOnPause() throws Exception {
-
-    }
-
-    @Test
-    public void showCloseButton_shouldShowInterstitialCloseButton() throws Exception {
-
-    }
-
-    @Test
-    public void videoError_withShouldFinishTrue_shouldShowCloseButton_AndBroadcastInterstitialFail_AndFinishActivity() throws Exception {
-
-    }
-
-    @Test
-    public void videoError_withShouldFinishFalse_shouldShowCloseButton_AndBroadcastInterstitialFail_AndNotFinishActivity() throws Exception {
-
-    }
-
-    @Test
-    public void videoCompleted_withShouldFinishTrue_shouldShowCloseButton_AndFinishActivity() throws Exception {
-
-    }
-
-    @Test
-    public void videoCompleted_withShouldFinishFalse_shouldShowCloseButton_AndNotFinishActivity() throws Exception {
-
-    }
-
-    @Test
-    public void videoClicked_withShouldBroadcastInterstitialClicked() throws Exception {
-
-    }
-
-    @Ignore("pending")
-    @Test
-    public void whenVideoFinishes_shouldFinish() throws Exception {
-        VideoView videoView = findVideoView();
-        ShadowVideoView shadowVideoView = shadowOf(videoView);
-
-        shadowVideoView.getOnCompletionListener().onCompletion(null);
-
-        assertThat(shadowOf(subject).isFinishing()).isTrue();
-    }
-
-    @Ignore("pending")
-    @Test
-    public void shouldSetOnErrorListener() throws Exception {
-        VideoView videoView = findVideoView();
-        ShadowVideoView shadowVideoView = shadowOf(videoView);
-
-        assertThat(shadowVideoView.getOnErrorListener()).isNotNull();
-        assertThat(shadowVideoView.getOnErrorListener()).isInstanceOf(MediaPlayer.OnErrorListener.class);
-    }
-
-    @Ignore("pending")
-    @Test
-    public void whenOnErrorListenerIsCalled_shouldLogOneErrorMessage() throws Exception {
-//        VideoView videoView = findVideoView();
-//        ShadowVideoView shadowVideoView = shadowOf(videoView);
-//
-//        shadowVideoView.getOnErrorListener().onError(null, MediaPlayer.MEDIA_ERROR_UNKNOWN, MediaPlayer.MEDIA_ERROR_SERVER_DIED);
-//        assertThat(isOneErrorLogged()).isTrue();
-    }
-
-    @Ignore("pending")
-    @Test
-    public void whenOnErrorListenerIsCalled_shouldFireErrorEvent() throws Exception {
-//        MraidVideoPlayerActivity.startMraid(new Activity(), "http://video");
-//        VideoView videoView = findVideoView();
-//        ShadowVideoView shadowVideoView = shadowOf(videoView);
-//
-//        reset(mraidView);
-//        shadowVideoView.getOnErrorListener().onError(null, MediaPlayer.MEDIA_ERROR_UNKNOWN, MediaPlayer.MEDIA_ERROR_SERVER_DIED);
-//        Mockito.verify(mraidView).fireErrorEvent(eq(PLAY_VIDEO), any(String.class));
-    }
-
-    private void setUpMraidSubject() {
-        subject = buildActivity(MraidVideoPlayerActivity.class)
-                .withIntent(MraidVideoPlayerActivity.createIntentMraid(new Activity(), videoUrl, adConfiguration))
+        subject = Robolectric.buildActivity(MraidVideoPlayerActivity.class)
+                .withIntent(intent)
                 .create()
                 .get();
     }
 
-    private void setUpVastSubject() {
-        subject = buildActivity(MraidVideoPlayerActivity.class)
-                .withIntent(MraidVideoPlayerActivity.createIntentVast(new Activity(),
-                        videoUrl,
-                        videoStartTrackers,
-                        videoFirstQuartileTrackers,
-                        videoMidpointTrackers,
-                        videoThirdQuartileTrackers,
-                        videoCompleteTrackers,
-                        impressionTrackers,
-                        clickThroughUrl,
-                        clickThroughTrackers,
-                        adConfiguration))
+    private void initializeSubjectForVast() {
+        intent.putExtra(BaseVideoPlayerActivity.VIDEO_CLASS_EXTRAS_KEY, "vast");
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("video_path");
+        intent.putExtra(VastVideoViewController.VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        subject = Robolectric.buildActivity(MraidVideoPlayerActivity.class)
+                .withIntent(intent)
                 .create()
                 .get();
     }
 
-    private boolean isOneErrorLogged() {
-        List<ShadowLog.LogItem> logs = ShadowLog.getLogsForTag("VideoPlayerActivity");
-        if(logs == null || logs.size() < 1){
-            return false;
-        }
-        return logs.get(0).msg.startsWith("Error:");
-    }
+    private void initializeSubjectWithMockViewController() {
+        initializeSubjectForMraid();
 
-    private VideoView findVideoView() {
-        ViewGroup parentView = (ViewGroup) subject.findViewById(android.R.id.content);
-        return findVideoView(parentView);
-    }
-
-    // @phil, why did you write this? It looks like way more than we need.
-    // phil: it came to me in a vision. Besides now we can mess with the guts of this thing and still always be able to get the VideoView
-    private VideoView findVideoView(ViewGroup parentView) {
-        for (int index = 0; index < parentView.getChildCount(); index++) {
-            View childView = parentView.getChildAt(index);
-            if (childView instanceof VideoView) {
-                return (VideoView) childView;
-            }
-            if (childView instanceof ViewGroup) {
-                return findVideoView((ViewGroup) childView);
-            }
-        }
-
-        return null;
+        subject.setBaseVideoViewController(baseVideoViewController);
     }
 }

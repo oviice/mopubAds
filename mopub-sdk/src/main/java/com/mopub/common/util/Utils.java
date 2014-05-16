@@ -42,4 +42,8 @@ public class Utils {
             }
         }
     }
+
+    public static boolean bitMaskContainsFlag(final int bitMask, final int flag) {
+        return (bitMask & flag) != 0;
+    }
 }

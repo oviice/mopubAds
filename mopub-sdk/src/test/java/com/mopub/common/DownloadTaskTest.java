@@ -1,6 +1,4 @@
-package com.mopub.nativeads;
-
-import com.mopub.nativeads.test.support.SdkTestRunner;
+package com.mopub.common;
 
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -9,6 +7,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.tester.org.apache.http.FakeHttpLayer;
 
 import java.util.concurrent.Semaphore;
@@ -17,7 +16,7 @@ import static junit.framework.Assert.fail;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 
-@RunWith(SdkTestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class DownloadTaskTest {
 
     private DownloadTask mDownloadTask;

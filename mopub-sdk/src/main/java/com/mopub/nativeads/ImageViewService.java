@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.mopub.common.util.MoPubLog;
 import com.mopub.common.util.Utils;
 
 import java.lang.ref.WeakReference;
@@ -11,7 +12,6 @@ import java.util.Arrays;
 import java.util.Map;
 
 import static com.mopub.nativeads.ImageService.ImageServiceListener;
-import static com.mopub.nativeads.util.Utils.MoPubLog;
 
 class ImageViewService {
     // random large number so we hopefully don't collide with something a pub is using
@@ -65,7 +65,7 @@ class ImageViewService {
 
         @Override
         public void onFail() {
-            MoPubLog("Failed to load image for ImageView");
+            MoPubLog.d("Failed to load image for ImageView");
         }
     }
 

@@ -2,7 +2,11 @@ package com.mopub.nativeads;
 
 import android.graphics.Bitmap;
 
+import com.mopub.common.DownloadResponse;
+import com.mopub.common.DownloadTask;
+import com.mopub.common.HttpResponses;
 import com.mopub.common.util.AsyncTasks;
+import com.mopub.common.util.MoPubLog;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
@@ -12,8 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.mopub.nativeads.DownloadTask.DownloadTaskListener;
-import static com.mopub.nativeads.util.Utils.MoPubLog;
+import static com.mopub.common.DownloadTask.DownloadTaskListener;
+
 import static java.util.Map.Entry;
 
 class ImageDownloadTaskManager extends ImageTaskManager {
@@ -59,7 +63,7 @@ class ImageDownloadTaskManager extends ImageTaskManager {
         @Override
         public void onComplete(final String url, final DownloadResponse downloadResponse) {
             if (downloadResponse == null || downloadResponse.getStatusCode() != HttpStatus.SC_OK) {
-                MoPubLog("Failed to download image: " + url);
+                MoPubLog.d("Failed to download image: " + url);
                 failAllTasks();
                 return;
             }
@@ -67,12 +71,12 @@ class ImageDownloadTaskManager extends ImageTaskManager {
             final Bitmap bitmap = HttpResponses.asBitmap(downloadResponse);
 
             if (bitmap == null) {
-                MoPubLog("Failed to decode bitmap from response for image: " + url);
+                MoPubLog.d("Failed to decode bitmap from response for image: " + url);
                 failAllTasks();
                 return;
             }
 
-            MoPubLog("Successfully downloaded image: " + url);
+            MoPubLog.d("Successfully downloaded image: " + url);
             mImages.put(url, bitmap);
             if (mCompletedCount.incrementAndGet() == mSize) {
                 mImageTaskManagerListener.onSuccess(mImages);

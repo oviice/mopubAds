@@ -36,7 +36,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.Locale;
 
 public class HttpResponses {
     public static String extractHeader(HttpResponse response, ResponseHeader responseHeader) {

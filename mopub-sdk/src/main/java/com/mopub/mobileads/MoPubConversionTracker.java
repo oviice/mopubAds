@@ -35,12 +35,10 @@ package com.mopub.mobileads;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
-
 import com.mopub.common.BaseUrlGenerator;
 import com.mopub.common.GpsHelper;
 import com.mopub.common.SharedPreferencesHelper;
 import com.mopub.mobileads.factories.HttpClientFactory;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;

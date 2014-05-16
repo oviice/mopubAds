@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mopub.nativeads;
+package com.mopub.common;
 
 import java.io.Closeable;
 import java.io.File;

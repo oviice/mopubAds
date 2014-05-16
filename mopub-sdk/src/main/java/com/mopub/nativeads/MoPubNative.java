@@ -4,9 +4,14 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.view.View;
 
+import com.mopub.common.DownloadResponse;
+import com.mopub.common.DownloadTask;
 import com.mopub.common.GpsHelper;
+import com.mopub.common.HttpResponses;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.DeviceUtils;
+import com.mopub.common.util.ManifestUtils;
+import com.mopub.common.util.MoPubLog;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
@@ -17,6 +22,7 @@ import java.util.Map;
 
 import static com.mopub.common.GpsHelper.GpsHelperListener;
 import static com.mopub.common.GpsHelper.asyncFetchAdvertisingInfo;
+
 import static com.mopub.nativeads.MoPubNative.MoPubNativeListener.EMPTY_MOPUB_NATIVE_LISTENER;
 import static com.mopub.nativeads.NativeErrorCode.CONNECTION_ERROR;
 import static com.mopub.nativeads.NativeErrorCode.EMPTY_AD_RESPONSE;
@@ -26,7 +32,6 @@ import static com.mopub.nativeads.NativeErrorCode.INVALID_REQUEST_URL;
 import static com.mopub.nativeads.NativeErrorCode.SERVER_ERROR_RESPONSE_CODE;
 import static com.mopub.nativeads.NativeErrorCode.UNEXPECTED_RESPONSE_CODE;
 import static com.mopub.nativeads.NativeErrorCode.UNSPECIFIED;
-import static com.mopub.nativeads.util.Utils.MoPubLog;
 
 public final class MoPubNative {
     public interface MoPubNativeListener {
@@ -58,6 +63,8 @@ public final class MoPubNative {
         } else if (moPubNativeListener == null) {
             throw new IllegalArgumentException("MoPubNativeListener may not be null.");
         }
+
+        ManifestUtils.checkNativeActivitiesDeclared(context);
 
         mContext = context.getApplicationContext();
         mAdUnitId = adUnitId;
@@ -101,7 +108,7 @@ public final class MoPubNative {
                 .generateUrlString(Constants.NATIVE_HOST);
 
         if (endpointUrl != null) {
-            MoPubLog("Loading ad from: " + endpointUrl);
+            MoPubLog.d("Loading ad from: " + endpointUrl);
         }
 
         final HttpGet httpGet;

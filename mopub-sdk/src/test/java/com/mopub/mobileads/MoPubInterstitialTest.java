@@ -33,8 +33,6 @@
 package com.mopub.mobileads;
 
 import android.app.Activity;
-
-import com.mopub.common.LocationService;
 import com.mopub.mobileads.test.support.TestAdViewControllerFactory;
 import com.mopub.mobileads.test.support.TestCustomEventInterstitialAdapterFactory;
 import org.junit.Before;
@@ -44,7 +42,7 @@ import org.junit.runner.RunWith;
 import java.math.BigDecimal;
 import java.util.*;
 
-import static com.mopub.common.LocationService.*;
+import static com.mopub.common.LocationService.LocationAwareness;
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;
 import static com.mopub.mobileads.MoPubErrorCode.CANCELLED;
 import static com.mopub.mobileads.MoPubErrorCode.INTERNAL_ERROR;

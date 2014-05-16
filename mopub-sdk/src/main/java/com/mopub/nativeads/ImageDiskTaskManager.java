@@ -1,10 +1,11 @@
 package com.mopub.nativeads;
 
 import android.graphics.Bitmap;
+import com.mopub.common.CacheService;
 
-import java.util.List;
+import java.util.*;
 
-import static com.mopub.nativeads.CacheService.DiskLruCacheGetListener;
+import static com.mopub.common.CacheService.DiskLruCacheGetListener;
 
 class ImageDiskTaskManager extends ImageTaskManager {
     private final List<String> mUrls;
@@ -29,7 +30,6 @@ class ImageDiskTaskManager extends ImageTaskManager {
 
     void failAllTasks() {
         if (mFailed.compareAndSet(false, true)) {
-            // See ImageDownloadTaskManager for an example
             mImageTaskManagerListener.onFail();
         }
     }

@@ -1,7 +1,6 @@
 package com.mopub.mobileads.util.vast;
 
 import com.mopub.mobileads.test.support.SdkTestRunner;
-import com.mopub.mobileads.util.vast.VastXmlManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -133,8 +132,96 @@ public class VastXmlManagerTest {
             "                                </MediaFiles>" +
             "                            </Linear>" +
             "                        </Creative>" +
-            "                        <Creative sequence=\"1\" AdID=\"\">" +
-            "                            <CompanionAds></CompanionAds>" +
+            "                        <Creative AdID=\"601364-Companion\">" +
+            "                            <CompanionAds>" +
+            "                               <Companion height=\"90\" width=\"728\">" +
+            "                                   <StaticResource creativeType=\"image/jpeg\">http://demo.tremormedia.com/proddev/vast/728x90_banner1.jpg</StaticResource>" +
+            "                                   <CompanionClickThrough>http://www.tremormedia.com</CompanionClickThrough>" +
+            "                                   <BADTrackingEvents>" +
+            "                                       <Tracking event=\"creativeView\">http://myTrackingURL/firstCompanionCreativeView</Tracking>" +
+            "                                       <Tracking event=\"creativeView\">http://myTrackingURL/secondCompanionCreativeView</Tracking>" +
+            "                                   </BADTrackingEvents>" +
+            "                               </Companion>" +
+            "                               <Companion id=\"valid\" height=\"250\" width=\"300\">" +
+            "                                   <StaticResource creativeType=\"image/png\">http://demo.tremormedia.com/proddev/vast/Blistex1.png</StaticResource>" +
+            "                                   <TrackingEvents>" +
+            "                                       <Tracking event=\"creativeView\">http://myTrackingURL/firstCompanionCreativeView</Tracking>" +
+            "                                       <Tracking event=\"creativeView\">http://myTrackingURL/secondCompanionCreativeView</Tracking>" +
+            "                                   </TrackingEvents>" +
+            "                                   <CompanionClickThrough>http://www.tremormedia.com</CompanionClickThrough>" +
+            "                               </Companion>" +
+            "                               <Companion height=\"789\" width=\"456\">" +
+            "                                   <StaticResource creativeType=\"image/bmp\">" +
+            "                                       <![CDATA[" +
+            "                                           http://cdn.liverail.com/adasset/229/7969/300x250.bmp" +
+            "                                       ]]>" +
+            "                                   </StaticResource>" +
+            "                                   <TrackingEvents>" +
+            "                                       <Tracking event=\"creativeView\">" +
+            "                                           <![CDATA[" +
+            "                                               http://trackingUrl1.com/" +
+            "                                           ]]>" +
+            "                                       </Tracking>" +
+            "                                   </TrackingEvents>" +
+            "                                   <CompanionClickThrough>" +
+            "                                       <![CDATA[" +
+            "                                           http://clickThroughUrl1.com/" +
+            "                                       ]]>" +
+            "                                   </CompanionClickThrough>" +
+            "                               </Companion>" +
+            "                               <Companion height=\"789\" width=\"1011\">" +
+            "                                   <StaticResource creativeType=\"image/gif\">" +
+            "                                       <![CDATA[" +
+            "                                           http://cdn.liverail.com/adasset/229/7969/300x250.gif" +
+            "                                       ]]>" +
+            "                                   </StaticResource>" +
+            "                                   <CompanionClickThrough>" +
+            "                                       <![CDATA[" +
+            "                                           http://clickThroughUrl2.com/" +
+            "                                       ]]>" +
+            "                                   </CompanionClickThrough>" +
+            "                               </Companion>" +
+            "                               <Companion width=\"300\" height=\"60\">" +
+            "                                   <StaticResource creativeType=\"application/x-shockwave-flash\">" +
+            "                                       <![CDATA[" +
+            "                                           http://cdn.liverail.com/adasset4/1331/229/7969/5122396e510b80db6b5ef4013ddabe90.swf" +
+            "                                       ]]>" +
+            "                                   </StaticResource>" +
+            "                                   <TrackingEvents>" +
+            "                                       <Tracking event=\"creativeView\">" +
+            "                                           <![CDATA[" +
+            "                                               http://trackingUrl2.com/" +
+            "                                           ]]>" +
+            "                                       </Tracking>" +
+            "                                   </TrackingEvents>" +
+            "                                   <CompanionClickThrough>" +
+            "                                       <![CDATA[" +
+            "                                           http://clickThroughUrl3.com/" +
+            "                                       ]]>" +
+            "                                   </CompanionClickThrough>" +
+            "                               </Companion>" +
+            "                               <Companion id=\"valid\" height=\"249\" width=\"299\">" +
+            "                                   <BADStaticResource creativeType=\"image/jpeg\">http://demo.tremormedia.com/proddev/vast/Blistex1.jpg</BADStaticResource>" +
+            "                                   <TrackingEvents>" +
+            "                                           <Tracking event=\"creativeView\">http://myTrackingURL/firstCompanionCreativeView</Tracking>" +
+            "                                           <Tracking event=\"creativeView\">http://myTrackingURL/secondCompanionCreativeView</Tracking>" +
+            "                                           <BADTracking event=\"creativeView\">http://myTrackingURL/thirdCompanionCreativeView</BADTracking>" +
+            "                                           <Tracking BADevent=\"creativeView\">http://myTrackingURL/fourthCompanionCreativeView</Tracking>" +
+            "                                           <Tracking event=\"BADcreativeView\">http://myTrackingURL/fifthCompanionCreativeView</Tracking>" +
+            "                                   </TrackingEvents>" +
+            "                                   <BADCompanionClickThrough>http://www.tremormedia.com</BADCompanionClickThrough>" +
+            "                               </Companion>" +
+            "                               <Companion width=\"9000\">" +
+            "                                   <TrackingEvents>" +
+            "                                       <ThisWillNotBeFound>" +
+            "                                           <Tracking event=\"creativeView\">http://myTrackingURL/firstCompanionCreativeView</Tracking>" +
+            "                                           <Tracking event=\"creativeView\">http://myTrackingURL/secondCompanionCreativeView</Tracking>" +
+            "                                       </ThisWillNotBeFound>" +
+            "                                   </TrackingEvents>" +
+            "                               </Companion>" +
+            "                               <BADCompanion>" +
+            "                               </BADCompanion>" +
+            "                            </CompanionAds>" +
             "                        </Creative>" +
             "                    </Creatives>" +
             "                    <Extensions>" +
@@ -291,6 +378,63 @@ public class VastXmlManagerTest {
 
         assertThat(tracker1).isEqualTo("http://ad.doubleclick.net/click%3Bh%3Dv8/3e1b/3/0/%2a/z%3B223626102%3B0-0%3B0%3B47414672%3B255-0/0%3B30477563/30495440/1%3B%3B%7Eaopt%3D0/0/ff/0%3B%7Esscs%3D%3fhttp://s0.2mdn.net/dot.gif");
         assertThat(tracker2).isEqualTo("http://ad.doubleclick.net/clk;212442087;33815766;i?http://www.google.com/support/richmedia");
+    }
+
+    @Test
+    public void getCompanionAdXmlManagers_shouldReturnListOfPopulatedCompanionAdXmlManagers() throws Exception {
+        List<VastXmlManager.ImageCompanionAdXmlManager> imageCompanionAdXmlManagers = mXmlManager.getCompanionAdXmlManagers();
+        assertThat(imageCompanionAdXmlManagers.size()).isEqualTo(7);
+
+        assertThat(imageCompanionAdXmlManagers.get(0).getWidth()).isEqualTo(728);
+        assertThat(imageCompanionAdXmlManagers.get(0).getHeight()).isEqualTo(90);
+        assertThat(imageCompanionAdXmlManagers.get(0).getType()).isEqualTo("image/jpeg");
+        assertThat(imageCompanionAdXmlManagers.get(0).getImageUrl()).isEqualTo("http://demo.tremormedia.com/proddev/vast/728x90_banner1.jpg");
+        assertThat(imageCompanionAdXmlManagers.get(0).getClickThroughUrl()).isEqualTo("http://www.tremormedia.com");
+        assertThat(imageCompanionAdXmlManagers.get(0).getClickTrackers()).isEmpty();
+
+        assertThat(imageCompanionAdXmlManagers.get(1).getWidth()).isEqualTo(300);
+        assertThat(imageCompanionAdXmlManagers.get(1).getHeight()).isEqualTo(250);
+        assertThat(imageCompanionAdXmlManagers.get(1).getType()).isEqualTo("image/png");
+        assertThat(imageCompanionAdXmlManagers.get(1).getImageUrl()).isEqualTo("http://demo.tremormedia.com/proddev/vast/Blistex1.png");
+        assertThat(imageCompanionAdXmlManagers.get(1).getClickThroughUrl()).isEqualTo("http://www.tremormedia.com");
+        assertThat(imageCompanionAdXmlManagers.get(1).getClickTrackers())
+                .containsOnly("http://myTrackingURL/firstCompanionCreativeView", "http://myTrackingURL/secondCompanionCreativeView");
+
+        assertThat(imageCompanionAdXmlManagers.get(2).getWidth()).isEqualTo(456);
+        assertThat(imageCompanionAdXmlManagers.get(2).getHeight()).isEqualTo(789);
+        assertThat(imageCompanionAdXmlManagers.get(2).getType()).isEqualTo("image/bmp");
+        assertThat(imageCompanionAdXmlManagers.get(2).getImageUrl()).isEqualTo("http://cdn.liverail.com/adasset/229/7969/300x250.bmp");
+        assertThat(imageCompanionAdXmlManagers.get(2).getClickThroughUrl()).isEqualTo("http://clickThroughUrl1.com/");
+        assertThat(imageCompanionAdXmlManagers.get(2).getClickTrackers()).containsOnly("http://trackingUrl1.com/");
+
+        assertThat(imageCompanionAdXmlManagers.get(3).getWidth()).isEqualTo(1011);
+        assertThat(imageCompanionAdXmlManagers.get(3).getHeight()).isEqualTo(789);
+        assertThat(imageCompanionAdXmlManagers.get(3).getType()).isEqualTo("image/gif");
+        assertThat(imageCompanionAdXmlManagers.get(3).getImageUrl()).isEqualTo("http://cdn.liverail.com/adasset/229/7969/300x250.gif");
+        assertThat(imageCompanionAdXmlManagers.get(3).getClickThroughUrl()).isEqualTo("http://clickThroughUrl2.com/");
+        assertThat(imageCompanionAdXmlManagers.get(3).getClickTrackers()).isEmpty();
+
+        assertThat(imageCompanionAdXmlManagers.get(4).getWidth()).isEqualTo(300);
+        assertThat(imageCompanionAdXmlManagers.get(4).getHeight()).isEqualTo(60);
+        assertThat(imageCompanionAdXmlManagers.get(4).getType()).isEqualTo("application/x-shockwave-flash");
+        assertThat(imageCompanionAdXmlManagers.get(4).getImageUrl()).isEqualTo("http://cdn.liverail.com/adasset4/1331/229/7969/5122396e510b80db6b5ef4013ddabe90.swf");
+        assertThat(imageCompanionAdXmlManagers.get(4).getClickThroughUrl()).isEqualTo("http://clickThroughUrl3.com/");
+        assertThat(imageCompanionAdXmlManagers.get(4).getClickTrackers()).containsOnly("http://trackingUrl2.com/");
+
+        assertThat(imageCompanionAdXmlManagers.get(5).getWidth()).isEqualTo(299);
+        assertThat(imageCompanionAdXmlManagers.get(5).getHeight()).isEqualTo(249);
+        assertThat(imageCompanionAdXmlManagers.get(5).getType()).isNull();
+        assertThat(imageCompanionAdXmlManagers.get(5).getImageUrl()).isNull();
+        assertThat(imageCompanionAdXmlManagers.get(5).getClickThroughUrl()).isNull();
+        assertThat(imageCompanionAdXmlManagers.get(5).getClickTrackers())
+                .containsOnly("http://myTrackingURL/firstCompanionCreativeView", "http://myTrackingURL/secondCompanionCreativeView");
+
+        assertThat(imageCompanionAdXmlManagers.get(6).getWidth()).isEqualTo(9000);
+        assertThat(imageCompanionAdXmlManagers.get(6).getHeight()).isNull();
+        assertThat(imageCompanionAdXmlManagers.get(6).getType()).isNull();
+        assertThat(imageCompanionAdXmlManagers.get(6).getImageUrl()).isNull();
+        assertThat(imageCompanionAdXmlManagers.get(6).getClickThroughUrl()).isNull();
+        assertThat(imageCompanionAdXmlManagers.get(6).getClickTrackers()).isEmpty();
     }
 
     @Test

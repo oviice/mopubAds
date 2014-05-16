@@ -21,7 +21,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.mopub.nativeads.util.Utils;
+import com.mopub.common.util.MoPubLog;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
@@ -46,7 +46,7 @@ public class MoPubBrowser extends Activity {
     private ImageButton mCloseButton;
 
     public static void open(final Context context, final String url) {
-        Utils.MoPubLog("Opening url in MoPubBrowser: " + url);
+        MoPubLog.d("Opening url in MoPubBrowser: " + url);
         final Intent intent = new Intent(context, MoPubBrowser.class);
         intent.putExtra(DESTINATION_URL_KEY, url);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -56,6 +56,8 @@ public class MoPubBrowser extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setResult(Activity.RESULT_OK);
 
         getWindow().requestFeature(Window.FEATURE_PROGRESS);
         getWindow().setFeatureInt(Window.FEATURE_PROGRESS, Window.PROGRESS_VISIBILITY_ON);

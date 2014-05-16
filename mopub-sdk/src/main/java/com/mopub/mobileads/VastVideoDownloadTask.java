@@ -32,114 +32,77 @@
 
 package com.mopub.mobileads;
 
+import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
-import android.util.Log;
 
-import com.mopub.common.util.Streams;
-import com.mopub.mobileads.factories.HttpClientFactory;
-import com.mopub.mobileads.util.HttpClients;
+import com.mopub.common.CacheService;
+import com.mopub.common.HttpClient;
+import com.mopub.common.util.MoPubLog;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class VastVideoDownloadTask extends AsyncTask<String, Void, Boolean> {
-    private static final String TEMP_FILE_PREFIX = "mopub-vast";
-    private static final long MAX_TEMP_FILE_LENGTH = 25 * 1000 * 1000;
-    private static final int HTTP_CLIENT_TIMEOUT = 10 * 1000;
-    private final DefaultHttpClient mHttpClient;
+    private static final int MAX_VIDEO_SIZE = 25 * 1024 * 1024; // 25 MiB
 
-    public interface OnDownloadCompleteListener {
-        public void onDownloadSuccess();
-        public void onDownloadFailed();
+    public interface VastVideoDownloadTaskListener {
+        public void onComplete(boolean success);
     }
 
-    private final DiskLruCache mDiskLruCache;
-    private final OnDownloadCompleteListener mOnDownloadCompleteListener;
+    private final VastVideoDownloadTaskListener mVastVideoDownloadTaskListener;
 
-    public VastVideoDownloadTask(OnDownloadCompleteListener listener, DiskLruCache diskLruCache) {
-        mOnDownloadCompleteListener = listener;
-        mDiskLruCache = diskLruCache;
-        mHttpClient = HttpClientFactory.create(HTTP_CLIENT_TIMEOUT);
+    public VastVideoDownloadTask(final VastVideoDownloadTaskListener listener) {
+        mVastVideoDownloadTaskListener = listener;
     }
 
     @Override
-    protected Boolean doInBackground(String... params) {
+    protected Boolean doInBackground(final String... params) {
         if (params == null || params[0] == null) {
             return false;
         }
 
-        return downloadToCache(params[0]);
+        final String videoUrl = params[0];
+        AndroidHttpClient httpClient = null;
+        try {
+            httpClient = HttpClient.getHttpClient();
+            final HttpGet httpget = new HttpGet(videoUrl);
+            final HttpResponse response = httpClient.execute(httpget);
+
+            if (response == null || response.getEntity() == null) {
+                throw new IOException("Obtained null response from video url: " + videoUrl);
+            }
+
+            if (response.getEntity().getContentLength() > MAX_VIDEO_SIZE) {
+                throw new IOException("Video exceeded max download size");
+            }
+
+            final InputStream inputStream = new BufferedInputStream(response.getEntity().getContent());
+            final boolean diskPutResult = CacheService.putToDiskCache(videoUrl, inputStream);
+            inputStream.close();
+            return diskPutResult;
+        } catch (Exception e) {
+            MoPubLog.d("Failed to download video: " + e.getMessage());
+            return false;
+        } finally {
+            if (httpClient != null) {
+                httpClient.close();
+            }
+        }
     }
 
     @Override
-    protected void onPostExecute(Boolean success) {
-        if (success) {
-            if (mOnDownloadCompleteListener != null) {
-                mOnDownloadCompleteListener.onDownloadSuccess();
-            }
-        } else {
-            if (mOnDownloadCompleteListener != null) {
-                mOnDownloadCompleteListener.onDownloadFailed();
-            }
-        }
+    protected void onCancelled() {
+        onPostExecute(false);
     }
 
-    Boolean downloadToCache(String videoUrl) {
-        boolean savedSuccessfully = false;
-
-        try {
-            InputStream inputStream = connectToUrl(videoUrl);
-            File tempFile = copyInputStreamToTempFile(inputStream);
-            savedSuccessfully = copyTempFileIntoCache(videoUrl, tempFile);
-            tempFile.delete();
-        } catch (Exception e) {
-            Log.d("MoPub", "Failed to download video.");
-        } finally {
-            HttpClients.safeShutdown(mHttpClient);
+    @Override
+    protected void onPostExecute(final Boolean success) {
+        if (mVastVideoDownloadTaskListener != null) {
+            mVastVideoDownloadTaskListener.onComplete(success);
         }
-
-        return savedSuccessfully;
-    }
-
-    InputStream connectToUrl(String videoUrl) throws IOException {
-        if (videoUrl == null) {
-            throw new IOException("Unable to connect to null url.");
-        }
-
-        HttpGet httpget = new HttpGet(videoUrl);
-        HttpResponse response = mHttpClient.execute(httpget);
-
-        if (response == null || response.getEntity() == null) {
-            throw new IOException("Obtained null response from video url: " + videoUrl);
-        }
-
-        return response.getEntity().getContent();
-    }
-
-    File copyInputStreamToTempFile(InputStream inputStream) throws IOException {
-        File tempFile = File.createTempFile(TEMP_FILE_PREFIX, null, mDiskLruCache.getCacheDirectory());
-        OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(tempFile));
-
-        try {
-            Streams.copyContent(inputStream, outputStream, MAX_TEMP_FILE_LENGTH);
-        } catch (IOException exception) {
-            tempFile.delete();
-            throw exception;
-        } finally {
-            Streams.closeStream(inputStream);
-            Streams.closeStream(outputStream);
-        }
-
-        return tempFile;
-    }
-
-    boolean copyTempFileIntoCache(String videoUrl, File tempFile) throws FileNotFoundException {
-        InputStream temporaryVideoStream = new BufferedInputStream(new FileInputStream(tempFile));
-        boolean savedSuccessfully = mDiskLruCache.putStream(videoUrl, temporaryVideoStream);
-        Streams.closeStream(temporaryVideoStream);
-        return savedSuccessfully;
     }
 }

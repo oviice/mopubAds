@@ -2,6 +2,7 @@ package com.mopub.nativeads;
 
 import android.os.AsyncTask;
 
+import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.IntentUtils;
 
 import java.io.IOException;
@@ -17,6 +18,11 @@ class UrlResolutionTask extends AsyncTask<String, Void, String> {
     }
 
     private final UrlResolutionListener mListener;
+
+    public static void getResolvedUrl(final String urlString, final UrlResolutionListener listener) {
+        final UrlResolutionTask urlResolutionTask = new UrlResolutionTask(listener);
+        AsyncTasks.safeExecuteOnExecutor(urlResolutionTask, urlString);
+    }
 
     UrlResolutionTask(UrlResolutionListener listener) {
         mListener = listener;

@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.mopub.common.MoPubBrowser;
+import com.mopub.common.util.MoPubLog;
 
 import java.lang.ref.SoftReference;
 import java.util.Arrays;
@@ -17,12 +18,12 @@ import java.util.Iterator;
 import static android.view.View.GONE;
 import static android.view.View.OnClickListener;
 import static android.view.View.VISIBLE;
+import static com.mopub.common.HttpClient.makeTrackingHttpRequest;
 import static com.mopub.common.util.IntentUtils.deviceCanHandleIntent;
 import static com.mopub.common.util.IntentUtils.isDeepLink;
+
 import static com.mopub.nativeads.MoPubNative.MoPubNativeListener;
-import static com.mopub.nativeads.NativeHttpClient.makeTrackingHttpRequest;
 import static com.mopub.nativeads.UrlResolutionTask.UrlResolutionListener;
-import static com.mopub.nativeads.util.Utils.MoPubLog;
 
 class NativeAdViewHelper {
     private NativeAdViewHelper() {}
@@ -35,7 +36,7 @@ class NativeAdViewHelper {
                           final MoPubNativeListener moPubNativeListener) {
 
         if (viewBinder == null) {
-            MoPubLog("ViewBinder is null, returning empty view.");
+            MoPubLog.d("ViewBinder is null, returning empty view.");
             return new View(context);
         }
 
@@ -51,13 +52,13 @@ class NativeAdViewHelper {
 
         if (nativeResponse == null) {
             // If we don't have content for the view, then hide the view for now
-            MoPubLog("NativeResponse is null, returning hidden view.");
+            MoPubLog.d("NativeResponse is null, returning hidden view.");
             convertView.setVisibility(GONE);
         } else if (nativeResponse.isDestroyed()) {
-            MoPubLog("NativeResponse is destroyed, returning hidden view.");
+            MoPubLog.d("NativeResponse is destroyed, returning hidden view.");
             convertView.setVisibility(GONE);
         } else if (nativeViewHolder == null) {
-            MoPubLog("Could not create NativeViewHolder, returning hidden view.");
+            MoPubLog.d("Could not create NativeViewHolder, returning hidden view.");
             convertView.setVisibility(GONE);
         } else {
             populateConvertViewSubViews(convertView, nativeViewHolder, nativeResponse, viewBinder);
@@ -169,7 +170,7 @@ class NativeAdViewHelper {
                         mMoPubNativeListener,
                         view
                 );
-                NativeHttpClient.getResolvedUrl(urlIterator.next(), urlResolutionListener);
+                UrlResolutionTask.getResolvedUrl(urlIterator.next(), urlResolutionListener);
             }
         }
     }
@@ -207,7 +208,7 @@ class NativeAdViewHelper {
                     mContext.startActivity(intent);
                 } else {
                     if (mUrlIterator.hasNext()) {
-                        NativeHttpClient.getResolvedUrl(mUrlIterator.next(), this);
+                        UrlResolutionTask.getResolvedUrl(mUrlIterator.next(), this);
                     } else {
                         mMoPubNativeListener.onNativeClick(mView.get());
                         MoPubBrowser.open(mContext, result);
@@ -225,7 +226,7 @@ class NativeAdViewHelper {
 
         @Override
         public void onFailure() {
-            MoPubLog("Failed to resolve URL for click.");
+            MoPubLog.d("Failed to resolve URL for click.");
             if (mSpinningProgressView.get() != null) {
                 mSpinningProgressView.get().removeFromRoot();
             }

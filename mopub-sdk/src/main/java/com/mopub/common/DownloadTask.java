@@ -1,22 +1,22 @@
-package com.mopub.nativeads;
+package com.mopub.common;
 
 import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
 
+import com.mopub.common.util.MoPubLog;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 
-import static com.mopub.nativeads.util.Utils.MoPubLog;
-
-class DownloadTask extends AsyncTask<HttpUriRequest, Void, DownloadResponse> {
+public class DownloadTask extends AsyncTask<HttpUriRequest, Void, DownloadResponse> {
     private final DownloadTaskListener mDownloadTaskListener;
     private String mUrl;
 
-    interface DownloadTaskListener {
+    public static interface DownloadTaskListener {
         abstract void onComplete(String url, DownloadResponse downloadResponse);
     }
 
-    DownloadTask(final DownloadTaskListener downloadTaskListener) throws IllegalArgumentException {
+    public DownloadTask(final DownloadTaskListener downloadTaskListener) throws IllegalArgumentException {
         if (downloadTaskListener == null) {
             throw new IllegalArgumentException("DownloadTaskListener must not be null.");
         }
@@ -27,23 +27,26 @@ class DownloadTask extends AsyncTask<HttpUriRequest, Void, DownloadResponse> {
     @Override
     protected DownloadResponse doInBackground(final HttpUriRequest... httpUriRequests) {
         if (httpUriRequests == null || httpUriRequests.length == 0 || httpUriRequests[0] == null) {
-            MoPubLog("Download task tried to execute null or empty url");
+            MoPubLog.d("Download task tried to execute null or empty url");
             return null;
         }
 
         final HttpUriRequest httpUriRequest = httpUriRequests[0];
         mUrl = httpUriRequest.getURI().toString();
 
-        final AndroidHttpClient httpClient = NativeHttpClient.getHttpClient();
+        AndroidHttpClient httpClient = null;
         try {
+            httpClient = HttpClient.getHttpClient();
             final HttpResponse httpResponse = httpClient.execute(httpUriRequest);
             return new DownloadResponse(httpResponse);
         } catch (Exception e) {
-            MoPubLog("Download task threw an internal exception");
+            MoPubLog.d("Download task threw an internal exception");
             cancel(true);
             return null;
         } finally {
-            httpClient.close();
+            if (httpClient != null) {
+                httpClient.close();
+            }
         }
     }
 

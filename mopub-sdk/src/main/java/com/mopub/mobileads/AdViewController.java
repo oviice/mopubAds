@@ -42,11 +42,9 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
-
 import com.mopub.common.util.Dips;
 import com.mopub.mobileads.factories.AdFetcherFactory;
 import com.mopub.mobileads.factories.HttpClientFactory;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -54,8 +52,11 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import java.util.*;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
-import static com.mopub.common.LocationService.*;
-import static com.mopub.common.GpsHelper.*;
+import static com.mopub.common.GpsHelper.GpsHelperListener;
+import static com.mopub.common.GpsHelper.asyncFetchAdvertisingInfo;
+import static com.mopub.common.GpsHelper.asyncFetchAdvertisingInfoIfNotCached;
+import static com.mopub.common.LocationService.LocationAwareness;
+import static com.mopub.common.LocationService.getLastKnownLocation;
 import static com.mopub.mobileads.MoPubView.DEFAULT_LOCATION_PRECISION;
 
 public class AdViewController {

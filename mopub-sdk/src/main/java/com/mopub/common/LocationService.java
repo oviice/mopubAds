@@ -4,9 +4,9 @@ import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
 
-import java.math.BigDecimal;
+import com.mopub.common.util.MoPubLog;
 
-import static com.mopub.nativeads.util.Utils.MoPubLog;
+import java.math.BigDecimal;
 
 public class LocationService {
     public static enum LocationAwareness { NORMAL, TRUNCATED, DISABLED };
@@ -32,18 +32,18 @@ public class LocationService {
         try {
             gpsLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         } catch (SecurityException e) {
-            MoPubLog("Failed to retrieve GPS location: access appears to be disabled.");
+            MoPubLog.d("Failed to retrieve GPS location: access appears to be disabled.");
         } catch (IllegalArgumentException e) {
-            MoPubLog("Failed to retrieve GPS location: device has no GPS provider.");
+            MoPubLog.d("Failed to retrieve GPS location: device has no GPS provider.");
         }
 
         Location networkLocation = null;
         try {
             networkLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         } catch (SecurityException e) {
-            MoPubLog("Failed to retrieve network location: access appears to be disabled.");
+            MoPubLog.d("Failed to retrieve network location: access appears to be disabled.");
         } catch (IllegalArgumentException e) {
-            MoPubLog("Failed to retrieve network location: device has no network provider.");
+            MoPubLog.d("Failed to retrieve network location: device has no network provider.");
         }
 
         if (gpsLocation == null && networkLocation == null) {

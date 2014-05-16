@@ -4,8 +4,9 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.mopub.common.util.MoPubLog;
+
 import static com.mopub.nativeads.NativeResponse.Parameter.isImageKey;
-import static com.mopub.nativeads.util.Utils.MoPubLog;
 
 class NativeViewHolder {
     TextView titleView;
@@ -27,7 +28,7 @@ class NativeViewHolder {
             nativeViewHolder.mainImageView = (ImageView) view.findViewById(viewBinder.mainImageId);
             nativeViewHolder.iconImageView = (ImageView) view.findViewById(viewBinder.iconImageId);
         } catch (ClassCastException e) {
-            MoPubLog("Could not cast View from id in ViewBinder to expected View type", e);
+            MoPubLog.d("Could not cast View from id in ViewBinder to expected View type", e);
             return null;
         }
 
@@ -57,7 +58,7 @@ class NativeViewHolder {
                     ((ImageView) view).setImageDrawable(null);
                     nativeResponse.loadExtrasImage(key, (ImageView) view);
                 } else {
-                    MoPubLog("View bound to " + key + " should be an instance of ImageView.");
+                    MoPubLog.d("View bound to " + key + " should be an instance of ImageView.");
                 }
             } else {
                 if (view instanceof TextView) {
@@ -67,7 +68,7 @@ class NativeViewHolder {
                         addTextView((TextView) view, (String) content);
                     }
                 } else {
-                    MoPubLog("View bound to " + key + " should be an instance of TextView.");
+                    MoPubLog.d("View bound to " + key + " should be an instance of TextView.");
                 }
             }
         }
@@ -75,7 +76,7 @@ class NativeViewHolder {
 
     private void addTextView(final TextView textView, final String contents) {
         if (textView == null) {
-            MoPubLog("Attempted to add text (" + contents + ") to null TextView.");
+            MoPubLog.d("Attempted to add text (" + contents + ") to null TextView.");
             return;
         }
 
@@ -83,7 +84,7 @@ class NativeViewHolder {
         textView.setText(null);
 
         if (contents == null) {
-            MoPubLog("Attempted to set TextView contents to null.");
+            MoPubLog.d("Attempted to set TextView contents to null.");
         } else {
             textView.setText(contents);
         }

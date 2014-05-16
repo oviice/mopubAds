@@ -1,23 +1,20 @@
-package com.mopub.nativeads;
+package com.mopub.common;
 
 import android.graphics.Bitmap;
-
-import com.mopub.nativeads.DownloadResponse;
-import com.mopub.nativeads.test.support.SdkTestRunner;
-import com.mopub.nativeads.HttpResponses;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.robolectric.Robolectric.shadowOf;
 
-@RunWith(SdkTestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class HttpResponsesTest {
 
     private DownloadResponse downloadResponse1;

@@ -7,10 +7,10 @@ import com.inmobi.commons.InMobi.LOG_LEVEL;
 import com.inmobi.monetization.IMBanner;
 import com.inmobi.monetization.IMBannerListener;
 import com.inmobi.monetization.IMErrorCode;
-import com.mopub.mobileads.CustomEventBanner;
-import com.mopub.mobileads.MoPub;
-import com.mopub.mobileads.MoPubErrorCode;
+import com.mopub.common.MoPub;
 import com.mopub.common.util.Views;
+import com.mopub.mobileads.CustomEventBanner;
+import com.mopub.mobileads.MoPubErrorCode;
 
 import java.util.*;
 

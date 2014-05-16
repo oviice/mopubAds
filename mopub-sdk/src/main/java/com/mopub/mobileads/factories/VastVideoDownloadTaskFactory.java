@@ -32,10 +32,7 @@
 
 package com.mopub.mobileads.factories;
 
-import com.mopub.mobileads.DiskLruCache;
 import com.mopub.mobileads.VastVideoDownloadTask;
-
-import static com.mopub.mobileads.VastVideoDownloadTask.OnDownloadCompleteListener;
 
 public class VastVideoDownloadTaskFactory {
     private static VastVideoDownloadTaskFactory instance = new VastVideoDownloadTaskFactory();
@@ -45,11 +42,11 @@ public class VastVideoDownloadTaskFactory {
         instance = factory;
     }
 
-    public static VastVideoDownloadTask create(OnDownloadCompleteListener onDownloadCompleteListener, DiskLruCache diskLruCache) {
-        return instance.internalCreate(onDownloadCompleteListener, diskLruCache);
+    public static VastVideoDownloadTask create(VastVideoDownloadTask.VastVideoDownloadTaskListener vastVideoDownloadTaskListener) {
+        return instance.internalCreate(vastVideoDownloadTaskListener);
     }
 
-    protected VastVideoDownloadTask internalCreate(OnDownloadCompleteListener onDownloadCompleteListener, DiskLruCache diskLruCache) {
-        return new VastVideoDownloadTask(onDownloadCompleteListener, diskLruCache);
+    protected VastVideoDownloadTask internalCreate(VastVideoDownloadTask.VastVideoDownloadTaskListener vastVideoDownloadTaskListener) {
+        return new VastVideoDownloadTask(vastVideoDownloadTaskListener);
     }
 }

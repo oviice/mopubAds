@@ -1,32 +1,51 @@
-package com.mopub.nativeads;
+package com.mopub.common;
 
 import android.content.Context;
 import android.os.AsyncTask;
 import android.support.v4.util.LruCache;
 
 import com.mopub.common.util.DeviceUtils;
+import com.mopub.common.util.MoPubLog;
 import com.mopub.common.util.Streams;
 import com.mopub.common.util.Utils;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import static com.mopub.nativeads.DiskLruCache.open;
-import static com.mopub.nativeads.util.Utils.MoPubLog;
+import static com.mopub.common.DiskLruCache.open;
 
-class CacheService {
+public class CacheService {
     static final String UNIQUE_CACHE_NAME = "mopub-cache";
     private static final int APP_VERSION = 1;
     // The number of values per cache entry. Must be positive.
     private static final int VALUE_COUNT = 1;
+    private static final int DISK_CACHE_INDEX = 0;
 
     private static DiskLruCache sDiskLruCache;
     private static MemoryLruCache sMemoryLruCache;
 
-    static void initializeCaches(final Context context) {
+    public static boolean initializeMemoryCache(final Context context) {
+        if (context == null) {
+            return false;
+        }
+
+        if (sMemoryLruCache == null) {
+            final int memoryCacheSizeBytes = DeviceUtils.memoryCacheSizeBytes(context);
+            sMemoryLruCache = new MemoryLruCache(memoryCacheSizeBytes);
+        }
+        return true;
+    }
+
+    public static boolean initializeDiskCache(final Context context) {
+        if (context == null) {
+            return false;
+        }
+
         if (sDiskLruCache == null) {
             final File cacheDirectory = getDiskCacheDirectory(context);
             final long diskCacheSizeBytes = DeviceUtils.diskCacheSizeBytes(cacheDirectory);
@@ -38,26 +57,55 @@ class CacheService {
                         diskCacheSizeBytes
                 );
             } catch (IOException e) {
-                MoPubLog("Unable to create DiskLruCache", e);
+                MoPubLog.d("Unable to create DiskLruCache", e);
             }
         }
-
-        if (sMemoryLruCache == null) {
-            final int memoryCacheSizeBytes = DeviceUtils.memoryCacheSizeBytes(context);
-            sMemoryLruCache = new MemoryLruCache(memoryCacheSizeBytes);
-        }
+        return true;
     }
 
-    static String createValidDiskCacheKey(final String key) {
+    public static void initializeCaches(final Context context) {
+        initializeMemoryCache(context);
+        initializeDiskCache(context);
+    }
+
+    public static String createValidDiskCacheKey(final String key) {
         return Utils.sha1(key);
     }
 
-    static File getDiskCacheDirectory(final Context context) {
+    public static File getDiskCacheDirectory(final Context context) {
         final String cachePath = context.getCacheDir().getPath();
         return new File(cachePath + File.separator + UNIQUE_CACHE_NAME);
     }
 
-    static byte[] getFromMemoryCache(final String key) {
+    public static boolean containsKeyDiskCache(final String key) {
+        if (sDiskLruCache == null) {
+            return false;
+        }
+
+        try {
+            final DiskLruCache.Snapshot snapshot = sDiskLruCache.get(createValidDiskCacheKey(key));
+            return snapshot != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static String getFilePathDiskCache(final String key) {
+        if (sDiskLruCache == null) {
+            return null;
+        }
+
+        // This violates encapsulation but there is no convenience method to get a filename from
+        // DiskLruCache. Filename was derived from private class method Entry#getCleanFile
+        // in DiskLruCache.java
+        return sDiskLruCache.getDirectory()
+                + File.separator
+                + createValidDiskCacheKey(key)
+                + "."
+                + DISK_CACHE_INDEX;
+    }
+
+    public static byte[] getFromMemoryCache(final String key) {
         if (sMemoryLruCache == null) {
             return null;
         }
@@ -65,7 +113,7 @@ class CacheService {
         return sMemoryLruCache.get(key);
     }
 
-    static byte[] getFromDiskCache(final String key) {
+    public static byte[] getFromDiskCache(final String key) {
         if (sDiskLruCache == null) {
             return null;
         }
@@ -78,9 +126,9 @@ class CacheService {
                 return null;
             }
 
-            final InputStream in = snapshot.getInputStream(0);
+            final InputStream in = snapshot.getInputStream(DISK_CACHE_INDEX);
             if (in != null) {
-                bytes = new byte[(int)snapshot.getLength(0)];
+                bytes = new byte[(int) snapshot.getLength(0)];
                 final BufferedInputStream buffIn = new BufferedInputStream(in);
                 try {
                     Streams.readStream(buffIn, bytes);
@@ -89,7 +137,7 @@ class CacheService {
                 }
             }
         } catch (Exception e) {
-            MoPubLog("Unable to get from DiskLruCache", e);
+            MoPubLog.d("Unable to get from DiskLruCache", e);
         } finally {
             if (snapshot != null) {
                 snapshot.close();
@@ -99,11 +147,11 @@ class CacheService {
         return bytes;
     }
 
-    static void getFromDiskCacheAsync(final String key, final DiskLruCacheGetListener diskLruCacheGetListener) {
+    public static void getFromDiskCacheAsync(final String key, final DiskLruCacheGetListener diskLruCacheGetListener) {
         new DiskLruCacheGetTask(key, diskLruCacheGetListener).execute();
     }
 
-    static byte[] get(final String key) {
+    public static byte[] get(final String key) {
         byte[] bytes = getFromMemoryCache(key);
         if (bytes != null) {
             return bytes;
@@ -111,7 +159,7 @@ class CacheService {
         return getFromDiskCache(key);
     }
 
-    static void putToMemoryCache(final String key, final byte[] content) {
+    public static void putToMemoryCache(final String key, final byte[] content) {
         if (sMemoryLruCache == null) {
             return;
         }
@@ -119,9 +167,13 @@ class CacheService {
         sMemoryLruCache.put(key, content);
     }
 
-    static void putToDiskCache(final String key, final byte[] content) {
+    public static boolean putToDiskCache(final String key, final byte[] content) {
+        return putToDiskCache(key, new ByteArrayInputStream(content));
+    }
+
+    public static boolean putToDiskCache(final String key, final InputStream content) {
         if (sDiskLruCache == null) {
-            return;
+            return false;
         }
 
         DiskLruCache.Editor editor = null;
@@ -130,17 +182,19 @@ class CacheService {
 
             if (editor == null) {
                 // another edit is in progress
-                return;
+                return false;
             }
 
-            final OutputStream outputStream = editor.newOutputStream(0);
-            outputStream.write(content);
+            final OutputStream outputStream =
+                    new BufferedOutputStream(editor.newOutputStream(DISK_CACHE_INDEX));
+            Streams.copyContent(content, outputStream);
+            outputStream.flush();
             outputStream.close();
 
             sDiskLruCache.flush();
             editor.commit();
         } catch (Exception e) {
-            MoPubLog("Unable to put to DiskLruCache", e);
+            MoPubLog.d("Unable to put to DiskLruCache", e);
             try {
                 if (editor != null) {
                     editor.abort();
@@ -148,14 +202,16 @@ class CacheService {
             } catch (IOException ignore) {
                 // ignore
             }
+            return false;
         }
+        return true;
     }
 
-    static void putToDiskCacheAsync(final String key, final byte[] content) {
+    public static void putToDiskCacheAsync(final String key, final byte[] content) {
         new DiskLruCachePutTask(key, content).execute();
     }
 
-    static void put(final String key, final byte[] content) {
+    public static void put(final String key, final byte[] content) {
         putToMemoryCache(key, content);
         putToDiskCacheAsync(key, content);
     }
@@ -175,7 +231,7 @@ class CacheService {
         }
     }
 
-    static interface DiskLruCacheGetListener {
+    public static interface DiskLruCacheGetListener {
         void onComplete(final String key, final byte[] content);
     }
 
@@ -231,7 +287,7 @@ class CacheService {
 
     // Testing
     @Deprecated
-    static void clearAndNullCaches() {
+    public static void clearAndNullCaches() {
         if (sDiskLruCache != null) {
             try {
                 sDiskLruCache.delete();
@@ -248,13 +304,13 @@ class CacheService {
 
     // Testing
     @Deprecated
-    static LruCache<String, byte[]> getMemoryLruCache() {
+    public static LruCache<String, byte[]> getMemoryLruCache() {
         return sMemoryLruCache;
     }
 
     // Testing
     @Deprecated
-    static DiskLruCache getDiskLruCache() {
+    public static DiskLruCache getDiskLruCache() {
         return sDiskLruCache;
     }
 }

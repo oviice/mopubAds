@@ -38,7 +38,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.util.Log;
 import android.view.View;
-
 import com.mopub.common.util.DateAndTime;
 import com.mopub.common.util.Streams;
 import com.mopub.mobileads.util.Base64;

@@ -41,18 +41,16 @@ import android.view.Gravity;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
-
 import com.mopub.common.GpsHelper;
 import com.mopub.common.GpsHelperTest;
+import com.mopub.common.MoPub;
 import com.mopub.common.SharedPreferencesHelper;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
-import com.mopub.common.MoPub;
 import com.mopub.mobileads.factories.HttpClientFactory;
 import com.mopub.mobileads.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestAdFetcherFactory;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 import com.mopub.mobileads.test.support.ThreadUtils;
-
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -108,6 +106,7 @@ public class AdViewControllerTest {
         response = new TestHttpResponseWithHeaders(200, "I ain't got no-body");
         adFetcher = TestAdFetcherFactory.getSingletonMock();
         methodBuilder = TestMethodBuilderFactory.getSingletonMock();
+        reset(methodBuilder);
     }
 
     @After

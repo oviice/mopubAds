@@ -9,6 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.mopub.common.CacheService;
 import com.mopub.common.util.Utils;
 import com.mopub.nativeads.test.support.SdkTestRunner;
 

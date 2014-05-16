@@ -1,4 +1,4 @@
-package com.mopub.nativeads;
+package com.mopub.common;
 
 import com.mopub.common.util.Streams;
 
@@ -7,12 +7,12 @@ import org.apache.http.HttpResponse;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 
-class DownloadResponse {
+public class DownloadResponse {
     private byte[] bytes = new byte[0];
     private final int statusCode;
     private final long contentLength;
 
-    DownloadResponse(final HttpResponse httpResponse) throws Exception {
+    public DownloadResponse(final HttpResponse httpResponse) throws Exception {
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         BufferedInputStream inputStream = null;
         try {
@@ -25,18 +25,18 @@ class DownloadResponse {
         }
 
         this.statusCode = httpResponse.getStatusLine().getStatusCode();
-        this.contentLength = httpResponse.getEntity().getContentLength();
+        this.contentLength = bytes.length;
     }
 
-    byte[] getByteArray() {
+    public byte[] getByteArray() {
         return bytes;
     }
 
-    int getStatusCode() {
+    public int getStatusCode() {
         return statusCode;
     }
 
-    long getContentLength() {
+    public long getContentLength() {
         return contentLength;
     }
 }

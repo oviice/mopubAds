@@ -4,9 +4,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-
+import com.mopub.common.CacheService;
+import com.mopub.common.CacheServiceTest;
 import com.mopub.nativeads.test.support.SdkTestRunner;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,14 +16,9 @@ import org.mockito.stubbing.Answer;
 import org.robolectric.Robolectric;
 import org.robolectric.tester.org.apache.http.FakeHttpLayer;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Semaphore;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 import static com.mopub.nativeads.ImageService.ImageServiceListener;
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -100,7 +95,7 @@ public class ImageServiceTest {
     @Test
     public void get_withImageInMemoryCache_shouldReturnImage() throws Exception {
         CacheService.initializeCaches(context);
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
         CacheService.putToMemoryCache(url1, imageData1.getBytes());
 
         ImageService.get(context, Arrays.asList(url1), imageServiceListener);
@@ -112,7 +107,7 @@ public class ImageServiceTest {
     @Test
     public void get_withImageInDiskCache_shouldReturnImage() throws Exception {
         CacheService.initializeCaches(context);
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
         CacheService.putToDiskCache(url1, imageData1.getBytes());
 
         ImageService.get(context, Arrays.asList(url1), imageServiceListener);
@@ -125,7 +120,7 @@ public class ImageServiceTest {
     @Test
     public void get_withEmptyCaches_shouldGetImageFromNetwork() throws Exception {
         CacheService.initializeCaches(context);
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
 
         fakeHttpLayer.addPendingHttpResponse(200, imageData1);
 
@@ -138,7 +133,7 @@ public class ImageServiceTest {
     @Test
     public void get_withImagesInMemoryCacheAndDiskCache_shouldReturnBothImages() throws Exception {
         CacheService.initializeCaches(context);
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
 
         CacheService.putToMemoryCache(url1, imageData1.getBytes());
         CacheService.putToDiskCache(url2, imageData2.getBytes());
@@ -154,7 +149,7 @@ public class ImageServiceTest {
     @Test
     public void get_withImagesInMemoryAndNetwork_shouldReturnBothImages() throws Exception {
         CacheService.initializeCaches(context);
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
 
         CacheService.putToMemoryCache(url1, imageData1.getBytes());
         fakeHttpLayer.addPendingHttpResponse(200, imageData2);
@@ -170,7 +165,7 @@ public class ImageServiceTest {
     @Test
     public void get_withImagesInDiskAndNetwork_shouldReturnBothImages() throws Exception {
         CacheService.initializeCaches(context);
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
 
         CacheService.putToDiskCache(url1, imageData1.getBytes());
         fakeHttpLayer.addPendingHttpResponse(200, imageData2);
@@ -186,7 +181,7 @@ public class ImageServiceTest {
     @Test
     public void get_withImagesInMemoryAndDiskAndNetwork_shouldReturnAllImages() throws Exception {
         CacheService.initializeCaches(context);
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
 
         CacheService.putToMemoryCache(url1, imageData1.getBytes());
         CacheService.putToDiskCache(url2, imageData2.getBytes());
@@ -203,7 +198,7 @@ public class ImageServiceTest {
     @Test
     public void get_withSameKeysInMemoryAndDiskCache_shouldReturnValueFromMemoryCache() throws Exception {
         CacheService.initializeCaches(context);
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
 
         CacheService.putToMemoryCache(url1, imageData2.getBytes());
         CacheService.putToDiskCache(url1, imageData1.getBytes());
@@ -217,7 +212,7 @@ public class ImageServiceTest {
     @Test
     public void get_withSameKeysInMemoryAndNetwork_shouldReturnValueFromMemoryCache() throws Exception {
         CacheService.initializeCaches(context);
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
 
         CacheService.putToMemoryCache(url1, imageData2.getBytes());
         fakeHttpLayer.addPendingHttpResponse(200, imageData1);
@@ -231,7 +226,7 @@ public class ImageServiceTest {
     @Test
     public void get_withSameKeysInDiskAndNetwork_shouldReturnValueFromDiskCache() throws Exception {
         CacheService.initializeCaches(context);
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
 
         CacheService.putToDiskCache(url1, imageData2.getBytes());
         fakeHttpLayer.addPendingHttpResponse(200, imageData1);
@@ -245,7 +240,7 @@ public class ImageServiceTest {
     @Test
     public void get_withNetworkFailure_shouldFail() throws Exception {
         CacheService.initializeCaches(context);
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
 
         CacheService.putToMemoryCache(url1, imageData1.getBytes());
         CacheService.putToDiskCache(url2, imageData2.getBytes());
@@ -260,7 +255,7 @@ public class ImageServiceTest {
     @Test
     public void get_withMultipleNetworkSuccessAndOneFailure_shouldFail() throws Exception {
         CacheService.initializeCaches(context);
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
 
         fakeHttpLayer.addPendingHttpResponse(200, imageData1);
         fakeHttpLayer.addPendingHttpResponse(200, imageData2);

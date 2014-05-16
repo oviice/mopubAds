@@ -1,5 +1,7 @@
 package com.mopub.mobileads.test.support;
 
+import android.content.Context;
+
 import com.mopub.mobileads.factories.VastManagerFactory;
 import com.mopub.mobileads.util.vast.VastManager;
 
@@ -17,7 +19,7 @@ public class TestVastManagerFactory extends VastManagerFactory {
     }
 
     @Override
-    public VastManager internalCreate() {
+    public VastManager internalCreate(final Context context) {
         return getTestFactory().mockVastManager;
     }
 }

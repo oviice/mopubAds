@@ -1,4 +1,4 @@
-package com.mopub.nativeads;
+package com.mopub.common;
 
 import android.app.Activity;
 import android.support.v4.util.LruCache;
@@ -17,7 +17,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.concurrent.Semaphore;
 
-import static com.mopub.nativeads.CacheService.DiskLruCacheGetListener;
+import static com.mopub.common.CacheService.DiskLruCacheGetListener;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -38,6 +38,8 @@ public class CacheServiceTest {
 
     @Before
     public void setUp() throws Exception {
+        CacheService.clearAndNullCaches();
+
         context = new Activity();
         key1 = "http://www.mopub.com/";
         data1 = "image_data_1";
@@ -93,14 +95,14 @@ public class CacheServiceTest {
     @Test
     public void diskLruCacheGet_whenEmpty_shouldReturnNull() throws Exception {
         CacheService.initializeCaches(context);
-        verifyCachesAreEmpty();
+        assertCachesAreEmpty();
         assertThat(CacheService.getFromDiskCache(key1)).isNull();
     }
 
     @Test
     public void diskLruCacheAsyncGet_whenPopulated_shouldReturnValue() throws Exception {
         CacheService.initializeCaches(context);
-        verifyCachesAreEmpty();
+        assertCachesAreEmpty();
         CacheService.putToDiskCache(key1, data1.getBytes());
         CacheService.getFromDiskCacheAsync(key1, diskCacheGetListener);
         semaphore.acquire();
@@ -129,9 +131,9 @@ public class CacheServiceTest {
     public void diskLruCachePut_withNullKey_shouldNotPut() throws Exception {
         // null value produces empty string key which is invalid for disk lru cache
         CacheService.initializeCaches(context);
-        verifyCachesAreEmpty();
+        assertCachesAreEmpty();
         CacheService.putToDiskCache(null, data1.getBytes());
-        verifyCachesAreEmpty();
+        assertCachesAreEmpty();
     }
 
     @Test
@@ -152,10 +154,18 @@ public class CacheServiceTest {
         return spy(new ByteArrayInputStream(string.getBytes()));
     }
 
-    static void verifyCachesAreEmpty() {
-        assertThat(CacheService.getMemoryLruCache()).isNotNull();
-        assertThat(CacheService.getMemoryLruCache().size()).isEqualTo(0);
+    public static void assertDiskCacheIsUninitialized() {
+        assertThat(CacheService.getDiskLruCache()).isNull();
+    }
+
+    public static void assertDiskCacheIsEmpty() {
         assertThat(CacheService.getDiskLruCache()).isNotNull();
         assertThat(CacheService.getDiskLruCache().size()).isEqualTo(0);
+    }
+
+    public static void assertCachesAreEmpty() {
+        assertThat(CacheService.getMemoryLruCache()).isNotNull();
+        assertThat(CacheService.getMemoryLruCache().size()).isEqualTo(0);
+        assertDiskCacheIsEmpty();
     }
 }

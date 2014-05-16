@@ -33,30 +33,19 @@
 package com.mopub.mobileads;
 
 import android.net.Uri;
-import android.util.Log;
+
+import com.mopub.common.CacheService;
 import com.mopub.mobileads.factories.VastManagerFactory;
-import com.mopub.mobileads.factories.VastVideoDownloadTaskFactory;
 import com.mopub.mobileads.util.vast.VastManager;
+import com.mopub.mobileads.util.vast.VastVideoConfiguration;
 
-import java.util.*;
+import java.util.Map;
 
-class VastVideoInterstitial extends ResponseBodyInterstitial implements VastManager.VastManagerListener, VastVideoDownloadTask.OnDownloadCompleteListener {
-    public static final int CACHE_MAX_SIZE = 100 * 1000 * 1000;
-    public static final String VIDEO_CACHE_DIRECTORY_NAME = "mopub_vast_video_cache";
+class VastVideoInterstitial extends ResponseBodyInterstitial implements VastManager.VastManagerListener {
     private CustomEventInterstitialListener mCustomEventInterstitialListener;
-    private VastVideoDownloadTask mVastVideoDownloadTask;
-    private DiskLruCache mVideoCache;
     private String mVastResponse;
-    private String mVideoUrl;
     private VastManager mVastManager;
-    private ArrayList<String> mVideoStartTrackers;
-    private ArrayList<String> mVideoFirstQuartileTrackers;
-    private ArrayList<String> mVideoMidpointTrackers;
-    private ArrayList<String> mVideoThirdQuartileTrackers;
-    private ArrayList<String> mVideoCompleteTrackers;
-    private ArrayList<String> mImpressionTrackers;
-    private String mClickThroughUrl;
-    private ArrayList<String> mClickTrackers;
+    private VastVideoConfiguration mVastVideoConfiguration;
 
     @Override
     protected void extractExtras(Map<String, String> serverExtras) {
@@ -67,33 +56,18 @@ class VastVideoInterstitial extends ResponseBodyInterstitial implements VastMana
     protected void preRenderHtml(CustomEventInterstitialListener customEventInterstitialListener) {
         mCustomEventInterstitialListener = customEventInterstitialListener;
 
-        if (mVideoCache == null) {
-            try {
-                mVideoCache = new DiskLruCache(mContext, VIDEO_CACHE_DIRECTORY_NAME, CACHE_MAX_SIZE);
-            } catch (Exception e) {
-                Log.d("MoPub", "Unable to create VAST video cache.");
-                mCustomEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.VIDEO_CACHE_ERROR);
-                return;
-            }
+        if (!CacheService.initializeDiskCache(mContext)) {
+            mCustomEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.VIDEO_CACHE_ERROR);
+            return;
         }
 
-        mVastManager = VastManagerFactory.create();
-        mVastManager.processVast(mVastResponse, this);
+        mVastManager = VastManagerFactory.create(mContext);
+        mVastManager.prepareVastVideoConfiguration(mVastResponse, this);
     }
 
     @Override
     protected void showInterstitial() {
-        MraidVideoPlayerActivity.startVast(mContext,
-                mVideoUrl,
-                mVideoStartTrackers,
-                mVideoFirstQuartileTrackers,
-                mVideoMidpointTrackers,
-                mVideoThirdQuartileTrackers,
-                mVideoCompleteTrackers,
-                mImpressionTrackers,
-                mClickThroughUrl,
-                mClickTrackers,
-                mAdConfiguration);
+        MraidVideoPlayerActivity.startVast(mContext, mVastVideoConfiguration, mAdConfiguration);
     }
 
     @Override
@@ -110,47 +84,16 @@ class VastVideoInterstitial extends ResponseBodyInterstitial implements VastMana
      */
 
     @Override
-    public void onComplete(VastManager vastManager) {
-        mVideoUrl = vastManager.getMediaFileUrl();
-
-        Uri uri = mVideoCache.getUri(mVideoUrl);
-        if (uri != null) {
-            onDownloadSuccess();
-        } else {
-            mVastVideoDownloadTask = VastVideoDownloadTaskFactory.create(this, mVideoCache);
-            mVastVideoDownloadTask.execute(mVideoUrl);
+    public void onVastVideoConfigurationPrepared(final VastVideoConfiguration vastVideoConfiguration) {
+        if (vastVideoConfiguration == null) {
+            mCustomEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.VIDEO_DOWNLOAD_ERROR);
+            return;
         }
-    }
 
-    /*
-     * VastVideoDownloadTask.OnDownloadCompleteListener implementation
-     */
-
-    @Override
-    public void onDownloadSuccess() {
-        mVideoStartTrackers = new ArrayList<String>(mVastManager.getVideoStartTrackers());
-        mVideoFirstQuartileTrackers = new ArrayList<String>(mVastManager.getVideoFirstQuartileTrackers());
-        mVideoMidpointTrackers = new ArrayList<String>(mVastManager.getVideoMidpointTrackers());
-        mVideoThirdQuartileTrackers = new ArrayList<String>(mVastManager.getVideoThirdQuartileTrackers());
-        mVideoCompleteTrackers = new ArrayList<String>(mVastManager.getVideoCompleteTrackers());
-
-        mImpressionTrackers = new ArrayList<String>(mVastManager.getImpressionTrackers());
-
-        mClickThroughUrl = mVastManager.getClickThroughUrl();
-        mClickTrackers = new ArrayList<String>(mVastManager.getClickTrackers());
-
+        mVastVideoConfiguration = vastVideoConfiguration;
         mCustomEventInterstitialListener.onInterstitialLoaded();
     }
 
-    @Override
-    public void onDownloadFailed() {
-        mCustomEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.VIDEO_DOWNLOAD_ERROR);
-    }
-
-    @Deprecated // for testing
-    DiskLruCache getVideoCache() {
-        return mVideoCache;
-    }
 
     @Deprecated // for testing
     String getVastResponse() {

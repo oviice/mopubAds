@@ -13,8 +13,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.mopub.common.HttpClient.makeTrackingHttpRequest;
 import static com.mopub.nativeads.MoPubNative.MoPubNativeListener;
-import static com.mopub.nativeads.NativeHttpClient.makeTrackingHttpRequest;
 
 class ImpressionTrackingManager {
     private static final int PERIOD = 250;

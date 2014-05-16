@@ -43,6 +43,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.mopub.common.util.MoPubLog;
 import com.mopub.nativeads.MoPubNative;
 import com.mopub.nativeads.NativeErrorCode;
 import com.mopub.nativeads.NativeResponse;
@@ -50,7 +51,6 @@ import com.mopub.nativeads.RequestParameters;
 import com.mopub.nativeads.ViewBinder;
 
 import static com.mopub.nativeads.MoPubNative.MoPubNativeListener;
-import static com.mopub.nativeads.util.Utils.MoPubLog;
 import static com.mopub.simpleadsdemo.Utils.hideSoftKeyboard;
 import static com.mopub.simpleadsdemo.Utils.logToast;
 
@@ -168,7 +168,7 @@ public final class NativeFragment extends Fragment {
 
         @Override
         public void onNativeLoad(final NativeResponse nativeResponse) {
-            MoPubLog("MoPubNativeListener: Load!, NativeResponse: " + nativeResponse.toString());
+            MoPubLog.d("MoPubNativeListener: Load!, NativeResponse: " + nativeResponse.toString());
 
             // When we have a valid response, let the adapter manage when it will be shown
             mNativeAdapter.addNativeResponse(nativeResponse);
@@ -176,7 +176,7 @@ public final class NativeFragment extends Fragment {
 
         @Override
         public void onNativeFail(final NativeErrorCode errorCode) {
-            MoPubLog("MoPubNativeListener: Fail!, NativeErrorCode: " + errorCode.toString());
+            MoPubLog.d("MoPubNativeListener: Fail!, NativeErrorCode: " + errorCode.toString());
             switch (errorCode) {
                 case INVALID_REQUEST_URL:
                     // Invalid url, don't try to request again
@@ -194,12 +194,12 @@ public final class NativeFragment extends Fragment {
 
         @Override
         public void onNativeImpression(final View view) {
-            MoPubLog("MoPubNativeListener: Impression!, View: " + view.toString());
+            MoPubLog.d("MoPubNativeListener: Impression!, View: " + view.toString());
         }
 
         @Override
         public void onNativeClick(final View view) {
-            MoPubLog("MoPubNativeListener: Click!, View: " + view.toString());
+            MoPubLog.d("MoPubNativeListener: Click!, View: " + view.toString());
         }
     }
 

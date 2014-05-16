@@ -19,9 +19,9 @@ import java.net.SocketException;
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
 import static android.Manifest.permission.INTERNET;
 import static com.mopub.common.util.Reflection.MethodBuilder;
+
 import static com.mopub.common.util.VersionCode.HONEYCOMB;
 import static com.mopub.common.util.VersionCode.currentApiLevel;
-import static com.mopub.nativeads.util.Utils.MoPubLog;
 import static java.util.Collections.list;
 
 public class DeviceUtils {
@@ -124,11 +124,11 @@ public class DeviceUtils {
         if (currentApiLevel().isAtLeast(HONEYCOMB)) {
             try {
                 final int flagLargeHeap = ApplicationInfo.class.getDeclaredField("FLAG_LARGE_HEAP").getInt(null);
-                if (bitmaskContainsFlag(context.getApplicationInfo().flags, flagLargeHeap)) {
+                if (Utils.bitMaskContainsFlag(context.getApplicationInfo().flags, flagLargeHeap)) {
                     memoryClass = (Integer) new MethodBuilder(activityManager, "getLargeMemoryClass").execute();
                 }
             } catch (Exception e) {
-                MoPubLog("Unable to reflectively determine large heap size on Honeycomb and above.");
+                MoPubLog.d("Unable to reflectively determine large heap size on Honeycomb and above.");
             }
         }
 
@@ -144,14 +144,10 @@ public class DeviceUtils {
             long availableBytes = ((long) statFs.getBlockCount()) * statFs.getBlockSize();
             size = availableBytes / 50;
         } catch (IllegalArgumentException e) {
-            MoPubLog("Unable to calculate 2% of available disk space, defaulting to minimum");
+            MoPubLog.d("Unable to calculate 2% of available disk space, defaulting to minimum");
         }
 
         // Bound inside min/max size for disk cache.
         return Math.max(Math.min(size, MAX_DISK_CACHE_SIZE), MIN_DISK_CACHE_SIZE);
-    }
-
-    public static boolean bitmaskContainsFlag(final int bitmask, final int flag) {
-        return (bitmask & flag) != 0;
     }
 }

@@ -35,10 +35,8 @@ package com.mopub.mobileads;
 import android.app.Activity;
 import android.net.Uri;
 import android.util.Log;
-
 import com.mopub.common.util.Strings;
 import com.mopub.mobileads.util.Json;
-
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;

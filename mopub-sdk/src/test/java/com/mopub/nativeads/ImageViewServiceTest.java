@@ -6,6 +6,8 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.widget.ImageView;
 
+import com.mopub.common.CacheService;
+import com.mopub.common.CacheServiceTest;
 import com.mopub.nativeads.test.support.SdkTestRunner;
 
 import org.junit.After;
@@ -47,7 +49,7 @@ public class ImageViewServiceTest {
 
     @Test
     public void loadImageView_withImageInMemoryCache_shouldLoadImageData() throws Exception {
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
         CacheService.putToMemoryCache(url1, imageData1.getBytes());
 
         assertThat(ImageViewService.getImageViewUniqueId(imageView)).isNull();
@@ -61,7 +63,7 @@ public class ImageViewServiceTest {
 
     @Test
     public void loadImageView_withImageInDiskCache_shouldLoadImageDataAsync() throws Exception {
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
         CacheService.putToDiskCache(url1, imageData1.getBytes());
 
         assertThat(ImageViewService.getImageViewUniqueId(imageView)).isNull();
@@ -76,7 +78,7 @@ public class ImageViewServiceTest {
 
     @Test
     public void loadImageView_withImageInNetwork_shouldLoadImageDataAsync() throws Exception {
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
         fakeHttpLayer.addPendingHttpResponse(200, imageData1);
 
         assertThat(ImageViewService.getImageViewUniqueId(imageView)).isNull();
@@ -91,7 +93,7 @@ public class ImageViewServiceTest {
 
     @Test
     public void loadImageView_withImageInNetworkAndUniqueIdChanges_shouldNotLoadImageData() throws Exception {
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
         assertThat(imageView.getDrawable()).isNull();
         fakeHttpLayer.addPendingHttpResponse(200, imageData1);
 
@@ -112,7 +114,7 @@ public class ImageViewServiceTest {
 
     @Test
     public void loadImageView_withImageInNetworkAndUniqueIdIsNull_shouldNotLoadImageData() throws Exception {
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
         assertThat(imageView.getDrawable()).isNull();
         fakeHttpLayer.addPendingHttpResponse(200, imageData1);
 
@@ -133,7 +135,7 @@ public class ImageViewServiceTest {
 
     @Test
     public void loadImageView_withTwoNetworkRequests_shouldLoadSecondImageData() throws Exception {
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
         assertThat(imageView.getDrawable()).isNull();
         fakeHttpLayer.addPendingHttpResponse(200, imageData1);
         fakeHttpLayer.addPendingHttpResponse(200, imageData2);
@@ -155,7 +157,7 @@ public class ImageViewServiceTest {
 
     @Test
     public void loadImageView_shouldClearDrawable() throws Exception {
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
         assertThat(imageView.getDrawable()).isNull();
         fakeHttpLayer.addPendingHttpResponse(200, imageData1);
         fakeHttpLayer.addPendingHttpResponse(200, imageData2);
@@ -174,7 +176,7 @@ public class ImageViewServiceTest {
 
     @Test
     public void loadImageView_withEmptyCachesAndNetworkFailure_shouldNotLoadImageDataAsync() throws Exception {
-        CacheServiceTest.verifyCachesAreEmpty();
+        CacheServiceTest.assertCachesAreEmpty();
         fakeHttpLayer.addPendingHttpResponse(500, imageData1);
 
         ImageViewService.loadImageView(url1, imageView);
