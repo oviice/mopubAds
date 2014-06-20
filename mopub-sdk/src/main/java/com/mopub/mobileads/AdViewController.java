@@ -42,9 +42,12 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
+
 import com.mopub.common.util.Dips;
+import com.mopub.common.util.MoPubLog;
 import com.mopub.mobileads.factories.AdFetcherFactory;
 import com.mopub.mobileads.factories.HttpClientFactory;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -52,11 +55,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import java.util.*;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
-import static com.mopub.common.GpsHelper.GpsHelperListener;
-import static com.mopub.common.GpsHelper.asyncFetchAdvertisingInfo;
-import static com.mopub.common.GpsHelper.asyncFetchAdvertisingInfoIfNotCached;
-import static com.mopub.common.LocationService.LocationAwareness;
-import static com.mopub.common.LocationService.getLastKnownLocation;
+import static com.mopub.common.LocationService.*;
+import static com.mopub.common.GpsHelper.*;
 import static com.mopub.mobileads.MoPubView.DEFAULT_LOCATION_PRECISION;
 
 public class AdViewController {
@@ -84,12 +84,14 @@ public class AdViewController {
 
     private Map<String, Object> mLocalExtras = new HashMap<String, Object>();
     private boolean mAutoRefreshEnabled = true;
+    private boolean mPreviousAutoRefreshSetting = true;
     private String mKeywords;
     private Location mLocation;
     private LocationAwareness mLocationAwareness = LocationAwareness.NORMAL;
     private int mLocationPrecision = DEFAULT_LOCATION_PRECISION;
     private boolean mIsFacebookSupported = true;
     private boolean mIsTesting;
+    private boolean mAdWasLoaded;
 
     protected static void setShouldHonorServerDimensions(View view) {
         sViewShouldHonorServerDimensions.put(view, true);
@@ -126,6 +128,7 @@ public class AdViewController {
     }
 
     public void loadAd() {
+        mAdWasLoaded = true;
         if (mAdConfiguration.getAdUnitId() == null) {
             Log.d("MoPub", "Can't load an ad in this ad view because the ad unit ID is null. " +
                     "Did you forget to call setAdUnitId()?");
@@ -260,17 +263,33 @@ public class AdViewController {
         return mAutoRefreshEnabled;
     }
 
-    public void setAutorefreshEnabled(boolean enabled) {
-        mAutoRefreshEnabled = enabled;
+    void pauseRefresh() {
+        mPreviousAutoRefreshSetting = mAutoRefreshEnabled;
+        setAutorefreshEnabled(false);
+    }
 
-        if (mAdConfiguration.getAdUnitId() != null) {
-            Log.d("MoPub", "Automatic refresh for " + mAdConfiguration + " set to: " + enabled + ".");
+    void unpauseRefresh() {
+        setAutorefreshEnabled(mPreviousAutoRefreshSetting);
+    }
 
+    void forceSetAutorefreshEnabled(boolean enabled) {
+        mPreviousAutoRefreshSetting = enabled;
+        setAutorefreshEnabled(enabled);
+    }
+
+    private void setAutorefreshEnabled(boolean enabled) {
+        final boolean autorefreshChanged = mAdWasLoaded && (mAutoRefreshEnabled != enabled);
+        if (autorefreshChanged) {
+            final String enabledString = (enabled) ? "enabled" : "disabled";
+            final String adUnitId = (mAdConfiguration != null) ? mAdConfiguration.getAdUnitId() : null;
+
+            MoPubLog.d("Refresh " + enabledString + " for ad unit (" + adUnitId + ").");
         }
 
-        if (mAutoRefreshEnabled) {
+        mAutoRefreshEnabled = enabled;
+        if (mAdWasLoaded && mAutoRefreshEnabled) {
             scheduleRefreshTimerIfEnabled();
-        } else {
+        } else if (!mAutoRefreshEnabled) {
             cancelRefreshTimer();
         }
     }

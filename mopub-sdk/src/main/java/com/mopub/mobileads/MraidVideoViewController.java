@@ -40,7 +40,9 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.VideoView;
+
 import com.mopub.common.util.Dips;
+import com.mopub.common.util.Drawables;
 
 import static android.view.View.GONE;
 import static android.view.View.OnClickListener;

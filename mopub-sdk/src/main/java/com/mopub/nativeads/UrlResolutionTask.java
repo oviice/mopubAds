@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.IntentUtils;
+import com.mopub.common.util.MoPubLog;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -13,7 +14,7 @@ class UrlResolutionTask extends AsyncTask<String, Void, String> {
     private static final int REDIRECT_LIMIT = 10;
 
     interface UrlResolutionListener {
-        void onSuccess(String result);
+        void onSuccess(String resolvedUrl);
         void onFailure();
     }
 
@@ -21,7 +22,14 @@ class UrlResolutionTask extends AsyncTask<String, Void, String> {
 
     public static void getResolvedUrl(final String urlString, final UrlResolutionListener listener) {
         final UrlResolutionTask urlResolutionTask = new UrlResolutionTask(listener);
-        AsyncTasks.safeExecuteOnExecutor(urlResolutionTask, urlString);
+
+        try {
+            AsyncTasks.safeExecuteOnExecutor(urlResolutionTask, urlString);
+        } catch (Exception e) {
+            MoPubLog.d("Failed to resolve url", e);
+
+            listener.onFailure();
+        }
     }
 
     UrlResolutionTask(UrlResolutionListener listener) {

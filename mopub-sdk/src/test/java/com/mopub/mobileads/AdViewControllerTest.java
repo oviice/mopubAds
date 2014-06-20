@@ -41,6 +41,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
+
 import com.mopub.common.GpsHelper;
 import com.mopub.common.GpsHelperTest;
 import com.mopub.common.MoPub;
@@ -51,6 +52,7 @@ import com.mopub.mobileads.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestAdFetcherFactory;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 import com.mopub.mobileads.test.support.ThreadUtils;
+
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -79,6 +81,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.stub;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -92,16 +95,19 @@ public class AdViewControllerTest {
     private HttpResponse response;
     private HttpClient httpClient;
     private AdFetcher adFetcher;
-    private Activity context;
     private MethodBuilder methodBuilder;
+    private Activity context;
 
     @Before
     public void setup() {
-        moPubView = mock(MoPubView.class);
-        stub(moPubView.getContext()).toReturn(new Activity());
-        httpClient = HttpClientFactory.create();
         context = new Activity();
         shadowOf(context).grantPermissions(ACCESS_NETWORK_STATE);
+
+        moPubView = mock(MoPubView.class);
+        stub(moPubView.getContext()).toReturn(context);
+
+        httpClient = HttpClientFactory.create();
+
         subject = new AdViewController(context, moPubView);
         response = new TestHttpResponseWithHeaders(200, "I ain't got no-body");
         adFetcher = TestAdFetcherFactory.getSingletonMock();
@@ -138,7 +144,7 @@ public class AdViewControllerTest {
         Robolectric.pauseMainLooper();
         assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(0);
 
-        subject.setAutorefreshEnabled(false);
+        subject.forceSetAutorefreshEnabled(false);
 
         subject.scheduleRefreshTimerIfEnabled();
 
@@ -170,6 +176,77 @@ public class AdViewControllerTest {
 
         subject.scheduleRefreshTimerIfEnabled();
 
+        assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(0);
+    }
+    
+    @Test
+    public void forceSetAutoRefreshEnabled_shouldSetAutoRefreshSetting() throws Exception {
+        assertThat(subject.getAutorefreshEnabled()).isTrue();
+
+        subject.forceSetAutorefreshEnabled(false);
+        assertThat(subject.getAutorefreshEnabled()).isFalse();
+
+        subject.forceSetAutorefreshEnabled(true);
+        assertThat(subject.getAutorefreshEnabled()).isTrue();
+    }
+
+    @Test
+    public void pauseRefresh_shouldDisableAutorefresh() throws Exception {
+        assertThat(subject.getAutorefreshEnabled()).isTrue();
+
+        subject.pauseRefresh();
+        assertThat(subject.getAutorefreshEnabled()).isFalse();
+    }
+
+    @Test
+    public void unpauseRefresh_afterUnpauseRefresh_shouldEnableRefresh() throws Exception {
+        subject.pauseRefresh();
+        
+        subject.unpauseRefresh();
+        assertThat(subject.getAutorefreshEnabled()).isTrue();
+    }
+
+    @Test
+    public void pauseAndUnpauseRefresh_withRefreshForceDisabled_shouldAlwaysHaveRefreshFalse() throws Exception {
+        subject.forceSetAutorefreshEnabled(false);
+        assertThat(subject.getAutorefreshEnabled()).isFalse();
+
+        subject.pauseRefresh();
+        assertThat(subject.getAutorefreshEnabled()).isFalse();
+
+        subject.unpauseRefresh();
+        assertThat(subject.getAutorefreshEnabled()).isFalse();
+    }
+
+    @Test
+    public void enablingAutoRefresh_afterLoadAd_shouldScheduleNewRefreshTimer() throws Exception {
+        final AdViewController adViewControllerSpy = spy(subject);
+
+        adViewControllerSpy.loadAd();
+        adViewControllerSpy.forceSetAutorefreshEnabled(true);
+        verify(adViewControllerSpy).scheduleRefreshTimerIfEnabled();
+    }
+
+    @Test
+    public void enablingAutoRefresh_withoutCallingLoadAd_shouldNotScheduleNewRefreshTimer() throws Exception {
+        final AdViewController adViewControllerSpy = spy(subject);
+
+        adViewControllerSpy.forceSetAutorefreshEnabled(true);
+        verify(adViewControllerSpy, never()).scheduleRefreshTimerIfEnabled();
+    }
+
+    @Test
+    public void disablingAutoRefresh_shouldCancelRefreshTimers() throws Exception {
+        response.addHeader("X-Refreshtime", "30");
+        subject.configureUsingHttpResponse(response);
+
+        Robolectric.pauseMainLooper();
+
+        subject.loadAd();
+        subject.forceSetAutorefreshEnabled(true);
+        assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(1);
+
+        subject.forceSetAutorefreshEnabled(false);
         assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(0);
     }
 

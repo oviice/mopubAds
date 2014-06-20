@@ -38,8 +38,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static com.mopub.mobileads.util.ResponseHeader.AD_TIMEOUT;
-import static com.mopub.mobileads.util.ResponseHeader.SCROLLABLE;
+import static com.mopub.common.util.ResponseHeader.AD_TIMEOUT;
+import static com.mopub.common.util.ResponseHeader.SCROLLABLE;
 import static org.fest.assertions.api.Assertions.assertThat;
 
 @RunWith(SdkTestRunner.class)

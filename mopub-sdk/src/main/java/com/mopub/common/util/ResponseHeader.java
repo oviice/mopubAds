@@ -30,7 +30,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.mopub.mobileads.util;
+package com.mopub.common.util;
 
 public enum ResponseHeader {
     AD_TIMEOUT("X-AdTimeout"),

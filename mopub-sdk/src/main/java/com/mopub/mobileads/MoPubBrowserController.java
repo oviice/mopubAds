@@ -37,6 +37,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
+
 import com.mopub.common.MoPubBrowser;
 import com.mopub.common.util.IntentUtils;
 import com.mopub.mobileads.util.Utils;

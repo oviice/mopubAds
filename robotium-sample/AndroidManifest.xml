@@ -9,8 +9,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     
-    <application android:label="Cool Activity"
-            android:debuggable="true">
+    <application android:label="Cool Activity">
 	    <activity android:name=".RobotiumTestSupportActivity"
 	            android:label="Cool Activity" android:theme="@android:style/Theme.NoTitleBar" >
 	        <intent-filter>

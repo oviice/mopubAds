@@ -10,17 +10,17 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.mopub.common.CacheService;
+import com.mopub.common.DownloadResponse;
 import com.mopub.common.util.Utils;
+import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 import com.mopub.nativeads.test.support.SdkTestRunner;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(SdkTestRunner.class)
@@ -31,7 +31,6 @@ public class NativeViewHolderTest {
     private NativeResponse nativeResponse;
     private ViewBinder viewBinder;
     private MoPubNative.MoPubNativeListener mopubNativeListener;
-    private JSONObject fakeJsonObject;
     private TextView titleView;
     private TextView textView;
     private TextView callToActionView;
@@ -39,6 +38,7 @@ public class NativeViewHolderTest {
     private ImageView iconImageView;
     private TextView extrasTextView;
     private ImageView extrasImageView;
+    private ImageView extrasImageView2;
 
     @Before
     public void setUp() throws Exception {
@@ -46,12 +46,6 @@ public class NativeViewHolderTest {
         relativeLayout = new RelativeLayout(context);
         relativeLayout.setId((int) Utils.generateUniqueId());
         viewGroup = new LinearLayout(context);
-
-        fakeJsonObject = new JSONObject();
-
-        // Only mandatory json fields
-        fakeJsonObject.put("imptracker", new JSONArray("[\"url1\", \"url2\"]"));
-        fakeJsonObject.put("clktracker", "expected clicktracker");
 
         // Fields in the web ui
         titleView = new TextView(context);
@@ -70,6 +64,8 @@ public class NativeViewHolderTest {
         extrasTextView.setId((int) Utils.generateUniqueId());
         extrasImageView = new ImageView(context);
         extrasImageView.setId((int) Utils.generateUniqueId());
+        extrasImageView2 = new ImageView(context);
+        extrasImageView2.setId((int) Utils.generateUniqueId());
 
         relativeLayout.addView(titleView);
         relativeLayout.addView(textView);
@@ -78,10 +74,7 @@ public class NativeViewHolderTest {
         relativeLayout.addView(iconImageView);
         relativeLayout.addView(extrasTextView);
         relativeLayout.addView(extrasImageView);
-    }
-
-    @After
-    public void tearDown() throws Exception {
+        relativeLayout.addView(extrasImageView2);
     }
 
     @Test
@@ -148,12 +141,15 @@ public class NativeViewHolderTest {
         CacheService.putToMemoryCache("mainimageurl", "mainimagedata".getBytes());
         CacheService.putToMemoryCache("iconimageurl", "iconimagedata".getBytes());
 
-        fakeJsonObject.put("title", "titletext");
-        fakeJsonObject.put("text", "texttext");
-        fakeJsonObject.put("mainimage", "mainimageurl");
-        fakeJsonObject.put("iconimage", "iconimageurl");
-        fakeJsonObject.put("ctatext", "cta");
-        nativeResponse = new NativeResponse(fakeJsonObject);
+        BaseForwardingNativeAd nativeAd = new BaseForwardingNativeAd() {};
+        nativeAd.setTitle("titletext");
+        nativeAd.setText("texttext");
+        nativeAd.setMainImageUrl("mainimageurl");
+        nativeAd.setIconImageUrl("iconimageurl");
+        nativeAd.setCallToAction("cta");
+
+        final DownloadResponse downloadResponse = new DownloadResponse(new TestHttpResponseWithHeaders(200, ""));
+        nativeResponse = new NativeResponse(context, downloadResponse, nativeAd, null);
 
         viewBinder = new ViewBinder.Builder(relativeLayout.getId())
                 .titleId(titleView.getId())
@@ -187,7 +183,8 @@ public class NativeViewHolderTest {
         iconImageView.setImageBitmap(ImageService.byteArrayToBitmap("previousiconimagedata".getBytes()));
 
         // Only required fields in native response
-        nativeResponse = new NativeResponse(fakeJsonObject);
+        final DownloadResponse downloadResponse = new DownloadResponse(new TestHttpResponseWithHeaders(200, ""));
+        nativeResponse = new NativeResponse(context, downloadResponse, mock(BaseForwardingNativeAd.class), null);
 
         viewBinder = new ViewBinder.Builder(relativeLayout.getId())
                 .titleId(titleView.getId())
@@ -215,8 +212,10 @@ public class NativeViewHolderTest {
         titleView.setText("previoustitletext");
         textView.setText("previoustexttext");
 
-        fakeJsonObject.put("ctatext", "cta");
-        nativeResponse = new NativeResponse(fakeJsonObject);
+        BaseForwardingNativeAd nativeAd = new BaseForwardingNativeAd() {};
+        nativeAd.setCallToAction("cta");
+        final DownloadResponse downloadResponse = new DownloadResponse(new TestHttpResponseWithHeaders(200, ""));
+        nativeResponse = new NativeResponse(context, downloadResponse, nativeAd, null);
 
         viewBinder = new ViewBinder.Builder(relativeLayout.getId())
                 .callToActionId(callToActionView.getId())
@@ -237,14 +236,19 @@ public class NativeViewHolderTest {
         // Setup for cache state for image gets
         CacheService.initializeCaches(context);
         CacheService.putToMemoryCache("extrasimageurl", "extrasimagedata".getBytes());
+        CacheService.putToMemoryCache("extrasimageurl2", "extrasimagedata2".getBytes());
 
-        fakeJsonObject.put("extrastext", "extrastexttext");
-        fakeJsonObject.put("extrasimage", "extrasimageurl");
-        nativeResponse = new NativeResponse(fakeJsonObject);
+        BaseForwardingNativeAd nativeAd = new BaseForwardingNativeAd() {};
+        nativeAd.addExtra("extrastext", "extrastexttext");
+        nativeAd.addExtra("extrasimage", "extrasimageurl");
+        nativeAd.addExtra("extrasimage2", "extrasimageurl2");
+        final DownloadResponse downloadResponse = new DownloadResponse(new TestHttpResponseWithHeaders(200, ""));
+        nativeResponse = new NativeResponse(context, downloadResponse, nativeAd, null);
 
         viewBinder = new ViewBinder.Builder(relativeLayout.getId())
                 .addExtra("extrastext", extrasTextView.getId())
                 .addExtra("extrasimage", extrasImageView.getId())
+                .addExtra("extrasimage2", extrasImageView2.getId())
                 .build();
 
         NativeViewHolder nativeViewHolder =
@@ -255,18 +259,23 @@ public class NativeViewHolderTest {
         assertThat(extrasTextView.getText()).isEqualTo("extrastexttext");
         assertThat(shadowOf(ImageViewServiceTest.getBitmapFromImageView(extrasImageView))
                 .getCreatedFromBytes()).isEqualTo("extrasimagedata".getBytes());
+        assertThat(shadowOf(ImageViewServiceTest.getBitmapFromImageView(extrasImageView2))
+                .getCreatedFromBytes()).isEqualTo("extrasimagedata2".getBytes());
     }
 
     @Test
     public void updateExtras_withMissingExtrasValues_shouldClearPreviousValues() throws Exception {
         extrasTextView.setText("previousextrastext");
         extrasImageView.setImageBitmap(ImageService.byteArrayToBitmap("previousextrasimagedata".getBytes()));
+        extrasImageView2.setImageBitmap(ImageService.byteArrayToBitmap("previousextrasimagedata2".getBytes()));
 
-        nativeResponse = new NativeResponse(fakeJsonObject);
+        final DownloadResponse downloadResponse = new DownloadResponse(new TestHttpResponseWithHeaders(200, ""));
+        nativeResponse = new NativeResponse(context, downloadResponse, new BaseForwardingNativeAd(){}, null);
 
         viewBinder = new ViewBinder.Builder(relativeLayout.getId())
                 .addExtra("extrastext", extrasTextView.getId())
                 .addExtra("extrasimage", extrasImageView.getId())
+                .addExtra("extrasimage2", extrasImageView2.getId())
                 .build();
 
         NativeViewHolder nativeViewHolder =
@@ -275,18 +284,24 @@ public class NativeViewHolderTest {
         assertThat(extrasTextView.getText()).isEqualTo("previousextrastext");
         assertThat(shadowOf(ImageViewServiceTest.getBitmapFromImageView(extrasImageView))
                 .getCreatedFromBytes()).isEqualTo("previousextrasimagedata".getBytes());
+        assertThat(shadowOf(ImageViewServiceTest.getBitmapFromImageView(extrasImageView2))
+                .getCreatedFromBytes()).isEqualTo("previousextrasimagedata2".getBytes());
 
         nativeViewHolder.updateExtras(relativeLayout, nativeResponse, viewBinder);
 
         assertThat(extrasTextView.getText()).isEqualTo("");
         assertThat(extrasImageView.getDrawable()).isNull();
+        assertThat(extrasImageView2.getDrawable()).isNull();
     }
 
     @Test
-    public void updateExtras_withMismatchingViewTypes_shouldNotSetValues() throws Exception {
-        fakeJsonObject.put("extrastext", "extrastexttext");
-        fakeJsonObject.put("extrasimage", "extrasimageurl");
-        nativeResponse = new NativeResponse(fakeJsonObject);
+    public void updateExtras_withMismatchingViewTypes_shouldSetTextViewToImageUrlAndSetExtrasImageViewToNull() throws Exception {
+        BaseForwardingNativeAd nativeAd = new BaseForwardingNativeAd() {};
+        nativeAd.addExtra("extrastext", "extrastexttext");
+        nativeAd.addExtra("extrasimage", "extrasimageurl");
+
+        final DownloadResponse downloadResponse = new DownloadResponse(new TestHttpResponseWithHeaders(200, ""));
+        nativeResponse = new NativeResponse(context, downloadResponse, nativeAd, null);
 
         viewBinder = new ViewBinder.Builder(relativeLayout.getId())
                 .addExtra("extrastext", extrasImageView.getId())
@@ -301,7 +316,7 @@ public class NativeViewHolderTest {
 
         nativeViewHolder.updateExtras(relativeLayout, nativeResponse, viewBinder);
 
-        assertThat(extrasTextView.getText()).isEqualTo("");
+        assertThat(extrasTextView.getText()).isEqualTo("extrasimageurl");
         assertThat(extrasImageView.getDrawable()).isNull();
     }
 

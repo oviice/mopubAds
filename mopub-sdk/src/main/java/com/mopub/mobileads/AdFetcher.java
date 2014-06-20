@@ -33,6 +33,7 @@
 package com.mopub.mobileads;
 
 import android.util.Log;
+
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.mobileads.factories.AdFetchTaskFactory;
 

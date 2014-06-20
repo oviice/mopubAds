@@ -30,14 +30,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.mopub.mobileads.util;
+package com.mopub.common.util;
 
 import com.mopub.mobileads.test.support.SdkTestRunner;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 

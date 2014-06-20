@@ -7,8 +7,7 @@
 
     <instrumentation android:targetPackage="com.mopub.mobileads.robotium" android:name="android.test.InstrumentationTestRunner" />
 
-    <application android:label="Cool Activity Test"
-                 android:debuggable="true">
+    <application android:label="Cool Activity Test">
         <uses-library android:name="android.test.runner" />
     </application>
 </manifest>

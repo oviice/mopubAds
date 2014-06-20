@@ -20,4 +20,12 @@ public class MoPubLog {
     public static int w(final String message, final Throwable throwable) {
         return Log.w(LOGTAG, message, throwable);
     }
+
+    public static int e(final String message) {
+        return MoPubLog.e(message, null);
+    }
+
+    public static int e(final String message, final Throwable throwable) {
+        return Log.e(LOGTAG, message, throwable);
+    }
 }

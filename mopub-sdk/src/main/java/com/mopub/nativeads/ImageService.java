@@ -4,8 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
-import com.mopub.common.util.MoPubLog;
 import com.mopub.common.CacheService;
+import com.mopub.common.util.MoPubLog;
 import com.mopub.common.util.Streams;
 
 import java.io.ByteArrayOutputStream;
@@ -69,7 +69,7 @@ class ImageService {
     static List<String> getBitmapsFromMemoryCache(final List<String> urls, final Map<String, Bitmap> hits) {
         final List<String> cacheMisses = new ArrayList<String>();
         for (final String url : urls) {
-            Bitmap bitmap = getBitmapFromMemoryCache(url);
+            final Bitmap bitmap = getBitmapFromMemoryCache(url);
 
             if (bitmap != null) {
                 hits.put(url, bitmap);

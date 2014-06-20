@@ -36,8 +36,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
+
 import com.mopub.mobileads.factories.CustomEventInterstitialAdapterFactory;
 import com.mopub.mobileads.test.support.SdkTestRunner;
+
+import org.fest.util.Lists;
 import org.fest.util.Sets;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -45,7 +48,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.shadows.ShadowLocalBroadcastManager;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Set;
 
 import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
@@ -57,6 +62,7 @@ import static com.mopub.mobileads.EventForwardingBroadcastReceiver.getHtmlInters
 import static com.mopub.mobileads.MoPubInterstitial.InterstitialAdListener;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;

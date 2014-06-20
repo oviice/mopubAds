@@ -3,11 +3,16 @@ package com.mopub.mobileads.util.vast;
 import android.content.Context;
 import android.view.Display;
 import android.view.WindowManager;
+
 import com.mopub.common.CacheService;
 import com.mopub.common.util.AsyncTasks;
+import com.mopub.common.util.MoPubLog;
 import com.mopub.mobileads.VastVideoDownloadTask;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 import static com.mopub.mobileads.VastVideoDownloadTask.VastVideoDownloadTaskListener;
 import static com.mopub.mobileads.util.vast.VastXmlManagerAggregator.VastXmlManagerAggregatorListener;
@@ -38,7 +43,16 @@ public class VastManager implements VastXmlManagerAggregatorListener {
         if (mVastXmlManagerAggregator == null) {
             mVastManagerListener = vastManagerListener;
             mVastXmlManagerAggregator = new VastXmlManagerAggregator(this);
-            AsyncTasks.safeExecuteOnExecutor(mVastXmlManagerAggregator, vastXml);
+
+            try {
+                AsyncTasks.safeExecuteOnExecutor(mVastXmlManagerAggregator, vastXml);
+            } catch (Exception e) {
+                MoPubLog.d("Failed to aggregate vast xml", e);
+
+                if (mVastManagerListener != null) {
+                    mVastManagerListener.onVastVideoConfigurationPrepared(null);
+                }
+            }
         }
     }
 
@@ -86,10 +100,18 @@ public class VastManager implements VastXmlManagerAggregatorListener {
                 }
         );
 
-        AsyncTasks.safeExecuteOnExecutor(
-                vastVideoDownloadTask,
-                vastVideoConfiguration.getNetworkMediaFileUrl()
-        );
+        try {
+            AsyncTasks.safeExecuteOnExecutor(
+                    vastVideoDownloadTask,
+                    vastVideoConfiguration.getNetworkMediaFileUrl()
+            );
+        } catch (Exception e) {
+            MoPubLog.d("Failed to download vast video", e);
+
+            if (mVastManagerListener != null) {
+                mVastManagerListener.onVastVideoConfigurationPrepared(null);
+            }
+        }
     }
 
     private boolean updateDiskMediaFileUrl(final VastVideoConfiguration vastVideoConfiguration) {

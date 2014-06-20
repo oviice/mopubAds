@@ -46,7 +46,13 @@ class ImageDownloadTaskManager extends ImageTaskManager {
             final HttpUriRequest httpUriRequest = entry.getKey();
             final DownloadTask downloadTask = entry.getValue();
 
-            AsyncTasks.safeExecuteOnExecutor(downloadTask, httpUriRequest);
+            try {
+                AsyncTasks.safeExecuteOnExecutor(downloadTask, httpUriRequest);
+            } catch (Exception e) {
+                MoPubLog.d("Failed to download image", e);
+
+                mImageTaskManagerListener.onFail();
+            }
         }
     }
 

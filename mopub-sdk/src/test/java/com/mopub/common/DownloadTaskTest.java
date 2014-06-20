@@ -1,5 +1,8 @@
 package com.mopub.common;
 
+import com.mopub.common.util.ResponseHeader;
+import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
+
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.junit.Before;
@@ -27,10 +30,12 @@ public class DownloadTaskTest {
     private HttpGet httpGet;
     private String mTestResponse;
     private FakeHttpLayer mFakeHttpLayer;
+    private TestHttpResponseWithHeaders mTestHttpResponseWithHeaders;
 
     @Before
     public void setUp() throws Exception {
         mSemaphore = new Semaphore(0);
+
         mDownloadTaskListener = new DownloadTask.DownloadTaskListener() {
             @Override
             public void onComplete(String url, DownloadResponse response) {
@@ -45,17 +50,24 @@ public class DownloadTaskTest {
         } catch (IllegalArgumentException e) {
             fail("Could not initialize HttpGet in test");
         }
+
         mTestResponse = "TEST RESPONSE";
+        mTestHttpResponseWithHeaders = new TestHttpResponseWithHeaders(200, mTestResponse);
+        mTestHttpResponseWithHeaders.addHeader(ResponseHeader.IMPRESSION_URL.getKey(), "moPubImpressionTrackerUrl");
+        mTestHttpResponseWithHeaders.addHeader(ResponseHeader.CLICKTHROUGH_URL.getKey(), "moPubClickTrackerUrl");
+
         mFakeHttpLayer = Robolectric.getFakeHttpLayer();
     }
 
     @Test
     public void execute_whenDownloadTaskAndHttpClientCompleteSuccessfully_shouldReturn200HttpResponse() throws Exception {
-        mFakeHttpLayer.addPendingHttpResponse(200, mTestResponse);
+        mFakeHttpLayer.addPendingHttpResponse(mTestHttpResponseWithHeaders);
         mDownloadTask.execute(httpGet);
         mSemaphore.acquire();
         assertThat(mUrl).isEqualTo(httpGet.getURI().toString());
         assertThat(mDownloadResponse.getStatusCode()).isEqualTo(200);
+        assertThat(mDownloadResponse.getFirstHeader(ResponseHeader.IMPRESSION_URL)).isEqualTo("moPubImpressionTrackerUrl");
+        assertThat(mDownloadResponse.getFirstHeader(ResponseHeader.CLICKTHROUGH_URL)).isEqualTo("moPubClickTrackerUrl");
         assertThat(HttpResponses.asResponseString(mDownloadResponse)).isEqualTo(mTestResponse);
     }
 

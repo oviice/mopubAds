@@ -162,7 +162,7 @@ public class MraidJavascript {
             "\n" +
             "  // Constants. ////////////////////////////////////////////////////////////////////////////////////\n" +
             "\n" +
-            "  var VERSION = mraid.VERSION = '2.0';\n" +
+            "  var VERSION = mraid.VERSION = '1.0';\n" +
             "\n" +
             "  var STATES = mraid.STATES = {\n" +
             "    LOADING: 'loading',     // Initial state.\n" +

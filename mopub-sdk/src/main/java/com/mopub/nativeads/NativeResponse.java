@@ -1,31 +1,40 @@
 package com.mopub.nativeads;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.view.View;
 import android.widget.ImageView;
 
+import com.mopub.common.DownloadResponse;
+import com.mopub.common.HttpClient;
+import com.mopub.common.MoPubBrowser;
+import com.mopub.common.util.IntentUtils;
 import com.mopub.common.util.MoPubLog;
+import com.mopub.common.util.ResponseHeader;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.mopub.nativeads.MoPubNative.MoPubNativeListener;
+import static com.mopub.nativeads.MoPubNative.MoPubNativeListener.EMPTY_MOPUB_NATIVE_LISTENER;
 import static com.mopub.nativeads.NativeResponse.Parameter.CALL_TO_ACTION;
 import static com.mopub.nativeads.NativeResponse.Parameter.CLICK_DESTINATION;
 import static com.mopub.nativeads.NativeResponse.Parameter.CLICK_TRACKER;
 import static com.mopub.nativeads.NativeResponse.Parameter.ICON_IMAGE;
 import static com.mopub.nativeads.NativeResponse.Parameter.IMPRESSION_TRACKER;
 import static com.mopub.nativeads.NativeResponse.Parameter.MAIN_IMAGE;
+import static com.mopub.nativeads.NativeResponse.Parameter.STAR_RATING;
 import static com.mopub.nativeads.NativeResponse.Parameter.TEXT;
 import static com.mopub.nativeads.NativeResponse.Parameter.TITLE;
-import static com.mopub.nativeads.NativeResponse.Parameter.isImageKey;
-import static java.util.Map.Entry;
+import static com.mopub.nativeads.UrlResolutionTask.UrlResolutionListener;
+import static com.mopub.nativeads.UrlResolutionTask.getResolvedUrl;
 
 public final class NativeResponse {
     enum Parameter {
@@ -42,8 +51,8 @@ public final class NativeResponse {
         CALL_TO_ACTION("ctatext", false),
         STAR_RATING("starrating", false);
 
-        private final String name;
-        private final boolean required;
+        final String name;
+        final boolean required;
 
         Parameter(final String name, boolean required) {
             this.name = name;
@@ -51,7 +60,7 @@ public final class NativeResponse {
         }
 
         static Parameter from(final String name) {
-            for (final Parameter parameter : Parameter.values()) {
+            for (final Parameter parameter : values()) {
                 if (parameter.name.equals(name)) {
                     return parameter;
                 }
@@ -60,13 +69,9 @@ public final class NativeResponse {
             return null;
         }
 
-        static boolean isImageKey(final String name) {
-            return name != null && name.toLowerCase().endsWith("image");
-        }
-
         static Set<String> requiredKeys = new HashSet<String>();
         static {
-            for (final Parameter parameter : Parameter.values()) {
+            for (final Parameter parameter : values()) {
                 if (parameter.required) {
                     requiredKeys.add(parameter.name);
                 }
@@ -74,239 +79,277 @@ public final class NativeResponse {
         }
     }
 
-    private String mMainImageUrl;
-    private String mIconImageUrl;
-    private List<String> mImpressionTrackers;
-    private String mClickTracker;
-    private String mClickDestinationUrl;
-    private String mCallToAction;
-    private String mTitle;
-    private String mText;
-    private boolean mRecordedImpression;
-    private final Map<String, Object> mExtras;
-    private boolean mIsDestroyed;
+    final Context mContext;
+    MoPubNativeListener mMoPubNativeListener;
+    final NativeAdInterface mNativeAd;
 
-    NativeResponse(final JSONObject jsonObject) throws IllegalArgumentException {
-        mExtras = new HashMap<String, Object>();
-        mImpressionTrackers = new ArrayList<String>();
+    // Impression and click trackers for the MoPub adserver
+    final Set<String> mMoPubImpressionTrackers;
+    final String mMoPubClickTracker;
 
-        if (!containsRequiredKeys(jsonObject)) {
-            throw new IllegalArgumentException("JSONObject did not contain required keys.");
-        }
+    boolean mRecordedImpression;
+    boolean mIsClicked;
+    boolean mIsDestroyed;
 
-        Iterator<String> keys = jsonObject.keys();
-        while (keys.hasNext()) {
-            final String key = keys.next();
-            final Parameter parameter = Parameter.from(key);
+    public NativeResponse(final Context context,
+            final DownloadResponse downloadResponse,
+            final NativeAdInterface nativeAd,
+            final MoPubNativeListener moPubNativeListener) {
+        mContext = context.getApplicationContext();
+        mMoPubNativeListener = moPubNativeListener;
+        mNativeAd = nativeAd;
 
-            if (parameter != null) {
-                try {
-                    addInstanceVariable(parameter, jsonObject.opt(key));
-                } catch (ClassCastException e) {
-                    throw new IllegalArgumentException("JSONObject key (" + key + ") contained unexpected value.");
-                }
-            } else {
-                addExtra(key, jsonObject.opt(key));
-            }
-        }
+        mMoPubImpressionTrackers = new HashSet<String>();
+        mMoPubImpressionTrackers.add(downloadResponse.getFirstHeader(ResponseHeader.IMPRESSION_URL));
+        mMoPubClickTracker = downloadResponse.getFirstHeader(ResponseHeader.CLICKTHROUGH_URL);
     }
 
     @Override
     public String toString() {
-        StringBuilder stringBuilder = new StringBuilder();
+        final StringBuilder stringBuilder = new StringBuilder("\n");
 
-        stringBuilder.append(TITLE.name).append(":").append(mTitle).append("\n");
-        stringBuilder.append(TEXT.name).append(":").append(mText).append("\n");
-        stringBuilder.append(ICON_IMAGE.name).append(":").append(mIconImageUrl).append("\n");
-        stringBuilder.append(MAIN_IMAGE.name).append(":").append(mMainImageUrl).append("\n");
-        stringBuilder.append(IMPRESSION_TRACKER.name).append(":").append(mImpressionTrackers).append("\n");
-        stringBuilder.append(CLICK_TRACKER.name).append(":").append(mClickTracker).append("\n");
-        stringBuilder.append(CLICK_DESTINATION.name).append(":").append(mClickDestinationUrl).append("\n");
-        stringBuilder.append(CALL_TO_ACTION.name).append(":").append(mCallToAction).append("\n");
+        stringBuilder.append(TITLE.name).append(":").append(getTitle()).append("\n");
+        stringBuilder.append(TEXT.name).append(":").append(getText()).append("\n");
+        stringBuilder.append(ICON_IMAGE.name).append(":").append(getIconImageUrl()).append("\n");
+        stringBuilder.append(MAIN_IMAGE.name).append(":").append(getMainImageUrl()).append("\n");
+        stringBuilder.append(STAR_RATING.name).append(":").append(getStarRating()).append("\n");
+        stringBuilder.append(IMPRESSION_TRACKER.name).append(":").append(getImpressionTrackers()).append("\n");
+        stringBuilder.append(CLICK_TRACKER.name).append(":").append(mMoPubClickTracker).append("\n");
+        stringBuilder.append(CLICK_DESTINATION.name).append(":").append(getClickDestinationUrl()).append("\n");
+        stringBuilder.append(CALL_TO_ACTION.name).append(":").append(getCallToAction()).append("\n");
         stringBuilder.append("recordedImpression").append(":").append(mRecordedImpression).append("\n");
-        stringBuilder.append("extras").append(":").append(mExtras);
+        stringBuilder.append("extras").append(":").append(getExtras());
 
         return stringBuilder.toString();
     }
 
-    public void destroy() {
-        mIsDestroyed = true;
-        mExtras.clear();
-    }
-
-    /**
-     * Getters
-     */
+    // Interface Methods
+    // Getters
     public String getMainImageUrl() {
-        return mMainImageUrl;
-    }
-
-    public void loadMainImage(final ImageView imageView) {
-        loadImageView(mMainImageUrl, imageView);
+        return mNativeAd.getMainImageUrl();
     }
 
     public String getIconImageUrl() {
-        return mIconImageUrl;
-    }
-
-    public void loadIconImage(final ImageView imageView) {
-        loadImageView(mIconImageUrl, imageView);
-    }
-
-    public List<String> getImpressionTrackers() {
-        return mImpressionTrackers;
-    }
-
-    public String getClickTracker() {
-        return mClickTracker;
+        return mNativeAd.getIconImageUrl();
     }
 
     public String getClickDestinationUrl() {
-        return mClickDestinationUrl;
+        return mNativeAd.getClickDestinationUrl();
     }
 
     public String getCallToAction() {
-        return mCallToAction;
+        return mNativeAd.getCallToAction();
     }
 
     public String getTitle() {
-        return mTitle;
+        return mNativeAd.getTitle();
     }
 
-    public String getSubtitle() {
-        return mText;
+    public String getText() {
+        return mNativeAd.getText();
+    }
+
+    public List<String> getImpressionTrackers() {
+        final Set<String> allImpressionTrackers = new HashSet<String>();
+        allImpressionTrackers.addAll(mMoPubImpressionTrackers);
+        allImpressionTrackers.addAll(mNativeAd.getImpressionTrackers());
+        return new ArrayList<String>(allImpressionTrackers);
+    }
+
+    public String getClickTracker() {
+        return mMoPubClickTracker;
+    }
+
+    public Double getStarRating() {
+        return mNativeAd.getStarRating();
+    }
+
+    public int getImpressionMinTimeViewed() {
+        return mNativeAd.getImpressionMinTimeViewed();
+    }
+
+    public int getImpressionMinPercentageViewed() {
+        return mNativeAd.getImpressionMinPercentageViewed();
+    }
+
+    // Extras Getters
+    public Object getExtra(final String key) {
+        return mNativeAd.getExtra(key);
+    }
+
+    public Map<String, Object> getExtras() {
+        return mNativeAd.getExtras();
+    }
+
+    // Event Handlers
+    public void prepareImpression(final View view) {
+        if (getRecordedImpression() || isDestroyed()) {
+            return;
+        }
+
+        ImpressionTrackingManager.addView(view, this);
+        mNativeAd.prepareImpression(view);
+    }
+
+    public void recordImpression(final View view) {
+        if (getRecordedImpression() || isDestroyed()) {
+            return;
+        }
+
+        for (final String impressionTracker : getImpressionTrackers()) {
+            HttpClient.makeTrackingHttpRequest(impressionTracker);
+        }
+
+        mNativeAd.recordImpression();
+        mRecordedImpression = true;
+
+        mMoPubNativeListener.onNativeImpression(view);
+    }
+
+    public void handleClick(final View view) {
+        if (isDestroyed()) {
+            return;
+        }
+
+        if (!isClicked()) {
+            HttpClient.makeTrackingHttpRequest(mMoPubClickTracker);
+        }
+
+        openClickDestinationUrl(view);
+        mNativeAd.handleClick(view);
+        mIsClicked = true;
+
+        mMoPubNativeListener.onNativeClick(view);
+    }
+
+    public void destroy() {
+        if (isDestroyed()) {
+            return;
+        }
+
+        mMoPubNativeListener = EMPTY_MOPUB_NATIVE_LISTENER;
+
+        mNativeAd.destroy();
+        mIsDestroyed = true;
+    }
+
+    // Non Interface Public Methods
+    public void loadMainImage(final ImageView imageView) {
+        loadImageView(getMainImageUrl(), imageView);
+    }
+
+    public void loadIconImage(final ImageView imageView) {
+        loadImageView(getIconImageUrl(), imageView);
+    }
+
+    public void loadExtrasImage(final String key, final ImageView imageView) {
+        final Object object = getExtra(key);
+        if (object != null && object instanceof String) {
+            loadImageView((String) object, imageView);
+        }
     }
 
     public boolean getRecordedImpression() {
         return mRecordedImpression;
     }
 
-    public Object getExtra(final String key) {
-        return mExtras.get(key);
-    }
-
-    public Map<String, Object> getExtras() {
-        return new HashMap<String, Object>(mExtras);
-    }
-
-    public void loadExtrasImage(final String key, final ImageView imageView) {
-        Object object = mExtras.get(key);
-        if (object != null && object instanceof String) {
-            final String imageUrl = (String) mExtras.get(key);
-            loadImageView(imageUrl, imageView);
-        }
-    }
-
-    private void loadImageView(final String url, final ImageView imageView) {
-        ImageViewService.loadImageView(url, imageView);
+    public boolean isClicked() {
+        return mIsClicked;
     }
 
     public boolean isDestroyed() {
         return mIsDestroyed;
     }
 
-    List<String> getExtrasImageUrls() {
-        final List<String> extrasBitmapUrls = new ArrayList<String>(mExtras.size());
-
-        for (final Entry<String, Object> entry : mExtras.entrySet()) {
-            if (isImageKey(entry.getKey()) && entry.getValue() instanceof String) {
-                extrasBitmapUrls.add((String) entry.getValue());
-            }
-        }
-
-        return extrasBitmapUrls;
+    // Helpers
+    private void loadImageView(final String url, final ImageView imageView) {
+        ImageViewService.loadImageView(url, imageView);
     }
 
-    List<String> getAllImageUrls() {
-        final List<String> imageUrls = new ArrayList<String>();
-        if (mMainImageUrl != null) {
-            imageUrls.add(mMainImageUrl);
-        }
-        if (mIconImageUrl != null) {
-            imageUrls.add(mIconImageUrl);
+    private void openClickDestinationUrl(final View view) {
+        if (getClickDestinationUrl() == null) {
+            return;
         }
 
-        imageUrls.addAll(getExtrasImageUrls());
-        return imageUrls;
-    }
-
-    /**
-     * Setters
-     */
-
-    void recordImpression() {
-        mRecordedImpression = true;
-    }
-
-    private boolean containsRequiredKeys(final JSONObject jsonObject) {
-        final Set<String> keys = new HashSet<String>();
-
-        final Iterator<String> jsonKeys = jsonObject.keys();
-        while (jsonKeys.hasNext()) {
-            keys.add(jsonKeys.next());
+        SpinningProgressView spinningProgressView = null;
+        if (view != null) {
+            spinningProgressView = new SpinningProgressView(mContext);
+            spinningProgressView.addToRoot(view);
         }
 
-        return keys.containsAll(Parameter.requiredKeys);
+        final Iterator<String> urlIterator = Arrays.asList(getClickDestinationUrl()).iterator();
+        final ClickDestinationUrlResolutionListener urlResolutionListener = new ClickDestinationUrlResolutionListener(
+                mContext,
+                urlIterator,
+                spinningProgressView
+        );
+
+        getResolvedUrl(urlIterator.next(), urlResolutionListener);
     }
 
-    private void addInstanceVariable(final Parameter key, final Object value) throws ClassCastException {
-        try {
-            switch (key) {
-                case MAIN_IMAGE:
-                    mMainImageUrl = (String) value;
-                    break;
-                case ICON_IMAGE:
-                    mIconImageUrl = (String) value;
-                    break;
-                case IMPRESSION_TRACKER:
-                    addImpressionTrackers(value);
-                    break;
-                case CLICK_TRACKER:
-                    mClickTracker = (String) value;
-                    break;
-                case CLICK_DESTINATION:
-                    mClickDestinationUrl = (String) value;
-                    break;
-                case CALL_TO_ACTION:
-                    mCallToAction = (String) value;
-                    break;
-                case TITLE:
-                    mTitle = (String) value;
-                    break;
-                case TEXT:
-                    mText = (String) value;
-                    break;
-                default:
-                    MoPubLog.d("Unable to add JSON key to internal mapping: " + key.name);
-                    break;
-            }
-        } catch (ClassCastException e) {
-            if (!key.required) {
-                MoPubLog.d("Ignoring class cast exception for optional defined key: " + key.name);
+    private static class ClickDestinationUrlResolutionListener implements UrlResolutionListener {
+        private final Context mContext;
+        private final Iterator<String> mUrlIterator;
+        private final SoftReference<SpinningProgressView> mSpinningProgressView;
+
+        public ClickDestinationUrlResolutionListener(final Context context,
+                final Iterator<String> urlIterator,
+                final SpinningProgressView spinningProgressView) {
+            mContext = context.getApplicationContext();
+            mUrlIterator = urlIterator;
+            mSpinningProgressView = new SoftReference<SpinningProgressView>(spinningProgressView);
+        }
+
+        @Override
+        public void onSuccess(final String resolvedUrl) {
+            final Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(resolvedUrl));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            if (IntentUtils.isDeepLink(resolvedUrl) && IntentUtils.deviceCanHandleIntent(mContext, intent)) {
+                // Open another Android app from deep link
+                mContext.startActivity(intent);
+            } else if (mUrlIterator.hasNext()) {
+                // If we can't handle a deep link then try the fallback url
+                getResolvedUrl(mUrlIterator.next(), this);
+                return;
             } else {
-                throw e;
+                // If we can't open the deep link and there are no backup links
+                // Or the link is a browser link then handle it here
+                MoPubBrowser.open(mContext, resolvedUrl);
+            }
+
+            removeSpinningProgressView();
+        }
+
+        @Override
+        public void onFailure() {
+            MoPubLog.d("Failed to resolve URL for click.");
+            removeSpinningProgressView();
+        }
+
+        private void removeSpinningProgressView() {
+            final SpinningProgressView spinningProgressView = mSpinningProgressView.get();
+            if (spinningProgressView != null) {
+                spinningProgressView.removeFromRoot();
             }
         }
     }
 
-    private void addExtra(final String key, final Object value) {
-        mExtras.put(key, value);
+    @Deprecated
+    public String getSubtitle() {
+        return mNativeAd.getText();
     }
 
-    private void addImpressionTrackers(final Object impressionTrackers) throws ClassCastException {
-        if (!(impressionTrackers instanceof JSONArray)) {
-            throw new ClassCastException("Expected impression trackers of type JSONArray.");
-        }
+    // Testing
+    @Deprecated
+    MoPubNativeListener getMoPubNativeListener() {
+        return mMoPubNativeListener;
+    }
 
-        final JSONArray trackers = (JSONArray) impressionTrackers;
-
-        for (int i = 0; i < trackers.length(); i++) {
-            try {
-                mImpressionTrackers.add(trackers.getString(i));
-            } catch (JSONException e) {
-                // This will only occur if we access a non-existent index in JSONArray.
-                MoPubLog.d("Unable to parse impression trackers.");
-            }
-        }
+    // Testing
+    @Deprecated
+    void setRecordedImpression(final boolean recordedImpression) {
+        mRecordedImpression = recordedImpression;
     }
 }

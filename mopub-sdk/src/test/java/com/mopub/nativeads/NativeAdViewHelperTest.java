@@ -9,12 +9,12 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.mopub.common.DownloadResponse;
+import com.mopub.common.util.ResponseHeader;
 import com.mopub.common.util.Utils;
+import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 import com.mopub.nativeads.test.support.SdkTestRunner;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,6 +23,7 @@ import org.robolectric.Robolectric;
 import static com.mopub.nativeads.MoPubNative.MoPubNativeListener;
 import static com.mopub.nativeads.NativeAdViewHelper.NativeViewClickListener;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 @RunWith(SdkTestRunner.class)
 public class NativeAdViewHelperTest {
@@ -30,9 +31,8 @@ public class NativeAdViewHelperTest {
     private RelativeLayout relativeLayout;
     private ViewGroup viewGroup;
     private NativeResponse nativeResponse;
+    private BaseForwardingNativeAd mNativeAd;
     private ViewBinder viewBinder;
-    private MoPubNativeListener mopubNativeListener;
-    private JSONObject fakeJsonObject;
     private TextView titleView;
     private TextView textView;
     private TextView callToActionView;
@@ -46,10 +46,12 @@ public class NativeAdViewHelperTest {
         relativeLayout.setId((int) Utils.generateUniqueId());
         viewGroup = new LinearLayout(context);
 
-        fakeJsonObject = new JSONObject();
-        fakeJsonObject.put("imptracker", new JSONArray("[\"url1\", \"url2\"]"));
-        fakeJsonObject.put("clktracker", "expected clicktracker");
-        nativeResponse = new NativeResponse(fakeJsonObject);
+        mNativeAd = new BaseForwardingNativeAd() {};
+        mNativeAd.setClickDestinationUrl("destinationUrl");
+        final TestHttpResponseWithHeaders testHttpResponseWithHeaders = new TestHttpResponseWithHeaders(200, "");
+        testHttpResponseWithHeaders.addHeader(ResponseHeader.CLICKTHROUGH_URL.getKey(), "clickTrackerUrl");
+        final DownloadResponse downloadResponse = new DownloadResponse(testHttpResponseWithHeaders);
+        nativeResponse = new NativeResponse(context, downloadResponse, mNativeAd, mock(MoPubNativeListener.class));
 
         titleView = new TextView(context);
         titleView.setId((int) Utils.generateUniqueId());
@@ -75,10 +77,6 @@ public class NativeAdViewHelperTest {
                 .mainImageId(mainImageView.getId())
                 .iconImageId(iconImageView.getId())
                 .build();
-    }
-
-    @After
-    public void tearDown() throws Exception {
     }
 
     @Test
@@ -134,7 +132,7 @@ public class NativeAdViewHelperTest {
 
     @Test
     public void onClick_shouldQueueClickTrackerAndUrlResolutionTasks() throws Exception {
-        NativeViewClickListener nativeViewClickListener = new NativeViewClickListener(context, "clickTrackerUrl", "destinationUrl", null);
+        NativeViewClickListener nativeViewClickListener = new NativeViewClickListener(nativeResponse);
 
         Robolectric.getBackgroundScheduler().pause();
         assertThat(Robolectric.getBackgroundScheduler().enqueuedTaskCount()).isEqualTo(0);
@@ -145,7 +143,9 @@ public class NativeAdViewHelperTest {
 
     @Test
     public void onClick_withNullDestinationUrl_shouldNotQueueUrlResolutionTask() throws Exception {
-        NativeViewClickListener nativeViewClickListener = new NativeViewClickListener(context, "clickTrackerUrl", null, null);
+        mNativeAd.setClickDestinationUrl(null);
+
+        NativeViewClickListener nativeViewClickListener = new NativeViewClickListener(nativeResponse);
 
         Robolectric.getBackgroundScheduler().pause();
         assertThat(Robolectric.getBackgroundScheduler().enqueuedTaskCount()).isEqualTo(0);

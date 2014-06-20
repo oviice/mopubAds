@@ -32,6 +32,8 @@
 
 package com.mopub.mobileads.util;
 
+import com.mopub.common.util.ResponseHeader;
+
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 

@@ -35,15 +35,18 @@ package com.mopub.common;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Looper;
 
 import com.mopub.common.factories.MethodBuilderFactory;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
 import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.mobileads.test.support.ThreadUtils;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
 
 import java.util.concurrent.Semaphore;
 
@@ -62,6 +65,7 @@ public class GpsHelperTest {
     private TestAdInfo adInfo;
     private Semaphore semaphore;
     private GpsHelper.GpsHelperListener semaphoreGpsHelperListener;
+    private Looper gpsHelperListenerCallbackLooper;
 
     // This class emulates the AdInfo class returned from the Google Play Services
     // AdvertisingIdClient.getAdvertisingIdInfo method; need to implement getters for reflection calls
@@ -91,6 +95,7 @@ public class GpsHelperTest {
         semaphoreGpsHelperListener = new GpsHelper.GpsHelperListener() {
             @Override
             public void onFetchAdInfoCompleted() {
+                gpsHelperListenerCallbackLooper = Looper.myLooper();
                 semaphore.release();
             }
         };
@@ -128,6 +133,20 @@ public class GpsHelperTest {
     }
 
     @Test
+    public void asyncFetchAdvertisingInfo_whenGooglePlayServicesIsLinked_shouldInvokeCallbackOnMainLooper() throws Exception {
+        GpsHelper.setClassNamesForTesting();
+        when(methodBuilder.execute()).thenReturn(
+                adInfo,
+                adInfo.ADVERTISING_ID,
+                adInfo.LIMIT_AD_TRACKING_ENABLED
+        );
+
+        GpsHelper.asyncFetchAdvertisingInfo(context, semaphoreGpsHelperListener);
+        safeAcquireSemaphore();
+        assertThat(gpsHelperListenerCallbackLooper).isEqualTo(Looper.getMainLooper());
+    }
+
+    @Test
     public void asyncFetchAdvertisingInfo_whenGooglePlayServicesIsLinked_shouldPopulateSharedPreferences() throws Exception {
         verifyCleanSharedPreferences(context);
         GpsHelper.setClassNamesForTesting();
@@ -138,7 +157,7 @@ public class GpsHelperTest {
         );
 
         GpsHelper.asyncFetchAdvertisingInfo(context, semaphoreGpsHelperListener);
-        semaphore.acquire();
+        safeAcquireSemaphore();
         verifySharedPreferences(context, adInfo);
     }
 
@@ -149,7 +168,7 @@ public class GpsHelperTest {
         when(methodBuilder.execute()).thenThrow(new Exception());
 
         GpsHelper.asyncFetchAdvertisingInfo(context, semaphoreGpsHelperListener);
-        semaphore.acquire();
+        safeAcquireSemaphore();
         verifyCleanSharedPreferences(context);
     }
 
@@ -160,7 +179,7 @@ public class GpsHelperTest {
         when(methodBuilder.execute()).thenReturn(null);
 
         GpsHelper.asyncFetchAdvertisingInfo(context, semaphoreGpsHelperListener);
-        semaphore.acquire();
+        safeAcquireSemaphore();
         verifyCleanSharedPreferences(context);
     }
 
@@ -176,7 +195,7 @@ public class GpsHelperTest {
         );
 
         GpsHelper.asyncFetchAdvertisingInfoIfNotCached(context, semaphoreGpsHelperListener);
-        semaphore.acquire();
+        safeAcquireSemaphore();
         verifySharedPreferences(context, adInfo);
     }
 
@@ -190,7 +209,7 @@ public class GpsHelperTest {
         );
 
         GpsHelper.asyncFetchAdvertisingInfoIfNotCached(context, semaphoreGpsHelperListener);
-        semaphore.acquire();
+        safeAcquireSemaphore();
         verify(methodBuilder).execute();
     }
 
@@ -203,7 +222,7 @@ public class GpsHelperTest {
         );
 
         GpsHelper.asyncFetchAdvertisingInfoIfNotCached(context, semaphoreGpsHelperListener);
-        semaphore.acquire();
+        safeAcquireSemaphore();
         verifyCleanSharedPreferences(context);
     }
 
@@ -341,6 +360,12 @@ public class GpsHelperTest {
                 .putBoolean(GpsHelper.IS_LIMIT_AD_TRACKING_ENABLED_KEY, adInfo.LIMIT_AD_TRACKING_ENABLED)
                 .commit();
         verifySharedPreferences(context, adInfo);
+    }
+
+    private void safeAcquireSemaphore() throws Exception {
+        Robolectric.runBackgroundTasks();
+        Robolectric.runUiThreadTasks();
+        semaphore.acquire();
     }
 
     static public void verifySharedPreferences(Context context, TestAdInfo adInfo) {

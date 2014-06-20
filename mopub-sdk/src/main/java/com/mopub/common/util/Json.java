@@ -30,14 +30,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.mopub.mobileads.util;
+package com.mopub.common.util;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class Json {
     public static Map<String, String> jsonStringToMap(String jsonParams) throws Exception {
@@ -99,4 +101,20 @@ public class Json {
         }
     }
 
+    public static <T> T getJsonValue(final JSONObject jsonObject, final String key, final Class<T> valueClass) {
+        if (jsonObject == null || key == null || valueClass == null) {
+            throw new IllegalArgumentException("Cannot pass any null argument to getJsonValue");
+        }
+
+        final Object object = jsonObject.opt(key);
+        if (object == null) {
+            MoPubLog.w("Tried to get Json value with key: " + key + ", but it was null");
+            return null;
+        } else if (!valueClass.isInstance(object)) {
+            MoPubLog.w("Tried to get Json value with key: " + key + ", of type: " + valueClass.toString() + ", its type did not match");
+            return null;
+        }
+
+        return valueClass.cast(object);
+    }
 }

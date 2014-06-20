@@ -1,16 +1,19 @@
 package com.mopub.common;
 
+import com.mopub.common.util.ResponseHeader;
 import com.mopub.common.util.Streams;
 
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 
 public class DownloadResponse {
-    private byte[] bytes = new byte[0];
-    private final int statusCode;
-    private final long contentLength;
+    private byte[] mBytes = new byte[0];
+    private final int mStatusCode;
+    private final long mContentLength;
+    private final Header[] mHeaders;
 
     public DownloadResponse(final HttpResponse httpResponse) throws Exception {
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -18,25 +21,35 @@ public class DownloadResponse {
         try {
             inputStream = new BufferedInputStream(httpResponse.getEntity().getContent());
             Streams.copyContent(inputStream, outputStream);
-            bytes = outputStream.toByteArray();
+            mBytes = outputStream.toByteArray();
         } finally {
             Streams.closeStream(inputStream);
             Streams.closeStream(outputStream);
         }
 
-        this.statusCode = httpResponse.getStatusLine().getStatusCode();
-        this.contentLength = bytes.length;
+        mStatusCode = httpResponse.getStatusLine().getStatusCode();
+        mContentLength = mBytes.length;
+        mHeaders = httpResponse.getAllHeaders();
     }
 
     public byte[] getByteArray() {
-        return bytes;
+        return mBytes;
     }
 
     public int getStatusCode() {
-        return statusCode;
+        return mStatusCode;
     }
 
     public long getContentLength() {
-        return contentLength;
+        return mContentLength;
+    }
+
+    public String getFirstHeader(final ResponseHeader responseHeader) {
+        for (final Header header : mHeaders) {
+            if (header.getName().equals(responseHeader.getKey())) {
+                return header.getValue();
+            }
+        }
+        return null;
     }
 }

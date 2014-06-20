@@ -40,7 +40,7 @@ import com.jirbo.adcolony.AdColony;
 import com.jirbo.adcolony.AdColonyAd;
 import com.jirbo.adcolony.AdColonyAdListener;
 import com.jirbo.adcolony.AdColonyVideoAd;
-import com.mopub.mobileads.util.Json;
+import com.mopub.common.util.Json;
 
 import java.util.*;
 import java.util.concurrent.*;

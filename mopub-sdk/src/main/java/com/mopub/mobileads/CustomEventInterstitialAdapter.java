@@ -35,11 +35,13 @@ package com.mopub.mobileads;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
+
+import com.mopub.common.util.Json;
 import com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
 import com.mopub.mobileads.factories.CustomEventInterstitialFactory;
-import com.mopub.mobileads.util.Json;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;

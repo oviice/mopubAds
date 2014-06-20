@@ -1,268 +1,303 @@
 package com.mopub.nativeads;
 
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import android.app.Activity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.mopub.common.DownloadResponse;
+import com.mopub.common.util.ResponseHeader;
+import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
+import com.mopub.nativeads.test.support.SdkTestRunner;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
+import org.robolectric.tester.org.apache.http.HttpRequestInfo;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import static com.mopub.nativeads.NativeResponse.Parameter;
-import static com.mopub.nativeads.NativeResponse.Parameter.requiredKeys;
+import static com.mopub.nativeads.ImpressionTrackingManager.NativeResponseWrapper;
+import static com.mopub.nativeads.MoPubNative.MoPubNativeListener.EMPTY_MOPUB_NATIVE_LISTENER;
 import static org.fest.assertions.api.Assertions.assertThat;
-import static org.fest.assertions.api.Assertions.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
 
 @RunWith(SdkTestRunner.class)
 public class NativeResponseTest {
 
-    private JSONObject fakeJsonObject;
     private NativeResponse subject;
+    private BaseForwardingNativeAd mNativeAd;
+    private Activity context;
+    private ViewGroup view;
+    private MoPubNative.MoPubNativeListener moPubNativeListener;
+    private NativeResponse subjectWMockBaseNativeAd;
+    private NativeAdInterface mMockNativeAd;
+    private boolean baseNativeAdRecordedImpression;
+    private boolean baseNativeAdIsClicked;
+    private DownloadResponse downloadResponse;
 
     @Before
     public void setUp() throws Exception {
-        fakeJsonObject = new JSONObject();
-        fakeJsonObject.put("imptracker", new JSONArray("[\"url1\", \"url2\"]"));
-        fakeJsonObject.put("clktracker", "expected clicktracker");
+        context = new Activity();
+        mNativeAd = new BaseForwardingNativeAd() {
+            @Override
+            public void recordImpression() {
+                baseNativeAdRecordedImpression = true;
+            }
+
+            @Override
+            public void handleClick(final View view) {
+                baseNativeAdIsClicked = true;
+            }
+        };
+        mNativeAd.setTitle("title");
+        mNativeAd.setText("text");
+        mNativeAd.setMainImageUrl("mainImageUrl");
+        mNativeAd.setIconImageUrl("iconImageUrl");
+        mNativeAd.setClickDestinationUrl("clickDestinationUrl");
+        mNativeAd.setCallToAction("callToAction");
+        mNativeAd.addExtra("extra", "extraValue");
+        mNativeAd.addExtra("extraImage", "extraImageUrl");
+        mNativeAd.addImpressionTracker("impressionUrl");
+        mNativeAd.setImpressionMinTimeViewed(500);
+
+        view = new LinearLayout(context);
+
+        final TestHttpResponseWithHeaders testHttpResponseWithHeaders = new TestHttpResponseWithHeaders(200, "");
+        testHttpResponseWithHeaders.addHeader(ResponseHeader.IMPRESSION_URL.getKey(), "moPubImpressionTrackerUrl");
+        testHttpResponseWithHeaders.addHeader(ResponseHeader.CLICKTHROUGH_URL.getKey(), "moPubClickTrackerUrl");
+        downloadResponse = new DownloadResponse(testHttpResponseWithHeaders);
+
+        moPubNativeListener = mock(MoPubNative.MoPubNativeListener.class);
+
+        subject = new NativeResponse(context, downloadResponse, mNativeAd, moPubNativeListener);
+
+        mMockNativeAd = mock(NativeAdInterface.class);
+        subjectWMockBaseNativeAd = new NativeResponse(context, downloadResponse, mMockNativeAd, moPubNativeListener);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        ImpressionTrackingManager.purgeViews();
     }
 
     @Test
-    public void parameter_requiredKeys_shouldOnlyContainTheRequiredKeys() throws Exception {
-        final HashSet<String> expectedKeys = new HashSet<String>();
-        expectedKeys.add("imptracker");
-        expectedKeys.add("clktracker");
-
-        assertThat(requiredKeys).isEqualTo(expectedKeys);
+    public void getTitle_shouldReturnTitleFromBaseNativeAd() throws Exception {
+        assertThat(subject.getTitle()).isEqualTo("title");
     }
 
     @Test
-    public void parameter_fromString_shouldReturnParameterOnMatch() throws Exception {
-        final Parameter parameter = Parameter.from("title");
-
-        assertThat(parameter).isEqualTo(Parameter.TITLE);
+    public void getTitle_shouldReturnTextFromBaseNativeAd() throws Exception {
+        assertThat(subject.getText()).isEqualTo("text");
     }
 
     @Test
-    public void parameter_fromString_shouldReturnNullOnIllegalKey() throws Exception {
-        final Parameter parameter = Parameter.from("random gibberish");
-
-        assertThat(parameter).isNull();
+    public void getMainImageUrl_shouldReturnMainImageUrlFromBaseNativeAd() throws Exception {
+        assertThat(subject.getMainImageUrl()).isEqualTo("mainImageUrl");
     }
 
     @Test
-    public void constructor_whenMissingRequiredKeys_shouldThrowIllegalArgumentException() throws Exception {
-        fakeJsonObject.remove("imptracker");
-
-        try {
-            subject = new NativeResponse(fakeJsonObject);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // pass
-        }
+    public void getIconImageUrl_shouldReturnIconImageUrlFromBaseNativeAd() throws Exception {
+        assertThat(subject.getIconImageUrl()).isEqualTo("iconImageUrl");
     }
 
     @Test
-    public void constructor_whenExpectedKeyOfWrongType_shouldThrowIllegalArgumentException() throws Exception {
-        fakeJsonObject.put("clktracker", 100);
-
-        try {
-            subject = new NativeResponse(fakeJsonObject);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // pass
-        }
+    public void getClickDestinationUrl_shouldReturnClickDestinationUrlFromBaseNativeAd() throws Exception {
+        assertThat(subject.getClickDestinationUrl()).isEqualTo("clickDestinationUrl");
     }
 
     @Test
-    public void constructor_shouldSetRequiredExpectedFields() throws Exception {
-        subject = new NativeResponse(fakeJsonObject);
-
-        assertThat(subject.getImpressionTrackers()).containsOnly("url1", "url2");
-        assertThat(subject.getClickTracker()).isEqualTo("expected clicktracker");
+    public void getCallToAction_shouldReturnCallToActionFromBaseNativeAd() throws Exception {
+        assertThat(subject.getCallToAction()).isEqualTo("callToAction");
     }
 
     @Test
-    public void constructor_shouldSetOptionalExpectedFields() throws Exception {
-        fakeJsonObject.put("title", "expected title");
-        fakeJsonObject.put("text", "expected text");
-        fakeJsonObject.put("mainimage", "expected mainimage");
-        fakeJsonObject.put("iconimage", "expected iconimage");
-
-        fakeJsonObject.put("clk", "expected clk");
-
-        fakeJsonObject.put("fallback", "expected fallback");
-        fakeJsonObject.put("ctatext", "expected ctatext");
-        fakeJsonObject.put("starrating", 5.0);
-
-        subject = new NativeResponse(fakeJsonObject);
-
-        assertThat(subject.getTitle()).isEqualTo("expected title");
-        assertThat(subject.getSubtitle()).isEqualTo("expected text");
-        assertThat(subject.getMainImageUrl()).isEqualTo("expected mainimage");
-        assertThat(subject.getIconImageUrl()).isEqualTo("expected iconimage");
-
-        assertThat(subject.getClickDestinationUrl()).isEqualTo("expected clk");
-
-//        assertThat(subject.getFallback()).isEqualTo("expected fallback");
-        assertThat(subject.getImpressionTrackers()).containsOnly("url1", "url2");
-        assertThat(subject.getClickTracker()).isEqualTo("expected clicktracker");
-        assertThat(subject.getCallToAction()).isEqualTo("expected ctatext");
-//        assertThat(subject.getStarRating()).isEqualTo(5.0);
+    public void getExtra_shouldReturnExtraFromBaseNativeAd() throws Exception {
+        assertThat(subject.getExtra("extra")).isEqualTo("extraValue");
     }
 
     @Test
-    public void constructor_whenImpressionTrackersIsNotJSONArray_shouldThrowIllegalArgumentException() throws Exception {
-        // An array list is not the same thing as a JSONArray
-        final List<String> impressionTrackers = new ArrayList<String>();
-        impressionTrackers.add("url1");
-        impressionTrackers.add("url2");
-        fakeJsonObject.put("imptracker", impressionTrackers);
-
-        try {
-            subject = new NativeResponse(fakeJsonObject);
-            fail("Expected constructor to throw an IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // pass
-        }
+    public void getExtras_shouldReturnCopyOfExtrasMapFromBaseNativeAd() throws Exception {
+        final Map<String, Object> extras = subject.getExtras();
+        assertThat(extras.size()).isEqualTo(2);
+        assertThat(extras.get("extra")).isEqualTo("extraValue");
+        assertThat(extras.get("extraImage")).isEqualTo("extraImageUrl");
+        assertThat(extras).isNotSameAs(mNativeAd.getExtras());
     }
 
     @Test
-    public void constructor_whenImpressionTrackersContainsNonStrings_willCoerceToString() throws Exception {
-        /**
-         * At this level of abstraction, we don't actually care that these Strings resolve to valid
-         * URLs. We just want to ensure that the constructor does not throw an exception.
-         */
-        final JSONArray impressionTrackers = new JSONArray();
-        impressionTrackers.put("url1");
-        impressionTrackers.put(JSONObject.NULL);
-        impressionTrackers.put(2.12);
-        fakeJsonObject.put("imptracker", impressionTrackers);
-
-        subject = new NativeResponse(fakeJsonObject);
-
-        assertThat(subject.getImpressionTrackers()).containsOnly("url1", "null", "2.12");
+    public void getImpressionTrackers_shouldReturnImpressionTrackersFromMoPubAndFromBaseNativeAd() throws Exception {
+        final List<String> impressionTrackers = subject.getImpressionTrackers();
+        assertThat(impressionTrackers).containsOnly("moPubImpressionTrackerUrl", "impressionUrl");
     }
 
     @Test
-    public void constructor_shouldSetExtraFields() throws Exception {
-        List<Object> array = new ArrayList<Object>();
-        array.add("index1");
-        array.add(-10);
-
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("one", "a");
-        map.put("two", "b");
-
-        fakeJsonObject.put("key1", "yay json");
-        fakeJsonObject.put("key2", 5);
-        fakeJsonObject.put("key3", new JSONArray(array));
-        fakeJsonObject.put("key4", new JSONObject(map));
-
-        subject = new NativeResponse(fakeJsonObject);
-
-        assertThat(subject.getExtra("key1")).isEqualTo("yay json");
-        assertThat(subject.getExtra("key2")).isEqualTo(5);
-        assertThat((JSONArray) subject.getExtra("key3")).isEqualsToByComparingFields(new JSONArray(array));
-        assertThat((JSONObject) subject.getExtra("key4")).isEqualsToByComparingFields(new JSONObject(map));
+    public void getImpressionMinTimeViewed_shouldReturnImpressionMinTimeViewedFromBaseNativeAd() throws Exception {
+        assertThat(subject.getImpressionMinTimeViewed()).isEqualTo(500);
     }
 
     @Test
-    public void getExtrasImageUrls_whenNoExtras_shouldReturnEmptyList() throws Exception {
-        subject = new NativeResponse(fakeJsonObject);
-
-        assertThat(subject.getExtrasImageUrls()).isEmpty();
+    public void getImpressionMinPercentageViewed_shouldReturnImpressionMinPercentageViewedFromBaseNativeAd() throws Exception {
+        assertThat(subject.getImpressionMinPercentageViewed()).isEqualTo(50);
     }
 
     @Test
-    public void getExtrasImageUrls_whenExtrasDoesNotContainImageKeys_shouldReturnEmptyList() throws Exception {
-        // getExtrasImageUrls requires the key to end with a case-insensitive "image" to be counted as an image
-        fakeJsonObject.put("imageAtFront", "ignored");
-        fakeJsonObject.put("middle_image_in_key", "ignored");
-        fakeJsonObject.put("other", "ignored");
+    public void getClickTracker_shouldReturnMoPubClickTracker() throws Exception {
+        assertThat(subject.getClickTracker()).isEqualTo("moPubClickTrackerUrl");
+    }
+    
+    @Test
+    public void prepareImpression_shouldAddViewAndResponseToImpressionTrackingManagerAndCallPrepareImpressionOnBaseNativeAd() throws Exception {
+        assertThat(ImpressionTrackingManager.getKeptViews()).isEmpty();
+        subjectWMockBaseNativeAd.prepareImpression(view);
+        final Map<View, NativeResponseWrapper> keptViews = ImpressionTrackingManager.getKeptViews();
+        assertThat(keptViews.size()).isEqualTo(1);
+        assertThat(keptViews.get(view).mNativeResponse).isSameAs(subjectWMockBaseNativeAd);
 
-        subject = new NativeResponse(fakeJsonObject);
-
-        assertThat(subject.getExtrasImageUrls()).isEmpty();
+        verify(mMockNativeAd).prepareImpression(view);
     }
 
     @Test
-    public void getExtrasImageUrls_whenExtrasContainsImages_shouldReturnImageUrls() throws Exception {
-        // getExtrasImageUrls requires the key to end with a case-insensitive "image" to be counted as an image
-        fakeJsonObject.put("test_image", "image_url_1");
-        fakeJsonObject.put("filler", "ignored");
-        fakeJsonObject.put("otherIMAGE", "image_url_2");
-        fakeJsonObject.put("more filler", "ignored");
-        fakeJsonObject.put("lastimage", "image_url_3");
+    public void prepareImpression_whenDestroyed_shouldReturnFast() throws Exception {
+        subjectWMockBaseNativeAd.destroy();
+        assertThat(subjectWMockBaseNativeAd.isDestroyed()).isTrue();
+        assertThat(ImpressionTrackingManager.getKeptViews()).isEmpty();
 
-        subject = new NativeResponse(fakeJsonObject);
+        subjectWMockBaseNativeAd.prepareImpression(view);
 
-        assertThat(subject.getExtrasImageUrls()).containsOnly("image_url_1", "image_url_2", "image_url_3");
+        assertThat(ImpressionTrackingManager.getKeptViews()).isEmpty();
+        verify(mMockNativeAd, never()).prepareImpression(view);
+    }
+
+    @Test
+    public void prepareImpression_whenAlreadyImpressed_shouldReturnFast() throws Exception {
+        subjectWMockBaseNativeAd.setRecordedImpression(true);
+        assertThat(subjectWMockBaseNativeAd.getRecordedImpression()).isTrue();
+        assertThat(ImpressionTrackingManager.getKeptViews()).isEmpty();
+
+        subjectWMockBaseNativeAd.prepareImpression(view);
+
+        assertThat(ImpressionTrackingManager.getKeptViews()).isEmpty();
+        verify(mMockNativeAd, never()).prepareImpression(view);
+    }
+
+    @Test
+    public void recordImpression_shouldRecordImpressionsAndCallIntoBaseNativeAdAndNotifyListenerIdempotently() throws Exception {
+        Robolectric.getFakeHttpLayer().addPendingHttpResponse(200, "ok");
+        Robolectric.getFakeHttpLayer().addPendingHttpResponse(200, "ok");
+        assertThat(subject.getRecordedImpression()).isFalse();
+
+        subject.recordImpression(view);
+
+        assertThat(subject.getRecordedImpression()).isTrue();
+
+        List<HttpRequestInfo> httpRequestInfos = Robolectric.getFakeHttpLayer().getSentHttpRequestInfos();
+        assertThat(httpRequestInfos.size()).isEqualTo(2);
+        assertThat(httpRequestInfos.get(0).getHttpRequest().getRequestLine().getUri()).isEqualTo("moPubImpressionTrackerUrl");
+        assertThat(httpRequestInfos.get(1).getHttpRequest().getRequestLine().getUri()).isEqualTo("impressionUrl");
+
+        assertThat(baseNativeAdRecordedImpression).isTrue();
+        verify(moPubNativeListener).onNativeImpression(view);
+
+        // reset state
+        baseNativeAdRecordedImpression = false;
+        Robolectric.getFakeHttpLayer().clearRequestInfos();
+        reset(moPubNativeListener);
+
+        // verify impression tracking doesn't fire again
+        subject.recordImpression(view);
+        assertThat(subject.getRecordedImpression()).isTrue();
+        assertThat(Robolectric.getFakeHttpLayer().getSentHttpRequestInfos()).isEmpty();
+        assertThat(baseNativeAdRecordedImpression).isFalse();
+        verify(moPubNativeListener, never()).onNativeImpression(view);
+    }
+
+    @Test
+    public void recordImpression_whenDestroyed_shouldReturnFast() throws Exception {
+        subject.destroy();
+        subject.recordImpression(view);
+        assertThat(subject.getRecordedImpression()).isFalse();
+        assertThat(Robolectric.getFakeHttpLayer().getSentHttpRequestInfos()).isEmpty();
+        assertThat(baseNativeAdRecordedImpression).isFalse();
+        verify(moPubNativeListener, never()).onNativeImpression(view);
+    }
+
+    @Test
+    public void handleClick_withNoBaseNativeAdClickDestinationUrl_shouldRecordClickAndCallIntoBaseNativeAdAndNotifyListener() throws Exception {
+        Robolectric.getFakeHttpLayer().addPendingHttpResponse(200, "ok");
+        assertThat(subject.isClicked()).isFalse();
+
+        subject.handleClick(view);
+
+        assertThat(subject.isClicked()).isTrue();
+
+        List<HttpRequestInfo> httpRequestInfos = Robolectric.getFakeHttpLayer().getSentHttpRequestInfos();
+        assertThat(httpRequestInfos.size()).isEqualTo(1);
+        assertThat(httpRequestInfos.get(0).getHttpRequest().getRequestLine().getUri()).isEqualTo("moPubClickTrackerUrl");
+
+        assertThat(baseNativeAdIsClicked).isTrue();
+        verify(moPubNativeListener).onNativeClick(view);
+
+        // reset state
+        baseNativeAdIsClicked = false;
+        Robolectric.getFakeHttpLayer().clearRequestInfos();
+        reset(moPubNativeListener);
+
+        // second time, tracking does not fire
+        subject.handleClick(view);
+        assertThat(subject.isClicked()).isTrue();
+        assertThat(Robolectric.getFakeHttpLayer().getSentHttpRequestInfos()).isEmpty();
+        assertThat(baseNativeAdRecordedImpression).isFalse();
+        verify(moPubNativeListener).onNativeClick(view);
+    }
+
+    @Ignore("pending")
+    @Test
+    public void handleClick_withBaseNativeAdClickDestinationUrl_shouldRecordClickAndCallIntoBaseNativeAdAndOpenClickDestinationAndNotifyListener() throws Exception {
+        // Really difficult to test url resolution since it doesn't use the apache http client
+    }
+
+    @Test
+    public void handleClick_whenDestroyed_shouldReturnFast() throws Exception {
+        subject.destroy();
+        subject.handleClick(view);
+        assertThat(subject.isClicked()).isFalse();
+        assertThat(Robolectric.getFakeHttpLayer().getSentHttpRequestInfos()).isEmpty();
+        assertThat(baseNativeAdIsClicked).isFalse();
+        verify(moPubNativeListener, never()).onNativeClick(view);
+    }
+
+    @Test
+    public void destroy_shouldCallIntoBaseNativeAd() throws Exception {
+        subjectWMockBaseNativeAd.destroy();
+        assertThat(subjectWMockBaseNativeAd.isDestroyed()).isTrue();
+        verify(mMockNativeAd).destroy();
+
+        reset(mMockNativeAd);
+
+        subjectWMockBaseNativeAd.destroy();
+        verify(mMockNativeAd, never()).destroy();
+    }
+
+    @Test
+    public void destroy_shouldSetMoPubNativeListenerToEmptyMoPubNativeListener() throws Exception {
+        assertThat(subjectWMockBaseNativeAd.getMoPubNativeListener()).isSameAs(moPubNativeListener);
+
+        subjectWMockBaseNativeAd.destroy();
+
+        assertThat(subjectWMockBaseNativeAd.getMoPubNativeListener()).isSameAs(EMPTY_MOPUB_NATIVE_LISTENER);
     }
 
     @Ignore("pending")
     @Test
     public void loadExtrasImage_shouldAsyncLoadImages() throws Exception {
-        // no easy way to test this since nothing can be mocked
-        // also not a critical test since it directly calls another service
-    }
-
-    @Test
-    public void getAllImageUrls_withNoExtraImages_shouldReturnEmptyList() throws Exception {
-        subject = new NativeResponse(fakeJsonObject);
-
-        assertThat(subject.getAllImageUrls()).isEmpty();
-    }
-
-    @Test
-    public void getAllImageUrls_withExtraImagesAndMainAndIconImages_shouldIncludeThemAlongWithMainAndIconImageUrls() throws Exception {
-        fakeJsonObject.put("mainimage", "expected mainimage");
-        fakeJsonObject.put("iconimage", "expected iconimage");
-
-        fakeJsonObject.put("extra1_image", "expected extra1_image");
-        fakeJsonObject.put("extra2_image", "expected extra2_image");
-
-        subject = new NativeResponse(fakeJsonObject);
-
-        assertThat(subject.getAllImageUrls()).containsOnly(
-                "expected mainimage",
-                "expected iconimage",
-                "expected extra1_image",
-                "expected extra2_image"
-        );
-    }
-
-    @Test
-    public void getAllImageUrls_withOnlyExtrasImages_shouldNotIncludeMainOrIconImages() throws Exception {
-        fakeJsonObject.put("extra1_image", "expected extra1_image");
-        fakeJsonObject.put("extra2_image", "expected extra2_image");
-
-        subject = new NativeResponse(fakeJsonObject);
-
-        assertThat(subject.getAllImageUrls()).containsOnly("expected extra1_image", "expected extra2_image");
-    }
-
-    @Test
-    public void recordImpression_shouldSaveImpressionStateWithIdempotence() throws Exception {
-        subject = new NativeResponse(fakeJsonObject);
-        assertThat(subject.getRecordedImpression()).isFalse();
-
-        subject.recordImpression();
-        assertThat(subject.getRecordedImpression()).isTrue();
-
-        subject.recordImpression();
-        assertThat(subject.getRecordedImpression()).isTrue();
-    }
-
-    @Ignore("pending")
-    @Test
-    public void loadMainAndIconImages_shouldAsyncLoadImages() throws Exception {
         // no easy way to test this since nothing can be mocked
         // also not a critical test since it directly calls another service
     }

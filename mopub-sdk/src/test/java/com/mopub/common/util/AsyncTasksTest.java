@@ -2,6 +2,10 @@ package com.mopub.common.util;
 
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+
+import com.mopub.mobileads.test.support.ThreadUtils;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -63,6 +67,13 @@ public class AsyncTasksTest {
     }
 
     @Test
+    public void safeExecutorOnExecutor_beforeICS_runningOnABackgroundThread_shouldThrowIllegalStateException() throws Exception {
+        Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", HONEYCOMB_MR2.getApiLevel());
+
+        ensureFastFailWhenTaskIsRunOnBackgroundThread();
+    }
+
+    @Test
     public void safeExecuteOnExecutor_atLeastICS_shouldCallExecuteWithParamsWithExecutor() throws Exception {
         Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", ICE_CREAM_SANDWICH.getApiLevel());
 
@@ -81,7 +92,6 @@ public class AsyncTasksTest {
 
     }
 
-
     @Test
     public void safeExecutorOnExecutor_atLeastICS_withNullAsyncTask_shouldThrowIllegalArgumentException() throws Exception {
         Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", ICE_CREAM_SANDWICH.getApiLevel());
@@ -92,5 +102,36 @@ public class AsyncTasksTest {
         } catch (IllegalArgumentException exception) {
             // pass
         }
+    }
+
+    @Test
+    public void safeExecutorOnExecutor_atLeastICS_runningOnABackgroundThread_shouldThrowIllegalStateException() throws Exception {
+        Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", ICE_CREAM_SANDWICH.getApiLevel());
+
+        ensureFastFailWhenTaskIsRunOnBackgroundThread();
+    }
+
+    private void ensureFastFailWhenTaskIsRunOnBackgroundThread() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    AsyncTasks.safeExecuteOnExecutor(asyncTask, "hello");
+
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            fail("Should have thrown IllegalStateException");
+                        }
+                    });
+                } catch (IllegalStateException exception) {
+                    // pass
+                }
+            }
+        }).start();
+
+        ThreadUtils.pause(10);
+        Robolectric.runUiThreadTasks();
     }
 }

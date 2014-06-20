@@ -1,29 +1,17 @@
 package com.mopub.nativeads;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
-import com.mopub.common.MoPubBrowser;
 import com.mopub.common.util.MoPubLog;
-
-import java.lang.ref.SoftReference;
-import java.util.Arrays;
-import java.util.Iterator;
 
 import static android.view.View.GONE;
 import static android.view.View.OnClickListener;
 import static android.view.View.VISIBLE;
-import static com.mopub.common.HttpClient.makeTrackingHttpRequest;
-import static com.mopub.common.util.IntentUtils.deviceCanHandleIntent;
-import static com.mopub.common.util.IntentUtils.isDeepLink;
-
 import static com.mopub.nativeads.MoPubNative.MoPubNativeListener;
-import static com.mopub.nativeads.UrlResolutionTask.UrlResolutionListener;
 
 class NativeAdViewHelper {
     private NativeAdViewHelper() {}
@@ -62,9 +50,9 @@ class NativeAdViewHelper {
             convertView.setVisibility(GONE);
         } else {
             populateConvertViewSubViews(convertView, nativeViewHolder, nativeResponse, viewBinder);
-            attachClickListeners(context, convertView, nativeViewHolder, nativeResponse, moPubNativeListener);
+            attachClickListeners(convertView, nativeViewHolder, nativeResponse);
             convertView.setVisibility(VISIBLE);
-            ImpressionTrackingManager.addView(convertView, nativeResponse, moPubNativeListener);
+            nativeResponse.prepareImpression(convertView);
         }
 
         return convertView;
@@ -90,9 +78,9 @@ class NativeAdViewHelper {
     }
 
     private static void populateConvertViewSubViews(final View convertView,
-                                                    final NativeViewHolder nativeViewHolder,
-                                                    final NativeResponse nativeResponse,
-                                                    final ViewBinder viewBinder) {
+            final NativeViewHolder nativeViewHolder,
+            final NativeResponse nativeResponse,
+            final ViewBinder viewBinder) {
         nativeViewHolder.update(nativeResponse);
         nativeViewHolder.updateExtras(convertView, nativeResponse, viewBinder);
     }
@@ -107,25 +95,21 @@ class NativeAdViewHelper {
         setCtaClickListener(nativeViewHolder, null);
     }
 
-    private static void attachClickListeners(final Context context,
-                                             final View view,
-                                             final NativeViewHolder nativeViewHolder,
-                                             final NativeResponse nativeResponse,
-                                             final MoPubNativeListener moPubNativeListener) {
+    private static void attachClickListeners(final View view,
+            final NativeViewHolder nativeViewHolder,
+            final NativeResponse nativeResponse) {
         if (view == null || nativeResponse == null) {
             return;
         }
 
-        final String clickTrackerUrl = nativeResponse.getClickTracker();
-        final String destinationUrl = nativeResponse.getClickDestinationUrl();
         final NativeViewClickListener nativeViewClickListener
-                = new NativeViewClickListener(context, clickTrackerUrl, destinationUrl, moPubNativeListener);
+                = new NativeViewClickListener(nativeResponse);
         view.setOnClickListener(nativeViewClickListener);
         setCtaClickListener(nativeViewHolder, nativeViewClickListener);
     }
 
     private static void setCtaClickListener(final NativeViewHolder nativeViewHolder,
-                                            final NativeViewClickListener nativeViewClickListener) {
+            final NativeViewClickListener nativeViewClickListener) {
         if (nativeViewHolder == null || nativeViewClickListener == null) {
             return;
         }
@@ -138,98 +122,15 @@ class NativeAdViewHelper {
     }
 
     static class NativeViewClickListener implements OnClickListener {
-        private final Context mContext;
-        private final String mClickTrackerUrl;
-        private final String mDestinationUrl;
-        private final MoPubNativeListener mMoPubNativeListener;
+        private final NativeResponse mNativeResponse;
 
-        NativeViewClickListener(final Context context,
-                final String clickTrackerUrl,
-                final String destinationUrl,
-                final MoPubNativeListener moPubNativeListener) {
-            mContext = context.getApplicationContext();
-            mClickTrackerUrl = clickTrackerUrl;
-            mDestinationUrl = destinationUrl;
-            mMoPubNativeListener = moPubNativeListener;
+        NativeViewClickListener(final NativeResponse nativeResponse) {
+            mNativeResponse = nativeResponse;
         }
 
         @Override
         public void onClick(View view) {
-            final SpinningProgressView spinningProgressView = new SpinningProgressView(mContext);
-            spinningProgressView.addToRoot(view);
-
-            // Fire and forget click tracker
-            makeTrackingHttpRequest(mClickTrackerUrl);
-
-            if (mDestinationUrl != null) {
-                final Iterator<String> urlIterator = Arrays.asList(mDestinationUrl).iterator();
-                final ClickDestinationUrlResolutionListener urlResolutionListener = new ClickDestinationUrlResolutionListener(
-                        mContext,
-                        urlIterator,
-                        spinningProgressView,
-                        mMoPubNativeListener,
-                        view
-                );
-                UrlResolutionTask.getResolvedUrl(urlIterator.next(), urlResolutionListener);
-            }
-        }
-    }
-
-    private static class ClickDestinationUrlResolutionListener implements UrlResolutionListener {
-        private final Context mContext;
-        private final Iterator<String> mUrlIterator;
-        private final SoftReference<SpinningProgressView> mSpinningProgressView;
-        private final MoPubNativeListener mMoPubNativeListener;
-        private final SoftReference<View> mView;
-
-        public ClickDestinationUrlResolutionListener(final Context context,
-                final Iterator<String> urlIterator,
-                final SpinningProgressView spinningProgressView,
-                final MoPubNativeListener moPubNativeListener,
-                final View view) {
-            mContext = context;
-            mUrlIterator = urlIterator;
-            mSpinningProgressView = new SoftReference<SpinningProgressView>(spinningProgressView);
-            mMoPubNativeListener = (moPubNativeListener == null)
-                    ? MoPubNativeListener.EMPTY_MOPUB_NATIVE_LISTENER
-                    : moPubNativeListener;
-            mView = new SoftReference<View>(view);
-        }
-
-        @Override
-        public void onSuccess(String result) {
-            final Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(result));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            if (isDeepLink(result)) {
-                if (deviceCanHandleIntent(mContext, intent)) {
-                    mMoPubNativeListener.onNativeClick(mView.get());
-                    mContext.startActivity(intent);
-                } else {
-                    if (mUrlIterator.hasNext()) {
-                        UrlResolutionTask.getResolvedUrl(mUrlIterator.next(), this);
-                    } else {
-                        mMoPubNativeListener.onNativeClick(mView.get());
-                        MoPubBrowser.open(mContext, result);
-                    }
-                }
-            } else {
-                mMoPubNativeListener.onNativeClick(mView.get());
-                MoPubBrowser.open(mContext, result);
-            }
-
-            if (mSpinningProgressView.get() != null) {
-                mSpinningProgressView.get().removeFromRoot();
-            }
-        }
-
-        @Override
-        public void onFailure() {
-            MoPubLog.d("Failed to resolve URL for click.");
-            if (mSpinningProgressView.get() != null) {
-                mSpinningProgressView.get().removeFromRoot();
-            }
+            mNativeResponse.handleClick(view);
         }
     }
 }

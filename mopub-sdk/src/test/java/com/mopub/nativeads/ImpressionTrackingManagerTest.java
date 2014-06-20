@@ -5,10 +5,11 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.view.View;
 
+import com.mopub.common.DownloadResponse;
+import com.mopub.common.util.ResponseHeader;
+import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 import com.mopub.nativeads.test.support.SdkTestRunner;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -39,19 +40,26 @@ public class ImpressionTrackingManagerTest {
 
     private View view;
     private NativeResponse nativeResponse;
+    private NativeResponseWrapper nativeResponseWrapper;
     private Context context;
     private MoPubNativeListener mopubNativeListener;
-    private JSONObject fakeJsonObject;
 
     @Before
     public void setUp() throws Exception {
+        ImpressionTrackingManager.purgeViews();
+
         context = new Activity();
         mopubNativeListener = mock(MoPubNativeListener.class);
         view = getViewMock(View.VISIBLE, 100, 100, 100, 100);
-        fakeJsonObject = new JSONObject();
-        fakeJsonObject.put("imptracker", new JSONArray("[\"url1\", \"url2\"]"));
-        fakeJsonObject.put("clktracker", "expected clicktracker");
-        nativeResponse = new NativeResponse(fakeJsonObject);
+
+        final BaseForwardingNativeAd nativeAd = new BaseForwardingNativeAd() {};
+        final TestHttpResponseWithHeaders testHttpResponseWithHeaders = new TestHttpResponseWithHeaders(200, "");
+        testHttpResponseWithHeaders.addHeader(ResponseHeader.IMPRESSION_URL.getKey(), "url1");
+        final DownloadResponse downloadResponse = new DownloadResponse(testHttpResponseWithHeaders);
+
+        nativeResponse = new NativeResponse(context, downloadResponse, nativeAd, mopubNativeListener);
+        nativeResponseWrapper = new NativeResponseWrapper(nativeResponse);
+
         Robolectric.addPendingHttpResponse(new TestHttpResponse(200, ""));
 
         // We need this to ensure that our SystemClock starts
@@ -89,7 +97,7 @@ public class ImpressionTrackingManagerTest {
 
     @Test
     public void addView_shouldAddViewToHashMap() throws Exception {
-        ImpressionTrackingManager.addView(view, nativeResponse, mopubNativeListener);
+        ImpressionTrackingManager.addView(view, nativeResponse);
         Map<View, NativeResponseWrapper> keptViews = ImpressionTrackingManager.getKeptViews();
         assertThat(keptViews).hasSize(1);
         assertThat(keptViews.get(view).mNativeResponse).isEqualTo(nativeResponse);
@@ -97,14 +105,14 @@ public class ImpressionTrackingManagerTest {
 
     @Test
     public void addView_whenViewIsNull_shouldNotAddView() throws Exception {
-        ImpressionTrackingManager.addView(null, nativeResponse, mopubNativeListener);
+        ImpressionTrackingManager.addView(null, nativeResponse);
         Map<View, NativeResponseWrapper> keptViews = ImpressionTrackingManager.getKeptViews();
         assertThat(keptViews).isEmpty();
     }
 
     @Test
     public void addView_whenNativeResponseIsNull_shouldNotAddView() throws Exception {
-        ImpressionTrackingManager.addView(view, null, mopubNativeListener);
+        ImpressionTrackingManager.addView(view, null);
         Map<View, NativeResponseWrapper> keptViews = ImpressionTrackingManager.getKeptViews();
         assertThat(keptViews).isEmpty();
     }
@@ -114,8 +122,8 @@ public class ImpressionTrackingManagerTest {
         View view1 = mock(View.class);
         View view2 = mock(View.class);
 
-        ImpressionTrackingManager.addView(view1, nativeResponse, mopubNativeListener);
-        ImpressionTrackingManager.addView(view2, nativeResponse, mopubNativeListener);
+        ImpressionTrackingManager.addView(view1, nativeResponse);
+        ImpressionTrackingManager.addView(view2, nativeResponse);
         assertThat(ImpressionTrackingManager.getKeptViews()).hasSize(2);
 
         ImpressionTrackingManager.removeView(view2);
@@ -134,7 +142,7 @@ public class ImpressionTrackingManagerTest {
 
     @Test
     public void removeView_whenViewIsNull_shouldDoNothing() throws Exception {
-        ImpressionTrackingManager.addView(view, nativeResponse, mopubNativeListener);
+        ImpressionTrackingManager.addView(view, nativeResponse);
 
         assertThat(ImpressionTrackingManager.getKeptViews()).hasSize(1);
         ImpressionTrackingManager.removeView(null);
@@ -143,51 +151,54 @@ public class ImpressionTrackingManagerTest {
 
     @Test
     public void visibilityCheckRun_whenWrapperIsNull_shouldNotTrackImpression() throws Exception {
-        ImpressionTrackingManager.addView(view, nativeResponse, mopubNativeListener);
+        ImpressionTrackingManager.addView(view, nativeResponse);
 
         // This doesn't normally happen; perhaps we're being overly defensive
         ImpressionTrackingManager.getKeptViews().put(view, null);
 
         new VisibilityCheck().run();
         assertThat(nativeResponse.getRecordedImpression()).isFalse();
-        assertImpressionTracked(nativeResponse, false);
+        assertImpressionTracked(false);
     }
 
     @Test
     public void visibilityCheckRun_whenNativeResponseIsNull_shouldNotTrackImpression() throws Exception {
-        ImpressionTrackingManager.addView(view, nativeResponse, mopubNativeListener);
+        ImpressionTrackingManager.addView(view, nativeResponse);
 
         // This doesn't normally happen; perhaps we're being overly defensive
-        ImpressionTrackingManager.getKeptViews().put(view, new NativeResponseWrapper(null, null));
+        ImpressionTrackingManager.getKeptViews().put(view, new NativeResponseWrapper(null));
 
         new VisibilityCheck().run();
         assertThat(nativeResponse.getRecordedImpression()).isFalse();
-        assertImpressionTracked(nativeResponse, false);
+        assertImpressionTracked(false);
     }
 
     @Test
     public void visibilityCheckRun_whenNativeResponseHasRecordedImpression_shouldNotTrackImpression() throws Exception {
-        ImpressionTrackingManager.addView(view, nativeResponse, mopubNativeListener);
-        nativeResponse.recordImpression();
-        assertThat(nativeResponse.getRecordedImpression()).isTrue();
+        ImpressionTrackingManager.addView(view, nativeResponse);
+        nativeResponse.recordImpression(view);
+        assertImpressionTracked(true);
+
+        Robolectric.getFakeHttpLayer().clearRequestInfos();
+        reset(mopubNativeListener);
 
         new VisibilityCheck().run();
-        assertImpressionTracked(nativeResponse, false);
+        assertImpressionTracked(false);
     }
 
     @Test
     public void visibilityCheckRun_whenViewIsInvisible_shouldNotTrackImpression() throws Exception {
         view.setVisibility(View.INVISIBLE);
-        ImpressionTrackingManager.addView(view, nativeResponse, mopubNativeListener);
+        ImpressionTrackingManager.addView(view, nativeResponse);
 
         new VisibilityCheck().run();
         assertThat(nativeResponse.getRecordedImpression()).isFalse();
-        assertImpressionTracked(nativeResponse, false);
+        assertImpressionTracked(false);
     }
 
     @Test
     public void visibilityCheckRun_whenLastViewedTimestampIsZero_shouldUpdateTimestampAndNotTrackImpression() throws Exception {
-        ImpressionTrackingManager.addView(view, nativeResponse, mopubNativeListener);
+        ImpressionTrackingManager.addView(view, nativeResponse);
 
         assertThat(ImpressionTrackingManager.getKeptViews().get(view).mFirstVisibleTimestamp).isEqualTo(0);
 
@@ -196,13 +207,12 @@ public class ImpressionTrackingManagerTest {
 
         assertThat(ImpressionTrackingManager.getKeptViews().get(view).mFirstVisibleTimestamp).isEqualTo(111);
         assertThat(nativeResponse.getRecordedImpression()).isFalse();
-        assertImpressionTracked(nativeResponse, false);
+        assertImpressionTracked(false);
     }
 
     @Test
     public void visibilityCheckRun_whenLastViewedTimestampIsNotZeroAndLessThanOneSecondHasElapsed_shouldNotTrackImpression() throws Exception {
         // Force the last viewed timestamp to be a known value
-        NativeResponseWrapper nativeResponseWrapper = new NativeResponseWrapper(nativeResponse, mopubNativeListener);
         nativeResponseWrapper.mFirstVisibleTimestamp = 5555;
         ImpressionTrackingManager.getKeptViews().put(view, nativeResponseWrapper);
 
@@ -211,14 +221,13 @@ public class ImpressionTrackingManagerTest {
         new VisibilityCheck().run();
 
         assertThat(nativeResponse.getRecordedImpression()).isFalse();
-        assertImpressionTracked(nativeResponse, false);
+        assertImpressionTracked(false);
     }
 
     @Ignore("Review race condition")
     @Test
     public void visibilityCheckRun_whenLastViewedTimestampIsNotZeroAndMoreThanOneSecondHasElapsed_shouldTrackImpression() throws Exception {
         // Force the last viewed timestamp to be a known value
-        NativeResponseWrapper nativeResponseWrapper = new NativeResponseWrapper(nativeResponse, mopubNativeListener);
         nativeResponseWrapper.mFirstVisibleTimestamp = 5555;
         ImpressionTrackingManager.getKeptViews().put(view, nativeResponseWrapper);
 
@@ -227,57 +236,58 @@ public class ImpressionTrackingManagerTest {
         new VisibilityCheck().run();
 
         assertThat(nativeResponse.getRecordedImpression()).isTrue();
-        assertImpressionTracked(nativeResponse, true);
+        assertImpressionTracked(true);
     }
 
     @Test
     public void isVisible_whenViewIsEntirelyOnScreen_shouldReturnTrue() throws Exception {
         view = getViewMock(View.VISIBLE, 100, 100, 100, 100);
 
-        assertThat(VisibilityCheck.isVisible(view)).isTrue();
+        assertThat(VisibilityCheck.isVisible(view, nativeResponseWrapper)).isTrue();
     }
 
     @Test
     public void isVisible_whenViewIs50PercentVisible_shouldReturnTrue() throws Exception {
         view = getViewMock(View.VISIBLE, 50, 100, 100, 100);
 
-        assertThat(VisibilityCheck.isVisible(view)).isTrue();
+        assertThat(VisibilityCheck.isVisible(view, nativeResponseWrapper)).isTrue();
     }
 
     @Test
     public void isVisible_whenViewIs49PercentVisible_shouldReturnFalse() throws Exception {
         view = getViewMock(View.VISIBLE, 49, 100, 100, 100);
 
-        assertThat(VisibilityCheck.isVisible(view)).isFalse();
+        assertThat(VisibilityCheck.isVisible(view, nativeResponseWrapper)).isFalse();
     }
 
     @Test
     public void isVisible_whenVisibleAreaIsZero_shouldReturnFalse() throws Exception {
         view = getViewMock(View.VISIBLE, 0, 0, 100, 100);
 
-        assertThat(VisibilityCheck.isVisible(view)).isFalse();
+        assertThat(VisibilityCheck.isVisible(view, nativeResponseWrapper)).isFalse();
     }
 
     @Test
     public void isVisible_whenViewIsInvisibleOrGone_shouldReturnFalse() throws Exception {
         View view = getViewMock(View.INVISIBLE, 100, 100, 100, 100);
-        assertThat(VisibilityCheck.isVisible(view)).isFalse();
+        assertThat(VisibilityCheck.isVisible(view, nativeResponseWrapper)).isFalse();
 
         reset(view);
         view = getViewMock(View.GONE, 100, 100, 100, 100);
-        assertThat(VisibilityCheck.isVisible(view)).isFalse();
+        assertThat(VisibilityCheck.isVisible(view, nativeResponseWrapper)).isFalse();
     }
 
     @Test
     public void isVisible_whenViewHasZeroWidthAndHeight_shouldReturnFalse() throws Exception {
         view = getViewMock(View.VISIBLE, 100, 100, 0, 0);
 
-        assertThat(VisibilityCheck.isVisible(view)).isFalse();
+        assertThat(VisibilityCheck.isVisible(view, nativeResponseWrapper)).isFalse();
     }
 
     @Test
-    public void isVisible_whenViewIsNull_shouldReturnFalse() throws Exception {
-        assertThat(VisibilityCheck.isVisible(null)).isFalse();
+    public void isVisible_whenViewOrNativeResponseWrapperIsNull_shouldReturnFalse() throws Exception {
+        assertThat(VisibilityCheck.isVisible(null, nativeResponseWrapper)).isFalse();
+        assertThat(VisibilityCheck.isVisible(view, null)).isFalse();
     }
 
     private View getViewMock(final int visibility,
@@ -302,7 +312,7 @@ public class ImpressionTrackingManagerTest {
         return view;
     }
 
-    private void assertImpressionTracked(final NativeResponse nativeResponseMock, final boolean wasTracked) {
+    private void assertImpressionTracked(final boolean wasTracked) {
         // Ensure that we fired off the HttpGets for each of the impression trackers
         if (wasTracked) {
             assertThat(Robolectric.getFakeHttpLayer().getSentHttpRequestInfos().size()).isEqualTo(1);

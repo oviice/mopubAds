@@ -46,11 +46,11 @@ import org.robolectric.Robolectric;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static com.mopub.mobileads.util.ResponseHeader.AD_TYPE;
-import static com.mopub.mobileads.util.ResponseHeader.CUSTOM_EVENT_DATA;
-import static com.mopub.mobileads.util.ResponseHeader.CUSTOM_EVENT_NAME;
-import static com.mopub.mobileads.util.ResponseHeader.FULL_AD_TYPE;
-import static com.mopub.mobileads.util.ResponseHeader.NATIVE_PARAMS;
+import static com.mopub.common.util.ResponseHeader.AD_TYPE;
+import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_DATA;
+import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_NAME;
+import static com.mopub.common.util.ResponseHeader.FULL_AD_TYPE;
+import static com.mopub.common.util.ResponseHeader.NATIVE_PARAMS;
 import static com.mopub.common.util.VersionCode.HONEYCOMB_MR2;
 import static com.mopub.common.util.VersionCode.ICE_CREAM_SANDWICH;
 import static org.mockito.Matchers.any;

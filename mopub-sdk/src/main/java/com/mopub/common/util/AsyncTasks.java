@@ -1,6 +1,7 @@
 package com.mopub.common.util;
 
 import android.os.AsyncTask;
+import android.os.Looper;
 
 import java.util.concurrent.Executor;
 
@@ -13,9 +14,13 @@ public class AsyncTasks {
      * Starting with ICS, default AsyncTask#execute behavior runs the tasks serially. This method
      * attempts to force these AsyncTasks to run in parallel with a ThreadPoolExecutor, if possible.
      */
-    public static <P> void safeExecuteOnExecutor(AsyncTask<P, ?, ?> asyncTask, P... params) {
+    public static <P> void safeExecuteOnExecutor(AsyncTask<P, ?, ?> asyncTask, P... params) throws IllegalArgumentException, IllegalStateException {
         if (asyncTask == null) {
             throw new IllegalArgumentException("Unable to execute null AsyncTask.");
+        }
+
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            throw new IllegalStateException("AsyncTask must be executed on the main thread");
         }
 
         if (currentApiLevel().isAtLeast(ICE_CREAM_SANDWICH)) {

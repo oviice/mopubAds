@@ -33,19 +33,28 @@
 package com.mopub.mobileads;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
+import android.view.View;
+
 import com.mopub.mobileads.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestAdViewControllerFactory;
 import com.mopub.mobileads.test.support.TestCustomEventBannerAdapterFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
+import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.shadows.ShadowLocalBroadcastManager;
 
 import java.util.*;
 
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;
-import static com.mopub.mobileads.util.ResponseHeader.CUSTOM_EVENT_DATA;
-import static com.mopub.mobileads.util.ResponseHeader.CUSTOM_EVENT_HTML_DATA;
-import static com.mopub.mobileads.util.ResponseHeader.CUSTOM_EVENT_NAME;
+import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_DATA;
+import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_HTML_DATA;
+import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_NAME;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
@@ -58,13 +67,103 @@ public class MoPubViewTest {
     private Map<String,String> paramsMap = new HashMap<String, String>();
     private CustomEventBannerAdapter customEventBannerAdapter;
     private AdViewController adViewController;
+    private Context context;
 
     @Before
     public void setup() {
-        subject = new MoPubView(new Activity());
+        context = new Activity();
+        subject = new MoPubView(context);
         customEventBannerAdapter = TestCustomEventBannerAdapterFactory.getSingletonMock();
         reset(customEventBannerAdapter);
         adViewController = TestAdViewControllerFactory.getSingletonMock();
+    }
+
+    @Test
+    public void screenStateBroadcastReceiver_withActionUserPresent_shouldUnpauseRefresh() throws Exception {
+        broadcastIntent(new Intent(Intent.ACTION_USER_PRESENT));
+
+        verify(adViewController).unpauseRefresh();
+    }
+
+    @Test
+    public void screenStateBroadcastReceiver_withActionScreenOff_shouldPauseRefersh() throws Exception {
+        broadcastIntent(new Intent(Intent.ACTION_SCREEN_OFF));
+
+        verify(adViewController).pauseRefresh();
+    }
+
+    @Test
+    public void screenStateBroadcastReceiver_withNullIntent_shouldDoNothing() throws Exception {
+        broadcastIntent(null);
+
+        verify(adViewController, never()).pauseRefresh();
+        verify(adViewController, never()).unpauseRefresh();
+    }
+
+    @Test
+    public void screenStateBroadcastReceiver_withRandomIntent_shouldDoNothing() throws Exception {
+        broadcastIntent(new Intent(Intent.ACTION_BATTERY_LOW));
+
+        verify(adViewController, never()).pauseRefresh();
+        verify(adViewController, never()).unpauseRefresh();
+    }
+
+    @Test
+    public void screenStateBroadcastReceiver_whenAdInBackground_shouldDoNothing() throws Exception {
+        subject.onWindowVisibilityChanged(View.INVISIBLE);
+        reset(adViewController);
+
+        broadcastIntent(new Intent(Intent.ACTION_USER_PRESENT));
+        verify(adViewController, never()).unpauseRefresh();
+
+        broadcastIntent(new Intent(Intent.ACTION_SCREEN_OFF));
+        verify(adViewController, never()).pauseRefresh();
+    }
+
+    @Test
+    public void screenStateBroadcastReceiver_afterOnDestroy_shouldDoNothing() throws Exception {
+        subject.destroy();
+
+        broadcastIntent(new Intent(Intent.ACTION_USER_PRESENT));
+        verify(adViewController, never()).unpauseRefresh();
+
+        broadcastIntent(new Intent(Intent.ACTION_SCREEN_OFF));
+        verify(adViewController, never()).pauseRefresh();
+    }
+
+    @Test
+    public void onWindowVisibilityChanged_toVisible_shouldUnpauseRefresh() throws Exception {
+        subject.onWindowVisibilityChanged(View.VISIBLE);
+
+        verify(adViewController).unpauseRefresh();
+    }
+
+    @Test
+    public void onWindowVisibilityChanged_toInvisible_shouldPauseRefresh() throws Exception {
+        subject.onWindowVisibilityChanged(View.INVISIBLE);
+
+        verify(adViewController).pauseRefresh();
+    }
+
+    @Test
+    public void setAutorefreshEnabled_withRefreshTrue_shouldForwardToAdViewController() throws Exception {
+        subject.setAutorefreshEnabled(true);
+
+        verify(adViewController).forceSetAutorefreshEnabled(true);
+    }
+
+    @Test
+    public void setAutorefreshEnabled_withRefreshFalse_shouldForwardToAdViewController() throws Exception {
+        subject.setAutorefreshEnabled(false);
+
+        verify(adViewController).forceSetAutorefreshEnabled(false);
+    }
+    
+    @Test
+    public void nativeAdLoaded_shouldScheduleRefreshTimer() throws Exception {
+        subject.nativeAdLoaded();
+
+        verify(adViewController).scheduleRefreshTimerIfEnabled();
     }
 
     @Test
@@ -88,5 +187,13 @@ public class MoPubViewTest {
         verify(adViewController).loadFailUrl(eq(ADAPTER_NOT_FOUND));
         verify(customEventBannerAdapter, never()).invalidate();
         verify(customEventBannerAdapter, never()).loadAd();
+    }
+
+    private void broadcastIntent(final Intent intent) {
+        final List<ShadowApplication.Wrapper> wrappers = Robolectric.getShadowApplication().getRegisteredReceivers();
+
+        for (final ShadowApplication.Wrapper wrapper : wrappers) {
+            wrapper.broadcastReceiver.onReceive(context, intent);
+        }
     }
 }

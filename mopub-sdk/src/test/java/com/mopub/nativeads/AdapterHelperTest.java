@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 
 @RunWith(SdkTestRunner.class)
 public class AdapterHelperTest {
@@ -21,6 +22,25 @@ public class AdapterHelperTest {
     @Before
     public void setUp() throws Exception {
         context = new Activity();
+        start = 1;
+        interval = 2;
+        subject = new AdapterHelper(context, start, interval);
+    }
+
+    @Test
+    public void constructor_whenPassedAnApplicationContext_shouldThrowIllegalArgumentException() throws Exception {
+        try {
+            new AdapterHelper(context.getApplicationContext(), start, interval);
+            fail("Expected IllegalArgumentException to be thrown");
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage()).isEqualTo("Illegal argument: Context must be instance of Activity.");
+        }
+    }
+
+    @Test
+    public void getAdView_withNullActivityContext_shouldReturnEmptyViewWithApplicationContext() throws Exception {
+        subject.clearActivityContext();
+        assertThat(subject.getAdView(null, null, null, null, null).getContext()).isEqualTo(context.getApplication());
     }
 
     @Test

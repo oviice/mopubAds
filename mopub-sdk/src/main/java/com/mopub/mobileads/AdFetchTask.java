@@ -42,9 +42,9 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ClientConnectionManager;
 
 import static com.mopub.mobileads.util.HttpResponses.extractHeader;
-import static com.mopub.mobileads.util.ResponseHeader.AD_TYPE;
-import static com.mopub.mobileads.util.ResponseHeader.USER_AGENT;
-import static com.mopub.mobileads.util.ResponseHeader.WARMUP;
+import static com.mopub.common.util.ResponseHeader.AD_TYPE;
+import static com.mopub.common.util.ResponseHeader.USER_AGENT;
+import static com.mopub.common.util.ResponseHeader.WARMUP;
 
 public class AdFetchTask extends AsyncTask<String, Void, AdLoadTask> {
     private TaskTracker mTaskTracker;

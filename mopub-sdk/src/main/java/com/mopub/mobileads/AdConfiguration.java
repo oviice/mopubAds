@@ -36,10 +36,12 @@ import android.content.Context;
 import android.os.Build;
 import android.provider.Settings;
 import android.webkit.WebView;
+
 import com.mopub.common.MoPub;
 import com.mopub.common.util.DateAndTime;
 import com.mopub.common.util.Utils;
 import com.mopub.common.util.VersionCode;
+
 import org.apache.http.HttpResponse;
 
 import java.io.*;
@@ -49,17 +51,17 @@ import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
 import static com.mopub.mobileads.util.HttpResponses.extractHeader;
 import static com.mopub.mobileads.util.HttpResponses.extractIntHeader;
 import static com.mopub.mobileads.util.HttpResponses.extractIntegerHeader;
-import static com.mopub.mobileads.util.ResponseHeader.AD_TIMEOUT;
-import static com.mopub.mobileads.util.ResponseHeader.AD_TYPE;
-import static com.mopub.mobileads.util.ResponseHeader.CLICKTHROUGH_URL;
-import static com.mopub.mobileads.util.ResponseHeader.DSP_CREATIVE_ID;
-import static com.mopub.mobileads.util.ResponseHeader.FAIL_URL;
-import static com.mopub.mobileads.util.ResponseHeader.HEIGHT;
-import static com.mopub.mobileads.util.ResponseHeader.IMPRESSION_URL;
-import static com.mopub.mobileads.util.ResponseHeader.NETWORK_TYPE;
-import static com.mopub.mobileads.util.ResponseHeader.REDIRECT_URL;
-import static com.mopub.mobileads.util.ResponseHeader.REFRESH_TIME;
-import static com.mopub.mobileads.util.ResponseHeader.WIDTH;
+import static com.mopub.common.util.ResponseHeader.AD_TIMEOUT;
+import static com.mopub.common.util.ResponseHeader.AD_TYPE;
+import static com.mopub.common.util.ResponseHeader.CLICKTHROUGH_URL;
+import static com.mopub.common.util.ResponseHeader.DSP_CREATIVE_ID;
+import static com.mopub.common.util.ResponseHeader.FAIL_URL;
+import static com.mopub.common.util.ResponseHeader.HEIGHT;
+import static com.mopub.common.util.ResponseHeader.IMPRESSION_URL;
+import static com.mopub.common.util.ResponseHeader.NETWORK_TYPE;
+import static com.mopub.common.util.ResponseHeader.REDIRECT_URL;
+import static com.mopub.common.util.ResponseHeader.REFRESH_TIME;
+import static com.mopub.common.util.ResponseHeader.WIDTH;
 
 public class AdConfiguration implements Serializable {
     private static final long serialVersionUID = 0L;

@@ -6,8 +6,6 @@ import android.widget.TextView;
 
 import com.mopub.common.util.MoPubLog;
 
-import static com.mopub.nativeads.NativeResponse.Parameter.isImageKey;
-
 class NativeViewHolder {
     TextView titleView;
     TextView textView;
@@ -37,7 +35,7 @@ class NativeViewHolder {
 
     void update(final NativeResponse nativeResponse) {
         addTextView(titleView, nativeResponse.getTitle());
-        addTextView(textView, nativeResponse.getSubtitle());
+        addTextView(textView, nativeResponse.getText());
         addTextView(callToActionView, nativeResponse.getCallToAction());
 
         nativeResponse.loadMainImage(mainImageView);
@@ -52,24 +50,18 @@ class NativeViewHolder {
             final View view = outerView.findViewById(resourceId);
             final Object content = nativeResponse.getExtra(key);
 
-            if (isImageKey(key)) {
-                if (view instanceof ImageView) {
-                    // Clear previous image
-                    ((ImageView) view).setImageDrawable(null);
-                    nativeResponse.loadExtrasImage(key, (ImageView) view);
-                } else {
-                    MoPubLog.d("View bound to " + key + " should be an instance of ImageView.");
+            if (view instanceof ImageView) {
+                // Clear previous image
+                ((ImageView) view).setImageDrawable(null);
+                nativeResponse.loadExtrasImage(key, (ImageView) view);
+            } else if (view instanceof TextView) {
+                // Clear previous text value
+                ((TextView) view).setText(null);
+                if (content instanceof String) {
+                    addTextView((TextView) view, (String) content);
                 }
             } else {
-                if (view instanceof TextView) {
-                    // Clear previous text value
-                    ((TextView) view).setText(null);
-                    if (content instanceof String) {
-                        addTextView((TextView) view, (String) content);
-                    }
-                } else {
-                    MoPubLog.d("View bound to " + key + " should be an instance of TextView.");
-                }
+                MoPubLog.d("View bound to " + key + " should be an instance of TextView or ImageView.");
             }
         }
     }

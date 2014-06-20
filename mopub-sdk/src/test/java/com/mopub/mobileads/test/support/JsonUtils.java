@@ -1,6 +1,6 @@
 package com.mopub.mobileads.test.support;
 
-import com.mopub.mobileads.util.Json;
+import com.mopub.common.util.Json;
 
 import java.util.Collections;
 import java.util.Map;

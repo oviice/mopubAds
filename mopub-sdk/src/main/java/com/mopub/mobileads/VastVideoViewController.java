@@ -43,13 +43,13 @@ import android.graphics.drawable.LayerDrawable;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.VideoView;
+
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.DownloadTask;
 import com.mopub.common.HttpResponses;
@@ -57,19 +57,25 @@ import com.mopub.common.MoPubBrowser;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.Dips;
 import com.mopub.common.util.Drawables;
+import com.mopub.common.util.MoPubLog;
 import com.mopub.common.util.Streams;
 import com.mopub.common.util.VersionCode;
-import com.mopub.mobileads.util.HttpUtils;
 import com.mopub.mobileads.util.vast.VastCompanionAd;
 import com.mopub.mobileads.util.vast.VastVideoConfiguration;
+
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.Serializable;
+import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+import static com.mopub.common.HttpClient.makeTrackingHttpRequest;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_SHOW;
 
@@ -156,7 +162,7 @@ public class VastVideoViewController extends BaseVideoViewController implements 
 
         mCompanionAdImageView = createCompanionAdImageView(context);
 
-        pingOnBackgroundThread(mVastVideoConfiguration.getImpressionTrackers());
+        makeTrackingHttpRequest(mVastVideoConfiguration.getImpressionTrackers());
 
         mVideoProgressCheckerRunnable = createVideoProgressCheckerRunnable();
     }
@@ -252,8 +258,8 @@ public class VastVideoViewController extends BaseVideoViewController implements 
                 final HttpGet httpGet = new HttpGet(mVastCompanionAd.getImageUrl());
                 DownloadTask downloadTask = new DownloadTask(this);
                 AsyncTasks.safeExecuteOnExecutor(downloadTask, httpGet);
-            } catch (IllegalArgumentException e) {
-                // malformed url, don't download optional companion ad
+            } catch (Exception e) {
+                MoPubLog.d("Failed to download companion ad", e);
             }
         }
     }
@@ -270,22 +276,22 @@ public class VastVideoViewController extends BaseVideoViewController implements 
 
                     if (!mIsStartMarkHit && currentPosition >= 1000) {
                         mIsStartMarkHit = true;
-                        pingOnBackgroundThread(mVastVideoConfiguration.getStartTrackers());
+                        makeTrackingHttpRequest(mVastVideoConfiguration.getStartTrackers());
                     }
 
                     if (!mIsFirstMarkHit && progressPercentage > FIRST_QUARTER_MARKER) {
                         mIsFirstMarkHit = true;
-                        pingOnBackgroundThread(mVastVideoConfiguration.getFirstQuartileTrackers());
+                        makeTrackingHttpRequest(mVastVideoConfiguration.getFirstQuartileTrackers());
                     }
 
                     if (!mIsSecondMarkHit && progressPercentage > MID_POINT_MARKER) {
                         mIsSecondMarkHit = true;
-                        pingOnBackgroundThread(mVastVideoConfiguration.getMidpointTrackers());
+                        makeTrackingHttpRequest(mVastVideoConfiguration.getMidpointTrackers());
                     }
 
                     if (!mIsThirdMarkHit && progressPercentage > THIRD_QUARTER_MARKER) {
                         mIsThirdMarkHit = true;
-                        pingOnBackgroundThread(mVastVideoConfiguration.getThirdQuartileTrackers());
+                        makeTrackingHttpRequest(mVastVideoConfiguration.getThirdQuartileTrackers());
                     }
 
                     if (isLongVideo(mVideoView.getDuration()) ) {
@@ -353,7 +359,7 @@ public class VastVideoViewController extends BaseVideoViewController implements 
 
                 videoCompleted(false);
 
-                pingOnBackgroundThread(mVastVideoConfiguration.getCompleteTrackers());
+                makeTrackingHttpRequest(mVastVideoConfiguration.getCompleteTrackers());
                 mIsVideoFinishedPlaying = true;
 
                 videoView.setVisibility(View.GONE);
@@ -444,7 +450,7 @@ public class VastVideoViewController extends BaseVideoViewController implements 
     }
 
     private void handleClick(final List<String> clickThroughTrackers, final String clickThroughUrl) {
-        pingOnBackgroundThread(clickThroughTrackers);
+        makeTrackingHttpRequest(clickThroughTrackers);
 
         videoClicked();
 
@@ -470,25 +476,6 @@ public class VastVideoViewController extends BaseVideoViewController implements 
 
     private boolean shouldAllowClickThrough() {
         return mShowCloseButtonEventFired;
-    }
-
-    private void pingOnBackgroundThread(List<String> urls) {
-        if (urls == null) {
-            return;
-        }
-
-        for (final String url : urls) {
-            sThreadPoolExecutor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        HttpUtils.ping(url);
-                    } catch (Exception e) {
-                        Log.d("MoPub", "Unable to track video impression url: " + url);
-                    }
-                }
-            });
-        }
     }
 
     private void startProgressChecker() {

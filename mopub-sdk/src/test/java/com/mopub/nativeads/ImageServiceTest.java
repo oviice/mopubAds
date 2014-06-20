@@ -4,9 +4,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+
 import com.mopub.common.CacheService;
 import com.mopub.common.CacheServiceTest;
 import com.mopub.nativeads.test.support.SdkTestRunner;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,9 +18,14 @@ import org.mockito.stubbing.Answer;
 import org.robolectric.Robolectric;
 import org.robolectric.tester.org.apache.http.FakeHttpLayer;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Semaphore;
 
 import static com.mopub.nativeads.ImageService.ImageServiceListener;
 import static org.fest.assertions.api.Assertions.assertThat;

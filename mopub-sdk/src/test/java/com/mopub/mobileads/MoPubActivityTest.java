@@ -49,6 +49,7 @@ import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowLocalBroadcastManager;
 
 import static android.widget.RelativeLayout.LayoutParams;
+import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
 import static com.mopub.mobileads.AdFetcher.CLICKTHROUGH_URL_KEY;
 import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.AdFetcher.REDIRECT_URL_KEY;

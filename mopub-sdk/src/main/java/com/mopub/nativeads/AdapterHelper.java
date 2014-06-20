@@ -1,39 +1,55 @@
 package com.mopub.nativeads;
 
+import android.app.Activity;
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.mopub.common.util.MoPubLog;
+
+import java.lang.ref.WeakReference;
+
 import static com.mopub.nativeads.MoPubNative.MoPubNativeListener;
 
 public final class AdapterHelper {
-    private final Context mContext;
+    private final WeakReference<Activity> mActivity;
+    private final Context mApplicationContext;
     private final int mStart;
     private final int mInterval;
 
     public AdapterHelper(final Context context, final int start, final int interval) throws IllegalArgumentException {
         if (context == null) {
-            throw new IllegalArgumentException("Illegal argument: context was null.");
+            throw new IllegalArgumentException("Illegal argument: Context was null.");
+        } else if (!(context instanceof Activity)) {
+            throw new IllegalArgumentException("Illegal argument: Context must be instance of Activity.");
         } else if (start < 0) {
             throw new IllegalArgumentException("Illegal argument: negative starting position.");
         } else if (interval < 2) {
             throw new IllegalArgumentException("Illegal argument: interval must be at least 2.");
         }
 
-        mContext = context.getApplicationContext();
+        mActivity = new WeakReference<Activity>((Activity) context);
+        mApplicationContext = context.getApplicationContext();
         mStart = start;
         mInterval = interval;
     }
 
     public View getAdView(final View convertView,
-                          final ViewGroup parent,
-                          final NativeResponse nativeResponse,
-                          final ViewBinder viewBinder,
-                          final MoPubNativeListener moPubNativeListener) {
+            final ViewGroup parent,
+            final NativeResponse nativeResponse,
+            final ViewBinder viewBinder,
+            final MoPubNativeListener moPubNativeListener) {
+        final Activity activity = mActivity.get();
+        if (activity == null) {
+            MoPubLog.d("Weak reference to Activity Context in AdapterHelper became null. " +
+                    "Returning empty view.");
+            return new View(mApplicationContext);
+        }
+
         return NativeAdViewHelper.getAdView(
                 convertView,
                 parent,
-                mContext,
+                activity,
                 nativeResponse,
                 viewBinder,
                 moPubNativeListener
@@ -86,5 +102,11 @@ public final class AdapterHelper {
             // Add 1 to the result since we start with an ad at start position and round down
             return (int) Math.floor((double) (contentRowCount - mStart) / spacesBetweenAds) + 1;
         }
+    }
+
+    // Testing
+    @Deprecated
+    void clearActivityContext() {
+        mActivity.clear();
     }
 }

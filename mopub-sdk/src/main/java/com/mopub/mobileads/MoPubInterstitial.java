@@ -37,15 +37,14 @@ import android.content.Context;
 import android.location.Location;
 import android.util.Log;
 
-import com.mopub.common.LocationService;
 import com.mopub.mobileads.factories.CustomEventInterstitialAdapterFactory;
 
 import java.util.*;
 
 import static com.mopub.common.LocationService.*;
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;
-import static com.mopub.mobileads.util.ResponseHeader.CUSTOM_EVENT_DATA;
-import static com.mopub.mobileads.util.ResponseHeader.CUSTOM_EVENT_NAME;
+import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_DATA;
+import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_NAME;
 
 public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomEventInterstitialAdapterListener {
 

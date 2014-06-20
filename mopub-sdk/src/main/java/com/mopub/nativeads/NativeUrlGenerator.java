@@ -7,13 +7,15 @@ import android.os.Build;
 import com.mopub.common.AdUrlGenerator;
 import com.mopub.common.GpsHelper;
 import com.mopub.common.LocationService;
-import com.mopub.common.util.DeviceUtils;
 import com.mopub.common.MoPub;
+import com.mopub.common.util.Strings;
 
 class NativeUrlGenerator extends AdUrlGenerator {
     private static int sLocationPrecision = 6;
     private static LocationService.LocationAwareness sLocationAwareness
             = LocationService.LocationAwareness.NORMAL;
+
+    private String mDesiredAssets;
 
     NativeUrlGenerator(Context context) {
         super(context);
@@ -29,6 +31,7 @@ class NativeUrlGenerator extends AdUrlGenerator {
         if (requestParameters != null) {
             mKeywords = requestParameters.getKeywords();
             mLocation = requestParameters.getLocation();
+            mDesiredAssets = requestParameters.getDesiredAssets();
         }
         return this;
     }
@@ -77,7 +80,15 @@ class NativeUrlGenerator extends AdUrlGenerator {
 
         setTwitterAppInstalledFlag();
 
+        setDesiredAssets();
+
         return getFinalUrlString();
+    }
+
+    private void setDesiredAssets() {
+        if (mDesiredAssets != null && !Strings.isEmpty(mDesiredAssets)) {
+            addParam("assets", mDesiredAssets);
+        }
     }
 
     @Override

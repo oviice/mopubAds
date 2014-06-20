@@ -1,9 +1,10 @@
 package com.mopub.nativeads;
 
 import android.graphics.Bitmap;
+
 import com.mopub.common.CacheService;
 
-import java.util.*;
+import java.util.List;
 
 import static com.mopub.common.CacheService.DiskLruCacheGetListener;
 

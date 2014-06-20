@@ -35,32 +35,35 @@ package com.mopub.mobileads;
 import android.app.Activity;
 import android.net.Uri;
 import android.util.Log;
+
+import com.mopub.common.util.Json;
 import com.mopub.common.util.Strings;
-import com.mopub.mobileads.util.Json;
+
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 
-import java.io.*;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
+import static com.mopub.common.util.ResponseHeader.AD_TYPE;
+import static com.mopub.common.util.ResponseHeader.CLICKTHROUGH_URL;
+import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_DATA;
+import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_NAME;
+import static com.mopub.common.util.ResponseHeader.CUSTOM_SELECTOR;
+import static com.mopub.common.util.ResponseHeader.FULL_AD_TYPE;
+import static com.mopub.common.util.ResponseHeader.NATIVE_PARAMS;
+import static com.mopub.common.util.ResponseHeader.REDIRECT_URL;
+import static com.mopub.common.util.ResponseHeader.SCROLLABLE;
 import static com.mopub.mobileads.AdFetcher.CLICKTHROUGH_URL_KEY;
 import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.AdFetcher.REDIRECT_URL_KEY;
 import static com.mopub.mobileads.AdFetcher.SCROLLABLE_KEY;
 import static com.mopub.mobileads.util.HttpResponses.extractBooleanHeader;
 import static com.mopub.mobileads.util.HttpResponses.extractHeader;
-import static com.mopub.mobileads.util.ResponseHeader.AD_TYPE;
-import static com.mopub.mobileads.util.ResponseHeader.CLICKTHROUGH_URL;
-import static com.mopub.mobileads.util.ResponseHeader.CUSTOM_EVENT_DATA;
-import static com.mopub.mobileads.util.ResponseHeader.CUSTOM_EVENT_NAME;
-import static com.mopub.mobileads.util.ResponseHeader.CUSTOM_SELECTOR;
-import static com.mopub.mobileads.util.ResponseHeader.FULL_AD_TYPE;
-import static com.mopub.mobileads.util.ResponseHeader.NATIVE_PARAMS;
-import static com.mopub.mobileads.util.ResponseHeader.REDIRECT_URL;
-import static com.mopub.mobileads.util.ResponseHeader.SCROLLABLE;
 
 abstract class AdLoadTask {
     WeakReference<AdViewController> mWeakAdViewController;

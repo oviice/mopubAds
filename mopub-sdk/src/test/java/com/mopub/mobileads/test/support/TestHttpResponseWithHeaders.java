@@ -36,7 +36,8 @@ import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.robolectric.tester.org.apache.http.TestHttpResponse;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestHttpResponseWithHeaders extends TestHttpResponse {
     private Map<String, Header> headers;
@@ -54,5 +55,10 @@ public class TestHttpResponseWithHeaders extends TestHttpResponse {
     @Override
     public Header getFirstHeader(String name) {
         return headers.get(name);
+    }
+
+    @Override
+    public Header[] getAllHeaders() {
+        return headers.values().toArray(new Header[headers.size()]);
     }
 }

@@ -1,39 +1,39 @@
 package com.mopub.nativeads;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.view.View;
 
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.DownloadTask;
 import com.mopub.common.GpsHelper;
-import com.mopub.common.HttpResponses;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.DeviceUtils;
 import com.mopub.common.util.ManifestUtils;
 import com.mopub.common.util.MoPubLog;
+import com.mopub.common.util.ResponseHeader;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.json.JSONObject;
 
+import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.mopub.common.GpsHelper.GpsHelperListener;
 import static com.mopub.common.GpsHelper.asyncFetchAdvertisingInfo;
-
+import static com.mopub.nativeads.CustomEventNative.CustomEventNativeListener;
+import static com.mopub.nativeads.CustomEventNative.CustomEventNativeListener;
 import static com.mopub.nativeads.MoPubNative.MoPubNativeListener.EMPTY_MOPUB_NATIVE_LISTENER;
 import static com.mopub.nativeads.NativeErrorCode.CONNECTION_ERROR;
 import static com.mopub.nativeads.NativeErrorCode.EMPTY_AD_RESPONSE;
-import static com.mopub.nativeads.NativeErrorCode.IMAGE_DOWNLOAD_FAILURE;
-import static com.mopub.nativeads.NativeErrorCode.INVALID_JSON;
 import static com.mopub.nativeads.NativeErrorCode.INVALID_REQUEST_URL;
 import static com.mopub.nativeads.NativeErrorCode.SERVER_ERROR_RESPONSE_CODE;
 import static com.mopub.nativeads.NativeErrorCode.UNEXPECTED_RESPONSE_CODE;
 import static com.mopub.nativeads.NativeErrorCode.UNSPECIFIED;
 
 public final class MoPubNative {
+
     public interface MoPubNativeListener {
         public void onNativeLoad(final NativeResponse nativeResponse);
         public void onNativeFail(final NativeErrorCode errorCode);
@@ -48,10 +48,11 @@ public final class MoPubNative {
         };
     }
 
-    private NativeResponse mNativeResponse;
-    private final Context mContext;
+    // must be an activity context since 3rd party networks need it
+    private final WeakReference<Context> mContext;
     private final String mAdUnitId;
     private MoPubNativeListener mMoPubNativeListener;
+    private Map<String, Object> mLocalExtras;
 
     public MoPubNative(final Context context, final String adUnitId, final MoPubNativeListener moPubNativeListener) {
         ImpressionTrackingManager.start();
@@ -66,25 +67,39 @@ public final class MoPubNative {
 
         ManifestUtils.checkNativeActivitiesDeclared(context);
 
-        mContext = context.getApplicationContext();
+        mContext = new WeakReference<Context>(context);
         mAdUnitId = adUnitId;
         mMoPubNativeListener = moPubNativeListener;
         
         // warm up cache for google play services info
-        asyncFetchAdvertisingInfo(mContext);
+        asyncFetchAdvertisingInfo(context);
+    }
+
+    public void destroy() {
+        mContext.clear();
+        mMoPubNativeListener = EMPTY_MOPUB_NATIVE_LISTENER;
+    }
+
+    public void setLocalExtras(final Map<String, Object> localExtras) {
+        mLocalExtras = new HashMap<String, Object>(localExtras);
     }
 
     public void makeRequest() {
-        makeRequest(null);
+        final RequestParameters requestParameters = null;
+        makeRequest(requestParameters);
     }
 
     public void makeRequest(final RequestParameters requestParameters) {
-        makeRequest(requestParameters, new NativeGpsHelperListener(requestParameters));
+        makeRequest(new NativeGpsHelperListener(requestParameters));
     }
 
-    void makeRequest(final RequestParameters requestParameters,
-            NativeGpsHelperListener nativeGpsHelperListener) {
-        if (!DeviceUtils.isNetworkAvailable(mContext)) {
+    void makeRequest(final NativeGpsHelperListener nativeGpsHelperListener) {
+        final Context context = getContextOrDestroy();
+        if (context == null) {
+            return;
+        }
+
+        if (!DeviceUtils.isNetworkAvailable(context)) {
             mMoPubNativeListener.onNativeFail(CONNECTION_ERROR);
             return;
         }
@@ -93,16 +108,18 @@ public final class MoPubNative {
         // is not cached then guarantee we get it before building the ad request url
         // in the callback, this is a requirement from Google
         GpsHelper.asyncFetchAdvertisingInfoIfNotCached(
-                mContext,
+                context,
                 nativeGpsHelperListener
         );
     }
-    public void destroy() {
-        mMoPubNativeListener = EMPTY_MOPUB_NATIVE_LISTENER;
-    }
 
-    private void loadNativeAd(final RequestParameters requestParameters) {
-        String endpointUrl = new NativeUrlGenerator(mContext)
+    void loadNativeAd(final RequestParameters requestParameters) {
+        final Context context = getContextOrDestroy();
+        if (context == null) {
+            return;
+        }
+
+        final String endpointUrl = new NativeUrlGenerator(context)
                 .withAdUnitId(mAdUnitId)
                 .withRequest(requestParameters)
                 .generateUrlString(Constants.NATIVE_HOST);
@@ -111,6 +128,10 @@ public final class MoPubNative {
             MoPubLog.d("Loading ad from: " + endpointUrl);
         }
 
+        requestNativeAd(endpointUrl);
+    }
+
+    private void requestNativeAd(final String endpointUrl) {
         final HttpGet httpGet;
         try {
             httpGet = new HttpGet(endpointUrl);
@@ -136,39 +157,54 @@ public final class MoPubNative {
                 } else if (downloadResponse.getContentLength() == 0) {
                     mMoPubNativeListener.onNativeFail(EMPTY_AD_RESPONSE);
                 } else {
-
-                    final JSONObject jsonObject = HttpResponses.asJsonObject(downloadResponse);
-
-                    if (jsonObject == null) {
-                        mMoPubNativeListener.onNativeFail(INVALID_JSON);
-                    } else {
-                        try {
-                            mNativeResponse = new NativeResponse(jsonObject);
-                        } catch (IllegalArgumentException e) {
-                            mMoPubNativeListener.onNativeFail(INVALID_JSON);
-                            return;
+                    final CustomEventNativeListener customEventNativeListener = new CustomEventNativeListener() {
+                        @Override
+                        public void onNativeAdLoaded(final NativeAdInterface nativeAd) {
+                            final Context context = getContextOrDestroy();
+                            if (context == null) {
+                                return;
+                            }
+                            mMoPubNativeListener.onNativeLoad(new NativeResponse(context, downloadResponse, nativeAd, mMoPubNativeListener));
                         }
-                        downloadImages();
+
+                        @Override
+                        public void onNativeAdFailed(final NativeErrorCode errorCode) {
+                            requestNativeAd(downloadResponse.getFirstHeader(ResponseHeader.FAIL_URL));
+                        }
+                    };
+
+                    final Context context = getContextOrDestroy();
+                    if (context == null) {
+                        return;
                     }
+                    CustomEventNativeAdapter.loadNativeAd(
+                            context,
+                            mLocalExtras,
+                            downloadResponse,
+                            customEventNativeListener
+                    );
                 }
             }
         });
 
-        AsyncTasks.safeExecuteOnExecutor(jsonDownloadTask, httpUriRequest);
+        try {
+            AsyncTasks.safeExecuteOnExecutor(jsonDownloadTask, httpUriRequest);
+        } catch (Exception e) {
+            MoPubLog.d("Failed to download json", e);
+
+            mMoPubNativeListener.onNativeFail(UNSPECIFIED);
+        }
+
     }
 
-    private void downloadImages() {
-        ImageService.get(mContext, mNativeResponse.getAllImageUrls(), new ImageService.ImageServiceListener() {
-            @Override
-            public void onSuccess(Map<String, Bitmap> bitmaps) {
-                mMoPubNativeListener.onNativeLoad(mNativeResponse);
-            }
-
-            @Override
-            public void onFail() {
-                mMoPubNativeListener.onNativeFail(IMAGE_DOWNLOAD_FAILURE);
-            }
-        });
+    Context getContextOrDestroy() {
+        final Context context = mContext.get();
+        if (context == null) {
+            destroy();
+            MoPubLog.d("Weak reference to Activity Context in MoPubNative became null. This instance" +
+                    " of MoPubNative is destroyed and No more requests will be processed.");
+        }
+        return context;
     }
 
     // Do not store this class as a member of MoPubNative; will result in circular reference
@@ -181,5 +217,10 @@ public final class MoPubNative {
         public void onFetchAdInfoCompleted() {
             loadNativeAd(mRequestParameters);
         }
+    }
+
+    @Deprecated
+    MoPubNativeListener getMoPubNativeListener() {
+        return mMoPubNativeListener;
     }
 }
