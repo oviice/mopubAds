@@ -79,7 +79,7 @@ public class MoPubCustomEventNativeTest {
     public void loadNativeAd_withValidInput_shouldDownloadImagesAndNotifyListenerOfOnNativeAdLoaded() throws Exception {
         subject.loadNativeAd(context, mCustomEventNativeListener, localExtras, serverExtras);
 
-        assertHttpRequestsMade("mainimageurl", "iconimageurl", "extraimageurl");
+        assertHttpRequestsMade(null, "mainimageurl", "iconimageurl", "extraimageurl");
 
         verify(mCustomEventNativeListener).onNativeAdLoaded(any(MoPubCustomEventNative.MoPubForwardingNativeAd.class));
         verify(mCustomEventNativeListener, never()).onNativeAdFailed(any(NativeErrorCode.class));

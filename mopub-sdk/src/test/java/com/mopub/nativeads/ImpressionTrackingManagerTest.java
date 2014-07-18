@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Rect;
 import android.view.View;
+import android.view.ViewParent;
+import android.view.ViewTreeObserver;
 
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.util.ResponseHeader;
@@ -12,7 +14,6 @@ import com.mopub.nativeads.test.support.SdkTestRunner;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
@@ -21,10 +22,10 @@ import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowSystemClock;
 import org.robolectric.tester.org.apache.http.TestHttpResponse;
 
-import java.util.Map;
-
+import static android.view.ViewTreeObserver.OnPreDrawListener;
 import static com.mopub.nativeads.ImpressionTrackingManager.NativeResponseWrapper;
-import static com.mopub.nativeads.ImpressionTrackingManager.VisibilityCheck;
+import static com.mopub.nativeads.ImpressionTrackingManager.PollingRunnable;
+import static com.mopub.nativeads.ImpressionTrackingManager.VisibilityChecker.isMostlyVisible;
 import static com.mopub.nativeads.MoPubNative.MoPubNativeListener;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.when;
 @RunWith(SdkTestRunner.class)
 public class ImpressionTrackingManagerTest {
     private static final String IMPRESSION_TRACKER = "url1";
+    private static final int IMPRESSION_MIN_PERCENTAGE_VIEWED = 50;
 
     private View view;
     private NativeResponse nativeResponse;
@@ -46,11 +48,11 @@ public class ImpressionTrackingManagerTest {
 
     @Before
     public void setUp() throws Exception {
-        ImpressionTrackingManager.purgeViews();
+        ImpressionTrackingManager.clearTracking();
 
         context = new Activity();
         mopubNativeListener = mock(MoPubNativeListener.class);
-        view = getViewMock(View.VISIBLE, 100, 100, 100, 100);
+        view = getViewMock(View.VISIBLE, 100, 100, 100, 100, true, true);
 
         final BaseForwardingNativeAd nativeAd = new BaseForwardingNativeAd() {};
         final TestHttpResponseWithHeaders testHttpResponseWithHeaders = new TestHttpResponseWithHeaders(200, "");
@@ -68,234 +70,392 @@ public class ImpressionTrackingManagerTest {
 
     @After
     public void tearDown() throws Exception {
-        ImpressionTrackingManager.purgeViews();
-    }
-
-    @Ignore("pending")
-    @Test
-    public void start_shouldScheduleVisibilityCheck() throws Exception {
-        Robolectric.getBackgroundScheduler().pause();
-        assertThat(Robolectric.getBackgroundScheduler().enqueuedTaskCount()).isEqualTo(0);
-        ImpressionTrackingManager.start();
-        assertThat(Robolectric.getBackgroundScheduler().enqueuedTaskCount()).isEqualTo(1);
-    }
-
-    @Ignore("pending")
-    @Test
-    public void start_onSubsequentInvocations_shouldDoNothing() throws Exception {
-    }
-
-    @Ignore("pending")
-    @Test
-    public void stop_shouldCancelVisibilityChecks() throws Exception {
-    }
-
-    @Ignore("pending")
-    @Test
-    public void stop_beforeStartIsCalled_doesNothing() throws Exception {
+        ImpressionTrackingManager.clearTracking();
     }
 
     @Test
-    public void addView_shouldAddViewToHashMap() throws Exception {
+    public void addView_withVisibleView_shouldAddViewToPollingHashMap() throws Exception {
         ImpressionTrackingManager.addView(view, nativeResponse);
-        Map<View, NativeResponseWrapper> keptViews = ImpressionTrackingManager.getKeptViews();
-        assertThat(keptViews).hasSize(1);
-        assertThat(keptViews.get(view).mNativeResponse).isEqualTo(nativeResponse);
+
+        assertThat(ImpressionTrackingManager.getPollingViews().keySet()).containsOnly(view);
+        assertThat(ImpressionTrackingManager.getWaitingViews()).isEmpty();
+    }
+
+    @Test
+    public void addView_withNonVisibleView_shouldAddViewToWaitingHashMap() throws Exception {
+        view = getViewMock(View.GONE, 0, 0, 0, 0, true, false);
+
+        ImpressionTrackingManager.addView(view, nativeResponse);
+
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
+        assertThat(ImpressionTrackingManager.getWaitingViews().keySet()).containsOnly(view);
     }
 
     @Test
     public void addView_whenViewIsNull_shouldNotAddView() throws Exception {
         ImpressionTrackingManager.addView(null, nativeResponse);
-        Map<View, NativeResponseWrapper> keptViews = ImpressionTrackingManager.getKeptViews();
-        assertThat(keptViews).isEmpty();
+
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
+        assertThat(ImpressionTrackingManager.getWaitingViews()).isEmpty();
     }
 
     @Test
     public void addView_whenNativeResponseIsNull_shouldNotAddView() throws Exception {
         ImpressionTrackingManager.addView(view, null);
-        Map<View, NativeResponseWrapper> keptViews = ImpressionTrackingManager.getKeptViews();
-        assertThat(keptViews).isEmpty();
+
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
+        assertThat(ImpressionTrackingManager.getWaitingViews()).isEmpty();
     }
 
     @Test
-    public void removeView_shouldRemoveViewFromKeptViews() throws Exception {
-        View view1 = mock(View.class);
-        View view2 = mock(View.class);
+    public void isViewTracked_whenPollingViewsOrWaitingViewsContainsView_shouldReturnTrue() throws Exception {
+        assertThat(ImpressionTrackingManager.isViewTracked(view)).isEqualTo(false);
 
+        ImpressionTrackingManager.getPollingViews().put(view, new NativeResponseWrapper(nativeResponse));
+        assertThat(ImpressionTrackingManager.isViewTracked(view)).isTrue();
+        ImpressionTrackingManager.getPollingViews().clear();
+
+        ImpressionTrackingManager.getWaitingViews().put(view, mock(OnPreDrawListener.class));
+        assertThat(ImpressionTrackingManager.isViewTracked(view)).isTrue();
+        ImpressionTrackingManager.getWaitingViews().clear();
+
+        ImpressionTrackingManager.getPollingViews().put(view, new NativeResponseWrapper(nativeResponse));
+        ImpressionTrackingManager.getWaitingViews().put(view, mock(OnPreDrawListener.class));
+        assertThat(ImpressionTrackingManager.isViewTracked(view)).isTrue();
+    }
+    
+    @Test
+    public void waitForVisibility_shouldRemoveViewFromPollingHashMap() throws Exception {
+        ImpressionTrackingManager.getPollingViews().put(view, new NativeResponseWrapper(nativeResponse));
+        ImpressionTrackingManager.waitForVisibility(view, nativeResponse);
+
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
+    }
+
+    @Test
+    public void waitForVisibility_whenViewTreeObserverIsAliveIsTrue_shouldAddOnPreDrawListenerToViewTreeObserverAndPopulateWaitingViewsHashMap() throws Exception {
+        ViewTreeObserver mockViewTreeObserver = mock(ViewTreeObserver.class);
+        when(mockViewTreeObserver.isAlive()).thenReturn(true);
+        when(view.getViewTreeObserver()).thenReturn(mockViewTreeObserver);
+
+        ImpressionTrackingManager.waitForVisibility(view, nativeResponse);
+
+        verify(mockViewTreeObserver).addOnPreDrawListener(any(OnPreDrawListener.class));
+        assertThat(ImpressionTrackingManager.getWaitingViews().keySet()).containsOnly(view);
+    }
+
+    @Test
+    public void waitForVisibility_whenViewTreeObserverIsAliveIsFalse_shouldNotAddOnPreDrawListenerToViewTreeObserverAndNotPopulateWaitingViewsHashMap() throws Exception {
+        ViewTreeObserver mockViewTreeObserver = mock(ViewTreeObserver.class);
+        when(mockViewTreeObserver.isAlive()).thenReturn(false);
+        when(view.getViewTreeObserver()).thenReturn(mockViewTreeObserver);
+
+        ImpressionTrackingManager.waitForVisibility(view, nativeResponse);
+
+        verify(mockViewTreeObserver, never()).addOnPreDrawListener(any(OnPreDrawListener.class));
+        assertThat(ImpressionTrackingManager.getWaitingViews()).isEmpty();
+    }
+
+    @Test
+    public void waitForVisibility_onPreDrawListener_onPreDraw_withVisibleView_shouldAddViewToPollingHashMap() throws Exception {
+        ImpressionTrackingManager.waitForVisibility(view, nativeResponse);
+        view.getViewTreeObserver().dispatchOnPreDraw();
+
+        assertThat(ImpressionTrackingManager.getPollingViews().keySet()).containsOnly(view);
+    }
+
+    @Test
+    public void waitForVisibility_onPreDrawListener_onPreDraw_withNonVisibleView_shouldNotAddViewToPollingHashMap() throws Exception {
+        View view = getViewMock(View.INVISIBLE, 100, 100, 100, 100, true, true);
+        ImpressionTrackingManager.waitForVisibility(view, nativeResponse);
+        view.getViewTreeObserver().dispatchOnPreDraw();
+
+        assertThat(ImpressionTrackingManager.getPollingViews().keySet()).isEmpty();
+    }
+    
+    @Test
+    public void pollVisibleView_shouldRemoveViewFromWaitingHashMap_shouldAddViewToPollingHashMap_shouldScheduleNextPoll() throws Exception {
+        Robolectric.getUiThreadScheduler().pause();
+        assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(0);
+
+        ImpressionTrackingManager.getWaitingViews().put(view, mock(OnPreDrawListener.class));
+
+        ImpressionTrackingManager.pollVisibleView(view, nativeResponse);
+
+        assertThat(ImpressionTrackingManager.getWaitingViews()).isEmpty();
+        assertThat(ImpressionTrackingManager.getPollingViews()).hasSize(1);
+        assertThat(ImpressionTrackingManager.getPollingViews().get(view)).isNotNull();
+        assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(1);
+    }
+
+    @Test
+    public void scheduleNextPoll_withNoMessages_shouldSchedulePoll() throws Exception {
+        Robolectric.getUiThreadScheduler().pause();
+        assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(0);
+
+        ImpressionTrackingManager.scheduleNextPoll();
+
+        assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(1);
+    }
+
+    @Test
+    public void removeWaiting_shouldRemoveViewFromWaitingHashMapAndRemoveOnPreDrawListener() throws Exception {
+        ViewTreeObserver mockViewTreeObserver = mock(ViewTreeObserver.class);
+        when(mockViewTreeObserver.isAlive()).thenReturn(true);
+        when(view.getViewTreeObserver()).thenReturn(mockViewTreeObserver);
+
+        OnPreDrawListener onPreDrawListener = mock(OnPreDrawListener.class);
+        ImpressionTrackingManager.getWaitingViews().put(view, onPreDrawListener);
+
+        ImpressionTrackingManager.removeWaitingView(view);
+
+        assertThat(ImpressionTrackingManager.getWaitingViews().keySet()).isEmpty();
+        verify(mockViewTreeObserver).removeOnPreDrawListener(onPreDrawListener);
+    }
+
+    @Test
+    public void removeWaiting_withNullView_shouldDoNothing() throws Exception {
+        assertThat(ImpressionTrackingManager.getWaitingViews().keySet()).isEmpty();
+
+        ImpressionTrackingManager.removeWaitingView(null);
+
+        assertThat(ImpressionTrackingManager.getWaitingViews().keySet()).isEmpty();
+    }
+
+    @Test
+    public void removePolling_shouldRemoveViewFromPollingHashMap() throws Exception {
+        ImpressionTrackingManager.getPollingViews().put(view, nativeResponseWrapper);
+
+        ImpressionTrackingManager.removePollingView(view);
+
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
+    }
+
+    @Test
+    public void removePolling_withNullView_shouldDoNothing() throws Exception {
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
+
+        ImpressionTrackingManager.removePollingView(null);
+
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
+    }
+
+    @Test
+    public void removeView_shouldRemoveViewFromWaitingAndPollingViews() throws Exception {
+        ImpressionTrackingManager.addView(view, nativeResponse);
+        View view1 = getViewMock(View.GONE, 0, 0, 0, 0, true, false);
         ImpressionTrackingManager.addView(view1, nativeResponse);
-        ImpressionTrackingManager.addView(view2, nativeResponse);
-        assertThat(ImpressionTrackingManager.getKeptViews()).hasSize(2);
 
-        ImpressionTrackingManager.removeView(view2);
-        assertThat(ImpressionTrackingManager.getKeptViews()).hasSize(1);
-        assertThat(ImpressionTrackingManager.getKeptViews().keySet()).containsOnly(view1);
+        assertThat(ImpressionTrackingManager.getPollingViews()).hasSize(1);
+        assertThat(ImpressionTrackingManager.getWaitingViews()).hasSize(1);
+
+        ImpressionTrackingManager.removeView(view1);
+        assertThat(ImpressionTrackingManager.getPollingViews()).hasSize(1);
+       assertThat(ImpressionTrackingManager.getPollingViews().keySet()).containsOnly(view);
+        assertThat(ImpressionTrackingManager.getWaitingViews()).hasSize(0);
+
+        ImpressionTrackingManager.removeView(view);
+        assertThat(ImpressionTrackingManager.getPollingViews()).hasSize(0);
+        assertThat(ImpressionTrackingManager.getWaitingViews()).hasSize(0);
     }
 
     @Test
-    public void removeView_whenThereAreNoKeptViews_shouldDoNothing() throws Exception {
-        assertThat(ImpressionTrackingManager.getKeptViews()).isEmpty();
+    public void removeView_withEmptyPollingAndWaitingHashMaps_shouldDoNothing() throws Exception {
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
+        assertThat(ImpressionTrackingManager.getWaitingViews()).isEmpty();
 
         ImpressionTrackingManager.removeView(view);
 
-        assertThat(ImpressionTrackingManager.getKeptViews()).isEmpty();
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
+        assertThat(ImpressionTrackingManager.getWaitingViews()).isEmpty();
     }
 
     @Test
     public void removeView_whenViewIsNull_shouldDoNothing() throws Exception {
         ImpressionTrackingManager.addView(view, nativeResponse);
 
-        assertThat(ImpressionTrackingManager.getKeptViews()).hasSize(1);
+        assertThat(ImpressionTrackingManager.getPollingViews()).hasSize(1);
         ImpressionTrackingManager.removeView(null);
-        assertThat(ImpressionTrackingManager.getKeptViews()).hasSize(1);
+        assertThat(ImpressionTrackingManager.getPollingViews()).hasSize(1);
     }
 
     @Test
-    public void visibilityCheckRun_whenWrapperIsNull_shouldNotTrackImpression() throws Exception {
-        ImpressionTrackingManager.addView(view, nativeResponse);
+    public void clearTracking_shouldClearWaitingAndPollingHashMaps_shouldClearHandlers() throws Exception {
+        ImpressionTrackingManager.getWaitingViews().put(view, mock(OnPreDrawListener.class));
+        ImpressionTrackingManager.getPollingViews().put(view, nativeResponseWrapper);
 
+        ImpressionTrackingManager.clearTracking();
+
+        assertThat(ImpressionTrackingManager.getWaitingViews()).isEmpty();
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
+
+    }
+
+    @Test
+    public void pollingRunnableRun_whenWrapperIsNull_shouldNotTrackImpression() throws Exception {
         // This doesn't normally happen; perhaps we're being overly defensive
-        ImpressionTrackingManager.getKeptViews().put(view, null);
+        ImpressionTrackingManager.getPollingViews().put(view, null);
 
-        new VisibilityCheck().run();
+        new PollingRunnable().run();
         assertThat(nativeResponse.getRecordedImpression()).isFalse();
         assertImpressionTracked(false);
     }
 
     @Test
-    public void visibilityCheckRun_whenNativeResponseIsNull_shouldNotTrackImpression() throws Exception {
-        ImpressionTrackingManager.addView(view, nativeResponse);
-
+    public void pollingRunnableRun_whenNativeResponseIsNull_shouldNotTrackImpression() throws Exception {
         // This doesn't normally happen; perhaps we're being overly defensive
-        ImpressionTrackingManager.getKeptViews().put(view, new NativeResponseWrapper(null));
+        ImpressionTrackingManager.getPollingViews().put(view, new NativeResponseWrapper(null));
 
-        new VisibilityCheck().run();
+        new PollingRunnable().run();
         assertThat(nativeResponse.getRecordedImpression()).isFalse();
         assertImpressionTracked(false);
     }
 
     @Test
-    public void visibilityCheckRun_whenNativeResponseHasRecordedImpression_shouldNotTrackImpression() throws Exception {
-        ImpressionTrackingManager.addView(view, nativeResponse);
+    public void pollingRunnableRun_whenNativeResponseHasRecordedImpression_shouldNotTrackImpression() throws Exception {
         nativeResponse.recordImpression(view);
         assertImpressionTracked(true);
 
         Robolectric.getFakeHttpLayer().clearRequestInfos();
         reset(mopubNativeListener);
 
-        new VisibilityCheck().run();
+        new PollingRunnable().run();
         assertImpressionTracked(false);
     }
 
     @Test
-    public void visibilityCheckRun_whenViewIsInvisible_shouldNotTrackImpression() throws Exception {
-        view.setVisibility(View.INVISIBLE);
-        ImpressionTrackingManager.addView(view, nativeResponse);
+    public void pollingRunnableRun_whenNativeResponseHasBeenDestroyed_shouldNotTrackImpression() throws Exception {
+        nativeResponse.destroy();
 
-        new VisibilityCheck().run();
+        Robolectric.getFakeHttpLayer().clearRequestInfos();
+        reset(mopubNativeListener);
+
+        new PollingRunnable().run();
+        assertImpressionTracked(false);
+    }
+
+    @Test
+    public void pollingRunnableRun_withNonVisibleView_shouldWaitForVisibility_shouldNotScheduleNextPoll() throws Exception {
+        View view = getViewMock(View.INVISIBLE, 100, 100, 100, 100, true, true);
+        ImpressionTrackingManager.getPollingViews().put(view, nativeResponseWrapper);
+
+        new PollingRunnable().run();
+
         assertThat(nativeResponse.getRecordedImpression()).isFalse();
         assertImpressionTracked(false);
+
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
+        assertThat(ImpressionTrackingManager.getWaitingViews().keySet()).containsOnly(view);
+        assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(0);
     }
 
     @Test
-    public void visibilityCheckRun_whenLastViewedTimestampIsZero_shouldUpdateTimestampAndNotTrackImpression() throws Exception {
-        ImpressionTrackingManager.addView(view, nativeResponse);
-
-        assertThat(ImpressionTrackingManager.getKeptViews().get(view).mFirstVisibleTimestamp).isEqualTo(0);
-
-        Robolectric.getUiThreadScheduler().advanceBy(111);
-        new VisibilityCheck().run();
-
-        assertThat(ImpressionTrackingManager.getKeptViews().get(view).mFirstVisibleTimestamp).isEqualTo(111);
-        assertThat(nativeResponse.getRecordedImpression()).isFalse();
-        assertImpressionTracked(false);
-    }
-
-    @Test
-    public void visibilityCheckRun_whenLastViewedTimestampIsNotZeroAndLessThanOneSecondHasElapsed_shouldNotTrackImpression() throws Exception {
+    public void pollingRunnableRun_whenLessThanOneSecondHasElapsed_shouldNotTrackImpression_shouldScheduleNextPoll() throws Exception {
         // Force the last viewed timestamp to be a known value
         nativeResponseWrapper.mFirstVisibleTimestamp = 5555;
-        ImpressionTrackingManager.getKeptViews().put(view, nativeResponseWrapper);
+        ImpressionTrackingManager.getPollingViews().put(view, nativeResponseWrapper);
 
         // We progress 999 milliseconds
         Robolectric.getUiThreadScheduler().advanceBy(5555 + 999);
-        new VisibilityCheck().run();
+        new PollingRunnable().run();
 
         assertThat(nativeResponse.getRecordedImpression()).isFalse();
         assertImpressionTracked(false);
+
+        assertThat(ImpressionTrackingManager.getPollingViews().keySet()).containsOnly(view);
+        assertThat(ImpressionTrackingManager.getWaitingViews()).isEmpty();
+        assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(1);
     }
 
-    @Ignore("Review race condition")
     @Test
-    public void visibilityCheckRun_whenLastViewedTimestampIsNotZeroAndMoreThanOneSecondHasElapsed_shouldTrackImpression() throws Exception {
+    public void pollingRunnableRun_whenMoreThanOneSecondHasElapsed_shouldTrackImpression_shouldNotScheduleNextPoll() throws Exception {
         // Force the last viewed timestamp to be a known value
         nativeResponseWrapper.mFirstVisibleTimestamp = 5555;
-        ImpressionTrackingManager.getKeptViews().put(view, nativeResponseWrapper);
+        ImpressionTrackingManager.getPollingViews().put(view, nativeResponseWrapper);
 
         // We progress 1000 milliseconds
         Robolectric.getUiThreadScheduler().advanceBy(5555 + 1000);
-        new VisibilityCheck().run();
+        new PollingRunnable().run();
 
         assertThat(nativeResponse.getRecordedImpression()).isTrue();
         assertImpressionTracked(true);
+
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
+        assertThat(ImpressionTrackingManager.getWaitingViews()).isEmpty();
+        assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(0);
     }
 
     @Test
-    public void isVisible_whenViewIsEntirelyOnScreen_shouldReturnTrue() throws Exception {
-        view = getViewMock(View.VISIBLE, 100, 100, 100, 100);
-
-        assertThat(VisibilityCheck.isVisible(view, nativeResponseWrapper)).isTrue();
+    public void isMostlyVisible_whenParentIsNull_shouldReturnFalse() throws Exception {
+        view = getViewMock(View.VISIBLE, 100, 100, 100, 100, false, true);
+        assertThat(isMostlyVisible(view, IMPRESSION_MIN_PERCENTAGE_VIEWED)).isFalse();
     }
 
     @Test
-    public void isVisible_whenViewIs50PercentVisible_shouldReturnTrue() throws Exception {
-        view = getViewMock(View.VISIBLE, 50, 100, 100, 100);
+    public void isMostlyVisible_whenViewIsOffScreen_shouldReturnFalse() throws Exception {
+        view = getViewMock(View.VISIBLE, 100, 100, 100, 100, true, false);
+        assertThat(isMostlyVisible(view, IMPRESSION_MIN_PERCENTAGE_VIEWED)).isFalse();
+    }
 
-        assertThat(VisibilityCheck.isVisible(view, nativeResponseWrapper)).isTrue();
+
+    @Test
+    public void isMostlyVisible_whenViewIsEntirelyOnScreen_shouldReturnTrue() throws Exception {
+        view = getViewMock(View.VISIBLE, 100, 100, 100, 100, true, true);
+
+        assertThat(isMostlyVisible(view, IMPRESSION_MIN_PERCENTAGE_VIEWED)).isTrue();
     }
 
     @Test
-    public void isVisible_whenViewIs49PercentVisible_shouldReturnFalse() throws Exception {
-        view = getViewMock(View.VISIBLE, 49, 100, 100, 100);
+    public void isMostlyVisible_whenViewIs50PercentVisible_shouldReturnTrue() throws Exception {
+        view = getViewMock(View.VISIBLE, 50, 100, 100, 100, true, true);
 
-        assertThat(VisibilityCheck.isVisible(view, nativeResponseWrapper)).isFalse();
+        assertThat(isMostlyVisible(view, IMPRESSION_MIN_PERCENTAGE_VIEWED)).isTrue();
     }
 
     @Test
-    public void isVisible_whenVisibleAreaIsZero_shouldReturnFalse() throws Exception {
-        view = getViewMock(View.VISIBLE, 0, 0, 100, 100);
+    public void isMostlyVisible_whenViewIs49PercentVisible_shouldReturnFalse() throws Exception {
+        view = getViewMock(View.VISIBLE, 49, 100, 100, 100, true, true);
 
-        assertThat(VisibilityCheck.isVisible(view, nativeResponseWrapper)).isFalse();
+        assertThat(isMostlyVisible(view, IMPRESSION_MIN_PERCENTAGE_VIEWED)).isFalse();
     }
 
     @Test
-    public void isVisible_whenViewIsInvisibleOrGone_shouldReturnFalse() throws Exception {
-        View view = getViewMock(View.INVISIBLE, 100, 100, 100, 100);
-        assertThat(VisibilityCheck.isVisible(view, nativeResponseWrapper)).isFalse();
+    public void isMostlyVisible_whenVisibleAreaIsZero_shouldReturnFalse() throws Exception {
+        view = getViewMock(View.VISIBLE, 0, 0, 100, 100, true, true);
+
+        assertThat(isMostlyVisible(view, IMPRESSION_MIN_PERCENTAGE_VIEWED)).isFalse();
+    }
+
+    @Test
+    public void isMostlyVisible_whenViewIsInvisibleOrGone_shouldReturnFalse() throws Exception {
+        View view = getViewMock(View.INVISIBLE, 100, 100, 100, 100, true, true);
+        assertThat(isMostlyVisible(view, IMPRESSION_MIN_PERCENTAGE_VIEWED)).isFalse();
 
         reset(view);
-        view = getViewMock(View.GONE, 100, 100, 100, 100);
-        assertThat(VisibilityCheck.isVisible(view, nativeResponseWrapper)).isFalse();
+        view = getViewMock(View.GONE, 100, 100, 100, 100, true, true);
+        assertThat(isMostlyVisible(view, IMPRESSION_MIN_PERCENTAGE_VIEWED)).isFalse();
     }
 
     @Test
-    public void isVisible_whenViewHasZeroWidthAndHeight_shouldReturnFalse() throws Exception {
-        view = getViewMock(View.VISIBLE, 100, 100, 0, 0);
+    public void isMostlyVisible_whenViewHasZeroWidthAndHeight_shouldReturnFalse() throws Exception {
+        view = getViewMock(View.VISIBLE, 100, 100, 0, 0, true, true);
 
-        assertThat(VisibilityCheck.isVisible(view, nativeResponseWrapper)).isFalse();
+        assertThat(isMostlyVisible(view, IMPRESSION_MIN_PERCENTAGE_VIEWED)).isFalse();
     }
 
     @Test
-    public void isVisible_whenViewOrNativeResponseWrapperIsNull_shouldReturnFalse() throws Exception {
-        assertThat(VisibilityCheck.isVisible(null, nativeResponseWrapper)).isFalse();
-        assertThat(VisibilityCheck.isVisible(view, null)).isFalse();
+    public void isMostlyVisible_whenViewIsNull_shouldReturnFalse() throws Exception {
+        assertThat(isMostlyVisible(null, IMPRESSION_MIN_PERCENTAGE_VIEWED)).isFalse();
     }
 
-    private View getViewMock(final int visibility,
-                             final int visibleWidth, final int visibleHeight,
-                             final int viewWidth, final int viewHeight) {
+    static View getViewMock(final int visibility,
+            final int visibleWidth, final int visibleHeight,
+            final int viewWidth, final int viewHeight,
+            final boolean isParentSet, final boolean isOnScreen) {
         View view = mock(View.class);
-        when(view.getContext()).thenReturn(context);
+        when(view.getContext()).thenReturn(new Activity());
         when(view.getVisibility()).thenReturn(visibility);
+
         when(view.getGlobalVisibleRect(any(Rect.class)))
                 .thenAnswer(new Answer<Boolean>() {
                     @Override
@@ -303,11 +463,17 @@ public class ImpressionTrackingManagerTest {
                         Object[] args = invocationOnMock.getArguments();
                         Rect rect = (Rect) args[0];
                         rect.set(0, 0, visibleWidth, visibleHeight);
-                        return true;
+                        return isOnScreen;
                     }
                 });
+
         when(view.getWidth()).thenReturn(viewWidth);
         when(view.getHeight()).thenReturn(viewHeight);
+        if (isParentSet) {
+            when(view.getParent()).thenReturn(mock(ViewParent.class));
+        }
+
+        when(view.getViewTreeObserver()).thenCallRealMethod();
 
         return view;
     }

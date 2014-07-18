@@ -6,6 +6,7 @@ import android.view.View;
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.DownloadTask;
 import com.mopub.common.GpsHelper;
+import com.mopub.common.HttpClient;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.DeviceUtils;
 import com.mopub.common.util.ManifestUtils;
@@ -22,7 +23,6 @@ import java.util.Map;
 
 import static com.mopub.common.GpsHelper.GpsHelperListener;
 import static com.mopub.common.GpsHelper.asyncFetchAdvertisingInfo;
-import static com.mopub.nativeads.CustomEventNative.CustomEventNativeListener;
 import static com.mopub.nativeads.CustomEventNative.CustomEventNativeListener;
 import static com.mopub.nativeads.MoPubNative.MoPubNativeListener.EMPTY_MOPUB_NATIVE_LISTENER;
 import static com.mopub.nativeads.NativeErrorCode.CONNECTION_ERROR;
@@ -55,8 +55,6 @@ public final class MoPubNative {
     private Map<String, Object> mLocalExtras;
 
     public MoPubNative(final Context context, final String adUnitId, final MoPubNativeListener moPubNativeListener) {
-        ImpressionTrackingManager.start();
-
         if (context == null) {
             throw new IllegalArgumentException("Context may not be null.");
         } else if (adUnitId == null) {
@@ -131,10 +129,20 @@ public final class MoPubNative {
         requestNativeAd(endpointUrl);
     }
 
-    private void requestNativeAd(final String endpointUrl) {
+    void requestNativeAd(final String endpointUrl) {
+        final Context context = getContextOrDestroy();
+        if (context == null) {
+            return;
+        }
+
+        if (endpointUrl == null) {
+            mMoPubNativeListener.onNativeFail(INVALID_REQUEST_URL);
+            return;
+        }
+
         final HttpGet httpGet;
         try {
-            httpGet = new HttpGet(endpointUrl);
+            httpGet = HttpClient.initializeHttpGet(endpointUrl, context);
         } catch (IllegalArgumentException e) {
             mMoPubNativeListener.onNativeFail(INVALID_REQUEST_URL);
             return;

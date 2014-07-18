@@ -37,15 +37,19 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.CalendarContract;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import com.mopub.common.util.Dips;
 import com.mopub.mobileads.test.support.FileUtils;
 import com.mopub.mobileads.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
@@ -126,6 +130,7 @@ public class MraidDisplayControllerTest {
     private Map<String, String> params;
     private AdConfiguration adConfiguration;
     private long testBroadcastIdentifier;
+
 
     @Before
     public void setup() {
@@ -796,6 +801,21 @@ public class MraidDisplayControllerTest {
         assertThat(intent.getLongExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, -1)).isNotEqualTo(-1);
         assertThat(intent.getLongExtra(CalendarContract.EXTRA_EVENT_END_TIME, -1)).isNotEqualTo(-1);
         assertThat(intent.getIntExtra(CalendarContract.Events.AVAILABILITY, -1)).isEqualTo(CalendarContract.Events.AVAILABILITY_FREE);
+    }
+
+    @Test
+    public void addCloseEventRegion_shouldAddCloseEventRegionToFrameLayout() throws Exception {
+        Activity activity = new Activity();
+        FrameLayout frameLayout = new FrameLayout(activity);
+        subject.addCloseEventRegion(frameLayout);
+
+        final Button closeEventRegion = (Button) frameLayout.getChildAt(0);
+        assertThat(closeEventRegion.getVisibility()).isEqualTo(View.VISIBLE);
+        assertThat(shadowOf(closeEventRegion).getBackgroundColor()).isEqualTo(Color.TRANSPARENT);
+        assertThat(shadowOf(closeEventRegion).getOnClickListener()).isEqualTo(subject.getCloseOnClickListener());
+        assertThat(Dips.pixelsToIntDips((float)closeEventRegion.getLayoutParams().width, activity)).isEqualTo(50);
+        assertThat(Dips.pixelsToIntDips((float)closeEventRegion.getLayoutParams().height, activity)).isEqualTo(50);
+        assertThat(((FrameLayout.LayoutParams)closeEventRegion.getLayoutParams()).gravity).isEqualTo(Gravity.TOP | Gravity.RIGHT);
     }
 
     private void resetMockMraidView(Context context) {

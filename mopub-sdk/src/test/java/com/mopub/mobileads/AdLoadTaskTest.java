@@ -42,7 +42,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static com.mopub.mobileads.AdTypeTranslator.CustomEventType.ADMOB_BANNER;
+import static com.mopub.mobileads.AdTypeTranslator.CustomEventType.GOOGLE_PLAY_SERVICES_BANNER;
 import static com.mopub.mobileads.AdTypeTranslator.CustomEventType.HTML_BANNER;
 import static com.mopub.mobileads.AdTypeTranslator.CustomEventType.HTML_INTERSTITIAL;
 import static com.mopub.mobileads.AdTypeTranslator.CustomEventType.MRAID_BANNER;
@@ -137,7 +137,7 @@ public class AdLoadTaskTest {
         response.addHeader(NATIVE_PARAMS.getKey(), expectedNativeParams);
 
         AdLoadTask.CustomEventAdLoadTask customEventTask = (AdLoadTask.CustomEventAdLoadTask) AdLoadTask.fromHttpResponse(response, adViewController);
-        assertThat(customEventTask.getParamsMap().get(CUSTOM_EVENT_NAME.getKey())).isEqualTo(ADMOB_BANNER.toString());
+        assertThat(customEventTask.getParamsMap().get(CUSTOM_EVENT_NAME.getKey())).isEqualTo(GOOGLE_PLAY_SERVICES_BANNER.toString());
 
         String actualNativeParams = customEventTask.getParamsMap().get(CUSTOM_EVENT_DATA.getKey());
         JsonUtils.assertJsonStringMapsEqual(actualNativeParams, expectedNativeParams);

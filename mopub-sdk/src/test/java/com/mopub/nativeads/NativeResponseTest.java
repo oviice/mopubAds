@@ -85,7 +85,7 @@ public class NativeResponseTest {
 
     @After
     public void tearDown() throws Exception {
-        ImpressionTrackingManager.purgeViews();
+        ImpressionTrackingManager.clearTracking();
     }
 
     @Test
@@ -155,9 +155,11 @@ public class NativeResponseTest {
     
     @Test
     public void prepareImpression_shouldAddViewAndResponseToImpressionTrackingManagerAndCallPrepareImpressionOnBaseNativeAd() throws Exception {
-        assertThat(ImpressionTrackingManager.getKeptViews()).isEmpty();
+        View view = ImpressionTrackingManagerTest.getViewMock(View.VISIBLE, 100, 100, 100, 100, true, true);
+
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
         subjectWMockBaseNativeAd.prepareImpression(view);
-        final Map<View, NativeResponseWrapper> keptViews = ImpressionTrackingManager.getKeptViews();
+        final Map<View, NativeResponseWrapper> keptViews = ImpressionTrackingManager.getPollingViews();
         assertThat(keptViews.size()).isEqualTo(1);
         assertThat(keptViews.get(view).mNativeResponse).isSameAs(subjectWMockBaseNativeAd);
 
@@ -168,11 +170,11 @@ public class NativeResponseTest {
     public void prepareImpression_whenDestroyed_shouldReturnFast() throws Exception {
         subjectWMockBaseNativeAd.destroy();
         assertThat(subjectWMockBaseNativeAd.isDestroyed()).isTrue();
-        assertThat(ImpressionTrackingManager.getKeptViews()).isEmpty();
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
 
         subjectWMockBaseNativeAd.prepareImpression(view);
 
-        assertThat(ImpressionTrackingManager.getKeptViews()).isEmpty();
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
         verify(mMockNativeAd, never()).prepareImpression(view);
     }
 
@@ -180,11 +182,11 @@ public class NativeResponseTest {
     public void prepareImpression_whenAlreadyImpressed_shouldReturnFast() throws Exception {
         subjectWMockBaseNativeAd.setRecordedImpression(true);
         assertThat(subjectWMockBaseNativeAd.getRecordedImpression()).isTrue();
-        assertThat(ImpressionTrackingManager.getKeptViews()).isEmpty();
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
 
         subjectWMockBaseNativeAd.prepareImpression(view);
 
-        assertThat(ImpressionTrackingManager.getKeptViews()).isEmpty();
+        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
         verify(mMockNativeAd, never()).prepareImpression(view);
     }
 

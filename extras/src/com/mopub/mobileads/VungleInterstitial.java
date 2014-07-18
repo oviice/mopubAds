@@ -35,17 +35,20 @@ package com.mopub.mobileads;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
-import com.vungle.sdk.VunglePub;
 
-import java.util.*;
-import java.util.concurrent.*;
+import com.vungle.publisher.EventListener;
+import com.vungle.publisher.VunglePub;
+
+import java.util.Map;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
 
 /*
- * Tested with Vungle SDK 1.3.3.
+ * Tested with Vungle SDK 3.1.0.
  */
-public class VungleInterstitial extends CustomEventInterstitial implements VunglePub.EventListener {
+public class VungleInterstitial extends CustomEventInterstitial implements EventListener {
 
     public static final String DEFAULT_VUNGLE_APP_ID = "YOUR_DEFAULT_VUNGLE_APP_ID";
 
@@ -54,6 +57,7 @@ public class VungleInterstitial extends CustomEventInterstitial implements Vungl
      */
     private static final String APP_ID_KEY = "appId";
 
+    private final VunglePub mVunglePub;
     private final Handler mHandler;
     private final ScheduledThreadPoolExecutor mScheduledThreadPoolExecutor;
     private CustomEventInterstitialListener mCustomEventInterstitialListener;
@@ -62,6 +66,7 @@ public class VungleInterstitial extends CustomEventInterstitial implements Vungl
     public VungleInterstitial() {
         mHandler = new Handler();
         mScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(10);
+        mVunglePub = VunglePub.getInstance();
     }
 
     @Override
@@ -87,16 +92,15 @@ public class VungleInterstitial extends CustomEventInterstitial implements Vungl
             appId = DEFAULT_VUNGLE_APP_ID;
         }
 
-        VunglePub.setEventListener(this);
-        VunglePub.init(context, appId);
-
+        mVunglePub.setEventListener(this);
+        mVunglePub.init(context, appId);
         scheduleOnInterstitialLoaded();
     }
 
     @Override
     protected void showInterstitial() {
-        if (VunglePub.isVideoAvailable(true)) {
-            VunglePub.displayAdvert();
+        if (mVunglePub.isCachedAdAvailable()) {
+            mVunglePub.playAd();
         } else {
             Log.d("MoPub", "Tried to show a Vungle interstitial ad before it finished loading. Please try again.");
         }
@@ -104,7 +108,7 @@ public class VungleInterstitial extends CustomEventInterstitial implements Vungl
 
     @Override
     protected void onInvalidate() {
-        VunglePub.setEventListener(null);
+        mVunglePub.setEventListener(null);
         mScheduledThreadPoolExecutor.shutdownNow();
         mIsLoading = false;
     }
@@ -117,7 +121,7 @@ public class VungleInterstitial extends CustomEventInterstitial implements Vungl
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-            if (VunglePub.isVideoAvailable()) {
+            if (mVunglePub.isCachedAdAvailable()) {
                 Log.d("MoPub", "Vungle interstitial ad successfully loaded.");
                 mScheduledThreadPoolExecutor.shutdownNow();
                 mHandler.post(new Runnable() {
@@ -138,17 +142,17 @@ public class VungleInterstitial extends CustomEventInterstitial implements Vungl
     }
 
     /*
-     * VunglePub.EventListener implementation
+     * EventListener implementation
      */
 
     @Override
-    public void onVungleView(double watchedSeconds, double totalAdSeconds) {
-        final double watchedPercent = watchedSeconds / totalAdSeconds * 100;
+    public void onVideoView(final boolean isCompletedView, final int watchedMillis, final int videoDurationMillis) {
+        final double watchedPercent = (double) watchedMillis / videoDurationMillis * 100;
         Log.d("MoPub", String.format("%.1f%% of Vungle video watched.", watchedPercent));
     }
 
     @Override
-    public void onVungleAdStart() {
+    public void onAdStart() {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -159,7 +163,7 @@ public class VungleInterstitial extends CustomEventInterstitial implements Vungl
     }
 
     @Override
-    public void onVungleAdEnd() {
+    public void onAdEnd() {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -167,6 +171,16 @@ public class VungleInterstitial extends CustomEventInterstitial implements Vungl
                 mCustomEventInterstitialListener.onInterstitialDismissed();
             }
         });
+    }
+
+    @Override
+    public void onAdUnavailable(final String s) {
+        mCustomEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_NO_FILL);
+    }
+
+    @Override
+    public void onCachedAdAvailable() {
+        // Due to the inconsistent behavior of this method, we rely on scheduleOnInterstitialLoaded instead.
     }
 
     @Deprecated // for testing

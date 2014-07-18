@@ -29,6 +29,9 @@
                 android:configChanges="keyboardHidden|orientation"/>
         <activity android:name="com.mopub.mobileads.MraidVideoPlayerActivity"
                 android:configChanges="keyboardHidden|orientation"/>
+
+        <meta-data android:name="com.google.android.gms.version"
+                   android:value="@integer/google_play_services_version" />
     </application>
 
 </manifest>

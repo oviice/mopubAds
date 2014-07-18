@@ -88,6 +88,7 @@ public class MraidCommandTest {
         assertThat(command.mView).isEqualTo(expectedView);
     }
 
+
     @Test
     public void createCommand_close_shouldSetDependentOnUserClick() throws Exception {
         assertThat(create(CLOSE.getCommand(), null, null).isCommandDependentOnUserClick(PlacementType.INLINE)).isFalse();

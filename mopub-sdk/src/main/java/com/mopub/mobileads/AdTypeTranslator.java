@@ -32,15 +32,12 @@
 
 package com.mopub.mobileads;
 
-import com.mopub.common.GpsHelper;
-
 public class AdTypeTranslator {
-
     public enum CustomEventType {
-        ADMOB_BANNER("admob_native_banner", "com.mopub.mobileads.GoogleAdMobBanner"),
-        ADMOB_INTERSTITIAL("admob_full_interstitial", "com.mopub.mobileads.GoogleAdMobInterstitial"),
-        GOOGLE_PLAY_BANNER("google_play_banner", "com.mopub.mobileads.GooglePlayServicesBanner"),
-        GOOGLE_PLAY_INTERSTITIAL("google_play_interstitial", "com.mopub.mobileads.GooglePlayServicesInterstitial"),
+        // With the deprecation of a standalone AdMob SDK, these now point to Google Play Services
+        GOOGLE_PLAY_SERVICES_BANNER("admob_native_banner", "com.mopub.mobileads.GooglePlayServicesBanner"),
+        GOOGLE_PLAY_SERVICES_INTERSTITIAL("admob_full_interstitial", "com.mopub.mobileads.GooglePlayServicesInterstitial"),
+
         MILLENNIAL_BANNER("millennial_native_banner", "com.mopub.mobileads.MillennialBanner"),
         MILLENNIAL_INTERSTITIAL("millennial_full_interstitial", "com.mopub.mobileads.MillennialInterstitial"),
         MRAID_BANNER("mraid_banner", "com.mopub.mobileads.MraidBanner"),
@@ -60,7 +57,7 @@ public class AdTypeTranslator {
         }
 
         private static CustomEventType fromString(String key) {
-            for (CustomEventType customEventType : CustomEventType.values()) {
+            for (CustomEventType customEventType : values()) {
                 if (customEventType.mKey.equals(key)) {
                     return customEventType;
                 }
@@ -91,10 +88,6 @@ public class AdTypeTranslator {
             customEventType = ("interstitial".equals(adType))
                     ? CustomEventType.fromString(fullAdType + "_interstitial")
                     : CustomEventType.fromString(adType + "_banner");
-
-            if (moPubView != null) {
-                customEventType = GpsHelper.convertAdMobToGooglePlayServices(moPubView.getContext(), customEventType);
-            }
         }
 
         return customEventType.toString();

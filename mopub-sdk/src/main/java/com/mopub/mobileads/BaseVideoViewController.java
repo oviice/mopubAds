@@ -100,6 +100,7 @@ abstract class BaseVideoViewController {
         return mLayout;
     }
 
+
     void videoError(boolean shouldFinish) {
         Log.d("MoPub", "Error: video can not be played.");
         broadcastAction(ACTION_INTERSTITIAL_FAIL);

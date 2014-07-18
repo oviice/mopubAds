@@ -44,14 +44,17 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import com.mopub.common.util.Dips;
+import com.mopub.mobileads.util.Interstitials;
 
 import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
-import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
 import static com.mopub.common.util.Drawables.INTERSTITIAL_CLOSE_BUTTON_NORMAL;
 import static com.mopub.common.util.Drawables.INTERSTITIAL_CLOSE_BUTTON_PRESSED;
+import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
 
 abstract class BaseInterstitialActivity extends Activity {
+    private OnClickListener mCloseOnClickListener;
+
     enum JavaScriptWebViewCallbacks {
         WEB_VIEW_DID_APPEAR("javascript:webviewDidAppear();"),
         WEB_VIEW_DID_CLOSE("javascript:webviewDidClose();");
@@ -66,7 +69,7 @@ abstract class BaseInterstitialActivity extends Activity {
         }
     }
 
-    private static final float CLOSE_BUTTON_SIZE = 50f;
+    private static final float CLOSE_BUTTON_SIZE_DP = 50f;
     private static final float CLOSE_BUTTON_PADDING = 8f;
 
     private ImageView mCloseButton;
@@ -84,8 +87,14 @@ abstract class BaseInterstitialActivity extends Activity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        mButtonSize = Dips.asIntPixels(CLOSE_BUTTON_SIZE, this);
+        mButtonSize = Dips.asIntPixels(CLOSE_BUTTON_SIZE_DP, this);
         mButtonPadding = Dips.asIntPixels(CLOSE_BUTTON_PADDING, this);
+        mCloseOnClickListener = new OnClickListener() {
+            @Override
+            public void onClick(final View view) {
+                finish();
+            }
+        };
 
         mLayout = new RelativeLayout(this);
         final RelativeLayout.LayoutParams adViewLayout = new RelativeLayout.LayoutParams(
@@ -128,6 +137,14 @@ abstract class BaseInterstitialActivity extends Activity {
             adConfiguration = null;
         }
         return adConfiguration;
+    }
+
+    void addCloseEventRegion() {
+        final int buttonSizePixels = Dips.dipsToIntPixels(CLOSE_BUTTON_SIZE_DP, this);
+        final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(buttonSizePixels, buttonSizePixels);
+        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+        Interstitials.addCloseEventRegion(mLayout, layoutParams, mCloseOnClickListener);
     }
 
     private void createInterstitialCloseButton() {

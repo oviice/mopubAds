@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.VideoView;
 
@@ -33,7 +34,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.robolectric.Robolectric;
-import org.robolectric.shadows.ShadowHandler;
 import org.robolectric.shadows.ShadowLocalBroadcastManager;
 import org.robolectric.shadows.ShadowVideoView;
 import org.robolectric.tester.org.apache.http.RequestMatcher;
@@ -78,6 +78,7 @@ public class VastVideoViewControllerTest {
     private BaseVideoViewControllerListener baseVideoViewControllerListener;
     private EventForwardingBroadcastReceiver broadcastReceiver;
     private int expectedBrowserRequestCode;
+    private String expectedUserAgent;
 
     @Before
     public void setUp() throws Exception {
@@ -125,6 +126,8 @@ public class VastVideoViewControllerTest {
         }, new TestHttpResponse(200, "body"));
 
         ShadowLocalBroadcastManager.getInstance(context).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
+
+        expectedUserAgent = new WebView(context).getSettings().getUserAgentString();
     }
 
     @After
@@ -154,7 +157,7 @@ public class VastVideoViewControllerTest {
         Robolectric.getBackgroundScheduler().unPause();
         Thread.sleep(NETWORK_DELAY);
 
-        assertHttpRequestsMade("imp");
+        assertHttpRequestsMade(expectedUserAgent, "imp");
     }
 
     @Test
@@ -282,6 +285,7 @@ public class VastVideoViewControllerTest {
         Thread.sleep(NETWORK_DELAY);
 
         assertHttpRequestsMade(
+                expectedUserAgent,
                 "companion_image_url",
                 "imp",
                 "companion_click_tracking_url_1",
@@ -343,6 +347,7 @@ public class VastVideoViewControllerTest {
 
         verify(baseVideoViewControllerListener, never()).onFinish();
     }
+
 
     @Test
     public void onTouch_withTouchUp_whenVideoLessThan16Seconds_andClickBeforeEnd_shouldDoNothing() throws Exception {
@@ -446,7 +451,7 @@ public class VastVideoViewControllerTest {
         Robolectric.getBackgroundScheduler().unPause();
         Thread.sleep(NETWORK_DELAY);
 
-        assertHttpRequestsMade("click_1", "click_2");
+        assertHttpRequestsMade(expectedUserAgent, "click_1", "click_2");
     }
 
     @Test
@@ -536,7 +541,7 @@ public class VastVideoViewControllerTest {
         Robolectric.getBackgroundScheduler().unPause();
         Thread.sleep(NETWORK_DELAY);
 
-        assertHttpRequestsMade("complete_1", "complete_2");
+        assertHttpRequestsMade(expectedUserAgent, "complete_1", "complete_2");
     }
 
     @Test
@@ -748,7 +753,7 @@ public class VastVideoViewControllerTest {
         Robolectric.getBackgroundScheduler().unPause();
         Thread.sleep(NETWORK_DELAY);
 
-        assertHttpRequestsMade("first", "second", "third");
+        assertHttpRequestsMade(expectedUserAgent, "first", "second", "third");
     }
 
     @Test
@@ -796,7 +801,7 @@ public class VastVideoViewControllerTest {
         Thread.sleep(NETWORK_DELAY);
 
         // Since it has not yet been a second, we expect that the start tracker has not been fired
-        assertHttpRequestsMade();
+        assertHttpRequestsMade(expectedUserAgent);
         Robolectric.getFakeHttpLayer().clearRequestInfos();
 
         // run checker another time
@@ -828,7 +833,7 @@ public class VastVideoViewControllerTest {
 
         Thread.sleep(NETWORK_DELAY);
 
-        assertHttpRequestsMade("start");
+        assertHttpRequestsMade(expectedUserAgent, "start");
         Robolectric.getFakeHttpLayer().clearRequestInfos();
 
         // run checker another time
@@ -859,7 +864,7 @@ public class VastVideoViewControllerTest {
         Robolectric.getBackgroundScheduler().unPause();
         Thread.sleep(NETWORK_DELAY);
 
-        assertHttpRequestsMade("first");
+        assertHttpRequestsMade(expectedUserAgent, "first");
         Robolectric.getFakeHttpLayer().clearRequestInfos();
 
         // run checker another time
@@ -889,7 +894,7 @@ public class VastVideoViewControllerTest {
         Robolectric.getBackgroundScheduler().unPause();
         Thread.sleep(NETWORK_DELAY);
 
-        assertHttpRequestsMade("first", "second");
+        assertHttpRequestsMade(expectedUserAgent, "first", "second");
         Robolectric.getFakeHttpLayer().clearRequestInfos();
 
         Robolectric.getUiThreadScheduler().runOneTask();
@@ -919,7 +924,7 @@ public class VastVideoViewControllerTest {
         Robolectric.getBackgroundScheduler().unPause();
         Thread.sleep(NETWORK_DELAY);
 
-        assertHttpRequestsMade("first", "second", "third");
+        assertHttpRequestsMade(expectedUserAgent, "first", "second", "third");
         Robolectric.getFakeHttpLayer().clearRequestInfos();
 
         Robolectric.getUiThreadScheduler().runOneTask();
@@ -1097,7 +1102,7 @@ public class VastVideoViewControllerTest {
         if (urls == null) {
             assertThat(Robolectric.getNextSentHttpRequest()).isNull();
         } else {
-            assertHttpRequestsMade(urls);
+            assertHttpRequestsMade(expectedUserAgent, urls);
         }
 
         Robolectric.getFakeHttpLayer().clearRequestInfos();

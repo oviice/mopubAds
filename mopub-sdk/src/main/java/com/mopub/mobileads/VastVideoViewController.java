@@ -75,6 +75,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+import static com.mopub.common.HttpClient.initializeHttpGet;
 import static com.mopub.common.HttpClient.makeTrackingHttpRequest;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_SHOW;
@@ -162,7 +163,7 @@ public class VastVideoViewController extends BaseVideoViewController implements 
 
         mCompanionAdImageView = createCompanionAdImageView(context);
 
-        makeTrackingHttpRequest(mVastVideoConfiguration.getImpressionTrackers());
+        makeTrackingHttpRequest(mVastVideoConfiguration.getImpressionTrackers(), context);
 
         mVideoProgressCheckerRunnable = createVideoProgressCheckerRunnable();
     }
@@ -255,8 +256,8 @@ public class VastVideoViewController extends BaseVideoViewController implements 
     private void downloadCompanionAd() {
         if (mVastCompanionAd != null) {
             try {
-                final HttpGet httpGet = new HttpGet(mVastCompanionAd.getImageUrl());
-                DownloadTask downloadTask = new DownloadTask(this);
+                final HttpGet httpGet = initializeHttpGet(mVastCompanionAd.getImageUrl(), getContext());
+                final DownloadTask downloadTask = new DownloadTask(this);
                 AsyncTasks.safeExecuteOnExecutor(downloadTask, httpGet);
             } catch (Exception e) {
                 MoPubLog.d("Failed to download companion ad", e);
@@ -276,22 +277,22 @@ public class VastVideoViewController extends BaseVideoViewController implements 
 
                     if (!mIsStartMarkHit && currentPosition >= 1000) {
                         mIsStartMarkHit = true;
-                        makeTrackingHttpRequest(mVastVideoConfiguration.getStartTrackers());
+                        makeTrackingHttpRequest(mVastVideoConfiguration.getStartTrackers(), getContext());
                     }
 
                     if (!mIsFirstMarkHit && progressPercentage > FIRST_QUARTER_MARKER) {
                         mIsFirstMarkHit = true;
-                        makeTrackingHttpRequest(mVastVideoConfiguration.getFirstQuartileTrackers());
+                        makeTrackingHttpRequest(mVastVideoConfiguration.getFirstQuartileTrackers(), getContext());
                     }
 
                     if (!mIsSecondMarkHit && progressPercentage > MID_POINT_MARKER) {
                         mIsSecondMarkHit = true;
-                        makeTrackingHttpRequest(mVastVideoConfiguration.getMidpointTrackers());
+                        makeTrackingHttpRequest(mVastVideoConfiguration.getMidpointTrackers(), getContext());
                     }
 
                     if (!mIsThirdMarkHit && progressPercentage > THIRD_QUARTER_MARKER) {
                         mIsThirdMarkHit = true;
-                        makeTrackingHttpRequest(mVastVideoConfiguration.getThirdQuartileTrackers());
+                        makeTrackingHttpRequest(mVastVideoConfiguration.getThirdQuartileTrackers(), getContext());
                     }
 
                     if (isLongVideo(mVideoView.getDuration()) ) {
@@ -359,7 +360,7 @@ public class VastVideoViewController extends BaseVideoViewController implements 
 
                 videoCompleted(false);
 
-                makeTrackingHttpRequest(mVastVideoConfiguration.getCompleteTrackers());
+                makeTrackingHttpRequest(mVastVideoConfiguration.getCompleteTrackers(), context);
                 mIsVideoFinishedPlaying = true;
 
                 videoView.setVisibility(View.GONE);
@@ -450,7 +451,7 @@ public class VastVideoViewController extends BaseVideoViewController implements 
     }
 
     private void handleClick(final List<String> clickThroughTrackers, final String clickThroughUrl) {
-        makeTrackingHttpRequest(clickThroughTrackers);
+        makeTrackingHttpRequest(clickThroughTrackers, getContext());
 
         videoClicked();
 

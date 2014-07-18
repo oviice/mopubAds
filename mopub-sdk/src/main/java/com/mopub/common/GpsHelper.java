@@ -13,12 +13,6 @@ import java.lang.ref.WeakReference;
 import static com.mopub.common.util.Reflection.MethodBuilder;
 import static com.mopub.common.util.Reflection.classFound;
 
-import static com.mopub.mobileads.AdTypeTranslator.CustomEventType;
-import static com.mopub.mobileads.AdTypeTranslator.CustomEventType.ADMOB_BANNER;
-import static com.mopub.mobileads.AdTypeTranslator.CustomEventType.ADMOB_INTERSTITIAL;
-import static com.mopub.mobileads.AdTypeTranslator.CustomEventType.GOOGLE_PLAY_BANNER;
-import static com.mopub.mobileads.AdTypeTranslator.CustomEventType.GOOGLE_PLAY_INTERSTITIAL;
-
 public class GpsHelper {
     static public final int GOOGLE_PLAY_SUCCESS_CODE = 0;
     static public final String ADVERTISING_ID_KEY = "advertisingId";
@@ -28,21 +22,6 @@ public class GpsHelper {
 
     public interface GpsHelperListener {
         public void onFetchAdInfoCompleted();
-    }
-
-    static public CustomEventType convertAdMobToGooglePlayServices(final Context context, final CustomEventType customEventType) {
-        // In both cases, only check if GooglePlayServices is available if absolutely necessary
-        if (customEventType == ADMOB_BANNER &&
-                classFound(GOOGLE_PLAY_BANNER.toString()) &&
-                isGpsAvailable(context)) {
-            return GOOGLE_PLAY_BANNER;
-        } else if (customEventType == ADMOB_INTERSTITIAL &&
-                classFound(GOOGLE_PLAY_INTERSTITIAL.toString()) &&
-                isGpsAvailable(context)) {
-            return GOOGLE_PLAY_INTERSTITIAL;
-        }
-
-        return customEventType;
     }
 
     static boolean isGpsAvailable(final Context context) {

@@ -1,10 +1,5 @@
 package com.mopub.mobileads;
 
-import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
-import static com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL;
-
-import java.util.Map;
-
 import android.content.Context;
 import android.util.Log;
 
@@ -12,9 +7,17 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 
+import java.util.Map;
+
+import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
+import static com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL;
+
 /*
- * Compatible with version 4.0.30 of the Google Play Services SDK.
+ * Compatible with version 5.0.77 of the Google Play Services SDK.
  */
+
+// Note: AdMob ads will now use this class as Google has deprecated the AdMob SDK.
+
 public class GooglePlayServicesInterstitial extends CustomEventInterstitial {
     /*
      * These keys are intended for MoPub internal use. Do not modify.
@@ -27,13 +30,13 @@ public class GooglePlayServicesInterstitial extends CustomEventInterstitial {
 
     @Override
     protected void loadInterstitial(
-            Context context,
-            CustomEventInterstitialListener customEventInterstitialListener,
-            Map<String, Object> localExtras,
-            Map<String, String> serverExtras) {
+            final Context context,
+            final CustomEventInterstitialListener customEventInterstitialListener,
+            final Map<String, Object> localExtras,
+            final Map<String, String> serverExtras) {
         mInterstitialListener = customEventInterstitialListener;
 
-        String adUnitId;
+        final String adUnitId;
 
         if (extrasAreValid(serverExtras)) {
             adUnitId = serverExtras.get(AD_UNIT_ID_KEY);
@@ -46,7 +49,7 @@ public class GooglePlayServicesInterstitial extends CustomEventInterstitial {
         mGoogleInterstitialAd.setAdListener(new InterstitialAdListener());
         mGoogleInterstitialAd.setAdUnitId(adUnitId);
 
-        AdRequest adRequest = new AdRequest.Builder().build();
+        final AdRequest adRequest = new AdRequest.Builder().build();
 
         mGoogleInterstitialAd.loadAd(adRequest);
     }

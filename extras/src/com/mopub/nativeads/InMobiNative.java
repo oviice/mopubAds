@@ -23,7 +23,7 @@ import static com.mopub.common.util.Json.getJsonValue;
 import static com.mopub.common.util.Numbers.parseDouble;
 
 /*
- * Tested with InMobi SDK 4.4.0
+ * Tested with InMobi SDK 4.4.1
  */
 class InMobiNative extends CustomEventNative implements IMNativeListener {
     private static final String APP_ID_KEY = "app_id";

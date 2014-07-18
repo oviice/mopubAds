@@ -1,3 +1,12 @@
+## Version 2.3 (Jul 17, 2014)
+
+  - **Improved impression tracking for Native Ads** Impression tracking for native ads is now more accurate and more efficient.
+  - **Streamlined Maven Build and Dependencies** MoPub's Android SDK now depends on the Android v4 Support Library shipped with the Android Build tools. The MoPub Sample App also depends on Google Play Services to use the Android Advertising ID. We recommend building against Play Services in your app as well. For integration instructions, see the [wiki](https://github.com/mopub/mopub-android-sdk/wiki/Getting-Started).
+  - **Removed AdMob Custom Events and JAR** AdMob's SDK is deprecated by Google and the APIs have been moved to Google Play Services. Existing AdMob adunits will now invoke the appropriate Google Play Services custom event. Developers must update their integration to use the Google Play Services custom events located in the extras folder by August 1.
+  - **Updated Third-Party Network Compatibility** MoPub's provided Custom Events (included in the extras/ folder) are now compatible with the latest SDK releases from Millennial Media (5.3.0), Vungle (3.1.0), InMobi (4.4.1) and Google Play Services (5.0.77).
+  - Fixed intermittent NullPointerException in MoPubNative#requestNativeAd; fixes [Github issue #97] (https://github.com/mopub/mopub-android-sdk/issues/97)
+  - Fixed an issue where MRAID interstitials could be not be closed.
+
 ## Version 2.2 (Jun 19, 2014)
 
   - **Native ads mediation** release; integration instructions and documentation are available on the [GitHub wiki](https://github.com/mopub/mopub-android-sdk/wiki/Integrating-Native-Third-Party-Ad-Networks). Added custom event native implementations to the native extras directory of the SDK (`/extras/src/com/mopub/nativeads`), with initial support for the following networks:

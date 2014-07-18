@@ -21,7 +21,7 @@ public class BaseForwardingNativeAdTest {
 
     @After
     public void tearDown() throws Exception {
-        ImpressionTrackingManager.purgeViews();
+        ImpressionTrackingManager.clearTracking();
     }
 
     @Test

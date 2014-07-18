@@ -41,6 +41,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
+
 import org.fest.assertions.api.ANDROID;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -85,13 +86,6 @@ public class BaseInterstitialActivityTest {
         subject.onCreate(null);
 
         verify(broadcastReceiver).onReceive(any(Context.class), eq(expectedIntent));
-    }
-
-    @Test
-    public void onCreate_shouldSetContentView() throws Exception {
-        subject.onCreate(null);
-
-        assertThat(getContentView(subject).getChildCount()).isEqualTo(2);
     }
 
     @Test

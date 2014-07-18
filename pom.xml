@@ -15,6 +15,20 @@
     <version>1.0</version>
     <packaging>pom</packaging>
 
+    <repositories>
+        <repository>
+            <id>andsupport</id>
+            <name>Android Support</name>
+            <url>file://${env.ANDROID_HOME}/extras/android/m2repository</url>
+        </repository>
+
+        <repository>
+            <id>playservices</id>
+            <name>Android Play Services</name>
+            <url>file://${env.ANDROID_HOME}/extras/google/m2repository</url>
+        </repository>
+    </repositories>
+
     <modules>
         <module>mopub-sdk</module>
         <module>mopub-sample</module>

@@ -43,21 +43,20 @@ import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL;
 
 /**
- * Compatible with version 5.1.0 of the Millennial Media SDK.
+ * Compatible with version 5.3.0 of the Millennial Media SDK.
  */
 
 class MillennialInterstitial extends CustomEventInterstitial {
     private MMInterstitial mMillennialInterstitial;
     private CustomEventInterstitialListener mInterstitialListener;
     public static final String APID_KEY = "adUnitID";
-    private MillennialBroadcastReceiver mBroadcastReceiver;
 
     @Override
-    protected void loadInterstitial(Context context, CustomEventInterstitialListener customEventInterstitialListener,
-                                    Map<String, Object> localExtras, Map<String, String> serverExtras) {
+    protected void loadInterstitial(final Context context, final CustomEventInterstitialListener customEventInterstitialListener,
+                                    final Map<String, Object> localExtras, final Map<String, String> serverExtras) {
         mInterstitialListener = customEventInterstitialListener;
 
-        String apid;
+        final String apid;
         if (extrasAreValid(serverExtras)) {
             apid = serverExtras.get(APID_KEY);
         } else {
@@ -66,15 +65,15 @@ class MillennialInterstitial extends CustomEventInterstitial {
         }
 
         MMSDK.initialize(context);
-        MMSDK.setBroadcastEvents(true);
 
-        mBroadcastReceiver = new MillennialBroadcastReceiver();
-        mBroadcastReceiver.register(context);
-
-        Location location = (Location) localExtras.get("location");
-        if (location != null) MMRequest.setUserLocation(location);
+        final Location location = (Location) localExtras.get("location");
+        if (location != null) {
+            MMRequest.setUserLocation(location);
+        }
 
         mMillennialInterstitial = new MMInterstitial(context);
+        mMillennialInterstitial.setListener(new MillennialInterstitialRequestListener());
+
         if (mMillennialInterstitial.isAdAvailable()) {
             Log.d("MoPub", "Millennial interstitial ad already loaded.");
             mInterstitialListener.onInterstitialLoaded();
@@ -97,79 +96,49 @@ class MillennialInterstitial extends CustomEventInterstitial {
     @Override
     protected void onInvalidate() {
         mMillennialInterstitial.setListener(null);
-        mBroadcastReceiver.unregister();
     }
 
     private boolean extrasAreValid(Map<String, String> serverExtras) {
         return serverExtras.containsKey(APID_KEY);
     }
 
-    class MillennialBroadcastReceiver extends MMBroadcastReceiver {
-        private Context mContext;
-
+    class MillennialInterstitialRequestListener implements RequestListener {
         @Override
-        public void fetchFinishedCaching(MMAd ad) {
-            super.fetchFinishedCaching(ad);
-            fetchFinished(NETWORK_INVALID_STATE);
-        }
-
-        @Override
-        public void getAdFailure(MMAd ad) {
-            super.getAdFailure(ad);
-            Log.d("MoPub", "Millennial interstitial ad failed to load.");
-            mInterstitialListener.onInterstitialFailed(NETWORK_NO_FILL);
-        }
-
-        @Override
-        public void intentStarted(MMAd ad, String intent) {
-            super.intentStarted(ad, intent);
-            Log.d("MoPub", "Millennial interstitial ad clicked.");
-            mInterstitialListener.onInterstitialClicked();
-        }
-
-        @Override
-        public void fetchFailure(MMAd ad) {
-            super.fetchFailure(ad);
-            fetchFinished(NETWORK_NO_FILL);
-        }
-
-        @Override
-        public void displayStarted(MMAd ad) {
-            super.displayStarted(ad);
+        public void MMAdOverlayLaunched(final MMAd mmAd) {
             Log.d("MoPub", "Showing Millennial interstitial ad.");
             mInterstitialListener.onInterstitialShown();
         }
 
         @Override
-        public void overlayClosed(MMAd ad) {
-            super.overlayClosed(ad);
+        public void MMAdOverlayClosed(final MMAd mmAd) {
             Log.d("MoPub", "Millennial interstitial ad dismissed.");
             mInterstitialListener.onInterstitialDismissed();
         }
 
-        void register(Context context) {
-            mContext = context;
-            context.registerReceiver(this, MMBroadcastReceiver.createIntentFilter());
-        }
+        @Override public void MMAdRequestIsCaching(final MMAd mmAd) {}
 
-        void unregister() {
-            try {
-                mContext.unregisterReceiver(this);
-            } catch (Exception exception) {
-                Log.d("MoPub", "Unable to unregister MMBroadcastReceiver", exception);
-            } finally {
-                mContext = null;
-            }
-        }
-
-        private void fetchFinished(MoPubErrorCode errorToReport) {
+        @Override
+        public void requestCompleted(final MMAd mmAd) {
             if (mMillennialInterstitial.isAdAvailable()) {
                 Log.d("MoPub", "Millennial interstitial ad loaded successfully.");
                 mInterstitialListener.onInterstitialLoaded();
             } else {
                 Log.d("MoPub", "Millennial interstitial ad failed to load.");
-                mInterstitialListener.onInterstitialFailed(errorToReport);
+                mInterstitialListener.onInterstitialFailed(NETWORK_INVALID_STATE);
             }
         }
+
+        @Override
+        public void requestFailed(final MMAd mmAd, final MMException e) {
+            Log.d("MoPub", "Millennial interstitial ad failed to load.");
+            mInterstitialListener.onInterstitialFailed(NETWORK_NO_FILL);
+        }
+
+        @Override
+        public void onSingleTap(final MMAd mmAd) {
+            Log.d("MoPub", "Millennial interstitial clicked.");
+            mInterstitialListener.onInterstitialClicked();
+        }
+
     }
 }

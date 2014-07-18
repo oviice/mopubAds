@@ -2,12 +2,15 @@ package com.mopub.nativeads;
 
 import android.app.Activity;
 
+import com.mopub.common.DownloadTask;
 import com.mopub.common.GpsHelper;
 import com.mopub.common.GpsHelperTest;
 import com.mopub.common.SharedPreferencesHelper;
+import com.mopub.common.util.test.support.ShadowAsyncTasks;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
 import com.mopub.nativeads.test.support.SdkTestRunner;
 
+import org.apache.http.client.methods.HttpGet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -16,7 +19,9 @@ import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.Robolectric;
+import org.robolectric.annotation.Config;
 
+import java.util.List;
 import java.util.concurrent.Semaphore;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
@@ -34,6 +39,7 @@ import static org.mockito.Mockito.when;
 import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(SdkTestRunner.class)
+@Config(shadows = {ShadowAsyncTasks.class})
 public class MoPubNativeTest {
     private MoPubNative subject;
     private MethodBuilder methodBuilder;
@@ -176,5 +182,46 @@ public class MoPubNativeTest {
         subject.loadNativeAd(null);
 
         assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(0);
+    }
+
+    @Test
+    public void requestNativeAd_withValidUrl_shouldStartDownloadTaskWithUrl() throws Exception {
+        Robolectric.getUiThreadScheduler().pause();
+        Robolectric.addPendingHttpResponse(200, "body");
+
+        subject.requestNativeAd("http://www.mopub.com");
+
+        verify(moPubNativeListener, never()).onNativeFail(any(NativeErrorCode.class));
+        assertThat(wasDownloadTaskExecuted()).isTrue();
+
+        List<?> latestParams = ShadowAsyncTasks.getLatestParams();
+        assertThat(latestParams).hasSize(1);
+        HttpGet httpGet = (HttpGet) latestParams.get(0);
+        assertThat(httpGet.getURI().toString()).isEqualTo("http://www.mopub.com");
+    }
+
+    @Test
+    public void requestNativeAd_withInvalidUrl_shouldFireNativeFailAndNotStartAsyncTask() throws Exception {
+        Robolectric.getUiThreadScheduler().pause();
+
+        subject.requestNativeAd("//\\//\\::::");
+
+        verify(moPubNativeListener).onNativeFail(any(NativeErrorCode.class));
+        assertThat(wasDownloadTaskExecuted()).isFalse();
+    }
+
+    @Test
+    public void requestNativeAd_withNullUrl_shouldFireNativeFailAndNotStartAsyncTask() throws Exception {
+        Robolectric.getUiThreadScheduler().pause();
+
+        subject.requestNativeAd(null);
+
+        verify(moPubNativeListener).onNativeFail(any(NativeErrorCode.class));
+        assertThat(wasDownloadTaskExecuted()).isFalse();
+    }
+
+    private boolean wasDownloadTaskExecuted() {
+        return ShadowAsyncTasks.wasCalled() &&
+                (ShadowAsyncTasks.getLatestAsyncTask() instanceof DownloadTask);
     }
 }

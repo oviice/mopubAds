@@ -197,7 +197,7 @@ public final class NativeResponse {
         }
 
         for (final String impressionTracker : getImpressionTrackers()) {
-            HttpClient.makeTrackingHttpRequest(impressionTracker);
+            HttpClient.makeTrackingHttpRequest(impressionTracker, mContext);
         }
 
         mNativeAd.recordImpression();
@@ -212,7 +212,7 @@ public final class NativeResponse {
         }
 
         if (!isClicked()) {
-            HttpClient.makeTrackingHttpRequest(mMoPubClickTracker);
+            HttpClient.makeTrackingHttpRequest(mMoPubClickTracker, mContext);
         }
 
         openClickDestinationUrl(view);
