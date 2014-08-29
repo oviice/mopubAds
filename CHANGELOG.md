@@ -1,7 +1,7 @@
 ## Version 2.4.0 (August 28, 2014)
 
   - **Minimum Android version now at API Level 9.** To use the new SDK, your app must run on Android 2.3.1 (Version 9, Gingerbread) or higher.
-  - **Simplied APIs for inserting native ads.** See [Native Ads Integration](https://github.com/mopub/mopub-android-sdk/wiki/Native-Ads-Integration) for details.
+  - **Simplified APIs for inserting native ads.** See [Native Ads Integration](https://github.com/mopub/mopub-android-sdk/wiki/Native-Ads-Integration) for details.
   - **Automatic ad caching for smooth scrolling.** For native ads, the SDK will now automatically pre-load ads, resulting in smoother scrolling.
   - **Performance improvements** The SDK now makes more efficient use of memory for image caching and avoids allocating temporary objects while scrolling, resulting in fewer garbage collections.
   - **Sample app improvements.** An improved sample app allows saving ad unit IDs for testing.
@@ -262,4 +262,3 @@ To allow users to play videos using the native video player:
   - Added support for custom events
   - Added network connectivity check before loading an ad
   - Added `OnAdPresentedOverlay` listener methods
-  - Removed unnecessary permissions from the library's manifest

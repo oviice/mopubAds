@@ -34,10 +34,11 @@ package com.mopub.mobileads;
 
 import android.content.Context;
 import android.net.Uri;
+
 import com.mopub.mobileads.MraidView.ViewState;
 import com.mopub.mobileads.factories.MraidViewFactory;
 
-import java.util.*;
+import java.util.Map;
 
 import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.MoPubErrorCode.MRAID_LOAD_ERROR;

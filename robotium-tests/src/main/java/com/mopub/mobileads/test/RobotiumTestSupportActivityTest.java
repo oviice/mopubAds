@@ -48,7 +48,7 @@ import com.mopub.mobileads.robotium.RobotiumTestSupportActivity;
 import static com.mopub.mobileads.MoPubInterstitial.InterstitialAdListener;
 
 public class RobotiumTestSupportActivityTest extends ActivityInstrumentationTestCase2<RobotiumTestSupportActivity>{
-    private static final long NETWORK_SLEEP_TIME = 3000;
+    private static final long NETWORK_SLEEP_TIME = 8000;
     private static final String BANNER_AD_UNIT_ID = "agltb3B1Yi1pbmNyDAsSBFNpdGUY8fgRDA";
     private static final String INTERSTITIAL_AD_UNIT_ID = "agltb3B1Yi1pbmNyDAsSBFNpdGUY6tERDA";
 

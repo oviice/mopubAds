@@ -43,9 +43,12 @@ import com.mopub.common.util.DateAndTime;
 import com.mopub.common.util.Streams;
 import com.mopub.mobileads.util.Base64;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
 
 public class AdAlertReporter {
     private static final String EMAIL_RECIPIENT = "creative-review@mopub.com";

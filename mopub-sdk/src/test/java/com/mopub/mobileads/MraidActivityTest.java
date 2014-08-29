@@ -176,6 +176,18 @@ public class MraidActivityTest extends BaseInterstitialActivityTest {
     }
 
     @Test
+    public void onCreate_shouldSetLayoutOfMraidView() throws Exception {
+        subject.onCreate(null);
+
+        ArgumentCaptor<RelativeLayout.LayoutParams> captor = ArgumentCaptor.forClass(RelativeLayout.LayoutParams.class);
+        verify(mraidView).setLayoutParams(captor.capture());
+        RelativeLayout.LayoutParams actualLayoutParams = captor.getValue();
+
+        assertThat(actualLayoutParams.width).isEqualTo(RelativeLayout.LayoutParams.MATCH_PARENT);
+        assertThat(actualLayoutParams.height).isEqualTo(RelativeLayout.LayoutParams.MATCH_PARENT);
+    }
+
+    @Test
     public void onCreate_shouldAddCloseEventRegion() throws Exception {
         subject.onCreate(null);
 

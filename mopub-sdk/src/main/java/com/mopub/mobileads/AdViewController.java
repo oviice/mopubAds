@@ -52,11 +52,16 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
-import static com.mopub.common.LocationService.*;
-import static com.mopub.common.GpsHelper.*;
+import static com.mopub.common.GpsHelper.GpsHelperListener;
+import static com.mopub.common.GpsHelper.asyncFetchAdvertisingInfo;
+import static com.mopub.common.GpsHelper.asyncFetchAdvertisingInfoIfNotCached;
+import static com.mopub.common.LocationService.LocationAwareness;
+import static com.mopub.common.LocationService.getLastKnownLocation;
 import static com.mopub.mobileads.MoPubView.DEFAULT_LOCATION_PRECISION;
 
 public class AdViewController {
@@ -89,7 +94,6 @@ public class AdViewController {
     private Location mLocation;
     private LocationAwareness mLocationAwareness = LocationAwareness.NORMAL;
     private int mLocationPrecision = DEFAULT_LOCATION_PRECISION;
-    private boolean mIsFacebookSupported = true;
     private boolean mIsTesting;
     private boolean mAdWasLoaded;
 
@@ -204,14 +208,6 @@ public class AdViewController {
         mKeywords = keywords;
     }
 
-    public boolean isFacebookSupported() {
-        return mIsFacebookSupported;
-    }
-
-    public void setFacebookSupported(boolean enabled) {
-        mIsFacebookSupported = enabled;
-    }
-
     public Location getLocation() {
         return mLocation;
     }
@@ -244,11 +240,6 @@ public class AdViewController {
 
     public String getClickthroughUrl() {
         return mAdConfiguration.getClickthroughUrl();
-    }
-
-    @Deprecated
-    public void setClickthroughUrl(String clickthroughUrl) {
-        mAdConfiguration.setClickthroughUrl(clickthroughUrl);
     }
 
     public String getRedirectUrl() {
@@ -415,7 +406,6 @@ public class AdViewController {
         return mUrlGenerator
                 .withAdUnitId(mAdConfiguration.getAdUnitId())
                 .withKeywords(mKeywords)
-                .withFacebookSupported(mIsFacebookSupported)
                 .withLocation(mLocation)
                 .generateUrlString(getServerHostname());
     }
@@ -527,4 +517,23 @@ public class AdViewController {
     public void customEventActionWillBegin() {
         registerClick();
     }
+
+    @Deprecated
+    public void setClickthroughUrl(String clickthroughUrl) {
+        mAdConfiguration.setClickthroughUrl(clickthroughUrl);
+    }
+
+    /**
+     * @deprecated As of release 2.4
+     */
+    @Deprecated
+    public boolean isFacebookSupported() {
+        return false;
+    }
+
+    /**
+     * @deprecated As of release 2.4
+     */
+    @Deprecated
+    public void setFacebookSupported(boolean enabled) {}
 }

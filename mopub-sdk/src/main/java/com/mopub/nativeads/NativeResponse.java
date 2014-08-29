@@ -9,9 +9,11 @@ import android.widget.ImageView;
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.HttpClient;
 import com.mopub.common.MoPubBrowser;
+import com.mopub.common.VisibleForTesting;
 import com.mopub.common.util.IntentUtils;
 import com.mopub.common.util.MoPubLog;
 import com.mopub.common.util.ResponseHeader;
+import com.mopub.nativeads.MoPubNative.MoPubNativeEventListener;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
@@ -22,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.mopub.nativeads.MoPubNative.MoPubNativeListener;
-import static com.mopub.nativeads.MoPubNative.MoPubNativeListener.EMPTY_MOPUB_NATIVE_LISTENER;
 import static com.mopub.nativeads.NativeResponse.Parameter.CALL_TO_ACTION;
 import static com.mopub.nativeads.NativeResponse.Parameter.CLICK_DESTINATION;
 import static com.mopub.nativeads.NativeResponse.Parameter.CLICK_TRACKER;
@@ -36,7 +36,7 @@ import static com.mopub.nativeads.NativeResponse.Parameter.TITLE;
 import static com.mopub.nativeads.UrlResolutionTask.UrlResolutionListener;
 import static com.mopub.nativeads.UrlResolutionTask.getResolvedUrl;
 
-public final class NativeResponse {
+public class NativeResponse {
     enum Parameter {
         IMPRESSION_TRACKER("imptracker", true),
         CLICK_TRACKER("clktracker", true),
@@ -69,7 +69,8 @@ public final class NativeResponse {
             return null;
         }
 
-        static Set<String> requiredKeys = new HashSet<String>();
+        @VisibleForTesting
+        static final Set<String> requiredKeys = new HashSet<String>();
         static {
             for (final Parameter parameter : values()) {
                 if (parameter.required) {
@@ -79,24 +80,27 @@ public final class NativeResponse {
         }
     }
 
-    final Context mContext;
-    MoPubNativeListener mMoPubNativeListener;
-    final NativeAdInterface mNativeAd;
+    private final Context mContext;
+    private MoPubNativeEventListener mMoPubNativeEventListener;
+    private final NativeAdInterface mNativeAd;
 
     // Impression and click trackers for the MoPub adserver
-    final Set<String> mMoPubImpressionTrackers;
-    final String mMoPubClickTracker;
+    private final Set<String> mMoPubImpressionTrackers;
+    private final String mMoPubClickTracker;
+    private final String mAdUnitId;
 
-    boolean mRecordedImpression;
-    boolean mIsClicked;
-    boolean mIsDestroyed;
+    private boolean mRecordedImpression;
+    private boolean mIsClicked;
+    private boolean mIsDestroyed;
 
     public NativeResponse(final Context context,
             final DownloadResponse downloadResponse,
+            final String adUnitId,
             final NativeAdInterface nativeAd,
-            final MoPubNativeListener moPubNativeListener) {
+            final MoPubNativeEventListener moPubNativeEventListener) {
         mContext = context.getApplicationContext();
-        mMoPubNativeListener = moPubNativeListener;
+        mAdUnitId = adUnitId;
+        mMoPubNativeEventListener = moPubNativeEventListener;
         mNativeAd = nativeAd;
 
         mMoPubImpressionTrackers = new HashSet<String>();
@@ -122,6 +126,10 @@ public final class NativeResponse {
 
         return stringBuilder.toString();
     }
+
+   public String getAdUnitId() {
+       return mAdUnitId;
+   }
 
     // Interface Methods
     // Getters
@@ -187,7 +195,6 @@ public final class NativeResponse {
             return;
         }
 
-        ImpressionTrackingManager.addView(view, this);
         mNativeAd.prepareImpression(view);
     }
 
@@ -203,7 +210,7 @@ public final class NativeResponse {
         mNativeAd.recordImpression();
         mRecordedImpression = true;
 
-        mMoPubNativeListener.onNativeImpression(view);
+        mMoPubNativeEventListener.onNativeImpression(view);
     }
 
     public void handleClick(final View view) {
@@ -219,7 +226,7 @@ public final class NativeResponse {
         mNativeAd.handleClick(view);
         mIsClicked = true;
 
-        mMoPubNativeListener.onNativeClick(view);
+        mMoPubNativeEventListener.onNativeClick(view);
     }
 
     public void destroy() {
@@ -227,7 +234,7 @@ public final class NativeResponse {
             return;
         }
 
-        mMoPubNativeListener = EMPTY_MOPUB_NATIVE_LISTENER;
+        mMoPubNativeEventListener = MoPubNative.EMPTY_EVENT_LISTENER;
 
         mNativeAd.destroy();
         mIsDestroyed = true;
@@ -341,13 +348,13 @@ public final class NativeResponse {
         return mNativeAd.getText();
     }
 
-    // Testing
+    @VisibleForTesting
     @Deprecated
-    MoPubNativeListener getMoPubNativeListener() {
-        return mMoPubNativeListener;
+    MoPubNativeEventListener getMoPubNativeEventListener() {
+        return mMoPubNativeEventListener;
     }
 
-    // Testing
+    @VisibleForTesting
     @Deprecated
     void setRecordedImpression(final boolean recordedImpression) {
         mRecordedImpression = recordedImpression;

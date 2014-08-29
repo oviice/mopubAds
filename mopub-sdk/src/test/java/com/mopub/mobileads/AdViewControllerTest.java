@@ -536,7 +536,7 @@ public class AdViewControllerTest {
                 subject.setAdContentView(view);
             }
         }).start();
-        ThreadUtils.pause(10);
+        ThreadUtils.pause(100);
         Robolectric.runUiThreadTasks();
 
         verify(moPubView).removeAllViews();

@@ -39,12 +39,12 @@ import android.util.Log;
 
 import com.mopub.mobileads.factories.CustomEventInterstitialAdapterFactory;
 
-import java.util.*;
+import java.util.Map;
 
-import static com.mopub.common.LocationService.*;
-import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;
+import static com.mopub.common.LocationService.LocationAwareness;
 import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_DATA;
 import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_NAME;
+import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;
 
 public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomEventInterstitialAdapterListener {
 
@@ -150,14 +150,6 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
 
     public String getKeywords() {
         return mInterstitialView.getKeywords();
-    }
-
-    public void setFacebookSupported(boolean enabled) {
-        mInterstitialView.setFacebookSupported(enabled);
-    }
-
-    public boolean isFacebookSupported() {
-        return mInterstitialView.isFacebookSupported();
     }
 
     public Activity getActivity() {
@@ -350,5 +342,19 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
     @Deprecated
     public void customEventActionWillBegin() {
         if (mInterstitialView != null) mInterstitialView.registerClick();
+    }
+
+    /**
+     * @deprecated As of release 2.4
+     */
+    @Deprecated
+    public void setFacebookSupported(boolean enabled) {}
+
+    /**
+     * @deprecated As of release 2.4
+     */
+    @Deprecated
+    public boolean isFacebookSupported() {
+        return false;
     }
 }

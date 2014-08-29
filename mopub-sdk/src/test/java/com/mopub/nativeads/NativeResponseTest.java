@@ -10,7 +10,6 @@ import com.mopub.common.util.ResponseHeader;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 import com.mopub.nativeads.test.support.SdkTestRunner;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -21,8 +20,8 @@ import org.robolectric.tester.org.apache.http.HttpRequestInfo;
 import java.util.List;
 import java.util.Map;
 
-import static com.mopub.nativeads.ImpressionTrackingManager.NativeResponseWrapper;
-import static com.mopub.nativeads.MoPubNative.MoPubNativeListener.EMPTY_MOPUB_NATIVE_LISTENER;
+import static com.mopub.nativeads.MoPubNative.EMPTY_EVENT_LISTENER;
+import static com.mopub.nativeads.MoPubNative.EMPTY_NETWORK_LISTENER;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -77,54 +76,49 @@ public class NativeResponseTest {
 
         moPubNativeListener = mock(MoPubNative.MoPubNativeListener.class);
 
-        subject = new NativeResponse(context, downloadResponse, mNativeAd, moPubNativeListener);
+        subject = new NativeResponse(context, downloadResponse, "adunit_id", mNativeAd, moPubNativeListener);
 
         mMockNativeAd = mock(NativeAdInterface.class);
-        subjectWMockBaseNativeAd = new NativeResponse(context, downloadResponse, mMockNativeAd, moPubNativeListener);
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        ImpressionTrackingManager.clearTracking();
+        subjectWMockBaseNativeAd = new NativeResponse(context, downloadResponse, "adunit_id", mMockNativeAd, moPubNativeListener);
     }
 
     @Test
-    public void getTitle_shouldReturnTitleFromBaseNativeAd() throws Exception {
+    public void getTitle_shouldReturnTitleFromBaseNativeAd() {
         assertThat(subject.getTitle()).isEqualTo("title");
     }
 
     @Test
-    public void getTitle_shouldReturnTextFromBaseNativeAd() throws Exception {
+    public void getTitle_shouldReturnTextFromBaseNativeAd() {
         assertThat(subject.getText()).isEqualTo("text");
     }
 
     @Test
-    public void getMainImageUrl_shouldReturnMainImageUrlFromBaseNativeAd() throws Exception {
+    public void getMainImageUrl_shouldReturnMainImageUrlFromBaseNativeAd() {
         assertThat(subject.getMainImageUrl()).isEqualTo("mainImageUrl");
     }
 
     @Test
-    public void getIconImageUrl_shouldReturnIconImageUrlFromBaseNativeAd() throws Exception {
+    public void getIconImageUrl_shouldReturnIconImageUrlFromBaseNativeAd() {
         assertThat(subject.getIconImageUrl()).isEqualTo("iconImageUrl");
     }
 
     @Test
-    public void getClickDestinationUrl_shouldReturnClickDestinationUrlFromBaseNativeAd() throws Exception {
+    public void getClickDestinationUrl_shouldReturnClickDestinationUrlFromBaseNativeAd() {
         assertThat(subject.getClickDestinationUrl()).isEqualTo("clickDestinationUrl");
     }
 
     @Test
-    public void getCallToAction_shouldReturnCallToActionFromBaseNativeAd() throws Exception {
+    public void getCallToAction_shouldReturnCallToActionFromBaseNativeAd() {
         assertThat(subject.getCallToAction()).isEqualTo("callToAction");
     }
 
     @Test
-    public void getExtra_shouldReturnExtraFromBaseNativeAd() throws Exception {
+    public void getExtra_shouldReturnExtraFromBaseNativeAd() {
         assertThat(subject.getExtra("extra")).isEqualTo("extraValue");
     }
 
     @Test
-    public void getExtras_shouldReturnCopyOfExtrasMapFromBaseNativeAd() throws Exception {
+    public void getExtras_shouldReturnCopyOfExtrasMapFromBaseNativeAd() {
         final Map<String, Object> extras = subject.getExtras();
         assertThat(extras.size()).isEqualTo(2);
         assertThat(extras.get("extra")).isEqualTo("extraValue");
@@ -133,65 +127,48 @@ public class NativeResponseTest {
     }
 
     @Test
-    public void getImpressionTrackers_shouldReturnImpressionTrackersFromMoPubAndFromBaseNativeAd() throws Exception {
+    public void getImpressionTrackers_shouldReturnImpressionTrackersFromMoPubAndFromBaseNativeAd() {
         final List<String> impressionTrackers = subject.getImpressionTrackers();
         assertThat(impressionTrackers).containsOnly("moPubImpressionTrackerUrl", "impressionUrl");
     }
 
     @Test
-    public void getImpressionMinTimeViewed_shouldReturnImpressionMinTimeViewedFromBaseNativeAd() throws Exception {
+    public void getImpressionMinTimeViewed_shouldReturnImpressionMinTimeViewedFromBaseNativeAd() {
         assertThat(subject.getImpressionMinTimeViewed()).isEqualTo(500);
     }
 
     @Test
-    public void getImpressionMinPercentageViewed_shouldReturnImpressionMinPercentageViewedFromBaseNativeAd() throws Exception {
+    public void getImpressionMinPercentageViewed_shouldReturnImpressionMinPercentageViewedFromBaseNativeAd() {
         assertThat(subject.getImpressionMinPercentageViewed()).isEqualTo(50);
     }
 
     @Test
-    public void getClickTracker_shouldReturnMoPubClickTracker() throws Exception {
+    public void getClickTracker_shouldReturnMoPubClickTracker() {
         assertThat(subject.getClickTracker()).isEqualTo("moPubClickTrackerUrl");
     }
-    
+
     @Test
-    public void prepareImpression_shouldAddViewAndResponseToImpressionTrackingManagerAndCallPrepareImpressionOnBaseNativeAd() throws Exception {
-        View view = ImpressionTrackingManagerTest.getViewMock(View.VISIBLE, 100, 100, 100, 100, true, true);
-
-        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
+    public void prepareImpression_shouldCallPrepareImpressionOnBaseNativeAd() {
         subjectWMockBaseNativeAd.prepareImpression(view);
-        final Map<View, NativeResponseWrapper> keptViews = ImpressionTrackingManager.getPollingViews();
-        assertThat(keptViews.size()).isEqualTo(1);
-        assertThat(keptViews.get(view).mNativeResponse).isSameAs(subjectWMockBaseNativeAd);
-
         verify(mMockNativeAd).prepareImpression(view);
     }
 
     @Test
-    public void prepareImpression_whenDestroyed_shouldReturnFast() throws Exception {
+    public void prepareImpression_whenDestroyed_shouldReturnFast() {
         subjectWMockBaseNativeAd.destroy();
-        assertThat(subjectWMockBaseNativeAd.isDestroyed()).isTrue();
-        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
-
         subjectWMockBaseNativeAd.prepareImpression(view);
-
-        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
         verify(mMockNativeAd, never()).prepareImpression(view);
     }
 
     @Test
-    public void prepareImpression_whenAlreadyImpressed_shouldReturnFast() throws Exception {
+    public void prepareImpression_whenAlreadyImpressed_shouldReturnFast() {
         subjectWMockBaseNativeAd.setRecordedImpression(true);
-        assertThat(subjectWMockBaseNativeAd.getRecordedImpression()).isTrue();
-        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
-
         subjectWMockBaseNativeAd.prepareImpression(view);
-
-        assertThat(ImpressionTrackingManager.getPollingViews()).isEmpty();
         verify(mMockNativeAd, never()).prepareImpression(view);
     }
 
     @Test
-    public void recordImpression_shouldRecordImpressionsAndCallIntoBaseNativeAdAndNotifyListenerIdempotently() throws Exception {
+    public void recordImpression_shouldRecordImpressionsAndCallIntoBaseNativeAdAndNotifyListenerIdempotently() {
         Robolectric.getFakeHttpLayer().addPendingHttpResponse(200, "ok");
         Robolectric.getFakeHttpLayer().addPendingHttpResponse(200, "ok");
         assertThat(subject.getRecordedImpression()).isFalse();
@@ -222,7 +199,7 @@ public class NativeResponseTest {
     }
 
     @Test
-    public void recordImpression_whenDestroyed_shouldReturnFast() throws Exception {
+    public void recordImpression_whenDestroyed_shouldReturnFast() {
         subject.destroy();
         subject.recordImpression(view);
         assertThat(subject.getRecordedImpression()).isFalse();
@@ -232,7 +209,7 @@ public class NativeResponseTest {
     }
 
     @Test
-    public void handleClick_withNoBaseNativeAdClickDestinationUrl_shouldRecordClickAndCallIntoBaseNativeAdAndNotifyListener() throws Exception {
+    public void handleClick_withNoBaseNativeAdClickDestinationUrl_shouldRecordClickAndCallIntoBaseNativeAdAndNotifyListener() {
         Robolectric.getFakeHttpLayer().addPendingHttpResponse(200, "ok");
         assertThat(subject.isClicked()).isFalse();
 
@@ -262,12 +239,12 @@ public class NativeResponseTest {
 
     @Ignore("pending")
     @Test
-    public void handleClick_withBaseNativeAdClickDestinationUrl_shouldRecordClickAndCallIntoBaseNativeAdAndOpenClickDestinationAndNotifyListener() throws Exception {
+    public void handleClick_withBaseNativeAdClickDestinationUrl_shouldRecordClickAndCallIntoBaseNativeAdAndOpenClickDestinationAndNotifyListener() {
         // Really difficult to test url resolution since it doesn't use the apache http client
     }
 
     @Test
-    public void handleClick_whenDestroyed_shouldReturnFast() throws Exception {
+    public void handleClick_whenDestroyed_shouldReturnFast() {
         subject.destroy();
         subject.handleClick(view);
         assertThat(subject.isClicked()).isFalse();
@@ -277,7 +254,7 @@ public class NativeResponseTest {
     }
 
     @Test
-    public void destroy_shouldCallIntoBaseNativeAd() throws Exception {
+    public void destroy_shouldCallIntoBaseNativeAd() {
         subjectWMockBaseNativeAd.destroy();
         assertThat(subjectWMockBaseNativeAd.isDestroyed()).isTrue();
         verify(mMockNativeAd).destroy();
@@ -289,17 +266,17 @@ public class NativeResponseTest {
     }
 
     @Test
-    public void destroy_shouldSetMoPubNativeListenerToEmptyMoPubNativeListener() throws Exception {
-        assertThat(subjectWMockBaseNativeAd.getMoPubNativeListener()).isSameAs(moPubNativeListener);
+    public void destroy_shouldSetMoPubNativeEventListenerToEmptyMoPubNativeListener() {
+        assertThat(subjectWMockBaseNativeAd.getMoPubNativeEventListener()).isSameAs(moPubNativeListener);
 
         subjectWMockBaseNativeAd.destroy();
 
-        assertThat(subjectWMockBaseNativeAd.getMoPubNativeListener()).isSameAs(EMPTY_MOPUB_NATIVE_LISTENER);
+        assertThat(subjectWMockBaseNativeAd.getMoPubNativeEventListener()).isSameAs(EMPTY_EVENT_LISTENER);
     }
 
     @Ignore("pending")
     @Test
-    public void loadExtrasImage_shouldAsyncLoadImages() throws Exception {
+    public void loadExtrasImage_shouldAsyncLoadImages() {
         // no easy way to test this since nothing can be mocked
         // also not a critical test since it directly calls another service
     }

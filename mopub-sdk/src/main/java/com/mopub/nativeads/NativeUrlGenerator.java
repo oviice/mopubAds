@@ -3,6 +3,7 @@ package com.mopub.nativeads;
 import android.content.Context;
 import android.location.Location;
 import android.os.Build;
+import android.text.TextUtils;
 
 import com.mopub.common.AdUrlGenerator;
 import com.mopub.common.GpsHelper;
@@ -16,6 +17,7 @@ class NativeUrlGenerator extends AdUrlGenerator {
             = LocationService.LocationAwareness.NORMAL;
 
     private String mDesiredAssets;
+    private String mSequenceNumber;
 
     NativeUrlGenerator(Context context) {
         super(context);
@@ -33,6 +35,11 @@ class NativeUrlGenerator extends AdUrlGenerator {
             mLocation = requestParameters.getLocation();
             mDesiredAssets = requestParameters.getDesiredAssets();
         }
+        return this;
+    }
+
+    NativeUrlGenerator withSequenceNumber(final int sequenceNumber) {
+        mSequenceNumber = String.valueOf(sequenceNumber);
         return this;
     }
 
@@ -82,7 +89,15 @@ class NativeUrlGenerator extends AdUrlGenerator {
 
         setDesiredAssets();
 
+        setSequenceNumber();
+
         return getFinalUrlString();
+    }
+
+    private void setSequenceNumber() {
+       if (!TextUtils.isEmpty(mSequenceNumber)) {
+           addParam("MAGIC_NO", mSequenceNumber);
+       }
     }
 
     private void setDesiredAssets() {

@@ -3,7 +3,6 @@ package com.mopub.nativeads;
 import android.content.Context;
 
 import com.mopub.common.util.MoPubLog;
-import com.mopub.common.util.Numbers;
 
 import org.json.JSONArray;
 import org.json.JSONException;

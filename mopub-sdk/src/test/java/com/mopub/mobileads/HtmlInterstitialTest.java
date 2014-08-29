@@ -91,6 +91,7 @@ public class HtmlInterstitialTest extends ResponseBodyInterstitialTest {
         localExtras.put(AD_CONFIGURATION_KEY, adConfiguration);
     }
 
+    // FIXME
     @Test
     public void loadInterstitial_shouldNotifyCustomEventInterstitialListenerOnLoaded() throws Exception {
         subject.loadInterstitial(context, customEventInterstitialListener, localExtras, serverExtras);

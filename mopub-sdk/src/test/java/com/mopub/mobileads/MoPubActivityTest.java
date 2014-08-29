@@ -50,7 +50,6 @@ import org.mockito.ArgumentCaptor;
 import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowLocalBroadcastManager;
 
-import static android.widget.RelativeLayout.LayoutParams;
 import static com.mopub.mobileads.AdFetcher.CLICKTHROUGH_URL_KEY;
 import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.AdFetcher.REDIRECT_URL_KEY;
@@ -169,9 +168,8 @@ public class MoPubActivityTest extends BaseInterstitialActivityTest {
         verify(htmlInterstitialWebView).setLayoutParams(captor.capture());
         RelativeLayout.LayoutParams actualLayoutParams = captor.getValue();
 
-        assertThat(actualLayoutParams.width).isEqualTo(RelativeLayout.LayoutParams.FILL_PARENT);
-        assertThat(actualLayoutParams.height).isEqualTo(RelativeLayout.LayoutParams.WRAP_CONTENT);
-        assertOnlyOneRuleSet(actualLayoutParams, RelativeLayout.CENTER_IN_PARENT);
+        assertThat(actualLayoutParams.width).isEqualTo(RelativeLayout.LayoutParams.MATCH_PARENT);
+        assertThat(actualLayoutParams.height).isEqualTo(RelativeLayout.LayoutParams.MATCH_PARENT);
     }
 
     @Test
@@ -291,18 +289,6 @@ public class MoPubActivityTest extends BaseInterstitialActivityTest {
 
     private Intent createMoPubActivityIntent(String htmlData, boolean isScrollable, String redirectUrl, String clickthroughUrl, AdConfiguration adConfiguration) {
         return MoPubActivity.createIntent(new Activity(), htmlData, isScrollable, redirectUrl, clickthroughUrl, adConfiguration);
-    }
-
-    private void assertOnlyOneRuleSet(LayoutParams layoutParams, int desiredRule) {
-        int[] rules = layoutParams.getRules();
-        for (int ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
-            int currentRule = rules[ruleIndex];
-            if (ruleIndex == desiredRule) {
-                assertThat(currentRule).isNotEqualTo(0);
-            } else {
-                assertThat(currentRule).isEqualTo(0);
-            }
-        }
     }
 }
 

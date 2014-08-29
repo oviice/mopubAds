@@ -1,7 +1,7 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/native_outer_view"
-    android:layout_width="fill_parent"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@android:color/white">
     <ImageView android:id="@+id/native_icon_image"
@@ -36,27 +36,29 @@
 
     <ImageView android:id="@+id/native_main_image"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/native_main_image_height"
         android:adjustViewBounds="true"
         android:layout_marginTop="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
         android:layout_below="@+id/native_text"
-        android:layout_alignParentLeft="true" />
+        android:layout_alignParentLeft="true"
+        android:contentDescription="@string/native_main_image" 
+        android:scaleType="centerCrop"/>
 
     <Button
         android:id="@+id/native_cta"
         android:layout_width="wrap_content"
         android:layout_height="35dp"
-        android:text="Learn More"
+        android:text="@string/learn_more"
         android:textColor="@android:color/black"
-        android:onClick=""
         android:textStyle="bold"
         android:layout_marginRight="10dp"
         android:layout_marginTop="10dp"
         android:layout_below="@+id/native_main_image"
-        android:textSize="12dp"
+        android:textSize="12sp"
         android:layout_alignParentRight="true"
         android:clickable="true"
         android:paddingBottom="10dp" />
 
 </RelativeLayout>
-

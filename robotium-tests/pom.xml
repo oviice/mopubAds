@@ -25,6 +25,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.android.gms</groupId>
+            <artifactId>play-services</artifactId>
+            <version>5.2.08</version>
+            <type>aar</type>
+        </dependency>
 
         <!--test-->
 

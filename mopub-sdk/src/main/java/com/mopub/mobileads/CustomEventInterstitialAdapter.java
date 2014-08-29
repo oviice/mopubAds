@@ -61,12 +61,12 @@ public class CustomEventInterstitialAdapter implements CustomEventInterstitialLi
     private final Handler mHandler;
     private final Runnable mTimeout;
 
-    public CustomEventInterstitialAdapter(MoPubInterstitial moPubInterstitial, String className, String jsonParams) {
+    public CustomEventInterstitialAdapter(final MoPubInterstitial moPubInterstitial, final String className, final String jsonParams) {
         mHandler = new Handler();
         mMoPubInterstitial = moPubInterstitial;
         mServerExtras = new HashMap<String, String>();
         mLocalExtras = new HashMap<String, Object>();
-        mContext = moPubInterstitial.getActivity();
+        mContext = mMoPubInterstitial.getActivity();
         mTimeout = new Runnable() {
             @Override
             public void run() {
@@ -81,22 +81,23 @@ public class CustomEventInterstitialAdapter implements CustomEventInterstitialLi
             mCustomEventInterstitial = CustomEventInterstitialFactory.create(className);
         } catch (Exception exception) {
             Log.d("MoPub", "Couldn't locate or instantiate custom event: " + className + ".");
-            if (mCustomEventInterstitialAdapterListener != null) mCustomEventInterstitialAdapterListener.onCustomEventInterstitialFailed(ADAPTER_NOT_FOUND);
+            mMoPubInterstitial.onCustomEventInterstitialFailed(ADAPTER_NOT_FOUND);
+            return;
         }
-        
+
         // Attempt to load the JSON extras into mServerExtras.
         try {
             mServerExtras = Json.jsonStringToMap(jsonParams);
         } catch (Exception exception) {
             Log.d("MoPub", "Failed to create Map from JSON: " + jsonParams);
         }
-        
-        mLocalExtras = moPubInterstitial.getLocalExtras();
-        if (moPubInterstitial.getLocation() != null) {
-            mLocalExtras.put("location", moPubInterstitial.getLocation());
+
+        mLocalExtras = mMoPubInterstitial.getLocalExtras();
+        if (mMoPubInterstitial.getLocation() != null) {
+            mLocalExtras.put("location", mMoPubInterstitial.getLocation());
         }
 
-        AdViewController adViewController = moPubInterstitial.getMoPubInterstitialView().getAdViewController();
+        final AdViewController adViewController = mMoPubInterstitial.getMoPubInterstitialView().getAdViewController();
         if (adViewController != null) {
             mLocalExtras.put(AD_CONFIGURATION_KEY, adViewController.getAdConfiguration());
         }

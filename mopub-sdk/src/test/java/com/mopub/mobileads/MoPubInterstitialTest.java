@@ -36,21 +36,23 @@ import android.app.Activity;
 
 import com.mopub.mobileads.test.support.TestAdViewControllerFactory;
 import com.mopub.mobileads.test.support.TestCustomEventInterstitialAdapterFactory;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
-import static com.mopub.common.LocationService.*;
+import static com.mopub.common.LocationService.LocationAwareness;
+import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_DATA;
+import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_HTML_DATA;
+import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_NAME;
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;
 import static com.mopub.mobileads.MoPubErrorCode.CANCELLED;
 import static com.mopub.mobileads.MoPubErrorCode.INTERNAL_ERROR;
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
-import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_DATA;
-import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_HTML_DATA;
-import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_NAME;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;

@@ -40,7 +40,7 @@ public class DownloadTask extends AsyncTask<HttpUriRequest, Void, DownloadRespon
             final HttpResponse httpResponse = httpClient.execute(httpUriRequest);
             return new DownloadResponse(httpResponse);
         } catch (Exception e) {
-            MoPubLog.d("Download task threw an internal exception");
+            MoPubLog.d("Download task threw an internal exception", e);
             cancel(true);
             return null;
         } finally {

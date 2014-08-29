@@ -36,8 +36,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.location.Location;
 import android.view.View;
+
 import com.mopub.mobileads.factories.CustomEventBannerFactory;
 import com.mopub.mobileads.test.support.SdkTestRunner;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,7 +47,8 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.Robolectric;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;

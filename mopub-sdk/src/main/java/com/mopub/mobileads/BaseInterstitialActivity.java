@@ -96,10 +96,10 @@ abstract class BaseInterstitialActivity extends Activity {
             }
         };
 
+        // The contentView needs to be a RelativeLayout so the close button can be properly aligned
         mLayout = new RelativeLayout(this);
         final RelativeLayout.LayoutParams adViewLayout = new RelativeLayout.LayoutParams(
-                RelativeLayout.LayoutParams.FILL_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-        adViewLayout.addRule(RelativeLayout.CENTER_IN_PARENT);
+                RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
         mLayout.addView(getAdView(), adViewLayout);
         setContentView(mLayout);
 

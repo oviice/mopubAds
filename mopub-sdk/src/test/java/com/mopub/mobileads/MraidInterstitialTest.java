@@ -94,6 +94,7 @@ public class MraidInterstitialTest extends ResponseBodyInterstitialTest {
         verify(customEventInterstitialListener, never()).onInterstitialLoaded();
     }
 
+    // FIXME
     @Test
     public void loadInterstitial_shouldNotifyInterstitialLoaded() throws Exception {
         subject.loadInterstitial(context, customEventInterstitialListener, localExtras, serverExtras);

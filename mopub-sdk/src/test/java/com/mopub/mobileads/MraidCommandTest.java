@@ -34,7 +34,7 @@ package com.mopub.mobileads;
 
 import org.junit.Test;
 
-import java.util.*;
+import java.util.Map;
 
 import static com.mopub.mobileads.MraidCommandFactory.MraidJavascriptCommand.CLOSE;
 import static com.mopub.mobileads.MraidCommandFactory.MraidJavascriptCommand.CREATE_CALENDAR_EVENT;

@@ -37,38 +37,16 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-            <version>4.0.1</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>com.squareup</groupId>
             <artifactId>fest-android</artifactId>
-            <version>1.0.1</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- this needs to come above fest-reflect or we pick up the wrong org.fest.util.Strings -->
-        <dependency>
-            <groupId>org.easytesting</groupId>
-            <artifactId>fest-assert-core</artifactId>
-            <version>2.0M9</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.easytesting</groupId>
-            <artifactId>fest-reflect</artifactId>
-            <version>1.4</version>
+            <version>1.0.7</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.8.2</version>
+            <artifactId>junit-dep</artifactId>
+            <version>4.10</version>
             <scope>test</scope>
         </dependency>
 
@@ -129,6 +107,7 @@
                     <excludes>
                         <exclude>**/Test*.java</exclude>
                     </excludes>
+                    <parallel>classesAndMethods</parallel>
                 </configuration>
             </plugin>
         </plugins>

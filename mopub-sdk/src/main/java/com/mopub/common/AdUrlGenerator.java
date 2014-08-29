@@ -74,7 +74,6 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
     protected String mAdUnitId;
     protected String mKeywords;
     protected Location mLocation;
-    protected boolean mFacebookSupportEnabled;
 
     public static enum TwitterAppInstalledStatus {
         UNKNOWN,
@@ -107,11 +106,6 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
 
     public AdUrlGenerator withKeywords(String keywords) {
         mKeywords = keywords;
-        return this;
-    }
-
-    public AdUrlGenerator withFacebookSupported(boolean enabled) {
-        mFacebookSupportEnabled = enabled;
         return this;
     }
 
@@ -248,5 +242,13 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
     @Deprecated // for testing
     public static void setTwitterAppInstalledStatus(TwitterAppInstalledStatus status) {
         sTwitterAppInstalledStatus = status;
+    }
+
+    /**
+     * @deprecated As of release 2.4
+     */
+    @Deprecated
+    public AdUrlGenerator withFacebookSupported(boolean enabled) {
+        return this;
     }
 }
