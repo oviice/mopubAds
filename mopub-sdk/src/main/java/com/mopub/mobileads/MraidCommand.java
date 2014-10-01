@@ -32,9 +32,9 @@
 
 package com.mopub.mobileads;
 
-import android.util.Log;
+import com.mopub.common.logging.MoPubLog;
 
-import java.util.*;
+import java.util.Map;
 
 import static com.mopub.mobileads.MraidCommandFactory.MraidJavascriptCommand.GET_RESIZE_PROPERTIES;
 import static com.mopub.mobileads.MraidCommandFactory.MraidJavascriptCommand.OPEN;
@@ -136,7 +136,7 @@ class MraidCommandStorePicture extends MraidCommand {
             mView.getDisplayController().showUserDownloadImageAlert(url);
         } else {
             mView.fireErrorEvent(STORE_PICTURE, "Image can't be stored with null or empty URL");
-            Log.d("MoPub", "Invalid URI for Mraid Store Picture.");
+            MoPubLog.d("Invalid URI for Mraid Store Picture.");
         }
     }
 

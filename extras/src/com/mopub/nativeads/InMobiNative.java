@@ -2,6 +2,7 @@ package com.mopub.nativeads;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -9,7 +10,6 @@ import com.inmobi.commons.InMobi;
 import com.inmobi.monetization.IMErrorCode;
 import com.inmobi.monetization.IMNative;
 import com.inmobi.monetization.IMNativeListener;
-import com.mopub.common.util.MoPubLog;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -167,7 +167,7 @@ class InMobiNative extends CustomEventNative implements IMNativeListener {
             try {
                 setStarRating(parseDouble(jsonObject.opt(RATING)));
             } catch (ClassCastException e) {
-                MoPubLog.d("Unable to set invalid star rating for InMobi Native.");
+                Log.d("MoPub", "Unable to set invalid star rating for InMobi Native.");
             }
             setImpressionMinTimeViewed(IMPRESSION_MIN_TIME_VIEWED);
         }
@@ -179,7 +179,7 @@ class InMobiNative extends CustomEventNative implements IMNativeListener {
             } else if (view != null && view.getParent() instanceof ViewGroup) {
                 mImNative.attachToView((ViewGroup) view.getParent());
             } else {
-                MoPubLog.e("InMobi did not receive ViewGroup to attachToView, unable to record impressions");
+                Log.e("MoPub", "InMobi did not receive ViewGroup to attachToView, unable to record impressions");
             }
         }
 

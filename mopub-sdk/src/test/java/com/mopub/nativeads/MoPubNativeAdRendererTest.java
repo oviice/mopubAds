@@ -13,7 +13,7 @@ import com.mopub.common.DownloadResponse;
 import com.mopub.common.util.ResponseHeader;
 import com.mopub.common.util.Utils;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
-import com.mopub.nativeads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 
 import org.junit.Before;
 import org.junit.Rule;

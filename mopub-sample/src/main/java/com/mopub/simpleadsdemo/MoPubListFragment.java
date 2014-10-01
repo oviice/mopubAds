@@ -20,7 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mopub.common.MoPub;
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 
 import java.util.ArrayList;
 import java.util.List;

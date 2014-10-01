@@ -36,7 +36,7 @@ import android.content.Context;
 import android.location.Location;
 
 import com.mopub.mobileads.factories.CustomEventInterstitialFactory;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 
 import org.junit.Before;
 import org.junit.Test;

@@ -6,6 +6,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.mopub.common.VisibleForTesting;
+import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
+import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubServerPositioning;
+import com.mopub.nativeads.PositioningSource.PositioningListener;
 
 import java.util.ArrayList;
 
@@ -25,44 +28,88 @@ public class MoPubStreamAdPlacer {
     private final Context mContext;
     private final Handler mPlacementHandler;
     private final Runnable mPlacementRunnable;
+    private final PositioningSource mPositioningSource;
     private final NativeAdSource mAdSource;
     private final ImpressionTracker mImpressionTracker;
-    private final PlacementData mPlacementData;
 
-    private MoPubNativeAdRenderer mAdRenderer;
-
+    private boolean mHasReceivedPositions;
+    private PlacementData mPendingPlacementData;
+    private boolean mHasReceivedAds;
+    private boolean mHasPlacedAds;
+    private PlacementData mPlacementData;
+    
+    private MoPubAdRenderer mAdRenderer;
     private String mAdUnitId;
-    private MoPubNativeAdLoadedListener mAdLoadedListener;
 
+    private MoPubNativeAdLoadedListener mAdLoadedListener;
     // The visible range is the range of items which we believe are visible, inclusive.
     // Placing ads near this range makes for a smoother user experience when scrolling up
     // or down.
     private static final int MAX_VISIBLE_RANGE = 100;
     private int mVisibleRangeStart;
     private int mVisibleRangeEnd;
-    private int mItemCount;
 
+    private int mItemCount;
     // A buffer around the visible range where we'll place ads if possible.
     private static final int RANGE_BUFFER = 10;
     private boolean mNeedsPlacement;
-    private boolean mIsLoadingFirstAd;
 
     /**
+     * Creates a new MoPubStreamAdPlacer object.
+     *
+     * By default, the StreamAdPlacer will contact the server to determine ad positions. If you
+     * wish to hard-code positions in your app, see {@link MoPubStreamAdPlacer(Context,
+     * MoPubClientPositioning)}.
+     *
+     * @param context The activity context.
+     */
+    public MoPubStreamAdPlacer(final Context context) {
+        // MoPubClientPositioning is mutable, so we must take care not to hold a
+        // reference to it that might be subsequently modified by the caller.
+        this(context, MoPubNativeAdPositioning.serverPositioning());
+    }
+
+    /**
+     * Creates a new MoPubStreamAdPlacer object, using server positioning.
+     *
      * @param context The activity context.
      * @param adPositioning A positioning object for specifying where ads will be placed in your
-     * stream.
+     * stream. See {@link MoPubNativeAdPositioning#serverPositioning()}.
      */
-    public MoPubStreamAdPlacer(final Context context,
-            final MoPubNativeAdPositioning adPositioning) {
-        this(context, new NativeAdSource(), new ImpressionTracker(context),
-                PlacementData.fromAdPositioning(adPositioning));
+    public MoPubStreamAdPlacer(final Context context, final MoPubServerPositioning adPositioning) {
+        this(context,
+                new NativeAdSource(),
+                new ImpressionTracker(context),
+                new ServerPositioningSource(context));
+    }
+
+    /**
+     * Creates a new MoPubStreamAdPlacer object, using client positioning.
+     *
+     * @param context The activity context.
+     * @param adPositioning A positioning object for specifying where ads will be placed in your
+     * stream. See {@link MoPubNativeAdPositioning#clientPositioning()}.
+     */
+    public MoPubStreamAdPlacer(final Context context, final MoPubClientPositioning adPositioning) {
+        // MoPubClientPositioning is mutable, so we must take care not to hold a
+        // reference to it that might be subsequently modified by the caller.
+        this(context,
+                new NativeAdSource(),
+                new ImpressionTracker(context),
+                new ClientPositioningSource(adPositioning));
     }
 
     @VisibleForTesting
     MoPubStreamAdPlacer(final Context context,
             final NativeAdSource adSource,
             final ImpressionTracker impressionTracker,
-            final PlacementData placementData) {
+            final PositioningSource positioningSource) {
+        mContext = context;
+        mImpressionTracker = impressionTracker;
+        mPositioningSource = positioningSource;
+        mAdSource = adSource;
+        mPlacementData = PlacementData.empty();
+
         mPlacementHandler = new Handler();
         mPlacementRunnable = new Runnable() {
             @Override
@@ -75,10 +122,6 @@ public class MoPubStreamAdPlacer {
             }
         };
 
-        mContext = context;
-        mAdSource = adSource;
-        mImpressionTracker = impressionTracker;
-        mPlacementData = placementData;
         mVisibleRangeStart = 0;
         mVisibleRangeEnd = 0;
     }
@@ -92,7 +135,7 @@ public class MoPubStreamAdPlacer {
      *
      * @param adRenderer The ad renderer.
      */
-    public void registerAdRenderer(final MoPubNativeAdRenderer adRenderer) {
+    public void registerAdRenderer(final MoPubAdRenderer adRenderer) {
         mAdRenderer = adRenderer;
     }
 
@@ -142,24 +185,65 @@ public class MoPubStreamAdPlacer {
             final RequestParameters requestParameters) {
         mAdUnitId = adUnitId;
 
-        // Is loading will be true until the first ad is available.
-        mIsLoadingFirstAd = true;
+        mHasPlacedAds = false;
+        mHasReceivedPositions = false;
+        mHasReceivedAds = false;
+
+        mPositioningSource.loadPositions(adUnitId, new PositioningListener() {
+            @Override
+            public void onLoad(final MoPubClientPositioning positioning) {
+                handlePositioningLoad(positioning);
+            }
+
+            @Override
+            public void onFailed() {
+            }
+        });
+
         mAdSource.setAdSourceListener(new NativeAdSource.AdSourceListener() {
             @Override
             public void onAdsAvailable() {
-                // When the first ad is available, remove ads that may be present and immediately
-                // place ads again. This prevents the UI from flashing grossly.
-                if (mIsLoadingFirstAd) {
-                    removeAdsInRange(0, mItemCount);
-                    placeAds();
-                } else {
-                    notifyNeedsPlacement();
-                }
-                mIsLoadingFirstAd = false;
+                handleAdsAvailable();
             }
         });
 
         mAdSource.loadAds(mContext, adUnitId, requestParameters);
+    }
+
+    @VisibleForTesting
+    void handlePositioningLoad(final MoPubClientPositioning positioning) {
+        PlacementData placementData = PlacementData.fromAdPositioning(positioning);
+        if (mHasReceivedAds) {
+            placeInitialAds(placementData);
+        } else {
+            mPendingPlacementData = placementData;
+        }
+        mHasReceivedPositions = true;
+    }
+
+    @VisibleForTesting
+    void handleAdsAvailable() {
+        // If we've already placed ads, just notify that we need placement.
+        if (mHasPlacedAds) {
+            notifyNeedsPlacement();
+            return;
+        }
+
+        // Otherwise, we may need to place initial ads.
+        if (mHasReceivedPositions) {
+            placeInitialAds(mPendingPlacementData);
+        }
+        mHasReceivedAds = true;
+    }
+
+    private void placeInitialAds(PlacementData placementData) {
+        // Remove ads that may be present and immediately place ads again. This prevents the UI
+        // from flashing grossly.
+        removeAdsInRange(0, mItemCount);
+
+        mPlacementData = placementData;
+        placeAds();
+        mHasPlacedAds = true;
     }
 
     /**
@@ -304,6 +388,7 @@ public class MoPubStreamAdPlacer {
             if (position < mVisibleRangeStart) {
                 mVisibleRangeStart--;
             }
+            mItemCount--;
         }
 
         int clearedAdsCount = mPlacementData.clearAdsInRange(adjustedStartRange, adjustedEndRange);

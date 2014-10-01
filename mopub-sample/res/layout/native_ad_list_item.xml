@@ -7,7 +7,7 @@
     <ImageView android:id="@+id/native_icon_image"
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:background="#FFFFFF"
+        android:background="@null"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_marginTop="10dp"
@@ -37,13 +37,13 @@
     <ImageView android:id="@+id/native_main_image"
         android:layout_width="match_parent"
         android:layout_height="@dimen/native_main_image_height"
-        android:adjustViewBounds="true"
+        android:background="@null"
         android:layout_marginTop="10dp"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:layout_below="@+id/native_text"
         android:layout_alignParentLeft="true"
-        android:contentDescription="@string/native_main_image" 
+        android:contentDescription="@string/native_main_image"
         android:scaleType="centerCrop"/>
 
     <Button

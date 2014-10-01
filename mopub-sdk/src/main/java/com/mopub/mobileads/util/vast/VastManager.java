@@ -6,7 +6,7 @@ import android.view.WindowManager;
 
 import com.mopub.common.CacheService;
 import com.mopub.common.util.AsyncTasks;
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.VastVideoDownloadTask;
 
 import java.util.ArrayList;

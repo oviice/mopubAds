@@ -8,7 +8,7 @@ import android.widget.LinearLayout;
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.util.ResponseHeader;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
-import com.mopub.nativeads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.mopub.nativeads.MoPubNative.EMPTY_EVENT_LISTENER;
-import static com.mopub.nativeads.MoPubNative.EMPTY_NETWORK_LISTENER;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;

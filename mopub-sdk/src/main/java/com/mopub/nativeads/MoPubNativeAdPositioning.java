@@ -1,155 +1,75 @@
 package com.mopub.nativeads;
 
-import android.util.SparseArray;
-
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.Preconditions;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * A positioning object used to specify ad positions in client SDK integration code.
+ * Provides factory methods for setting up native ad positions.
  *
- * Client positioning allows you to:
- * <ul>
- * <li>Specify fixed positions for ads</li>
- * <li>Specify an spacing interval for ads, starting at the last fixed position</li>
- * <li>Override the ad unit for a given fixed ad position. This is useful to
- * direct-sell a "premium" ad unit at a specified position. It can also be useful
- * if you want to track a position separately from other positions in the MoPub UI.</li>
- * </ul>
- *
- * For example, to space ads every 5 items, starting at position 3:
- * <code>
- * MoPubNativeAdPositioning positioning = new MoPubNativeAdPositioning.Builder()
- *     .addFixedPosition(3)
- *     .enableRepeatingPositions(5)
- *     .build();
- * }
- * </code>
- *
- * {@code MoPubNativeAdPositioning} is an immutable class. To create a new instance, use
- * {@link MoPubNativeAdPositioning.Builder}.
+ * This class supports 2 types of positioning to use when placing ads into your stream:
+ * <ol>
+ *     <li><b>Server positioning</b>. The SDK will connect to the MoPub server to determine the
+ *     optimal positions for ads. You can also configure these positions yourself using the
+ *     MoPub publisher UI. We recommend using server positioning, and it is the default if you
+ *     do not specify positioning when loading ads.</li>
+ *     <li><b>Client positioning.</b> Requires you to hard-code positions into your app. You
+ *     can specify fixed positions for ads, as well as a repeating interval.
+ *     </li>
+ * </ol>
  */
 public final class MoPubNativeAdPositioning {
     /**
-     * Constant for indicating that ad positions should not repeat.
+     * Allows the SDK to connect to the MoPub server in order to determine ad
+     * positions.
      */
-    public static final int NO_REPEAT = -1;
-
-    private final int mRepeatInterval;
-    private final List<Integer> mFixedPositions;
-    private final SparseArray<String> mAdUnitOverrides;
-
-    private MoPubNativeAdPositioning(final int repeatInterval, final List<Integer> fixedPositions,
-            final SparseArray<String> adUnitOverrides) {
-        mRepeatInterval = repeatInterval;
-
-        // Safe copy the positions to avoid modification
-        mFixedPositions = new ArrayList<Integer>(fixedPositions);
-
-        // Safe copy overrides. 'clone' is protected on pre-ICS devices, so we copy manually.
-        mAdUnitOverrides = new SparseArray<String>(adUnitOverrides.size());
-        for (int i = 0; i < adUnitOverrides.size(); ++i) {
-            mAdUnitOverrides.put(adUnitOverrides.keyAt(i), adUnitOverrides.valueAt(i));
-        }
+    public static class MoPubServerPositioning {
+        // No-op. This is used by the ad placer as an indicator to use server positioning.
     }
 
     /**
-     * Returns an ordered array of fixed ad positions.
-     *
-     * @return Fixed ad positions.
+     * Allows hard-coding ad positions into your app.
      */
-    public List<Integer> getFixedPositions() {
-        return mFixedPositions;
-    }
+    public static class MoPubClientPositioning {
+        /**
+         * Constant indicating that ad positions should not repeat.
+         */
+        public static final int NO_REPEAT = Integer.MAX_VALUE;
 
-    /**
-     * Returns the repeating ad interval.
-     *
-     * Repeating ads start after the last fixed position. Returns -1 if there is no repeating
-     * interval.
-     *
-     * @return The repeating ad interval.
-     */
-    public int getRepeatingInterval() {
-        return mRepeatInterval;
-    }
+        private final ArrayList<Integer> mFixedPositions = new ArrayList<Integer>();
+        private int mRepeatInterval = NO_REPEAT;
 
-    /**
-     * Returns the overridden ad unit ID for the given position.
-     *
-     * Returns {@code null} if the position is not an ad, or if there is no overridden ad unit for
-     * this position.
-     *
-     * @param position The ad position.
-     * @return The overridden ad unit ID.
-     */
-    public String getAdUnitIdOverride(int position) {
-        return mAdUnitOverrides.get(position);
-    }
-
-    /**
-     * Creates and returns a {@code MoPubNativeAdPositioning.Builder}.
-     *
-     * @return A new builder.
-     */
-    public static Builder newBuilder() {
-        return new Builder();
-    }
-
-    /**
-     * A Builder class for the ad positioning.
-     */
-    public static final class Builder {
-        private int mRepeatInterval = MoPubNativeAdPositioning.NO_REPEAT;
-        private final List<Integer> mFixedPositions;
-        private final SparseArray<String> mAdUnitIdOverrides;
-
-        private Builder() {
-            mFixedPositions = new ArrayList<Integer>();
-            mAdUnitIdOverrides = new SparseArray<String>();
+        public MoPubClientPositioning() {
         }
 
         /**
          * Specifies a fixed ad position.
          *
          * @param position The ad position.
-         * @return The builder.
+         * @return This object for easy use in chained setters.
          */
-        public Builder addFixedPosition(final int position) {
-            internalAddFixedPosition(position);
+        public MoPubClientPositioning addFixedPosition(final int position) {
+            if (!Preconditions.NoThrow.checkArgument(position >= 0)) {
+                return this;
+            }
+
+            // Add in sorted order if this does not exist.
+            int index = Collections.binarySearch(mFixedPositions, position);
+            if (index < 0) {
+                mFixedPositions.add(~index, position);
+            }
             return this;
         }
 
         /**
-         * Specifies a fixed ad position, with an ad unit ID override.
+         * Returns an ordered array of fixed ad positions.
          *
-         * Calling this method twice with the same position and different ad unit IDs replaces the
-         * first ad unit ID.
-         *
-         * @param position The ad position.
-         * @param adUnitIdOverride The ad unit ID to use when requesting and ad for this position.
-         * @return The builder.
+         * @return Fixed ad positions.
          */
-        public Builder addFixedPosition(final int position, final String adUnitIdOverride) {
-            if (internalAddFixedPosition(position)) {
-                mAdUnitIdOverrides.put(position, adUnitIdOverride);
-            }
-            return this;
-        }
-
-        private boolean internalAddFixedPosition(final int position) {
-            if (position < 0) {
-                return false;
-            }
-            if (!mFixedPositions.contains(position)) {
-                mFixedPositions.add(position);
-            } else {
-                mAdUnitIdOverrides.remove(position);
-            }
-            return true;
+        List<Integer> getFixedPositions() {
+            return mFixedPositions;
         }
 
         /**
@@ -157,15 +77,81 @@ public final class MoPubNativeAdPositioning {
          *
          * @param interval The frequency at which to show ads. Must be an integer greater than 1 or
          * the constant NO_REPEAT.
-         * @return The builder.
+         * @return This object for easy use in chained setters.
          */
-        public Builder enableRepeatingPositions(final int interval) {
-            if (interval < 1 && interval != NO_REPEAT) {
-                MoPubLog.w("Attempted to assign an illegal interval < 1 to the" +
-                        " ad positioning object. Call ignored.");
+        public MoPubClientPositioning enableRepeatingPositions(final int interval) {
+            if (!Preconditions.NoThrow.checkArgument(
+                    interval > 1, "Repeating interval must be greater than 1")) {
+                mRepeatInterval = NO_REPEAT;
                 return this;
             }
             mRepeatInterval = interval;
+            return this;
+        }
+
+        /**
+         * Returns the repeating ad interval.
+         *
+         * Repeating ads start after the last fixed position. Returns {@link #NO_REPEAT} if there is
+         * no repeating interval.
+         *
+         * @return The repeating ad interval.
+         */
+        int getRepeatingInterval() {
+            return mRepeatInterval;
+        }
+    }
+
+    static MoPubClientPositioning clone(MoPubClientPositioning positioning) {
+        MoPubClientPositioning clone = new MoPubClientPositioning();
+        clone.mFixedPositions.addAll(positioning.mFixedPositions);
+        clone.mRepeatInterval = positioning.mRepeatInterval;
+        return clone;
+    }
+
+    /**
+     * Creates and returns a {@link MoPubClientPositioning} object.
+     * @return A new positioning object.
+     */
+    public static MoPubClientPositioning clientPositioning() {
+        return new MoPubClientPositioning();
+    }
+
+    /**
+     * Creates and returns a {@link MoPubServerPositioning} object.
+     * @return A new positioning object.
+     */
+    public static MoPubServerPositioning serverPositioning() {
+        return new MoPubServerPositioning();
+    }
+
+    /**
+     * Creates and returns a {@link MoPubNativeAdPositioning.Builder}.
+     *
+     * @return A new builder.
+     * @deprecated We recommend using {@link #serverPositioning()} and specifying positioning in
+     * the MoPub UI. If you still want to hard-code positioning information in your app,
+     * use {@link #clientPositioning} instead of this builder.
+     */
+    @Deprecated
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
+    /**
+     * A Builder class for the ad positioning.
+     */
+    @Deprecated
+    public static final class Builder extends MoPubClientPositioning {
+        @Override
+        public Builder addFixedPosition(final int position) {
+            super.addFixedPosition(position);
+            return this;
+        }
+
+        @Override
+        public Builder enableRepeatingPositions(final int interval) {
+            super.enableRepeatingPositions(interval);
             return this;
         }
 
@@ -174,11 +160,9 @@ public final class MoPubNativeAdPositioning {
          *
          * @return A new positioning object.
          */
-        public MoPubNativeAdPositioning build() {
-            // Could insert into a sorted LinkedList instead of doing this.
-            Collections.sort(mFixedPositions);
-            return new MoPubNativeAdPositioning(mRepeatInterval, mFixedPositions,
-                    mAdUnitIdOverrides);
+        @Deprecated
+        public MoPubClientPositioning build() {
+            return this;
         }
     }
 }

@@ -32,6 +32,7 @@
 
 package com.mopub.common.util;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -49,6 +50,14 @@ public class DateAndTime {
 
     public static Date now() {
         return instance.internalNow();
+    }
+
+    public static String getTimeZoneOffsetString() {
+        // A new instance is created with each call because DateFormat objects have
+        // internal state and are not thread safe.
+        SimpleDateFormat format = new SimpleDateFormat("Z");
+        format.setTimeZone(localTimeZone());
+        return format.format(now());
     }
 
     public TimeZone internalLocalTimeZone() {

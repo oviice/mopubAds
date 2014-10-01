@@ -32,12 +32,7 @@
 
 package com.mopub.common;
 
-import android.content.Context;
-import android.content.pm.PackageInfo;
 import android.net.Uri;
-import android.provider.Settings;
-
-import com.mopub.common.util.Utils;
 
 import static com.mopub.common.util.Strings.isEmpty;
 
@@ -112,31 +107,5 @@ public abstract class BaseUrlGenerator {
 
     protected void setUdid(String udid) {
         addParam("udid", udid);
-    }
-
-    protected String getUdidFromContext(Context context) {
-        /*
-         * try to use the android id from Google Play Services if available
-         * if not fall back on the device id
-         */
-        final String androidId = GpsHelper.getAdvertisingId(context);
-
-        if (androidId != null) {
-            return IFA_PREFIX + androidId;
-        } else {
-            String deviceId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-            deviceId = (deviceId == null) ? "" : Utils.sha1(deviceId);
-            return SHA_PREFIX + deviceId;
-        }
-    }
-
-    protected String getAppVersionFromContext(Context context) {
-        try {
-            String packageName = context.getPackageName();
-            PackageInfo packageInfo = context.getPackageManager().getPackageInfo(packageName, 0);
-            return packageInfo.versionName;
-        } catch (Exception exception) {
-            return null;
-        }
     }
 }

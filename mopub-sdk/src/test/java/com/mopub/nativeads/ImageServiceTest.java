@@ -10,7 +10,7 @@ import com.mopub.common.CacheServiceTest;
 import com.mopub.common.DownloadResponse;
 import com.mopub.nativeads.test.support.MoPubShadowBitmap;
 import com.mopub.nativeads.test.support.MoPubShadowDisplay;
-import com.mopub.nativeads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 
 import org.junit.After;
 import org.junit.Before;

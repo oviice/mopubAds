@@ -66,6 +66,7 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.mopub.common.util.Dips;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Streams;
 import com.mopub.mobileads.MraidView.ExpansionStyle;
 import com.mopub.mobileads.MraidView.NativeCloseButtonStyle;
@@ -347,7 +348,7 @@ class MraidDisplayController extends MraidAbstractController {
         Context context = getContext();
         if (!isStorePictureSupported(context)) {
             getMraidView().fireErrorEvent(STORE_PICTURE, "Error downloading file - the device does not have an SD card mounted, or the Android permission is not granted.");
-            Log.d("MoPub", "Error downloading file - the device does not have an SD card mounted, or the Android permission is not granted.");
+            MoPubLog.d("Error downloading file - the device does not have an SD card mounted, or the Android permission is not granted.");
             return;
         }
 
@@ -389,6 +390,7 @@ class MraidDisplayController extends MraidAbstractController {
                     HttpResponse httpResponse = httpClient.execute(httpGet);
                     pictureInputStream = httpResponse.getEntity().getContent();
 
+                    // do we have this header on non-redirects?
                     String redirectLocation = HttpResponses.extractHeader(httpResponse, LOCATION);
                     if (redirectLocation != null) {
                         uri = URI.create(redirectLocation);
@@ -408,7 +410,7 @@ class MraidDisplayController extends MraidAbstractController {
                         public void run() {
                             showUserToast("Image failed to download.");
                             getMraidView().fireErrorEvent(STORE_PICTURE, "Error downloading and saving image file.");
-                            Log.d("MoPub", "Error downloading and saving image file.");
+                            MoPubLog.d("Error downloading and saving image file.");
                         }
                     });
                 } finally {

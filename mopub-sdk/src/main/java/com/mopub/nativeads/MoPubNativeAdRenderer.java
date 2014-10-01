@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.mopub.common.VisibleForTesting;
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 
 import java.util.WeakHashMap;
 

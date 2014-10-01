@@ -1,3 +1,22 @@
+## Version 3.0.0 (September 30, 2014)
+
+  - **Location Settings are now SDK-wide**
+    - Calls to `MoPubView#setLocationAwareness` and `MoPubInterstial#setLocationAwareness` are
+    deprecated in favor of `MoPub#setLocationAwareness`
+    - Calls to `MoPubView#setLocationPrecision` and `MoPubInterstitial#setLocationPrecision` are
+    deprecated in favor of `MoPub#setLocationPrecision`
+    - Calls to any of these methods have the effect of setting location awareness and precision
+    globally for the SDK
+  - **Build target SDK is now API Level 19.** If you are building the MoPub SDK from source,
+  modify your dependencies to reference Android 4.4.2, API Level 19. This does not affect the
+  minimum device API level, which remains at API Level 9.
+  - **Source-level support for Gradle projects.** The SDK source now includes a build.gradle file
+   you can use to build source as part of your Gradle project.
+  - **The SDK now uses Play Services 5.0.89**
+  - **Bug fixes:**
+    - Millennial Interstitial caching now properly handles request failures
+    - Fixed bug preventing native ads from loading after a request failure
+
 ## Version 2.4.0 (August 28, 2014)
 
   - **Minimum Android version now at API Level 9.** To use the new SDK, your app must run on Android 2.3.1 (Version 9, Gingerbread) or higher.

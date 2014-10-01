@@ -34,9 +34,9 @@ package com.mopub.mobileads;
 
 import android.app.Activity;
 import android.net.Uri;
-import android.util.Log;
 
 import com.mopub.common.util.Json;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Strings;
 
 import org.apache.http.Header;
@@ -100,7 +100,7 @@ abstract class AdLoadTask {
             adType = extractHeader(response, AD_TYPE);
             fullAdType = extractHeader(response, FULL_AD_TYPE);
 
-            Log.d("MoPub", "Loading ad type: " + AdTypeTranslator.getAdNetworkType(adType, fullAdType));
+            MoPubLog.d("Loading ad type: " + AdTypeTranslator.getAdNetworkType(adType, fullAdType));
 
             adTypeCustomEventName = AdTypeTranslator.getCustomEventNameForAdType(
                     adViewController.getMoPubView(), adType, fullAdType);
@@ -115,7 +115,7 @@ abstract class AdLoadTask {
         }
 
         private AdLoadTask extractCustomEventAdLoadTask() {
-            Log.i("MoPub", "Performing custom event.");
+            MoPubLog.i("Performing custom event.");
 
             // If applicable, try to invoke the new custom event system (which uses custom classes)
             adTypeCustomEventName = extractHeader(response, CUSTOM_EVENT_NAME);
@@ -236,13 +236,13 @@ abstract class AdLoadTask {
             MoPubView mpv = adViewController.getMoPubView();
 
             if (mHeader == null) {
-                Log.i("MoPub", "Couldn't call custom method because the server did not specify one.");
+                MoPubLog.i("Couldn't call custom method because the server did not specify one.");
                 mpv.loadFailUrl(MoPubErrorCode.ADAPTER_NOT_FOUND);
                 return;
             }
 
             String methodName = mHeader.getValue();
-            Log.i("MoPub", "Trying to call method named " + methodName);
+            MoPubLog.i("Trying to call method named " + methodName);
 
             Class<? extends Activity> c;
             Method method;
@@ -252,11 +252,11 @@ abstract class AdLoadTask {
                 method = c.getMethod(methodName, MoPubView.class);
                 method.invoke(userActivity, mpv);
             } catch (NoSuchMethodException e) {
-                Log.d("MoPub", "Couldn't perform custom method named " + methodName +
+                MoPubLog.d("Couldn't perform custom method named " + methodName +
                         "(MoPubView view) because your activity class has no such method");
                 mpv.loadFailUrl(MoPubErrorCode.ADAPTER_NOT_FOUND);
             } catch (Exception e) {
-                Log.d("MoPub", "Couldn't perform custom method named " + methodName);
+                MoPubLog.d("Couldn't perform custom method named " + methodName);
                 mpv.loadFailUrl(MoPubErrorCode.ADAPTER_NOT_FOUND);
             }
         }

@@ -3,7 +3,7 @@ package com.mopub.common;
 import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
 
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;

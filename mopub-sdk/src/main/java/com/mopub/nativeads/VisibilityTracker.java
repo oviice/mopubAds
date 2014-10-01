@@ -9,7 +9,7 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 
 import com.mopub.common.VisibleForTesting;
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;

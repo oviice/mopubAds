@@ -35,7 +35,7 @@ package com.mopub.mobileads;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestHtmlInterstitialWebViewFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -91,7 +91,6 @@ public class HtmlInterstitialTest extends ResponseBodyInterstitialTest {
         localExtras.put(AD_CONFIGURATION_KEY, adConfiguration);
     }
 
-    // FIXME
     @Test
     public void loadInterstitial_shouldNotifyCustomEventInterstitialListenerOnLoaded() throws Exception {
         subject.loadInterstitial(context, customEventInterstitialListener, localExtras, serverExtras);

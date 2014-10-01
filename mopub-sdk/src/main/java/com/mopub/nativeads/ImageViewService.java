@@ -4,7 +4,7 @@ import android.graphics.Bitmap;
 import android.widget.ImageView;
 
 import com.mopub.common.VisibleForTesting;
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Utils;
 
 import java.lang.ref.WeakReference;

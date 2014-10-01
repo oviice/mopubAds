@@ -10,7 +10,7 @@ import android.widget.TextView;
 
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.util.Utils;
-import com.mopub.nativeads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 
 import org.junit.Before;
 import org.junit.Test;

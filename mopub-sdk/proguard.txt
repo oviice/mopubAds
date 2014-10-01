@@ -5,7 +5,6 @@
 # Keep public classes and methods.
 -keepclassmembers class com.mopub.** { public *; }
 -keep public class com.mopub.**
--keep public class android.webkit.JavascriptInterface {}
 
 # Explicitly keep any custom event classes in any package.
 -keep class * extends com.mopub.mobileads.CustomEventBanner {}

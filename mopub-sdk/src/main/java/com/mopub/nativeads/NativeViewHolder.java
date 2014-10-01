@@ -4,7 +4,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 
 class NativeViewHolder {
     TextView titleView;

@@ -4,7 +4,7 @@ import android.app.Activity;
 
 import com.mopub.common.CacheService;
 import com.mopub.nativeads.test.support.MoPubShadowBitmap;
-import com.mopub.nativeads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 
 import org.apache.http.HttpRequest;
 import org.json.JSONArray;

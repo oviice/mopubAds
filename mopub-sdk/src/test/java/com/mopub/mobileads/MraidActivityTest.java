@@ -38,6 +38,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
+import android.os.Build.VERSION_CODES;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.WebViewClient;
@@ -46,7 +47,7 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 
 import com.mopub.common.util.Dips;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestMraidViewFactory;
 
 import org.fest.assertions.api.ANDROID;
@@ -55,6 +56,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.robolectric.Robolectric;
+import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLocalBroadcastManager;
 
 import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
@@ -202,20 +204,18 @@ public class MraidActivityTest extends BaseInterstitialActivityTest {
                 .isEqualTo(RelativeLayout.TRUE);
     }
 
+    @Config(reportSdk = VERSION_CODES.ICE_CREAM_SANDWICH)
     @Test
-    public void onCreate_whenICS_shouldSetHardwareAcceleratedFlag() throws Exception {
-        Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", 14);
-
+    public void onCreate_atLeastIcs_shouldSetHardwareAcceleratedFlag() throws Exception {
         subject.onCreate(null);
 
         boolean hardwareAccelerated = shadowOf(subject.getWindow()).getFlag(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
         assertThat(hardwareAccelerated).isTrue();
     }
 
+    @Config(reportSdk = VERSION_CODES.HONEYCOMB_MR2)
     @Test
-    public void onCreate_whenPreICS_shouldNotSetHardwareAcceleratedFlag() throws Exception {
-        Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", 13);
-
+    public void onCreate_beforeIcs_shouldNotSetHardwareAcceleratedFlag() throws Exception {
         subject.onCreate(null);
 
         boolean hardwareAccelerated = shadowOf(subject.getWindow()).getFlag(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);

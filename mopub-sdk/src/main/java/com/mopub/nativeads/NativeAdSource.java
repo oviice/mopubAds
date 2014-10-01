@@ -40,6 +40,7 @@ class NativeAdSource {
     private final MoPubNativeNetworkListener mMoPubNativeNetworkListener;
 
     @VisibleForTesting boolean mRequestInFlight;
+    @VisibleForTesting boolean mRetryInFlight;
     @VisibleForTesting int mSequenceNumber;
     @VisibleForTesting int mRetryTimeMilliseconds;
 
@@ -71,6 +72,7 @@ class NativeAdSource {
         mReplenishCacheRunnable = new Runnable() {
             @Override
             public void run() {
+                mRetryInFlight = false;
                 replenishCache();
             }
         };
@@ -99,17 +101,18 @@ class NativeAdSource {
 
             @Override
             public void onNativeFail(final NativeErrorCode errorCode) {
+                // Reset the retry time for the next time we dequeue.
+                mRequestInFlight = false;
+
                 // Stopping requests after the max retry time prevents us from using battery when
                 // the user is not interacting with the stream, eg. the app is backgrounded.
                 if (mRetryTimeMilliseconds >= MAXIMUM_RETRY_TIME_MILLISECONDS) {
-                    // Reset the retry time for the next time we dequeue.
-                    mRequestInFlight = false;
                     resetRetryTime();
                     return;
                 }
 
-                // Don't reset mRequestInFlight here - dequeueAd shouldn't short-circuit the retry.
                 updateRetryTime();
+                mRetryInFlight = true;
                 mReplenishCacheHandler.postDelayed(mReplenishCacheRunnable, mRetryTimeMilliseconds);
             }
         };
@@ -180,7 +183,7 @@ class NativeAdSource {
         final long now = SystemClock.uptimeMillis();
 
         // Starting an ad request takes several millis. Post for performance reasons.
-        if (!mRequestInFlight) {
+        if (!mRequestInFlight && !mRetryInFlight) {
             mReplenishCacheHandler.post(mReplenishCacheRunnable);
         }
 

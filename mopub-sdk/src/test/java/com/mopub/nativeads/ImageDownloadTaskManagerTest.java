@@ -1,7 +1,7 @@
 package com.mopub.nativeads;
 
 import com.mopub.common.DownloadResponse;
-import com.mopub.nativeads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;

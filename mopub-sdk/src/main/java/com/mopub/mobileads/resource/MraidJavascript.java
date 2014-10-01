@@ -53,6 +53,9 @@ public class MraidJavascript {
             "  // Establish the root mraidbridge object.\n" +
             "  var mraidbridge = window.mraidbridge = {};\n" +
             "\n" +
+            "  // native SDK is ready to process mraid commands.\n" +
+            "  var nativeSDKFiredReady = false;\n" +
+            "\n" +
             "  // Listeners for bridge events.\n" +
             "  var listeners = {};\n" +
             "\n" +
@@ -65,6 +68,7 @@ public class MraidJavascript {
             "  //////////////////////////////////////////////////////////////////////////////////////////////////\n" +
             "\n" +
             "  mraidbridge.fireReadyEvent = function() {\n" +
+            "    nativeSDKFiredReady = true;\n" +
             "    mraidbridge.fireEvent('ready');\n" +
             "  };\n" +
             "\n" +
@@ -99,6 +103,12 @@ public class MraidJavascript {
             "  };\n" +
             "\n" +
             "  mraidbridge.executeNativeCall = function(command) {\n" +
+            "    if (!nativeSDKFiredReady) {\n" +
+            "        console.log('rejecting ' + command + ' because mraid is not ready');\n" +
+            "        mraidbridge.fireErrorEvent('mraid is not ready', command);\n" +
+            "        return;\n" +
+            "    }\n" +
+            "\n" +
             "    var call = 'mraid://' + command;\n" +
             "\n" +
             "    var key, value;\n" +

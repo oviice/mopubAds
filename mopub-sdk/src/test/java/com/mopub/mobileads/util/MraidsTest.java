@@ -39,14 +39,16 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Build;
+import android.os.Build.VERSION_CODES;
 import android.os.Environment;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
+import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowEnvironment;
 
 import java.util.*;
@@ -120,27 +122,25 @@ public class MraidsTest {
         assertThat(Mraids.isStorePictureSupported(context)).isFalse();
     }
 
+    @Config(reportSdk = VERSION_CODES.ICE_CREAM_SANDWICH)
     @Test
-    public void isCalendarAvailable_whenApiLevelICS_shouldReturnTrue() throws Exception {
+    public void isCalendarAvailable_atLeastIcs_shouldReturnTrue() throws Exception {
         context = createMockContextWithSpecificIntentData(null, null, Mraids.ANDROID_CALENDAR_CONTENT_TYPE, "android.intent.action.INSERT");
-        Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", ICE_CREAM_SANDWICH.getApiLevel());
-
         assertThat(Mraids.isCalendarAvailable(context)).isTrue();
     }
 
+    @Config(reportSdk = VERSION_CODES.HONEYCOMB_MR2)
     @Test
-    public void isCalendarAvailable_whenApiLevelBelowICS_shouldReturnFalse() throws Exception {
+    public void isCalendarAvailable_beforeIcs_shouldReturnFalse() throws Exception {
         context = createMockContextWithSpecificIntentData(null, null, Mraids.ANDROID_CALENDAR_CONTENT_TYPE, "android.intent.action.INSERT");
-        Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", HONEYCOMB_MR2.getApiLevel());
-
         assertThat(Mraids.isCalendarAvailable(context)).isFalse();
     }
 
+    @Config(reportSdk = VERSION_CODES.ICE_CREAM_SANDWICH)
     @Test
-    public void isCalendarAvailable_whenApiLevelICSButCanNotAcceptIntent_shouldReturnFalse() throws Exception {
+    public void isCalendarAvailable_atLeastIcs_butCanNotAcceptIntent_shouldReturnFalse() throws
+            Exception {
         context = createMockContextWithSpecificIntentData(null, null, "vnd.android.cursor.item/NOPE", "android.intent.action.INSERT");
-        Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", ICE_CREAM_SANDWICH.getApiLevel());
-
         assertThat(Mraids.isCalendarAvailable(context)).isFalse();
     }
 

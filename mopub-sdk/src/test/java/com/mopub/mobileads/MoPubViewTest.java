@@ -37,7 +37,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.view.View;
 
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
+import com.mopub.common.LocationService;
+import com.mopub.common.MoPub;
 import com.mopub.mobileads.test.support.TestAdViewControllerFactory;
 import com.mopub.mobileads.test.support.TestCustomEventBannerAdapterFactory;
 
@@ -225,6 +227,13 @@ public class MoPubViewTest {
         verify(adViewController).loadFailUrl(eq(ADAPTER_NOT_FOUND));
         verify(customEventBannerAdapter, never()).invalidate();
         verify(customEventBannerAdapter, never()).loadAd();
+    }
+
+    @Test
+    public void setLocationAwarenss_shouldChangeGlobalSetting() {
+        assertThat(MoPub.getLocationAwareness()).isEqualTo(MoPub.LocationAwareness.NORMAL);
+        subject.setLocationAwareness(LocationService.LocationAwareness.DISABLED);
+        assertThat(MoPub.getLocationAwareness()).isEqualTo(MoPub.LocationAwareness.DISABLED);
     }
 
     private void broadcastIntent(final Intent intent) {

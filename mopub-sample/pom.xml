@@ -40,7 +40,7 @@
         <dependency>
             <groupId>com.google.android.gms</groupId>
             <artifactId>play-services</artifactId>
-            <version>5.2.08</version>
+            <version>5.0.89</version>
             <type>aar</type>
         </dependency>
 
@@ -91,7 +91,7 @@
 
         <dependency> <groupId>com.google.android</groupId>
             <artifactId>android</artifactId>
-            <version>4.1.2</version>
+            <version>4.4.2</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -115,7 +115,7 @@
                 <configuration>
                     <sdk>
                         <!-- platform or api level (api level 4 = platform 1.6)-->
-                        <platform>16</platform>
+                        <platform>19</platform>
                     </sdk>
                     <undeployBeforeDeploy>true</undeployBeforeDeploy>
                 </configuration>

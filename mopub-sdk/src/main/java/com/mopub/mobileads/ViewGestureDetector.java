@@ -33,10 +33,11 @@
 package com.mopub.mobileads;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+
+import com.mopub.common.logging.MoPubLog;
 
 public class ViewGestureDetector extends GestureDetector {
     private final View mView;
@@ -69,7 +70,7 @@ public class ViewGestureDetector extends GestureDetector {
                 if (mUserClickListener != null) {
                     mUserClickListener.onUserClick();
                 } else {
-                    Log.d("MoPub", "View's onUserClick() is not registered.");
+                    MoPubLog.d("View's onUserClick() is not registered.");
                 }
                 mAdAlertGestureListener.finishGestureDetection();
                 break;

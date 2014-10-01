@@ -35,7 +35,8 @@ package com.mopub.mobileads.util;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
+
+import com.mopub.common.logging.MoPubLog;
 
 public class Utils {
     private Utils() {}
@@ -47,7 +48,7 @@ public class Utils {
             }
             context.startActivity(intent);
         } catch (Exception e) {
-            Log.d("MoPub", (errorMessage != null)
+            MoPubLog.d((errorMessage != null)
                     ? errorMessage
                     : "Unable to start intent.");
             return false;

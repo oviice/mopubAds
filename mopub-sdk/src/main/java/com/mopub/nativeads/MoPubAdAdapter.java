@@ -11,7 +11,9 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 
 import com.mopub.common.VisibleForTesting;
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
+import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
+import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubServerPositioning;
 
 import java.util.List;
 import java.util.WeakHashMap;
@@ -40,14 +42,45 @@ public class MoPubAdAdapter extends BaseAdapter {
     private MoPubNativeAdLoadedListener mAdLoadedListener;
 
     /**
+     * Creates a new MoPubAdAdapter object.
+     *
+     * By default, the adapter will contact the server to determine ad positions. If you
+     * wish to hard-code positions in your app, see {@link MoPubAdAdapter(Context,
+     * MoPubClientPositioning)}.
+     *
+     * @param context The activity context.
+     * @param originalAdapter Your original adapter.
+     */
+    public MoPubAdAdapter(final Context context, final Adapter originalAdapter) {
+        this(context, originalAdapter, MoPubNativeAdPositioning.serverPositioning());
+    }
+
+    /**
+     * Creates a new MoPubAdAdapter object, using server positioning.
+     *
      * @param context The activity context.
      * @param originalAdapter Your original adapter.
      * @param adPositioning A positioning object for specifying where ads will be placed in your
-     * stream.
+     * stream. See {@link MoPubNativeAdPositioning#serverPositioning()}.
      */
     public MoPubAdAdapter(final Context context,
             final Adapter originalAdapter,
-            final MoPubNativeAdPositioning adPositioning) {
+            final MoPubServerPositioning adPositioning) {
+        this(new MoPubStreamAdPlacer(context, adPositioning), originalAdapter,
+                new VisibilityTracker(context));
+    }
+
+    /**
+     * Creates a new MoPubAdAdapter object, using client positioning.
+     *
+     * @param context The activity context.
+     * @param originalAdapter Your original adapter.
+     * @param adPositioning A positioning object for specifying where ads will be placed in your
+     * stream. See {@link MoPubNativeAdPositioning#clientPositioning()}.
+     */
+    public MoPubAdAdapter(final Context context,
+            final Adapter originalAdapter,
+            final MoPubClientPositioning adPositioning) {
         this(new MoPubStreamAdPlacer(context, adPositioning), originalAdapter,
                 new VisibilityTracker(context));
     }
@@ -122,7 +155,7 @@ public class MoPubAdAdapter extends BaseAdapter {
      *
      * @param adRenderer The ad renderer.
      */
-    public final void registerAdRenderer(final MoPubNativeAdRenderer adRenderer) {
+    public final void registerAdRenderer(final MoPubAdRenderer adRenderer) {
         if (adRenderer == null) {
             MoPubLog.w("Tried to set a null ad renderer on the placer.");
             return;

@@ -3,7 +3,7 @@ package com.mopub.nativeads;
 import android.os.Handler;
 import android.view.View;
 
-import com.mopub.nativeads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 
 import org.fest.util.Lists;
 import org.junit.Before;

@@ -2,7 +2,7 @@
 
 package com.mopub.nativeads;
 
-import com.mopub.nativeads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,36 +43,28 @@ public class PlacementDataTest {
 
     @Before
     public void setup() {
-        noAds = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.newBuilder()
-                .build());
-        adAt0 = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.newBuilder()
+        noAds = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.clientPositioning());
+        adAt0 = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.clientPositioning()
+                .addFixedPosition(0));
+        adAt1 = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.clientPositioning()
+                .addFixedPosition(1));
+        adsAt01 = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.clientPositioning()
                 .addFixedPosition(0)
-                .build());
-        adAt1 = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.newBuilder()
+                .addFixedPosition(1));
+        adsAt14 = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.clientPositioning()
                 .addFixedPosition(1)
-                .build());
-        adsAt01 = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.newBuilder()
-                .addFixedPosition(0)
-                .addFixedPosition(1)
-                .build());
-        adsAt14 = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.newBuilder()
-                .addFixedPosition(1)
-                .addFixedPosition(4)
-                .build());
-        adsRepeating = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.newBuilder()
-                .enableRepeatingPositions(3)
-                .build());
-        adsAt15repeating = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.newBuilder()
+                .addFixedPosition(4));
+        adsRepeating = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.clientPositioning()
+                .enableRepeatingPositions(3));
+        adsAt15repeating = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.clientPositioning()
                 .addFixedPosition(1)
                 .addFixedPosition(5)
-                .enableRepeatingPositions(3)
-                .build());
-        adsAt1234 = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.newBuilder()
+                .enableRepeatingPositions(3));
+        adsAt1234 = PlacementData.fromAdPositioning(MoPubNativeAdPositioning.clientPositioning()
                 .addFixedPosition(1)
                 .addFixedPosition(2)
                 .addFixedPosition(3)
-                .addFixedPosition(4)
-                .build());
+                .addFixedPosition(4));
 
         when(mockNativeAdData.getAd()).thenReturn(mockNativeResponse);
         when(mockNativeAdData2.getAd()).thenReturn(mockNativeResponse2);

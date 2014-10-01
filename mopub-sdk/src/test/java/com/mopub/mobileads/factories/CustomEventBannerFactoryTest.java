@@ -34,7 +34,7 @@ package com.mopub.mobileads.factories;
 
 import com.mopub.mobileads.AdTypeTranslator;
 import com.mopub.mobileads.CustomEventBanner;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

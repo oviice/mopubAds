@@ -3,7 +3,7 @@ package com.mopub.nativeads;
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.DownloadTask;
 import com.mopub.common.util.AsyncTasks;
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;

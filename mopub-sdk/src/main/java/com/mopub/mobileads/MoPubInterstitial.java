@@ -35,8 +35,9 @@ package com.mopub.mobileads;
 import android.app.Activity;
 import android.content.Context;
 import android.location.Location;
-import android.util.Log;
 
+import com.mopub.common.MoPub;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.factories.CustomEventInterstitialAdapterFactory;
 
 import java.util.Map;
@@ -180,22 +181,6 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
         return mInterstitialAdListener;
     }
 
-    public void setLocationAwareness(LocationAwareness awareness) {
-        mInterstitialView.setLocationAwareness(awareness);
-    }
-
-    public LocationAwareness getLocationAwareness() {
-        return mInterstitialView.getLocationAwareness();
-    }
-
-    public void setLocationPrecision(int precision) {
-        mInterstitialView.setLocationPrecision(precision);
-    }
-
-    public int getLocationPrecision() {
-        return mInterstitialView.getLocationPrecision();
-    }
-
     public void setTesting(boolean testing) {
         mInterstitialView.setTesting(testing);
     }
@@ -270,6 +255,26 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
         }
     }
 
+    @Deprecated
+    public void setLocationAwareness(LocationAwareness locationAwareness) {
+        MoPub.setLocationAwareness(locationAwareness.getNewLocationAwareness());
+    }
+
+    @Deprecated
+    public LocationAwareness getLocationAwareness() {
+        return LocationAwareness.fromMoPubLocationAwareness(MoPub.getLocationAwareness());
+    }
+
+    @Deprecated
+    public void setLocationPrecision(int precision) {
+        MoPub.setLocationPrecision(precision);
+    }
+
+    @Deprecated
+    public int getLocationPrecision() {
+        return MoPub.getLocationPrecision();
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
     public class MoPubInterstitialView extends MoPubView {
@@ -282,7 +287,7 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
         @Override
         protected void loadCustomEvent(Map<String, String> paramsMap) {
             if (paramsMap == null) {
-                Log.d("MoPub", "Couldn't invoke custom event because the server did not specify one.");
+                MoPubLog.d("Couldn't invoke custom event because the server did not specify one.");
                 loadFailUrl(ADAPTER_NOT_FOUND);
                 return;
             }
@@ -291,7 +296,7 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
                 mCustomEventInterstitialAdapter.invalidate();
             }
 
-            Log.d("MoPub", "Loading custom event interstitial adapter.");
+            MoPubLog.d("Loading custom event interstitial adapter.");
 
             mCustomEventInterstitialAdapter = CustomEventInterstitialAdapterFactory.create(
                     MoPubInterstitial.this,
@@ -302,7 +307,7 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
         }
 
         protected void trackImpression() {
-            Log.d("MoPub", "Tracking impression for interstitial.");
+            MoPubLog.d("Tracking impression for interstitial.");
             if (mAdViewController != null) mAdViewController.trackImpression();
         }
 

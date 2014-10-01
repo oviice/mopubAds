@@ -2,7 +2,7 @@ package com.mopub.nativeads;
 
 import android.app.Activity;
 
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

@@ -38,28 +38,32 @@ import android.content.res.Configuration;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 
 import com.mopub.common.AdUrlGenerator;
+import com.mopub.common.ClientMetadata;
 import com.mopub.common.GpsHelper;
 import com.mopub.common.GpsHelperTest;
-import com.mopub.common.SharedPreferencesHelper;
-import com.mopub.common.util.Reflection.MethodBuilder;
 import com.mopub.common.MoPub;
+import com.mopub.common.SharedPreferencesHelper;
+import com.mopub.common.test.support.SdkTestRunner;
+import com.mopub.common.util.Reflection.MethodBuilder;
 import com.mopub.common.util.Utils;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.mobileads.test.support.MoPubShadowTelephonyManager;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowConnectivityManager;
 import org.robolectric.shadows.ShadowNetworkInfo;
-import org.robolectric.shadows.ShadowTelephonyManager;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
 import static android.net.ConnectivityManager.TYPE_DUMMY;
@@ -71,9 +75,9 @@ import static android.net.ConnectivityManager.TYPE_MOBILE_MMS;
 import static android.net.ConnectivityManager.TYPE_MOBILE_SUPL;
 import static android.net.ConnectivityManager.TYPE_WIFI;
 import static android.telephony.TelephonyManager.NETWORK_TYPE_UNKNOWN;
-import static com.mopub.common.AdUrlGenerator.MoPubNetworkType;
+import static com.mopub.common.AdUrlGenerator.TwitterAppInstalledStatus;
+import static com.mopub.common.ClientMetadata.MoPubNetworkType;
 import static com.mopub.common.util.Strings.isEmpty;
-import static com.mopub.mobileads.WebViewAdUrlGenerator.TwitterAppInstalledStatus;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -83,13 +87,14 @@ import static org.robolectric.Robolectric.application;
 import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(SdkTestRunner.class)
-public class WebViewUrlGeneratorTest {
+@Config(shadows = {MoPubShadowTelephonyManager.class})
+public class WebViewAdUrlGeneratorTest {
 
     private WebViewAdUrlGenerator subject;
     private static final String TEST_UDID = "20b013c721c";
     private String expectedUdid;
     private Configuration configuration;
-    private ShadowTelephonyManager shadowTelephonyManager;
+    private MoPubShadowTelephonyManager shadowTelephonyManager;
     private ShadowConnectivityManager shadowConnectivityManager;
     private Activity context;
     private MethodBuilder methodBuilder;
@@ -102,7 +107,7 @@ public class WebViewUrlGeneratorTest {
         Settings.Secure.putString(application.getContentResolver(), Settings.Secure.ANDROID_ID, TEST_UDID);
         expectedUdid = "sha%3A" + Utils.sha1(TEST_UDID);
         configuration = application.getResources().getConfiguration();
-        shadowTelephonyManager = shadowOf((TelephonyManager) application.getSystemService(Context.TELEPHONY_SERVICE));
+        shadowTelephonyManager = (MoPubShadowTelephonyManager) shadowOf((TelephonyManager) application.getSystemService(Context.TELEPHONY_SERVICE));
         shadowConnectivityManager = shadowOf((ConnectivityManager) application.getSystemService(Context.CONNECTIVITY_SERVICE));
         methodBuilder = TestMethodBuilderFactory.getSingletonMock();
     }
@@ -181,21 +186,60 @@ public class WebViewUrlGeneratorTest {
         String adUrl = generateMinimumUrlString();
         assertThat(adUrl).isEqualTo(urlBuilder.withMcc("123").withMnc("456").build());
 
+        ClientMetadata.clearForTesting();
         shadowTelephonyManager.setNetworkOperator("12345");
         adUrl = generateMinimumUrlString();
         assertThat(adUrl).isEqualTo(urlBuilder.withMcc("123").withMnc("45").build());
 
+        ClientMetadata.clearForTesting();
         shadowTelephonyManager.setNetworkOperator("1234");
         adUrl = generateMinimumUrlString();
         assertThat(adUrl).isEqualTo(urlBuilder.withMcc("123").withMnc("4").build());
 
+        ClientMetadata.clearForTesting();
         shadowTelephonyManager.setNetworkOperator("123");
         adUrl = generateMinimumUrlString();
         assertThat(adUrl).isEqualTo(urlBuilder.withMcc("123").withMnc("").build());
 
+        ClientMetadata.clearForTesting();
         shadowTelephonyManager.setNetworkOperator("12");
         adUrl = generateMinimumUrlString();
         assertThat(adUrl).isEqualTo(urlBuilder.withMcc("12").withMnc("").build());
+    }
+
+    @Test
+    public void generateAdUrl_needsAndDoesNotHaveReadPhoneState_shouldNotContainOperatorName() {
+        AdUrlBuilder urlBuilder = new AdUrlBuilder(expectedUdid);
+
+        shadowTelephonyManager.setNeedsReadPhoneState(true);
+        shadowTelephonyManager.setReadPhoneStatePermission(false);
+
+        String adUrl = generateMinimumUrlString();
+        assertThat(adUrl).isEqualTo(urlBuilder.withCarrierName("").build());
+    }
+
+    @Test
+    public void generateAdUrl_needsAndHasReadPhoneState_shouldContainOperatorName() {
+        AdUrlBuilder urlBuilder = new AdUrlBuilder(expectedUdid);
+
+        shadowTelephonyManager.setNeedsReadPhoneState(true);
+        shadowTelephonyManager.setReadPhoneStatePermission(true);
+        shadowTelephonyManager.setNetworkOperatorName("TEST_NAME");
+
+        String adUrl = generateMinimumUrlString();
+        assertThat(adUrl).isEqualTo(urlBuilder.withCarrierName("TEST_NAME").build());
+    }
+
+    @Test
+    public void generateAdUrl_doesNotNeedReadPhoneState_shouldContainOperatorName() {
+        AdUrlBuilder urlBuilder = new AdUrlBuilder(expectedUdid);
+
+        shadowTelephonyManager.setNeedsReadPhoneState(false);
+        shadowTelephonyManager.setReadPhoneStatePermission(false);
+        shadowTelephonyManager.setNetworkOperatorName("TEST_NAME");
+
+        String adUrl = generateMinimumUrlString();
+        assertThat(adUrl).isEqualTo(urlBuilder.withCarrierName("TEST_NAME").build());
     }
 
     @Test
@@ -339,6 +383,31 @@ public class WebViewUrlGeneratorTest {
                 .withDnt(adInfo.LIMIT_AD_TRACKING_ENABLED)
                 .build();
         assertThat(generateMinimumUrlString()).isEqualTo(expectedAdUrl);
+    }
+
+    @Test
+    public void enableLocationTracking_shouldIncludeLocationInUrl() {
+        MoPub.setLocationAwareness(MoPub.LocationAwareness.NORMAL);
+        String adUrl = generateMinimumUrlString();
+        assertThat(getLocationFromRequestUrl(adUrl)).isNotNull();
+    }
+
+    @Test
+    public void disableLocationCollection_shouldNotIncludeLocationInUrl() {
+        MoPub.setLocationAwareness(MoPub.LocationAwareness.DISABLED);
+        String adUrl = generateMinimumUrlString();
+        assertThat(getLocationFromRequestUrl(adUrl)).isNullOrEmpty();
+    }
+
+    private String getLocationFromRequestUrl(String requestString) {
+        Uri requestUri = Uri.parse(requestString);
+        String location = requestUri.getQueryParameter("ll");
+
+        if (TextUtils.isEmpty(location)) {
+            return "";
+        }
+
+        return location;
     }
 
     private NetworkInfo createNetworkInfo(int type) {

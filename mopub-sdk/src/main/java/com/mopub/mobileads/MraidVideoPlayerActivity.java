@@ -36,12 +36,12 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
 import com.mopub.common.util.IntentUtils;
+import com.mopub.common.logging.MoPubLog;
 
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_FAIL;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.broadcastAction;
@@ -61,7 +61,7 @@ public class MraidVideoPlayerActivity extends BaseVideoPlayerActivity implements
         if (adConfiguration != null) {
             mBroadcastIdentifier = adConfiguration.getBroadcastIdentifier();
         } else {
-            Log.d("MoPub", "Unable to obtain broadcast identifier. Video interactions cannot be tracked.");
+            MoPubLog.d("Unable to obtain broadcast identifier. Video interactions cannot be tracked.");
         }
 
         try {
@@ -159,7 +159,7 @@ public class MraidVideoPlayerActivity extends BaseVideoPlayerActivity implements
         try {
             startActivityForResult(intent, requestCode);
         } catch (ActivityNotFoundException e) {
-            Log.d("MoPub", "Activity " + clazz.getName() + " not found. Did you declare it in your AndroidManifest.xml?");
+            MoPubLog.d("Activity " + clazz.getName() + " not found. Did you declare it in your AndroidManifest.xml?");
         }
     }
 

@@ -34,14 +34,16 @@ package com.mopub.mobileads;
 
 import android.app.Activity;
 import android.os.Build;
+import android.os.Build.VERSION_CODES;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
+import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowWebView;
 
 import static android.webkit.WebSettings.PluginState;
@@ -70,14 +72,39 @@ public class BaseHtmlWebViewTest {
         touchUp = createMotionEvent(MotionEvent.ACTION_UP);
     }
 
+    @Config(reportSdk = VERSION_CODES.JELLY_BEAN_MR2)
     @Test
-    public void shouldEnablePluginsBasedOnApiLevel() throws Exception {
-        Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", ICE_CREAM_SANDWICH.getApiLevel());
+    public void pluginState_atLeastJellybeanMr2_shouldDefaultToOff_shouldNeverBeEnabled()  {
+        subject = new BaseHtmlWebView(new Activity(), adConfiguration);
+        assertThat(subject.getSettings().getPluginState()).isEqualTo(PluginState.OFF);
+
+        subject.enablePlugins(true);
+        assertThat(subject.getSettings().getPluginState()).isEqualTo(PluginState.OFF);
+    }
+
+    @Config(reportSdk = VERSION_CODES.ICE_CREAM_SANDWICH)
+    @Test
+    public void pluginState_atLeastIcsButBelowJellybeanMr2_shouldDefaultToOn_shouldAllowToggling() {
         subject = new BaseHtmlWebView(new Activity(), adConfiguration);
         assertThat(subject.getSettings().getPluginState()).isEqualTo(PluginState.ON);
 
-        Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", HONEYCOMB_MR2.getApiLevel());
+        subject.enablePlugins(false);
+        assertThat(subject.getSettings().getPluginState()).isEqualTo(PluginState.OFF);
+
+        subject.enablePlugins(true);
+        assertThat(subject.getSettings().getPluginState()).isEqualTo(PluginState.ON);
+    }
+
+    @Config(reportSdk = VERSION_CODES.GINGERBREAD_MR1)
+    @Test
+    public void pluginState_beforeIcs_shouldDefaultToOff_shouldAllowToggling() {
         subject = new BaseHtmlWebView(new Activity(), adConfiguration);
+        assertThat(subject.getSettings().getPluginState()).isEqualTo(PluginState.OFF);
+
+        subject.enablePlugins(true);
+        assertThat(subject.getSettings().getPluginState()).isEqualTo(PluginState.ON);
+
+        subject.enablePlugins(false);
         assertThat(subject.getSettings().getPluginState()).isEqualTo(PluginState.OFF);
     }
 

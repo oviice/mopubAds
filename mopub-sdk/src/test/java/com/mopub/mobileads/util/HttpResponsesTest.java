@@ -32,7 +32,7 @@
 
 package com.mopub.mobileads.util;
 
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 import org.junit.Before;
 import org.junit.Test;

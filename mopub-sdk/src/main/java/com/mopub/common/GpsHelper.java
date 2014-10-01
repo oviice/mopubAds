@@ -6,7 +6,7 @@ import android.os.AsyncTask;
 
 import com.mopub.common.factories.MethodBuilderFactory;
 import com.mopub.common.util.AsyncTasks;
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 
 import java.lang.ref.WeakReference;
 

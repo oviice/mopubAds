@@ -34,7 +34,7 @@ package com.mopub.mobileads;
 
 import android.app.Activity;
 
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestMraidViewFactory;
 
 import org.junit.Before;

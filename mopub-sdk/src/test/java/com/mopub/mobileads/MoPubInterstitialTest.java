@@ -34,6 +34,9 @@ package com.mopub.mobileads;
 
 import android.app.Activity;
 
+import com.mopub.common.test.support.SdkTestRunner;
+import com.mopub.common.LocationService;
+import com.mopub.common.MoPub;
 import com.mopub.mobileads.test.support.TestAdViewControllerFactory;
 import com.mopub.mobileads.test.support.TestCustomEventInterstitialAdapterFactory;
 
@@ -45,7 +48,6 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.mopub.common.LocationService.LocationAwareness;
 import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_DATA;
 import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_HTML_DATA;
 import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_NAME;
@@ -60,7 +62,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 
-@RunWith(com.mopub.mobileads.test.support.SdkTestRunner.class)
+@RunWith(SdkTestRunner.class)
 public class MoPubInterstitialTest {
 
     private static final String KEYWORDS_VALUE = "expected_keywords";
@@ -121,6 +123,13 @@ public class MoPubInterstitialTest {
     }
 
     @Test
+    public void setTestingTest() throws Exception {
+        subject.setInterstitialView(interstitialView);
+        subject.setTesting(true);
+        verify(interstitialView).setTesting(eq(true));
+    }
+
+    @Test
     public void getInterstitialAdListenerTest() throws Exception {
         interstitialAdListener = mock(MoPubInterstitial.InterstitialAdListener.class);
         subject.setInterstitialAdListener(interstitialAdListener);
@@ -128,39 +137,10 @@ public class MoPubInterstitialTest {
     }
 
     @Test
-    public void setLocationAwarenessTest() throws Exception {
-        subject.setInterstitialView(interstitialView);
-        subject.setLocationAwareness(LocationAwareness.NORMAL);
-        verify(interstitialView).setLocationAwareness(eq(LocationAwareness.NORMAL));
-    }
-
-    @Test
-    public void getLocationAwarenessTest() throws Exception {
-        subject.setInterstitialView(interstitialView);
-        subject.getLocationAwareness();
-        verify(interstitialView).getLocationAwareness();
-    }
-
-    @Test
-    public void setLocationPrecisionTest() throws Exception {
-        subject.setInterstitialView(interstitialView);
-        subject.setLocationPrecision(10);
-        verify(interstitialView).setLocationPrecision(eq(10));
-    }
-
-    @Test
-    public void getLocationPrecisionTest() throws Exception {
-        subject.setInterstitialView(interstitialView);
-        subject.getLocationPrecision();
-        verify(interstitialView).getLocationPrecision();
-    }
-
-
-    @Test
-    public void setTestingTest() throws Exception {
-        subject.setInterstitialView(interstitialView);
-        subject.setTesting(true);
-        verify(interstitialView).setTesting(eq(true));
+    public void setLocationAwarenss_shouldChangeGlobalSetting() {
+        assertThat(MoPub.getLocationAwareness()).isEqualTo(MoPub.LocationAwareness.NORMAL);
+        subject.setLocationAwareness(LocationService.LocationAwareness.DISABLED);
+        assertThat(MoPub.getLocationAwareness()).isEqualTo(MoPub.LocationAwareness.DISABLED);
     }
 
     @Test

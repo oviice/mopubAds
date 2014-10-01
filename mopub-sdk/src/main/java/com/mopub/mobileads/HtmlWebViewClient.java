@@ -36,12 +36,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.util.Log;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import com.mopub.common.MoPubBrowser;
 import com.mopub.common.util.IntentUtils;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.util.Utils;
 
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
@@ -70,7 +70,7 @@ class HtmlWebViewClient extends WebViewClient {
             return true;
         }
 
-        Log.d("MoPub", "Ad clicked. Click URL: " + url);
+        MoPubLog.d("Ad clicked. Click URL: " + url);
 
         // this is added because http/s can also be intercepted
         if (!isWebSiteUrl(url) && IntentUtils.canHandleApplicationUrl(mContext, url)) {
@@ -152,7 +152,7 @@ class HtmlWebViewClient extends WebViewClient {
         try {
             urlToOpenInNativeBrowser = uri.getQueryParameter("url");
         } catch (UnsupportedOperationException e) {
-            Log.w("MoPub", "Could not handle url: " + url);
+            MoPubLog.w("Could not handle url: " + url);
             return false;
         }
 
@@ -188,7 +188,7 @@ class HtmlWebViewClient extends WebViewClient {
 
     private void showMoPubBrowserForUrl(String url) {
         if (url == null || url.equals("")) url = "about:blank";
-        Log.d("MoPub", "Final URI to show in browser: " + url);
+        MoPubLog.d("Final URI to show in browser: " + url);
         Intent intent = new Intent(mContext, MoPubBrowser.class);
         intent.putExtra(MoPubBrowser.DESTINATION_URL_KEY, url);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -213,7 +213,7 @@ class HtmlWebViewClient extends WebViewClient {
             action = uri.getQueryParameter("fnc");
             adData = uri.getQueryParameter("data");
         } catch (UnsupportedOperationException e) {
-            Log.w("MoPub", "Could not handle custom intent with uri: " + uri);
+            MoPubLog.w("Could not handle custom intent with uri: " + uri);
             return;
         }
 

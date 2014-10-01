@@ -10,7 +10,7 @@ import com.mopub.common.util.test.support.ShadowAsyncTasks;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
 import com.mopub.nativeads.MoPubNative.MoPubNativeEventListener;
 import com.mopub.nativeads.MoPubNative.MoPubNativeNetworkListener;
-import com.mopub.nativeads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 
 import org.apache.http.client.methods.HttpGet;
 import org.junit.After;

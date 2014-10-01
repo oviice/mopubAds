@@ -6,7 +6,7 @@ import android.os.AsyncTask;
 import android.support.v4.util.LruCache;
 
 import com.mopub.common.util.DeviceUtils;
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Streams;
 import com.mopub.common.util.Utils;
 

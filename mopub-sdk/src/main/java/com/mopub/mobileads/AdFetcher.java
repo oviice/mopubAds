@@ -32,9 +32,8 @@
 
 package com.mopub.mobileads;
 
-import android.util.Log;
-
 import com.mopub.common.util.AsyncTasks;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.factories.AdFetchTaskFactory;
 
 /*
@@ -76,7 +75,7 @@ public class AdFetcher {
 
     public void fetchAdForUrl(String url) {
         mTaskTracker.newTaskStarted();
-        Log.i("MoPub", "Fetching ad for task #" + getCurrentTaskId());
+        MoPubLog.i("Fetching ad for task #" + getCurrentTaskId());
 
         if (mCurrentTask != null) {
             mCurrentTask.cancel(true);
@@ -87,13 +86,13 @@ public class AdFetcher {
         try {
             AsyncTasks.safeExecuteOnExecutor(mCurrentTask, url);
         } catch (Exception exception) {
-            Log.d("MoPub", "Error executing AdFetchTask", exception);
+            MoPubLog.d("Error executing AdFetchTask", exception);
         }
     }
 
     public void cancelFetch() {
         if (mCurrentTask != null) {
-            Log.i("MoPub", "Canceling fetch ad for task #" + getCurrentTaskId());
+            MoPubLog.i("Canceling fetch ad for task #" + getCurrentTaskId());
             mCurrentTask.cancel(true);
         }
     }

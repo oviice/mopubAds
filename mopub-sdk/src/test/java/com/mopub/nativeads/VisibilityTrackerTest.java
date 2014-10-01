@@ -10,7 +10,7 @@ import android.view.ViewTreeObserver;
 import android.view.Window;
 
 import com.mopub.nativeads.VisibilityTracker.TrackingInfo;
-import com.mopub.nativeads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 
 import org.fest.util.Lists;
 import org.junit.Before;

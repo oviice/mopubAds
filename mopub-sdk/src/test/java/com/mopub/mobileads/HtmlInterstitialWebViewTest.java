@@ -34,12 +34,14 @@ package com.mopub.mobileads;
 
 import android.app.Activity;
 import android.os.Build;
+import android.os.Build.VERSION_CODES;
 import android.webkit.WebViewClient;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
+import org.robolectric.annotation.Config;
 
 import java.lang.reflect.Method;
 
@@ -115,9 +117,9 @@ public class HtmlInterstitialWebViewTest {
         verify(customEventInterstitialListener).onInterstitialLoaded();
     }
 
+    @Config(reportSdk = VERSION_CODES.HONEYCOMB)
     @Test
-    public void destroy_onHoneycombAndBeyond_shouldRemoveJavascriptInterface() {
-        Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", HONEYCOMB.getApiLevel());
+    public void destroy_atLeastHoneycomb_shouldRemoveJavascriptInterface() {
         HtmlInterstitialWebView spySubject = spy(subject);
 
         spySubject.destroy();
@@ -125,9 +127,9 @@ public class HtmlInterstitialWebViewTest {
         verify(spySubject).removeJavascriptInterface(MOPUB_JS_INTERFACE_NAME);
     }
 
+    @Config(reportSdk = VERSION_CODES.GINGERBREAD_MR1)
     @Test
     public void destroy_beforeHoneycomb_shouldNotRemoveJavascriptInterface() {
-        Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", GINGERBREAD_MR1.getApiLevel());
         HtmlInterstitialWebView spySubject = spy(subject);
 
         spySubject.destroy();

@@ -48,7 +48,7 @@ import com.mopub.common.MoPub;
 import com.mopub.common.SharedPreferencesHelper;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
 import com.mopub.mobileads.factories.HttpClientFactory;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestAdFetcherFactory;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 import com.mopub.mobileads.test.support.ThreadUtils;
@@ -276,6 +276,7 @@ public class AdViewControllerTest {
         }
     }
 
+    // this test for impressionUrl is unnecessary (since we're catching the NullPointerException)
     @Test
     public void trackImpression_shouldDoNothingIfImpressionUrlNotSpecified() throws Exception {
         subject.configureUsingHttpResponse(response);
@@ -314,6 +315,7 @@ public class AdViewControllerTest {
         }
     }
 
+    // this test for clickthroughUrl is unnecessary (since we're catching the NullPointerException)
     @Test
     public void trackImpression_shouldDoNothingIfClickthroughUrlNotSpecified() throws Exception {
         subject.configureUsingHttpResponse(response);

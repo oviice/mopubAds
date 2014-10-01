@@ -38,9 +38,8 @@ import android.content.SharedPreferences;
 import android.os.Looper;
 
 import com.mopub.common.factories.MethodBuilderFactory;
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
-import com.mopub.mobileads.test.support.SdkTestRunner;
-import com.mopub.mobileads.test.support.ThreadUtils;
 
 import org.junit.After;
 import org.junit.Before;

@@ -39,20 +39,16 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.view.View;
 import android.widget.TextView;
-
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.test.support.TestDateAndTime;
-import com.mopub.mobileads.test.support.SdkTestRunner;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;

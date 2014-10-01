@@ -39,7 +39,7 @@ import android.net.Uri;
 
 import com.mopub.common.CacheService;
 import com.mopub.common.CacheServiceTest;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 import com.mopub.mobileads.test.support.TestVastManagerFactory;
 import com.mopub.mobileads.test.support.TestVastVideoDownloadTaskFactory;

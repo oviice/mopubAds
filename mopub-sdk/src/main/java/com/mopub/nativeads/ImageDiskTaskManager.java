@@ -35,6 +35,7 @@ class ImageDiskTaskManager extends TaskManager<Bitmap> {
 
     void failAllTasks() {
         if (mFailed.compareAndSet(false, true)) {
+            // See ImageDownloadTaskManager for an example
             mImageTaskManagerListener.onFail();
         }
     }

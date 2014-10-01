@@ -36,11 +36,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.VideoView;
+
+import com.mopub.common.logging.MoPubLog;
 
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_FAIL;
@@ -102,7 +103,7 @@ abstract class BaseVideoViewController {
 
 
     void videoError(boolean shouldFinish) {
-        Log.d("MoPub", "Error: video can not be played.");
+        MoPubLog.d("Error: video can not be played.");
         broadcastAction(ACTION_INTERSTITIAL_FAIL);
         if (shouldFinish) {
            mBaseVideoViewControllerListener.onFinish();

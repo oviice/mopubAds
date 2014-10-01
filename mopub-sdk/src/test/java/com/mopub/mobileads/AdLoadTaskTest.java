@@ -33,7 +33,7 @@
 package com.mopub.mobileads;
 
 import com.mopub.mobileads.test.support.JsonUtils;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;

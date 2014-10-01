@@ -3,7 +3,7 @@ package com.mopub.nativeads;
 import android.os.Handler;
 import android.os.SystemClock;
 
-import com.mopub.nativeads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -298,25 +298,29 @@ public class NativeAdSourceTest {
     }
 
     @Test
-    public void moPubNativeNetworkListener_onNativeFail_shouldResetRequestInFlight_shouldUpdateRetryTime_shouldPostDelayedRunnable() {
+    public void
+    moPubNativeNetworkListener_onNativeFail_shouldResetInFlight_shouldUpdateRetryTime_shouldPostDelayedRunnable() {
         subject.mRequestInFlight = true;
         subject.mRetryTimeMilliseconds = defaultRetryTime;
 
         subject.getMoPubNativeNetworkListener().onNativeFail(NativeErrorCode.UNSPECIFIED);
 
-        assertThat(subject.mRequestInFlight).isEqualTo(true);
+        assertThat(subject.mRequestInFlight).isEqualTo(false);
+        assertThat(subject.mRetryInFlight).isEqualTo(true);
         assertThat(subject.mRetryTimeMilliseconds).isGreaterThan(defaultRetryTime);
         verify(mockReplenishCacheHandler).postDelayed(any(Runnable.class), eq((long)subject.mRetryTimeMilliseconds));
     }
 
     @Test
-    public void moPubNativeNetworkListener_onNativeFail_maxRetryTime_shouldResetRetryTime_shouldNotPostDelayedRunnable() {
+    public void
+    moPubNativeNetworkListener_onNativeFail_maxRetryTime_shouldResetInflight_shouldResetRetryTime_shouldNotPostDelayedRunnable() {
         subject.mRequestInFlight = true;
         subject.mRetryTimeMilliseconds = maxRetryTime;
 
         subject.getMoPubNativeNetworkListener().onNativeFail(NativeErrorCode.UNSPECIFIED);
 
         assertThat(subject.mRequestInFlight).isEqualTo(false);
+        assertThat(subject.mRetryInFlight).isEqualTo(false);
         assertThat(subject.mRetryTimeMilliseconds).isEqualTo(defaultRetryTime);
         verify(mockReplenishCacheHandler, never()).postDelayed(any(Runnable.class), anyLong());
     }

@@ -70,14 +70,13 @@ public class NativeGalleryFragment extends Fragment implements MoPubNativeAdLoad
         views.mAdUnitIdView.setText(adUnitId);
         mViewPager = (ViewPager) view.findViewById(R.id.gallery_pager);
         mStreamAdPlacer = new MoPubStreamAdPlacer(getActivity(),
-                MoPubNativeAdPositioning.newBuilder()
-                        .addFixedPosition(1)
+                MoPubNativeAdPositioning.clientPositioning()
                         .addFixedPosition(4)
+                        .addFixedPosition(1)
                         .enableRepeatingPositions(3)
-                        .build()
         );
         final MoPubNativeAdRenderer adRenderer = new MoPubNativeAdRenderer(
-                new ViewBinder.Builder(R.layout.native_ad_row)
+                new ViewBinder.Builder(R.layout.native_ad_list_item)
                         .titleId(R.id.native_title)
                         .textId(R.id.native_text)
                         .mainImageId(R.id.native_main_image)

@@ -36,7 +36,7 @@ import android.content.Context;
 import android.view.MotionEvent;
 import android.view.View;
 import com.mopub.mobileads.test.support.GestureUtils;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

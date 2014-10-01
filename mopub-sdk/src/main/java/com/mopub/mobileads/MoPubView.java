@@ -39,11 +39,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Location;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.webkit.WebViewDatabase;
 import android.widget.FrameLayout;
 
+import com.mopub.common.MoPub;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.ManifestUtils;
 import com.mopub.common.util.Visibility;
 import com.mopub.mobileads.factories.AdViewControllerFactory;
@@ -77,7 +78,6 @@ public class MoPubView extends FrameLayout {
     private Context mContext;
     private int mScreenVisibility;
     private BroadcastReceiver mScreenStateReceiver;
-    private LocationAwareness mLocationAwareness;
 
     private BannerAdListener mBannerAdListener;
     
@@ -99,7 +99,6 @@ public class MoPubView extends FrameLayout {
 
         mContext = context;
         mScreenVisibility = getVisibility();
-        mLocationAwareness = LocationAwareness.NORMAL;
 
         setHorizontalScrollBarEnabled(false);
         setVerticalScrollBarEnabled(false);
@@ -110,7 +109,7 @@ public class MoPubView extends FrameLayout {
         // Here, we'll work around it by trying to create a file store and then just go inert
         // if it's not accessible.
         if (WebViewDatabase.getInstance(context) == null) {
-            Log.e("MoPub", "Disabling MoPub. Local cache file is inaccessible so MoPub will " +
+            MoPubLog.e("Disabling MoPub. Local cache file is inaccessible so MoPub will " +
                     "fail if we try to create a WebView. Details of this Android bug found at:" +
                     "http://code.google.com/p/android/issues/detail?id=10789");
             return;
@@ -121,6 +120,7 @@ public class MoPubView extends FrameLayout {
     }
 
     private void registerScreenStateBroadcastReceiver() {
+        // message about leaked IntentReceiver
         mScreenStateReceiver = new BroadcastReceiver() {
             public void onReceive(final Context context, final Intent intent) {
                 if (!Visibility.isScreenVisible(mScreenVisibility) || intent == null) {
@@ -146,12 +146,14 @@ public class MoPubView extends FrameLayout {
         try {
             mContext.unregisterReceiver(mScreenStateReceiver);
         } catch (Exception IllegalArgumentException) {
-            Log.d("MoPub", "Failed to unregister screen state broadcast receiver (never registered).");
+            MoPubLog.d("Failed to unregister screen state broadcast receiver (never registered).");
         }
     }
 
     public void loadAd() {
-        if (mAdViewController != null) mAdViewController.loadAd();
+        if (mAdViewController != null) {
+            mAdViewController.loadAd();
+        }
     }
 
     /*
@@ -183,7 +185,7 @@ public class MoPubView extends FrameLayout {
 
     protected void loadCustomEvent(Map<String, String> paramsMap) {
         if (paramsMap == null) {
-            Log.d("MoPub", "Couldn't invoke custom event because the server did not specify one.");
+            MoPubLog.d("Couldn't invoke custom event because the server did not specify one.");
             loadFailUrl(ADAPTER_NOT_FOUND);
             return;
         }
@@ -192,7 +194,7 @@ public class MoPubView extends FrameLayout {
             mCustomEventBannerAdapter.invalidate();
         }
 
-        Log.d("MoPub", "Loading custom event adapter.");
+        MoPubLog.d("Loading custom event adapter.");
 
         mCustomEventBannerAdapter = CustomEventBannerAdapterFactory.create(
                 this,
@@ -211,7 +213,7 @@ public class MoPubView extends FrameLayout {
     }
 
     protected void trackNativeImpression() {
-        Log.d("MoPub", "Tracking impression for native adapter.");
+        MoPubLog.d("Tracking impression for native adapter.");
         if (mAdViewController != null) mAdViewController.trackImpression();
     }
 
@@ -237,7 +239,7 @@ public class MoPubView extends FrameLayout {
     }
 
     protected void adLoaded() {
-        Log.d("MoPub", "adLoaded");
+        MoPubLog.d("adLoaded");
         
         if (mBannerAdListener != null) {
             mBannerAdListener.onBannerLoaded(this);
@@ -345,24 +347,6 @@ public class MoPubView extends FrameLayout {
         return mBannerAdListener;
     }
 
-    public void setLocationAwareness(LocationAwareness awareness) {
-        mLocationAwareness = awareness;
-    }
-
-    public LocationAwareness getLocationAwareness() {
-        return mLocationAwareness;
-    }
-
-    public void setLocationPrecision(int precision) {
-        if (mAdViewController != null) {
-            mAdViewController.setLocationPrecision(precision);
-        }
-    }
-
-    public int getLocationPrecision() {
-        return (mAdViewController != null) ? mAdViewController.getLocationPrecision() : 0;
-    }
-
     public void setLocalExtras(Map<String, Object> localExtras) {
         if (mAdViewController != null) mAdViewController.setLocalExtras(localExtras);
     }
@@ -381,7 +365,7 @@ public class MoPubView extends FrameLayout {
     public boolean getAutorefreshEnabled() {
         if (mAdViewController != null) return mAdViewController.getAutorefreshEnabled();
         else {
-            Log.d("MoPub", "Can't get autorefresh status for destroyed MoPubView. " +
+            MoPubLog.d("Can't get autorefresh status for destroyed MoPubView. " +
                     "Returning false.");
             return false;
         }
@@ -398,7 +382,7 @@ public class MoPubView extends FrameLayout {
     public boolean getTesting() {
         if (mAdViewController != null) return mAdViewController.getTesting();
         else {
-            Log.d("MoPub", "Can't get testing status for destroyed MoPubView. " +
+            MoPubLog.d("Can't get testing status for destroyed MoPubView. " +
                     "Returning false.");
             return false;
         }
@@ -415,6 +399,26 @@ public class MoPubView extends FrameLayout {
 
     AdViewController getAdViewController() {
         return mAdViewController;
+    }
+
+    @Deprecated
+    public void setLocationAwareness(LocationAwareness locationAwareness) {
+        MoPub.setLocationAwareness(locationAwareness.getNewLocationAwareness());
+    }
+
+    @Deprecated
+    public LocationAwareness getLocationAwareness() {
+        return LocationAwareness.fromMoPubLocationAwareness(MoPub.getLocationAwareness());
+    }
+
+    @Deprecated
+    public void setLocationPrecision(int precision) {
+        MoPub.setLocationPrecision(precision);
+    }
+
+    @Deprecated
+    public int getLocationPrecision() {
+        return MoPub.getLocationPrecision();
     }
 
     @Deprecated
@@ -479,7 +483,7 @@ public class MoPubView extends FrameLayout {
 
     @Deprecated
     protected void adWillLoad(String url) {
-        Log.d("MoPub", "adWillLoad: " + url);
+        MoPubLog.d("adWillLoad: " + url);
         if (mOnAdWillLoadListener != null) mOnAdWillLoadListener.OnAdWillLoad(this, url);
     }
 

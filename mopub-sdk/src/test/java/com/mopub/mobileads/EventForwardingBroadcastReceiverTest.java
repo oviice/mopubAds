@@ -38,7 +38,7 @@ import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.mopub.mobileads.factories.CustomEventInterstitialAdapterFactory;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 
 import org.fest.util.Sets;
 import org.junit.Before;
@@ -60,6 +60,7 @@ import static com.mopub.mobileads.EventForwardingBroadcastReceiver.getHtmlInters
 import static com.mopub.mobileads.MoPubInterstitial.InterstitialAdListener;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -81,6 +82,7 @@ public class EventForwardingBroadcastReceiverTest {
         context = new Activity();
     }
 
+    // takes place in the loading and showing of an interstitial.
     @Ignore("pending")
     @Test
     public void twoDifferentInterstitials_shouldNotHearEachOthersBroadcasts() throws Exception {

@@ -1,3 +1,9 @@
+*.aar
+*.apk
+*.iml
+*.orig
+*.pyc
+*.swp
 .DS_Store
 .git.bak/
 .gradle/
@@ -6,17 +12,11 @@ ant_build/
 bin/
 build/
 classes/
-gen/
 gen-external-apklibs/
+gen/
+local.properties
 out/
 proguard_logs/
-tmp/
 target/
-*.apk
-*.aar
-*.orig
-*.iml
-*.pyc
-*.iml
-local.properties
+tmp/
 

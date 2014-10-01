@@ -11,7 +11,7 @@ import com.mopub.common.VisibleForTesting;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.DeviceUtils;
 import com.mopub.common.util.ManifestUtils;
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.ResponseHeader;
 
 import org.apache.http.HttpStatus;
@@ -242,6 +242,7 @@ public class MoPubNative {
                     if (context == null) {
                         return;
                     }
+
                     CustomEventNativeAdapter.loadNativeAd(
                             context,
                             mLocalExtras,

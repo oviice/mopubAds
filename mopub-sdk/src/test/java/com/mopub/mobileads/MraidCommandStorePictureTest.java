@@ -33,7 +33,7 @@
 package com.mopub.mobileads;
 
 import com.mopub.mobileads.test.support.FileUtils;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestMraidViewFactory;
 import org.junit.Before;
 import org.junit.Test;

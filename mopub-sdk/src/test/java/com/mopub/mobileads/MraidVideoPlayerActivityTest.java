@@ -41,7 +41,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.mopub.common.MoPubBrowser;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.util.vast.VastVideoConfiguration;
 
 import org.junit.Before;

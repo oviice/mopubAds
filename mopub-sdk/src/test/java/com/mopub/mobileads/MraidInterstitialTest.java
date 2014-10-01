@@ -35,7 +35,7 @@ package com.mopub.mobileads;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -94,7 +94,6 @@ public class MraidInterstitialTest extends ResponseBodyInterstitialTest {
         verify(customEventInterstitialListener, never()).onInterstitialLoaded();
     }
 
-    // FIXME
     @Test
     public void loadInterstitial_shouldNotifyInterstitialLoaded() throws Exception {
         subject.loadInterstitial(context, customEventInterstitialListener, localExtras, serverExtras);

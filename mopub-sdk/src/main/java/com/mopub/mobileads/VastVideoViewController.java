@@ -57,7 +57,7 @@ import com.mopub.common.MoPubBrowser;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.Dips;
 import com.mopub.common.util.Drawables;
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Streams;
 import com.mopub.common.util.VersionCode;
 import com.mopub.mobileads.util.vast.VastCompanionAd;
@@ -266,6 +266,7 @@ public class VastVideoViewController extends BaseVideoViewController implements 
     }
 
     private Runnable createVideoProgressCheckerRunnable() {
+        // This code could be pulled into it's own class
         return new Runnable() {
             @Override
             public void run() {

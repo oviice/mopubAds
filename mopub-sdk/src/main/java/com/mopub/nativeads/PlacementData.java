@@ -1,6 +1,7 @@
 package com.mopub.nativeads;
 
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
+import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
 
 import java.util.List;
 
@@ -143,11 +144,11 @@ class PlacementData {
         System.arraycopy(desiredInsertionPositions, 0, mDesiredOriginalPositions, 0, mDesiredCount);
     }
 
-    static PlacementData fromAdPositioning(final MoPubNativeAdPositioning adPositioning) {
+    static PlacementData fromAdPositioning(final MoPubClientPositioning adPositioning) {
         final List<Integer> fixed = adPositioning.getFixedPositions();
         final int interval = adPositioning.getRepeatingInterval();
 
-        final int size = (interval == MoPubNativeAdPositioning.NO_REPEAT ? fixed.size() : MAX_ADS);
+        final int size = (interval == MoPubClientPositioning.NO_REPEAT ? fixed.size() : MAX_ADS);
         final int[] desiredInsertionPositions = new int[size];
 
         // Fixed positions are in terms of final positions. Calculate current insertion positions
@@ -165,6 +166,10 @@ class PlacementData {
             desiredInsertionPositions[numAds++] = lastPos;
         }
         return new PlacementData(desiredInsertionPositions);
+    }
+
+    static PlacementData empty() {
+        return new PlacementData(new int[] {});
     }
 
     /**

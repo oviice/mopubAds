@@ -71,15 +71,14 @@ public class NativeListViewFragment extends Fragment {
 
         // Create an ad adapter with ads in positions 0, 4, and every 10 places thereafter.
         // This adapter will be used in place of the original adapter for the ListView.
-        mAdAdapter = new MoPubAdAdapter(getActivity(), adapter, MoPubNativeAdPositioning.newBuilder()
+        mAdAdapter = new MoPubAdAdapter(getActivity(), adapter, MoPubNativeAdPositioning.clientPositioning()
                 .addFixedPosition(0)
                 .addFixedPosition(4)
-                .enableRepeatingPositions(10)
-                .build());
+                .enableRepeatingPositions(10));
 
         // Set up an renderer that knows how to put ad data in an ad view.
         final MoPubNativeAdRenderer adRenderer = new MoPubNativeAdRenderer(
-                new ViewBinder.Builder(R.layout.native_ad_row)
+                new ViewBinder.Builder(R.layout.native_ad_list_item)
                         .titleId(R.id.native_title)
                         .textId(R.id.native_text)
                         .mainImageId(R.id.native_main_image)

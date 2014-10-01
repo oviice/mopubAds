@@ -33,25 +33,30 @@
 package com.mopub.mobileads;
 
 import android.os.Build;
+import android.os.Build.VERSION_CODES;
+
 import com.mopub.mobileads.factories.AdFetchTaskFactory;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestAdFetchTaskFactory;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
+
 import org.apache.http.HttpResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
+import org.robolectric.annotation.Config;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Executor;
 
 import static com.mopub.common.util.ResponseHeader.AD_TYPE;
 import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_DATA;
 import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_NAME;
 import static com.mopub.common.util.ResponseHeader.FULL_AD_TYPE;
 import static com.mopub.common.util.ResponseHeader.NATIVE_PARAMS;
-import static com.mopub.common.util.VersionCode.HONEYCOMB_MR2;
+import static com.mopub.common.util.VersionCode.GINGERBREAD;
 import static com.mopub.common.util.VersionCode.ICE_CREAM_SANDWICH;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -127,21 +132,21 @@ public class AdFetcherTest {
         verify(moPubInterstitialView).loadCustomEvent(eq(paramsMap));
     }
 
+    @Config(reportSdk = VERSION_CODES.ICE_CREAM_SANDWICH)
     @Test
-    public void fetchAdForUrl_whenApiLevelIsAtLeastICS_shouldExecuteUsingAnExecutor() throws Exception {
-        Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", ICE_CREAM_SANDWICH.getApiLevel());
+    public void fetchAdForUrl_atLeastIcs_shouldExecuteUsingAnExecutor() throws Exception {
         AdFetchTaskFactory.setInstance(new TestAdFetchTaskFactory());
         AdFetchTask adFetchTask = TestAdFetchTaskFactory.getSingletonMock();
 
         subject.fetchAdForUrl("some url");
 
-        verify(adFetchTask).executeOnExecutor(eq(AdFetchTask.THREAD_POOL_EXECUTOR), eq("some url"));
+        verify(adFetchTask).executeOnExecutor(any(Executor.class), eq("some url"));
         verify(adFetchTask, never()).execute(anyString());
     }
 
+    @Config(reportSdk = VERSION_CODES.GINGERBREAD_MR1)
     @Test
-    public void fetchAdForUrl_whenApiLevelIsBelowICS_shouldExecuteWithoutAnExecutor() throws Exception {
-        Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", HONEYCOMB_MR2.getApiLevel());
+    public void fetchAdForUrl_beforeHoneycomb_shouldExecuteWithoutAnExecutor() throws Exception {
         AdFetchTaskFactory.setInstance(new TestAdFetchTaskFactory());
         AdFetchTask adFetchTask = TestAdFetchTaskFactory.getSingletonMock();
 

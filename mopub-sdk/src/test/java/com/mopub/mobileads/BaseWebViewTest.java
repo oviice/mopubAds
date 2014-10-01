@@ -35,13 +35,15 @@ package com.mopub.mobileads;
 
 import android.app.Activity;
 import android.os.Build;
+import android.os.Build.VERSION_CODES;
 import android.view.ViewGroup;
 import android.webkit.WebSettings;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
+import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowWebView;
 
 import static com.mopub.common.util.VersionCode.JELLY_BEAN_MR1;
@@ -62,9 +64,9 @@ public class BaseWebViewTest {
         context = new Activity();
     }
 
+    @Config(reportSdk = VERSION_CODES.JELLY_BEAN_MR1)
     @Test
-    public void jellyBeanMr1AndBefore_shouldDisablePluginsByDefault() throws Exception {
-        Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", JELLY_BEAN_MR1.getApiLevel());
+    public void beforeJellyBeanMr1_shouldDisablePluginsByDefault() throws Exception {
         subject = new BaseWebView(context);
 
         WebSettings webSettings = subject.getSettings();
@@ -74,9 +76,9 @@ public class BaseWebViewTest {
         assertThat(webSettings.getPluginState()).isEqualTo(WebSettings.PluginState.ON);
     }
 
+    @Config(reportSdk = VERSION_CODES.JELLY_BEAN_MR2)
     @Test
-    public void jellyBeanMr2AndAfter_shouldPass() throws Exception {
-        Robolectric.Reflection.setFinalStaticField(Build.VERSION.class, "SDK_INT", JELLY_BEAN_MR2.getApiLevel());
+    public void atLeastJellybeanMr2_shouldPass() throws Exception {
         subject = new BaseWebView(context);
 
         subject.enablePlugins(true);

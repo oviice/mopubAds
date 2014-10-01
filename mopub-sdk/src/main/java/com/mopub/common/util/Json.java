@@ -32,6 +32,8 @@
 
 package com.mopub.common.util;
 
+import com.mopub.common.logging.MoPubLog;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -101,6 +103,8 @@ public class Json {
         }
     }
 
+    // This method is used by the Native Custom events.
+    @SuppressWarnings("unused")
     public static <T> T getJsonValue(final JSONObject jsonObject, final String key, final Class<T> valueClass) {
         if (jsonObject == null || key == null || valueClass == null) {
             throw new IllegalArgumentException("Cannot pass any null argument to getJsonValue");

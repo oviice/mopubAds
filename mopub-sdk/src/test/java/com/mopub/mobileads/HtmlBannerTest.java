@@ -36,6 +36,8 @@ import android.app.Activity;
 import android.net.Uri;
 import android.view.Gravity;
 import android.widget.FrameLayout;
+
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestHtmlBannerWebViewFactory;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 import com.mopub.mobileads.test.support.TestMoPubViewFactory;
@@ -60,7 +62,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.stub;
 import static org.mockito.Mockito.verify;
 
-@RunWith(com.mopub.mobileads.test.support.SdkTestRunner.class)
+@RunWith(SdkTestRunner.class)
 public class HtmlBannerTest {
 
     private HtmlBanner subject;

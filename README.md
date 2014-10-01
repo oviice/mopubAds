@@ -27,15 +27,13 @@ Integration instructions are available on the [wiki](https://github.com/mopub/mo
 
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for details.
 
-  - **Minimum Android version now at API Level 9.** To use the new SDK, your app must run on Android 2.3.1 (Version 9, Gingerbread) or higher.
+  - **Location Settings are now SDK-wide**
 
-  - **Simplified APIs for inserting native ads.** See [Native Ads Integration](https://github.com/mopub/mopub-android-sdk/wiki/Native-Ads-Integration) for details.
+  - **Build target SDK is now API Level 19**
 
-  - **Automatic ad caching for smooth scrolling.** For native ads, the SDK will now automatically pre-load ads, resulting in smoother scrolling.
+  - **Source-level support for Gradle projects**
 
-  - **Performance improvements** The SDK now makes more efficient use of memory for image caching and avoids allocating temporary objects while scrolling, resulting in fewer garbage collections.
-
-  - **Sample app improvements.** An improved sample app allows saving ad unit IDs for testing.
+  - **The SDK now uses Play Services 5.0.89**
 
   - **Bug fixes**
 

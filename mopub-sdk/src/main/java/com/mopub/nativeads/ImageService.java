@@ -10,7 +10,7 @@ import android.view.WindowManager;
 import com.mopub.common.CacheService;
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.VisibleForTesting;
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.VersionCode;
 
 import java.util.ArrayList;
@@ -218,8 +218,13 @@ class ImageService {
         while (getMemBytes(options) > TWO_MEGABYTES) {
             options.inSampleSize *= 2;
         }
+
         options.inJustDecodeBounds = false;
         Bitmap bitmap = decodeByteArray(bytes, 0, bytes.length, options);
+        if (bitmap == null) {
+            return null;
+        }
+
         final int subsampleWidth = bitmap.getWidth();
 
         // If needed, scale the bitmap so it's exactly the requested width.
@@ -229,6 +234,7 @@ class ImageService {
             bitmap = Bitmap.createScaledBitmap(subsampledBitmap, requestedWidth, requestedHeight, true);
             subsampledBitmap.recycle();
         }
+        
         return bitmap;
     }
 

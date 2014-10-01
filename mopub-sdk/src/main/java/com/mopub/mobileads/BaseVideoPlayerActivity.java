@@ -37,7 +37,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.util.vast.VastVideoConfiguration;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;

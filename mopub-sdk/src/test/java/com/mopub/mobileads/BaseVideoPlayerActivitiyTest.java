@@ -35,9 +35,8 @@ package com.mopub.mobileads;
 import android.app.Activity;
 import android.content.Intent;
 
-import com.mopub.common.util.DeviceUtils;
 import com.mopub.common.util.Utils;
-import com.mopub.mobileads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.util.vast.VastVideoConfiguration;
 
 import org.junit.Before;

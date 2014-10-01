@@ -98,7 +98,11 @@ class MillennialBanner extends CustomEventBanner {
 
     @Override
     protected void onInvalidate() {
-        mMillennialAdView.setListener(null);
+        // mMillennialAdView can be null if loadBanner terminated prematurely (i.e. the associated
+        // serverExtras are invalid).
+        if (mMillennialAdView != null) {
+            mMillennialAdView.setListener(null);
+        }
     }
 
     private boolean extrasAreValid(final Map<String, String> serverExtras) {

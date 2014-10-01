@@ -34,10 +34,10 @@ package com.mopub.mobileads;
 
 import android.content.Context;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 
 import com.mopub.common.util.Json;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;
 import com.mopub.mobileads.factories.CustomEventBannerFactory;
 
@@ -71,17 +71,17 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
         mTimeout = new Runnable() {
             @Override
             public void run() {
-                Log.d("MoPub", "Third-party network timed out.");
+                MoPubLog.d("Third-party network timed out.");
                 onBannerFailed(NETWORK_TIMEOUT);
                 invalidate();
             }
         };
 
-        Log.d("MoPub", "Attempting to invoke custom event: " + className);
+        MoPubLog.d("Attempting to invoke custom event: " + className);
         try {
             mCustomEventBanner = CustomEventBannerFactory.create(className);
         } catch (Exception exception) {
-            Log.d("MoPub", "Couldn't locate or instantiate custom event: " + className + ".");
+            MoPubLog.d("Couldn't locate or instantiate custom event: " + className + ".");
             mMoPubView.loadFailUrl(ADAPTER_NOT_FOUND);
             return;
         }
@@ -90,7 +90,7 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
         try {
             mServerExtras = Json.jsonStringToMap(classData);
         } catch (Exception exception) {
-            Log.d("MoPub", "Failed to create Map from JSON: " + classData + exception.toString());
+            MoPubLog.d("Failed to create Map from JSON: " + classData + exception.toString());
         }
 
         mLocalExtras = mMoPubView.getLocalExtras();

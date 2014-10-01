@@ -11,7 +11,7 @@ import com.mopub.common.HttpClient;
 import com.mopub.common.MoPubBrowser;
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.util.IntentUtils;
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.ResponseHeader;
 import com.mopub.nativeads.MoPubNative.MoPubNativeEventListener;
 

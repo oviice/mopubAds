@@ -33,44 +33,16 @@
 package com.mopub.common;
 
 import android.content.Context;
-import android.content.res.Configuration;
 import android.location.Location;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.telephony.TelephonyManager;
 
-import com.mopub.common.util.DateAndTime;
 import com.mopub.common.util.IntentUtils;
 
-import java.text.SimpleDateFormat;
-
-import static android.Manifest.permission.ACCESS_NETWORK_STATE;
-import static android.content.pm.PackageManager.PERMISSION_GRANTED;
-import static android.net.ConnectivityManager.TYPE_MOBILE;
-import static android.net.ConnectivityManager.TYPE_WIFI;
-import static com.mopub.common.AdUrlGenerator.MoPubNetworkType.ETHERNET;
-import static com.mopub.common.AdUrlGenerator.MoPubNetworkType.MOBILE;
-import static com.mopub.common.AdUrlGenerator.MoPubNetworkType.UNKNOWN;
-import static com.mopub.common.AdUrlGenerator.MoPubNetworkType.WIFI;
+import static com.mopub.common.ClientMetadata.MoPubNetworkType;
 
 public abstract class AdUrlGenerator extends BaseUrlGenerator {
     private static TwitterAppInstalledStatus sTwitterAppInstalledStatus = TwitterAppInstalledStatus.UNKNOWN;
-    public static final String DEVICE_ORIENTATION_PORTRAIT = "p";
-    public static final String DEVICE_ORIENTATION_LANDSCAPE = "l";
-    public static final String DEVICE_ORIENTATION_SQUARE = "s";
-    public static final String DEVICE_ORIENTATION_UNKNOWN = "u";
-
-    // From ConnectivityManager
-    public static final int TYPE_DUMMY = 0x8;
-    public static final int TYPE_ETHERNET = 0x9;
-    public static final int TYPE_MOBILE_DUN = 0x4;
-    public static final int TYPE_MOBILE_HIPRI = 0x5;
-    public static final int TYPE_MOBILE_MMS = 0x2;
-    public static final int TYPE_MOBILE_SUPL = 0x3;
 
     protected Context mContext;
-    protected TelephonyManager mTelephonyManager;
-    protected ConnectivityManager mConnectivityManager;
     protected String mAdUnitId;
     protected String mKeywords;
     protected Location mLocation;
@@ -81,22 +53,8 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
         INSTALLED,
     }
 
-    public static enum MoPubNetworkType {
-        UNKNOWN,
-        ETHERNET,
-        WIFI,
-        MOBILE;
-
-        @Override
-        public String toString() {
-            return Integer.toString(ordinal());
-        }
-    }
-
     public AdUrlGenerator(Context context) {
         mContext = context;
-        mTelephonyManager = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
-        mConnectivityManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
     }
 
     public AdUrlGenerator withAdUnitId(String adUnitId) {
@@ -137,16 +95,8 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
         addParam("z", timeZoneOffsetString);
     }
 
-    protected void setOrientation(int orientation) {
-        String orString = DEVICE_ORIENTATION_UNKNOWN;
-        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-            orString = DEVICE_ORIENTATION_PORTRAIT;
-        } else if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            orString = DEVICE_ORIENTATION_LANDSCAPE;
-        } else if (orientation == Configuration.ORIENTATION_SQUARE) {
-            orString = DEVICE_ORIENTATION_SQUARE;
-        }
-        addParam("o", orString);
+    protected void setOrientation(String orientation) {
+        addParam("o", orientation);
     }
 
     protected void setDensity(float density) {
@@ -175,54 +125,16 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
         addParam("cn", networkOperatorName);
     }
 
-    protected void setNetworkType(int type) {
-        switch(type) {
-            case TYPE_ETHERNET:
-                addParam("ct", ETHERNET);
-                break;
-            case TYPE_WIFI:
-                addParam("ct", WIFI);
-                break;
-            case TYPE_MOBILE:
-            case TYPE_MOBILE_DUN:
-            case TYPE_MOBILE_HIPRI:
-            case TYPE_MOBILE_MMS:
-            case TYPE_MOBILE_SUPL:
-                addParam("ct", MOBILE);
-                break;
-            default:
-                addParam("ct", UNKNOWN);
-        }
+    protected void setNetworkType(MoPubNetworkType networkType) {
+        addParam("ct", networkType);
     }
 
     private void addParam(String key, MoPubNetworkType value) {
         addParam(key, value.toString());
     }
-    protected String getNetworkOperator() {
-        String networkOperator = mTelephonyManager.getNetworkOperator();
-        if (mTelephonyManager.getPhoneType() == TelephonyManager.PHONE_TYPE_CDMA &&
-                mTelephonyManager.getSimState() == TelephonyManager.SIM_STATE_READY) {
-            networkOperator = mTelephonyManager.getSimOperator();
-        }
-        return networkOperator;
-    }
 
     private int mncPortionLength(String networkOperator) {
         return Math.min(3, networkOperator.length());
-    }
-
-    protected static String getTimeZoneOffsetString() {
-        SimpleDateFormat format = new SimpleDateFormat("Z");
-        format.setTimeZone(DateAndTime.localTimeZone());
-        return format.format(DateAndTime.now());
-    }
-
-    protected int getActiveNetworkType() {
-        if (mContext.checkCallingOrSelfPermission(ACCESS_NETWORK_STATE) == PERMISSION_GRANTED) {
-            NetworkInfo activeNetworkInfo = mConnectivityManager.getActiveNetworkInfo();
-            return activeNetworkInfo != null ? activeNetworkInfo.getType() : TYPE_DUMMY;
-        }
-        return TYPE_DUMMY;
     }
 
     protected void setTwitterAppInstalledFlag() {

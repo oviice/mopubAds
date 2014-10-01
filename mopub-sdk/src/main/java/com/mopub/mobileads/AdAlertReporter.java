@@ -36,10 +36,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.util.Log;
 import android.view.View;
 
 import com.mopub.common.util.DateAndTime;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Streams;
 import com.mopub.mobileads.util.Base64;
 
@@ -208,7 +208,7 @@ public class AdAlertReporter {
             Uri fileUri = Uri.fromFile(new File(mContext.getFilesDir() + File.separator + fileName));
             mEmailAttachments.add(fileUri);
         } catch (Exception exception) {
-            Log.d("MoPub", "Unable to write text attachment to file: " + fileName);
+            MoPubLog.d("Unable to write text attachment to file: " + fileName);
         } finally {
             Streams.closeStream(fileOutputStream);
         }
@@ -228,7 +228,7 @@ public class AdAlertReporter {
             Uri fileUri = Uri.fromFile(new File(mContext.getFilesDir() + File.separator + fileName));
             mEmailAttachments.add(fileUri);
         } catch (Exception exception) {
-            Log.d("MoPub", "Unable to write text attachment to file: " + fileName);
+            MoPubLog.d("Unable to write text attachment to file: " + fileName);
         } finally {
             Streams.closeStream(fileOutputStream);
         }

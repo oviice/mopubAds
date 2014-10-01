@@ -2,7 +2,7 @@ package com.mopub.common.util;
 
 import android.view.View;
 
-import com.mopub.nativeads.test.support.SdkTestRunner;
+import com.mopub.common.test.support.SdkTestRunner;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

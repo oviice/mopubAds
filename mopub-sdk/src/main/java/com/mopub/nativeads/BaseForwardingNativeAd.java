@@ -2,7 +2,7 @@ package com.mopub.nativeads;
 
 import android.view.View;
 
-import com.mopub.common.util.MoPubLog;
+import com.mopub.common.logging.MoPubLog;
 
 import java.util.HashMap;
 import java.util.HashSet;
