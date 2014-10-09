@@ -21,15 +21,20 @@ import static com.mopub.nativeads.CustomEventNativeAdapter.RESPONSE_BODY_KEY;
 import static com.mopub.nativeads.NativeResponse.Parameter;
 
 public class MoPubCustomEventNative extends CustomEventNative {
+
     @Override
     protected void loadNativeAd(final Context context,
             final CustomEventNativeListener customEventNativeListener,
             final Map<String, Object> localExtras,
             final Map<String, String> serverExtras) {
 
-        final MoPubForwardingNativeAd moPubForwardingNativeAd;
+        final MoPubForwardingNativeAd moPubForwardingNativeAd =
+                new MoPubForwardingNativeAd(context.getApplicationContext(),
+                        serverExtras.get(RESPONSE_BODY_KEY),
+                        customEventNativeListener);
+
         try {
-            moPubForwardingNativeAd = new MoPubForwardingNativeAd(serverExtras.get(RESPONSE_BODY_KEY));
+            moPubForwardingNativeAd.loadAd();
         } catch (IllegalArgumentException e) {
             customEventNativeListener.onNativeAdFailed(NativeErrorCode.UNSPECIFIED);
             return;
@@ -37,26 +42,27 @@ public class MoPubCustomEventNative extends CustomEventNative {
             customEventNativeListener.onNativeAdFailed(NativeErrorCode.INVALID_JSON);
             return;
         }
-        preCacheImages(context, moPubForwardingNativeAd.getAllImageUrls(), new ImageListener() {
-            @Override
-            public void onImagesCached() {
-                customEventNativeListener.onNativeAdLoaded(moPubForwardingNativeAd);
-            }
-
-            @Override
-            public void onImagesFailedToCache(NativeErrorCode errorCode) {
-                customEventNativeListener.onNativeAdFailed(errorCode);
-            }
-        });
     }
 
     static class MoPubForwardingNativeAd extends BaseForwardingNativeAd {
-        MoPubForwardingNativeAd(final String jsonString) throws IllegalArgumentException, JSONException {
-            if (jsonString == null) {
+        private final Context mContext;
+        private final String mJsonString;
+        private final CustomEventNativeListener mCustomEventNativeListener;
+
+        MoPubForwardingNativeAd(final Context context,
+                final String jsonString,
+                final CustomEventNativeListener customEventNativeListener) {
+            mContext = context;
+            mJsonString = jsonString;
+            mCustomEventNativeListener = customEventNativeListener;
+        }
+
+        void loadAd() throws IllegalArgumentException, JSONException {
+            if (mJsonString == null) {
                 throw new IllegalArgumentException("Json String cannot be null");
             }
 
-            final JSONTokener jsonTokener = new JSONTokener(jsonString);
+            final JSONTokener jsonTokener = new JSONTokener(mJsonString);
             final JSONObject jsonObject = new JSONObject(jsonTokener);
 
             if (!containsRequiredKeys(jsonObject)) {
@@ -78,6 +84,18 @@ public class MoPubCustomEventNative extends CustomEventNative {
                     addExtra(key, jsonObject.opt(key));
                 }
             }
+
+            preCacheImages(mContext, getAllImageUrls(), new ImageListener() {
+                @Override
+                public void onImagesCached() {
+                    mCustomEventNativeListener.onNativeAdLoaded(MoPubForwardingNativeAd.this);
+                }
+
+                @Override
+                public void onImagesFailedToCache(final NativeErrorCode errorCode) {
+                    mCustomEventNativeListener.onNativeAdFailed(errorCode);
+                }
+            });
         }
 
         private boolean containsRequiredKeys(final JSONObject jsonObject) {
@@ -176,6 +194,5 @@ public class MoPubCustomEventNative extends CustomEventNative {
             imageUrls.addAll(getExtrasImageUrls());
             return imageUrls;
         }
-
     }
 }

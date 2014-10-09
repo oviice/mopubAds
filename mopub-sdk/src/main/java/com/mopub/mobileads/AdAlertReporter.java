@@ -37,18 +37,14 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.view.View;
-
-import com.mopub.common.util.DateAndTime;
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.util.DateAndTime;
 import com.mopub.common.util.Streams;
 import com.mopub.mobileads.util.Base64;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
 
 public class AdAlertReporter {
     private static final String EMAIL_RECIPIENT = "creative-review@mopub.com";

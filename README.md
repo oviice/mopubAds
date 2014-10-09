@@ -27,15 +27,9 @@ Integration instructions are available on the [wiki](https://github.com/mopub/mo
 
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for details.
 
-  - **Location Settings are now SDK-wide**
+  - **Updated Facebook SDK Compatibility to 3.18.1**
 
-  - **Build target SDK is now API Level 19**
-
-  - **Source-level support for Gradle projects**
-
-  - **The SDK now uses Play Services 5.0.89**
-
-  - **Bug fixes**
+  - **Updated API for Native Ads Custom Event writers**
 
 ## Requirements
 

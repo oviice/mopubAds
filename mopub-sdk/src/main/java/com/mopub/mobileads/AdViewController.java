@@ -42,20 +42,16 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
-
 import com.mopub.common.MoPub;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Dips;
 import com.mopub.mobileads.factories.AdFetcherFactory;
 import com.mopub.mobileads.factories.HttpClientFactory;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.*;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
 import static com.mopub.common.GpsHelper.GpsHelperListener;

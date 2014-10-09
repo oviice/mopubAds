@@ -34,20 +34,17 @@ package com.mopub.mobileads;
 
 import android.app.Activity;
 import android.net.Uri;
-
-import com.mopub.common.util.Json;
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.util.Json;
 import com.mopub.common.util.Strings;
-
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 
-import java.io.IOException;
+import java.io.*;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.mopub.common.util.ResponseHeader.AD_TYPE;
 import static com.mopub.common.util.ResponseHeader.CLICKTHROUGH_URL;

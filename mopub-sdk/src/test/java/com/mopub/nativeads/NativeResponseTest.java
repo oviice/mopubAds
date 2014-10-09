@@ -3,12 +3,15 @@ package com.mopub.nativeads;
 import android.app.Activity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import com.mopub.common.DownloadResponse;
-import com.mopub.common.util.ResponseHeader;
-import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 import com.mopub.common.test.support.SdkTestRunner;
+import com.mopub.common.util.ResponseHeader;
+import com.mopub.common.util.Utils;
+import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -22,10 +25,12 @@ import java.util.Map;
 
 import static com.mopub.nativeads.MoPubNative.EMPTY_EVENT_LISTENER;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
 public class NativeResponseTest {
@@ -79,6 +84,13 @@ public class NativeResponseTest {
 
         mMockNativeAd = mock(NativeAdInterface.class);
         subjectWMockBaseNativeAd = new NativeResponse(context, downloadResponse, "adunit_id", mMockNativeAd, moPubNativeListener);
+    }
+
+    @Test
+    public void constructor_shouldSetNativeEventListenerOnNativeAdInterface() {
+        reset(mMockNativeAd);
+        subject = new NativeResponse(context, downloadResponse, "adunit_id", mMockNativeAd, moPubNativeListener);
+        verify(mMockNativeAd).setNativeEventListener(any(BaseForwardingNativeAd.NativeEventListener.class));
     }
 
     @Test
@@ -147,23 +159,48 @@ public class NativeResponseTest {
     }
 
     @Test
-    public void prepareImpression_shouldCallPrepareImpressionOnBaseNativeAd() {
-        subjectWMockBaseNativeAd.prepareImpression(view);
-        verify(mMockNativeAd).prepareImpression(view);
+    public void prepare_shouldCallPrepareOnBaseNativeAd() {
+        subjectWMockBaseNativeAd.prepare(view);
+        verify(mMockNativeAd).prepare(view);
     }
 
     @Test
-    public void prepareImpression_whenDestroyed_shouldReturnFast() {
+    public void prepare_whenDestroyed_shouldReturnFast() {
         subjectWMockBaseNativeAd.destroy();
-        subjectWMockBaseNativeAd.prepareImpression(view);
-        verify(mMockNativeAd, never()).prepareImpression(view);
+        subjectWMockBaseNativeAd.prepare(view);
+        verify(mMockNativeAd, never()).prepare(view);
+    }
+    
+    @Test
+    public void prepare_withOverridingeClickTracker_shouldNotSetOnClickListener() throws Exception {
+        when(mMockNativeAd.isOverridingClickTracker()).thenReturn(true);
+        View view = mock(View.class);
+        subjectWMockBaseNativeAd.prepare(view);
+        verify(view, never()).setOnClickListener(any(NativeResponse.NativeViewClickListener.class));
     }
 
     @Test
-    public void prepareImpression_whenAlreadyImpressed_shouldReturnFast() {
-        subjectWMockBaseNativeAd.setRecordedImpression(true);
-        subjectWMockBaseNativeAd.prepareImpression(view);
-        verify(mMockNativeAd, never()).prepareImpression(view);
+    public void prepare_withoutOverridingClickTracker_shouldSetOnClickListener() throws Exception {
+        when(mMockNativeAd.isOverridingClickTracker()).thenReturn(false);
+        View view = mock(View.class);
+        subjectWMockBaseNativeAd.prepare(view);
+        verify(view).setOnClickListener(any(NativeResponse.NativeViewClickListener.class));
+    }
+
+    @Test
+    public void prepare_shouldAttachClickListenersToViewTree() {
+        RelativeLayout relativeLayout = new RelativeLayout(context);
+        Button callToActionView = new Button(context);
+        callToActionView.setId((int) Utils.generateUniqueId());
+        relativeLayout.addView(callToActionView);
+
+        assertThat(relativeLayout.performClick()).isFalse();
+        assertThat(callToActionView.performClick()).isFalse();
+
+        subject.prepare(relativeLayout);
+
+        assertThat(relativeLayout.performClick()).isTrue();
+        assertThat(callToActionView.performClick()).isTrue();
     }
 
     @Test
@@ -271,6 +308,17 @@ public class NativeResponseTest {
         subjectWMockBaseNativeAd.destroy();
 
         assertThat(subjectWMockBaseNativeAd.getMoPubNativeEventListener()).isSameAs(EMPTY_EVENT_LISTENER);
+    }
+
+    // NativeViewClickListener tests
+    @Test
+    public void NativeViewClickListener_onClick_shouldQueueClickTrackerAndUrlResolutionTasks() {
+        subject = mock(NativeResponse.class);
+        NativeResponse.NativeViewClickListener nativeViewClickListener = subject.new NativeViewClickListener();
+
+        View view = new View(context);
+        nativeViewClickListener.onClick(view);
+        verify(subject).handleClick(view);
     }
 
     @Ignore("pending")

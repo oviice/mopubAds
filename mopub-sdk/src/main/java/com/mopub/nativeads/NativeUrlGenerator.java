@@ -3,7 +3,6 @@ package com.mopub.nativeads;
 import android.content.Context;
 import android.location.Location;
 import android.text.TextUtils;
-
 import com.mopub.common.AdUrlGenerator;
 import com.mopub.common.ClientMetadata;
 import com.mopub.common.LocationService;

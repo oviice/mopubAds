@@ -34,10 +34,8 @@ package com.mopub.mobileads;
 
 import android.content.Context;
 import android.location.Location;
-
-import com.mopub.mobileads.factories.CustomEventInterstitialFactory;
 import com.mopub.common.test.support.SdkTestRunner;
-
+import com.mopub.mobileads.factories.CustomEventInterstitialFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,8 +43,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.Robolectric;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;

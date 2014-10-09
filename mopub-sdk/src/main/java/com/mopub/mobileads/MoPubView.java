@@ -42,7 +42,6 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.webkit.WebViewDatabase;
 import android.widget.FrameLayout;
-
 import com.mopub.common.MoPub;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.ManifestUtils;
@@ -50,8 +49,7 @@ import com.mopub.common.util.Visibility;
 import com.mopub.mobileads.factories.AdViewControllerFactory;
 import com.mopub.mobileads.factories.CustomEventBannerAdapterFactory;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 import static com.mopub.common.LocationService.LocationAwareness;
 import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_DATA;
@@ -120,7 +118,6 @@ public class MoPubView extends FrameLayout {
     }
 
     private void registerScreenStateBroadcastReceiver() {
-        // message about leaked IntentReceiver
         mScreenStateReceiver = new BroadcastReceiver() {
             public void onReceive(final Context context, final Intent intent) {
                 if (!Visibility.isScreenVisible(mScreenVisibility) || intent == null) {

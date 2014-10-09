@@ -5,8 +5,8 @@ import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
 import com.mopub.common.test.support.SdkTestRunner;
+import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -342,6 +342,59 @@ public class MoPubStreamAdPlacerTest {
         verify(mockAdRenderer, never()).createAdView(any(Context.class), any(ViewGroup.class));
         verify(mockAdRenderer).renderAdView(convertView, stubNativeResponse);
         verify(mockImpressionTracker).addView(convertView, stubNativeResponse);
+    }
+
+    @Test
+    public void getAdView_shouldRemoveViewFromImpressionTracker_shouldClearPreviousNativeResponse() throws Exception {
+        NativeResponse mockNativeResponse = mock(NativeResponse.class);
+        View mockView = mock(View.class);
+        when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse, mockNativeResponse, stubNativeResponse);
+        subject.handlePositioningLoad(positioning);
+        subject.handleAdsAvailable();
+        subject.setItemCount(100);
+
+        subject.getAdView(1, mockView, null);
+        verify(mockImpressionTracker).removeView(mockView);
+
+        // Second call should clear the first NativeResponse
+        subject.getAdView(3, mockView, null);
+        verify(mockImpressionTracker, times(2)).removeView(mockView);
+        verify(stubNativeResponse).clear(mockView);
+
+        // Third call should clear the second NativeResponse
+        subject.getAdView(5, mockView, null);
+        verify(mockImpressionTracker, times(3)).removeView(mockView);
+        verify(mockNativeResponse).clear(mockView);
+    }
+
+    @Test
+    public void getAdView_withNetworkImpressionTracker_shouldNotAddViewToImpressionTracker_shouldPrepareNativeResponse() throws Exception {
+        View mockView = mock(View.class);
+        when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.handlePositioningLoad(positioning);
+        subject.handleAdsAvailable();
+        subject.setItemCount(100);
+
+        when(stubNativeResponse.isOverridingImpressionTracker()).thenReturn(true);
+        subject.getAdView(1, mockView, null);
+
+        verify(mockImpressionTracker, never()).addView(any(View.class), any(NativeResponse.class));
+        verify(stubNativeResponse).prepare(mockView);
+    }
+
+    @Test
+    public void getAdView_withoutNetworkImpressionTracker_shouldAddViewToImpressionTracker_shouldPrepareNativeResponse() throws Exception {
+        View mockView = mock(View.class);
+        when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.handlePositioningLoad(positioning);
+        subject.handleAdsAvailable();
+        subject.setItemCount(100);
+
+        when(stubNativeResponse.isOverridingImpressionTracker()).thenReturn(false);
+        subject.getAdView(1, mockView, null);
+
+        verify(mockImpressionTracker).addView(mockView, stubNativeResponse);
+        verify(stubNativeResponse).prepare(mockView);
     }
 
     @Test

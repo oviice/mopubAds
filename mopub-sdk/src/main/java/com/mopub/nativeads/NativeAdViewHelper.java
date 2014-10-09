@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 
 import java.util.WeakHashMap;
@@ -20,8 +21,14 @@ class NativeAdViewHelper {
 
     // Because the impression tracker requires tracking drawing views,
     // each context requires a separate impression tracker. To avoid leaking, keep weak references.
-    private static final WeakHashMap<Context, ImpressionTracker> sImpressionTrackerMap =
+    @VisibleForTesting
+    static final WeakHashMap<Context, ImpressionTracker> sImpressionTrackerMap =
             new WeakHashMap<Context, ImpressionTracker>();
+
+    // Used to keep track of the last NativeResponse a view was associated with in order to clean
+    // up its state before associating with a new NativeResponse
+    static private final WeakHashMap<View, NativeResponse> sNativeResponseMap =
+            new WeakHashMap<View, NativeResponse>();
 
     @Deprecated
     static View getAdView(View convertView,
@@ -41,7 +48,7 @@ class NativeAdViewHelper {
             convertView = moPubNativeAdRenderer.createAdView(context, parent);
         }
 
-        cleanUpImpressionTracking(context, convertView);
+        clearNativeResponse(context, convertView);
 
         if (nativeResponse == null) {
             // If we don't have content for the view, then hide the view for now
@@ -51,19 +58,29 @@ class NativeAdViewHelper {
             MoPubLog.d("NativeResponse is destroyed, returning hidden view.");
             convertView.setVisibility(GONE);
         } else {
+            prepareNativeResponse(context, convertView, nativeResponse);
             moPubNativeAdRenderer.renderAdView(convertView, nativeResponse);
-            prepareImpressionTracking(context, convertView, nativeResponse);
         }
 
         return convertView;
     }
 
-    private static void cleanUpImpressionTracking(final Context context, final View view) {
+    private static void clearNativeResponse(final Context context, final View view) {
         getImpressionTracker(context).removeView(view);
+        final NativeResponse nativeResponse = sNativeResponseMap.get(view);
+        if (nativeResponse != null) {
+            nativeResponse.clear(view);
+        }
     }
 
-    private static void prepareImpressionTracking(final Context context, final View view, final NativeResponse nativeResponse) {
-        getImpressionTracker(context).addView(view, nativeResponse);
+    private static void prepareNativeResponse(final Context context,
+            final View view,
+            final NativeResponse nativeResponse) {
+        sNativeResponseMap.put(view, nativeResponse);
+        if (!nativeResponse.isOverridingImpressionTracker()) {
+            getImpressionTracker(context).addView(view, nativeResponse);
+        }
+        nativeResponse.prepare(view);
     }
 
     private static ImpressionTracker getImpressionTracker(final Context context) {

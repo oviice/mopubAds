@@ -2,25 +2,22 @@ package com.mopub.nativeads;
 
 import android.content.Context;
 import android.view.View;
-
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.DownloadTask;
 import com.mopub.common.GpsHelper;
 import com.mopub.common.HttpClient;
 import com.mopub.common.VisibleForTesting;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.DeviceUtils;
 import com.mopub.common.util.ManifestUtils;
-import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.ResponseHeader;
-
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.mopub.common.GpsHelper.GpsHelperListener;
 import static com.mopub.common.GpsHelper.asyncFetchAdvertisingInfo;

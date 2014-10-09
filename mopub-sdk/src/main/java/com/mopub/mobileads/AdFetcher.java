@@ -32,8 +32,8 @@
 
 package com.mopub.mobileads;
 
-import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.util.AsyncTasks;
 import com.mopub.mobileads.factories.AdFetchTaskFactory;
 
 /*

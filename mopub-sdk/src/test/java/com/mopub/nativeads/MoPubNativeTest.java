@@ -1,17 +1,15 @@
 package com.mopub.nativeads;
 
 import android.app.Activity;
-
 import com.mopub.common.DownloadTask;
 import com.mopub.common.GpsHelper;
 import com.mopub.common.GpsHelperTest;
 import com.mopub.common.SharedPreferencesHelper;
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.test.support.ShadowAsyncTasks;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
 import com.mopub.nativeads.MoPubNative.MoPubNativeEventListener;
 import com.mopub.nativeads.MoPubNative.MoPubNativeNetworkListener;
-import com.mopub.common.test.support.SdkTestRunner;
-
 import org.apache.http.client.methods.HttpGet;
 import org.junit.After;
 import org.junit.Before;
@@ -24,8 +22,8 @@ import org.mockito.stubbing.Answer;
 import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
 
-import java.util.List;
-import java.util.concurrent.Semaphore;
+import java.util.*;
+import java.util.concurrent.*;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
 import static android.Manifest.permission.INTERNET;

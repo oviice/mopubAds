@@ -36,7 +36,6 @@ import android.content.Context;
 import android.graphics.Color;
 import android.view.MotionEvent;
 import android.view.View;
-
 import com.mopub.common.logging.MoPubLog;
 
 import static com.mopub.common.util.VersionCode.ICE_CREAM_SANDWICH;

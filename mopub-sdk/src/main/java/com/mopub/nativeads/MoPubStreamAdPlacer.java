@@ -4,13 +4,12 @@ import android.content.Context;
 import android.os.Handler;
 import android.view.View;
 import android.view.ViewGroup;
-
 import com.mopub.common.VisibleForTesting;
 import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
 import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubServerPositioning;
 import com.mopub.nativeads.PositioningSource.PositioningListener;
 
-import java.util.ArrayList;
+import java.util.*;
 
 /**
  * @code MoPubStreamAdPlacer facilitates loading ads and placing them into a content stream.
@@ -31,6 +30,7 @@ public class MoPubStreamAdPlacer {
     private final PositioningSource mPositioningSource;
     private final NativeAdSource mAdSource;
     private final ImpressionTracker mImpressionTracker;
+    private final WeakHashMap<View, NativeResponse> mNativeResponseMap;
 
     private boolean mHasReceivedPositions;
     private PlacementData mPendingPlacementData;
@@ -109,6 +109,7 @@ public class MoPubStreamAdPlacer {
         mPositioningSource = positioningSource;
         mAdSource = adSource;
         mPlacementData = PlacementData.empty();
+        mNativeResponseMap = new WeakHashMap<View, NativeResponse>();
 
         mPlacementHandler = new Handler();
         mPlacementRunnable = new Runnable() {
@@ -352,8 +353,11 @@ public class MoPubStreamAdPlacer {
                 convertView : adRenderer.createAdView(mContext, parent);
 
         NativeResponse nativeResponse = adData.getAd();
-        adRenderer.renderAdView(view, nativeResponse);
-        mImpressionTracker.addView(view, nativeResponse);
+        if (!nativeResponse.equals(mNativeResponseMap.get(view))) {
+            clearNativeResponse(view);
+            prepareNativeResponse(nativeResponse, view);
+            adRenderer.renderAdView(view, nativeResponse);
+        }
         return view;
     }
 
@@ -613,5 +617,21 @@ public class MoPubStreamAdPlacer {
 
     private NativeAdData createAdData(final int position, final NativeResponse adResponse) {
         return new NativeAdData(mAdUnitId, mAdRenderer, adResponse);
+    }
+
+    private void clearNativeResponse(final View view) {
+        mImpressionTracker.removeView(view);
+        final NativeResponse lastNativeResponse = mNativeResponseMap.get(view);
+        if (lastNativeResponse != null) {
+            lastNativeResponse.clear(view);
+        }
+    }
+
+    private void prepareNativeResponse(final NativeResponse nativeResponse, final View view) {
+        mNativeResponseMap.put(view, nativeResponse);
+        if (!nativeResponse.isOverridingImpressionTracker()) {
+            mImpressionTracker.addView(view, nativeResponse);
+        }
+        nativeResponse.prepare(view);
     }
 }

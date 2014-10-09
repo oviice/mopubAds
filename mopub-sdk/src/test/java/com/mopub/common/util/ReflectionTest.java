@@ -34,13 +34,12 @@ package com.mopub.common.util;
 
 import android.app.Activity;
 import android.view.View;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
-import static com.mopub.common.util.Reflection.*;
+import static com.mopub.common.util.Reflection.MethodBuilder;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.fail;
 

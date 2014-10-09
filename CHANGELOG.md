@@ -1,3 +1,13 @@
+## Version 3.1.0 (October 9, 2014)
+
+  - **Updated Facebook SDK Compatibility to 3.18.1**
+  Provided Custom Events for Facebook Banners, Interstitials and Native Ads (included
+  in the extras/ folder) are now compatible with the latest SDK release from Facebook (3.18.1).
+  - **Updated API for Native Ads Custom Event writers**
+  If you are mediating Facebook or InMobi native ads, this change requires you to copy
+  FacebookNative.java and InMobiNative.java custom events from the extras/ folder to
+  com.mopub.nativeads package for compatibility.
+
 ## Version 3.0.0 (September 30, 2014)
 
   - **Location Settings are now SDK-wide**

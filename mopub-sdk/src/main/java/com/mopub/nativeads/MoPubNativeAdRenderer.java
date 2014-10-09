@@ -4,7 +4,6 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
@@ -50,13 +49,8 @@ public class MoPubNativeAdRenderer implements MoPubAdRenderer<NativeResponse> {
             return;
         }
 
-        // Clean up previous state of view
-        removeClickListeners(view, nativeViewHolder);
-
         populateConvertViewSubViews(view, nativeViewHolder, nativeResponse, mViewBinder);
-        attachClickListeners(view, nativeViewHolder, nativeResponse);
         view.setVisibility(VISIBLE);
-        nativeResponse.prepareImpression(view);
     }
 
     @VisibleForTesting
@@ -77,43 +71,5 @@ public class MoPubNativeAdRenderer implements MoPubAdRenderer<NativeResponse> {
             final ViewBinder viewBinder) {
         nativeViewHolder.update(nativeResponse);
         nativeViewHolder.updateExtras(view, nativeResponse, viewBinder);
-    }
-
-    private void removeClickListeners(final View view, final NativeViewHolder nativeViewHolder) {
-        view.setOnClickListener(null);
-        setCtaClickListener(nativeViewHolder, null);
-    }
-
-    private void attachClickListeners(final View view,
-            final NativeViewHolder nativeViewHolder,
-            final NativeResponse nativeResponse) {
-        final NativeViewClickListener nativeViewClickListener =
-                new NativeViewClickListener(nativeResponse);
-        view.setOnClickListener(nativeViewClickListener);
-        setCtaClickListener(nativeViewHolder, nativeViewClickListener);
-    }
-
-    private void setCtaClickListener(final NativeViewHolder nativeViewHolder,
-            final NativeViewClickListener nativeViewClickListener) {
-        // CTA widget could be a button and buttons don't inherit click listeners from parents
-        // So we have to set it manually here if so
-        if (nativeViewHolder.callToActionView != null
-                && nativeViewHolder.callToActionView instanceof Button) {
-            nativeViewHolder.callToActionView.setOnClickListener(nativeViewClickListener);
-        }
-    }
-
-    @VisibleForTesting
-    static class NativeViewClickListener implements View.OnClickListener {
-        private final NativeResponse mNativeResponse;
-
-        NativeViewClickListener(final NativeResponse nativeResponse) {
-            mNativeResponse = nativeResponse;
-        }
-
-        @Override
-        public void onClick(final View view) {
-            mNativeResponse.handleClick(view);
-        }
     }
 }

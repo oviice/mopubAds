@@ -1,7 +1,6 @@
 package com.mopub.nativeads;
 
 import android.app.Activity;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -10,20 +9,18 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.mopub.common.DownloadResponse;
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.ResponseHeader;
 import com.mopub.common.util.Utils;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
-import com.mopub.common.test.support.SdkTestRunner;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
 
 import static com.mopub.nativeads.MoPubNative.MoPubNativeListener;
-import static com.mopub.nativeads.MoPubNativeAdRenderer.NativeViewClickListener;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -148,33 +145,6 @@ public class MoPubNativeAdRendererTest {
     }
 
     @Test
-    public void renderAdView_whenCallToActionIsAButton_shouldAttachClickListenersToConvertViewAndCtaButton() {
-        assertThat(relativeLayout.performClick()).isFalse();
-        assertThat(callToActionView.performClick()).isFalse();
-
-        subject.renderAdView(relativeLayout, nativeResponse);
-
-        assertThat(relativeLayout.performClick()).isTrue();
-        assertThat(callToActionView.performClick()).isTrue();
-    }
-
-    @Test
-    public void renderAdView_whenCallToActionIsATextView_shouldAttachClickListenersToConvertViewOnly() {
-        relativeLayout.removeView(callToActionView);
-        callToActionView = new TextView(context);
-        callToActionView.setId((int) Utils.generateUniqueId());
-        relativeLayout.addView(callToActionView);
-
-        assertThat(relativeLayout.performClick()).isFalse();
-        assertThat(callToActionView.performClick()).isFalse();
-
-        subject.renderAdView(relativeLayout, nativeResponse);
-
-        assertThat(relativeLayout.performClick()).isTrue();
-        assertThat(callToActionView.performClick()).isFalse();
-    }
-
-    @Test
     public void getOrCreateNativeViewHolder_withNoViewHolder_shouldCreateNativeViewHolder() {
         final NativeViewHolder viewHolder =
                 subject.getOrCreateNativeViewHolder(relativeLayout, viewBinder);
@@ -191,33 +161,6 @@ public class MoPubNativeAdRendererTest {
 
         assertThat(subject.getOrCreateNativeViewHolder(relativeLayout, viewBinder))
                 .isEqualTo(viewHolder);
-    }
-
-    // NativeViewClickListener tests
-
-    @Test
-    public void onClick_shouldQueueClickTrackerAndUrlResolutionTasks() {
-        NativeViewClickListener nativeViewClickListener = new NativeViewClickListener(nativeResponse);
-
-        Robolectric.getBackgroundScheduler().pause();
-        assertThat(Robolectric.getBackgroundScheduler().enqueuedTaskCount()).isEqualTo(0);
-        nativeViewClickListener.onClick(new View(context));
-
-        assertThat(Robolectric.getBackgroundScheduler().enqueuedTaskCount()).isEqualTo(2);
-    }
-
-    @Test
-    public void onClick_withNullDestinationUrl_shouldNotQueueUrlResolutionTask() {
-        mNativeAd.setClickDestinationUrl(null);
-
-        NativeViewClickListener nativeViewClickListener = new NativeViewClickListener(nativeResponse);
-
-        Robolectric.getBackgroundScheduler().pause();
-        assertThat(Robolectric.getBackgroundScheduler().enqueuedTaskCount()).isEqualTo(0);
-        nativeViewClickListener.onClick(new View(context));
-
-        // 1 task for async ping to click tracker
-        assertThat(Robolectric.getBackgroundScheduler().enqueuedTaskCount()).isEqualTo(1);
     }
 
     static private void compareNativeViewHolders(final NativeViewHolder actualViewHolder,

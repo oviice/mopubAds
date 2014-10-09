@@ -39,10 +39,8 @@ import android.content.Intent;
 import android.view.View;
 import android.webkit.WebViewClient;
 import android.widget.RelativeLayout;
-
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestHtmlInterstitialWebViewFactory;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

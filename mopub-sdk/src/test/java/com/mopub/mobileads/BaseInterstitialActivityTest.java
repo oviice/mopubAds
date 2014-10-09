@@ -41,7 +41,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
-
 import org.fest.assertions.api.ANDROID;
 import org.junit.Ignore;
 import org.junit.Test;
