@@ -348,9 +348,9 @@ public class MoPubAdAdapter extends BaseAdapter {
      */
     @Override
     public int getItemViewType(final int position) {
-        final int adType = mStreamAdPlacer.getAdViewType(position);
-        if (adType != 0) {
-            return adType + mOriginalAdapter.getViewTypeCount() - 1;
+        final int viewType = mStreamAdPlacer.getAdViewType(position);
+        if (viewType != MoPubStreamAdPlacer.CONTENT_VIEW_TYPE) {
+            return viewType + mOriginalAdapter.getViewTypeCount() - 1;
         }
         return mOriginalAdapter.getItemViewType(mStreamAdPlacer.getOriginalPosition(position));
     }

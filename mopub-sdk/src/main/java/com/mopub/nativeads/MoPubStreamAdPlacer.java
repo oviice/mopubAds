@@ -24,6 +24,12 @@ import java.util.*;
  * UI thread.
  */
 public class MoPubStreamAdPlacer {
+    /**
+     * Constant representing that the view type for a given position is a regular content item
+     * instead of an ad.
+     */
+    public static final int CONTENT_VIEW_TYPE = 0;
+
     private final Context mContext;
     private final Handler mPlacementHandler;
     private final Runnable mPlacementRunnable;
@@ -427,7 +433,7 @@ public class MoPubStreamAdPlacer {
      * @return The ad view type.
      */
     public int getAdViewType(final int position) {
-        return isAd(position) ? 0 : 1;
+        return isAd(position) ? 1 : CONTENT_VIEW_TYPE;
     }
 
     /**
