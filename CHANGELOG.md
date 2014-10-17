@@ -1,6 +1,6 @@
 ## Version 3.2.0 (October 17, 2014)
 
-  - **Updated SDK License** Visit [http://www.mopub.com/legal/sdk-license-agreement/]() for details.
+  - **Updated SDK License** Visit [http://www.mopub.com/legal/sdk-license-agreement/](http://www.mopub.com/legal/sdk-license-agreement/) for details.
   - **Bug Fixes**
 
 ## Version 3.1.0 (October 9, 2014)
