@@ -15,6 +15,11 @@ public class TestHttpResponseWithHeaders extends TestHttpResponse {
         headers = new HashMap<String, Header>();
     }
 
+    public TestHttpResponseWithHeaders(int statusCode, byte[] responseBody) {
+        super(statusCode, responseBody);
+        headers = new HashMap<String, Header>();
+    }
+
     @Override
     public void addHeader(String name, String value) {
         headers.put(name, new BasicHeader(name, value));
