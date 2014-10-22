@@ -1,5 +1,5 @@
 ## Version 3.2.1 (October 21, 2014)
-  - ** Bug Fix ** Fixes a bug in processing certain HTTP headers for Native Ads.
+  - **Bug Fix** Fixes a bug in processing certain HTTP headers for Native Ads.
 
 ## Version 3.2.0 (October 17, 2014)
 
