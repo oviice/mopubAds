@@ -28,7 +28,7 @@
         <dependency>
             <groupId>com.google.android.gms</groupId>
             <artifactId>play-services</artifactId>
-            <version>5.2.08</version>
+            <version>5.0.89</version>
             <type>aar</type>
         </dependency>
 

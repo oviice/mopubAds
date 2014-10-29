@@ -61,9 +61,9 @@ class NativeUrlGenerator extends AdUrlGenerator {
                 clientMetadata.getDeviceModel(),
                 clientMetadata.getDeviceProduct());
 
-        setUdid(clientMetadata.getUdid());
+        setUdid(clientMetadata.getAdvertisingId());
 
-        setDoNotTrack(clientMetadata.getDoNoTrack());
+        setDoNotTrack(clientMetadata.isDoNotTrackSet());
 
         setTimezone(DateAndTime.getTimeZoneOffsetString());
 

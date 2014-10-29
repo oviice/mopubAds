@@ -87,19 +87,20 @@ public class MoPubConversionTrackerTest {
     @Test
     public void reportAppOpen_whenGooglePlayServicesIsLinkedAndAdInfoIsNotCached_shouldUseAdInfoParams() throws Exception {
         GpsHelper.setClassNamesForTesting();
-        GpsHelperTest.verifyCleanSharedPreferences(context);
+        GpsHelperTest.verifyCleanClientMetadata(context);
         GpsHelperTest.TestAdInfo adInfo = new GpsHelperTest.TestAdInfo();
 
         when(methodBuilder.setStatic(any(Class.class))).thenReturn(methodBuilder);
         when(methodBuilder.addParam(any(Class.class), any())).thenReturn(methodBuilder);
         when(methodBuilder.execute()).thenReturn(
+                GpsHelper.GOOGLE_PLAY_SUCCESS_CODE,
                 adInfo,
-                adInfo.ADVERTISING_ID,
-                adInfo.LIMIT_AD_TRACKING_ENABLED,
+                adInfo.mAdId,
+                adInfo.mLimitAdTrackingEnabled,
                 GpsHelper.GOOGLE_PLAY_SUCCESS_CODE
         );
 
-        expectedUdid = "ifa%3A" + adInfo.ADVERTISING_ID;
+        expectedUdid = "ifa%3A" + adInfo.mAdId;
         dnt = true;
 
         fakeHttpLayer.addPendingHttpResponse(200, "doesn't matter what this is as long as it's not nothing");

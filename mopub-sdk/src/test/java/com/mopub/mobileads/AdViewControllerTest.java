@@ -346,7 +346,7 @@ public class AdViewControllerTest {
     @Test
     public void loadAd_whenGooglePlayServicesIsLinkedAndAdInfoIsNotCached_shouldCacheAdInfoBeforeFetchingAd() throws Exception {
         SharedPreferencesHelper.getSharedPreferences(context).edit().clear().commit();
-        GpsHelperTest.verifyCleanSharedPreferences(context);
+        GpsHelperTest.verifyCleanClientMetadata(context);
 
         GpsHelper.setClassNamesForTesting();
         GpsHelperTest.TestAdInfo adInfo = new GpsHelperTest.TestAdInfo();
@@ -369,13 +369,12 @@ public class AdViewControllerTest {
         Thread.sleep(500);
 
         verify(mockAdViewControllerGpsHelperListener).onFetchAdInfoCompleted();
-        GpsHelperTest.verifySharedPreferences(context, adInfo);
+        GpsHelperTest.verifyClientMetadata(context, adInfo);
     }
 
     @Test
     public void loadAd_whenGooglePlayServicesIsNotLinked_shouldFetchAdFast() throws Exception {
-        SharedPreferencesHelper.getSharedPreferences(context).edit().clear().commit();
-        GpsHelperTest.verifyCleanSharedPreferences(context);
+        GpsHelperTest.verifyCleanClientMetadata(context);
 
         GpsHelper.setClassNamesForTesting();
         when(methodBuilder.setStatic(any(Class.class))).thenReturn(methodBuilder);
@@ -392,19 +391,22 @@ public class AdViewControllerTest {
         // no need to sleep since it run the callback without an async task
 
         verify(mockAdViewControllerGpsHelperListener).onFetchAdInfoCompleted();
-        GpsHelperTest.verifyCleanSharedPreferences(context);
+        GpsHelperTest.verifyCleanClientMetadata(context);
     }
 
     @Test
     public void loadAd_whenGooglePlayServicesIsLinkedAndAdInfoIsCached_shouldFetchAdFast() throws Exception {
         GpsHelperTest.TestAdInfo adInfo = new GpsHelperTest.TestAdInfo();
-        GpsHelperTest.populateAndVerifySharedPreferences(context, adInfo);
+        GpsHelperTest.populateAndVerifyClientMetadata(context, adInfo);
         GpsHelper.setClassNamesForTesting();
 
         when(methodBuilder.setStatic(any(Class.class))).thenReturn(methodBuilder);
         when(methodBuilder.addParam(any(Class.class), any())).thenReturn(methodBuilder);
         when(methodBuilder.execute()).thenReturn(
-                GpsHelper.GOOGLE_PLAY_SUCCESS_CODE
+                GpsHelper.GOOGLE_PLAY_SUCCESS_CODE,
+                adInfo,
+                adInfo.mAdId,
+                adInfo.mLimitAdTrackingEnabled
         );
 
         final AdViewController.AdViewControllerGpsHelperListener mockAdViewControllerGpsHelperListener
@@ -416,7 +418,7 @@ public class AdViewControllerTest {
         // no need to sleep since it run the callback without an async task
 
         verify(mockAdViewControllerGpsHelperListener).onFetchAdInfoCompleted();
-        GpsHelperTest.verifySharedPreferences(context, adInfo);
+        GpsHelperTest.verifyClientMetadata(context, adInfo);
     }
 
     @Test

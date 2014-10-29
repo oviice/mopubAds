@@ -32,9 +32,9 @@ public class WebViewAdUrlGenerator extends AdUrlGenerator {
                 clientMetadata.getDeviceModel(),
                 clientMetadata.getDeviceProduct());
 
-        setUdid(clientMetadata.getUdid());
+        setUdid(clientMetadata.getAdvertisingId());
 
-        setDoNotTrack(clientMetadata.getDoNoTrack());
+        setDoNotTrack(clientMetadata.isDoNotTrackSet());
 
         setKeywords(mKeywords);
 

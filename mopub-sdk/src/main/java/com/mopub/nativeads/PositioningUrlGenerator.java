@@ -36,7 +36,7 @@ class PositioningUrlGenerator extends BaseUrlGenerator {
                 clientMetadata.getDeviceModel(),
                 clientMetadata.getDeviceProduct());
 
-        setUdid(clientMetadata.getUdid());
+        setUdid(clientMetadata.getAdvertisingId());
 
         setAppVersion(clientMetadata.getAppVersion());
 

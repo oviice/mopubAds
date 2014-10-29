@@ -36,6 +36,8 @@ public class ClientMetadata {
     private String mIsoCountryCode;
     private String mNetworkOperatorName;
     private String mUdid;
+    private boolean mDoNotTrack = false;
+    private boolean mAdvertisingInfoSet = false;
 
     /**
      * Returns the singleton ClientMetadata object, using the context to obtain data if necessary.
@@ -145,7 +147,8 @@ public class ClientMetadata {
             mNetworkOperatorName = null;
         }
 
-        mUdid = getUdidFromContext(mContext);
+        // Get the device ID. This will be replaced later when the Play Services callbacks complete.
+        mUdid = getDeviceIdFromContext(mContext);
     }
 
     private static String getAppVersionFromContext(Context context) {
@@ -160,19 +163,11 @@ public class ClientMetadata {
         }
     }
 
-    private static String getUdidFromContext(Context context) {
-        // try to use the android id from Google Play Services if available
-        // if not fall back on the device id
-        final String androidId = GpsHelper.getAdvertisingId(context);
-
-        if (androidId != null) {
-            return IFA_PREFIX + androidId;
-        } else {
-            String deviceId = Settings.Secure.getString(context.getContentResolver(),
-                    Settings.Secure.ANDROID_ID);
-            deviceId = (deviceId == null) ? "" : Utils.sha1(deviceId);
-            return SHA_PREFIX + deviceId;
-        }
+    private static String getDeviceIdFromContext(Context context) {
+        String deviceId = Settings.Secure.getString(context.getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+        deviceId = (deviceId == null) ? "" : Utils.sha1(deviceId);
+        return SHA_PREFIX + deviceId;
     }
 
     /**
@@ -211,13 +206,6 @@ public class ClientMetadata {
     }
 
     /**
-     * @return whether doNotTrack is enabled in the advertising settings.
-     */
-    public boolean getDoNoTrack() {
-        return GpsHelper.isLimitAdTrackingEnabled(mContext);
-    }
-
-    /**
      * @return the network operator.
      */
     public String getNetworkOperator() {
@@ -239,10 +227,28 @@ public class ClientMetadata {
     }
 
     /**
-     * @return the Google Play advertising ID or the device ID if Play Services are not available.
+     * @return the stored device ID.
      */
-    public String getUdid() {
+    public synchronized String getAdvertisingId() {
         return mUdid;
+    }
+
+    /**
+     * @return the user's do not track preference. Should be set whenever a getAdInfo() call is
+     *         completed.
+     */
+    public synchronized boolean isDoNotTrackSet() {
+        return mDoNotTrack;
+    }
+
+    public synchronized void setAdvertisingInfo(String advertisingId, boolean doNotTrack) {
+        mUdid = IFA_PREFIX + advertisingId;
+        mDoNotTrack = doNotTrack;
+        mAdvertisingInfoSet = true;
+    }
+
+    public synchronized boolean isAdvertisingInfoSet() {
+        return mAdvertisingInfoSet;
     }
 
     /**

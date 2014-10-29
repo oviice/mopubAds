@@ -20,7 +20,7 @@ import java.lang.ref.WeakReference;
 import java.util.*;
 
 import static com.mopub.common.GpsHelper.GpsHelperListener;
-import static com.mopub.common.GpsHelper.asyncFetchAdvertisingInfo;
+import static com.mopub.common.GpsHelper.fetchAdvertisingInfoAsync;
 import static com.mopub.nativeads.CustomEventNative.CustomEventNativeListener;
 import static com.mopub.nativeads.NativeErrorCode.CONNECTION_ERROR;
 import static com.mopub.nativeads.NativeErrorCode.EMPTY_AD_RESPONSE;
@@ -110,7 +110,7 @@ public class MoPubNative {
         mMoPubNativeEventListener = EMPTY_EVENT_LISTENER;
 
         // warm up cache for google play services info
-        asyncFetchAdvertisingInfo(context);
+        fetchAdvertisingInfoAsync(context, null);
     }
 
     public void setNativeEventListener(final MoPubNativeEventListener nativeEventListener) {
@@ -133,7 +133,12 @@ public class MoPubNative {
     }
 
     public void makeRequest(final RequestParameters requestParameters) {
-        makeRequest(new NativeGpsHelperListener(requestParameters));
+        makeRequest(requestParameters, null);
+    }
+
+    public void makeRequest(final RequestParameters requestParameters,
+            Integer sequenceNumber) {
+        makeRequest(new NativeGpsHelperListener(requestParameters, sequenceNumber));
     }
 
     void makeRequest(final NativeGpsHelperListener nativeGpsHelperListener) {
@@ -150,13 +155,15 @@ public class MoPubNative {
         // If we have access to Google Play Services (GPS) but the advertising info
         // is not cached then guarantee we get it before building the ad request url
         // in the callback, this is a requirement from Google
-        GpsHelper.asyncFetchAdvertisingInfoIfNotCached(
+        GpsHelper.fetchAdvertisingInfoAsync(
                 context,
                 nativeGpsHelperListener
         );
     }
 
-    void loadNativeAd(final RequestParameters requestParameters, final Integer sequenceNumber) {
+
+    private void loadNativeAd(final RequestParameters requestParameters,
+            final Integer sequenceNumber) {
         final Context context = getContextOrDestroy();
         if (context == null) {
             return;
@@ -273,14 +280,21 @@ public class MoPubNative {
     // Do not store this class as a member of MoPubNative; will result in circular reference
     class NativeGpsHelperListener implements GpsHelperListener {
         private final RequestParameters mRequestParameters;
+        private final Integer mSequenceNumber;
+
+        NativeGpsHelperListener(RequestParameters requestParameters, Integer sequenceNumber) {
+            mRequestParameters = requestParameters;
+            mSequenceNumber = sequenceNumber;
+        }
 
         NativeGpsHelperListener(RequestParameters requestParameters) {
-            mRequestParameters = requestParameters;
+            this(requestParameters, null);
         }
 
         @Override
         public void onFetchAdInfoCompleted() {
-            loadNativeAd(mRequestParameters);
+
+            loadNativeAd(mRequestParameters, mSequenceNumber);
         }
     }
 

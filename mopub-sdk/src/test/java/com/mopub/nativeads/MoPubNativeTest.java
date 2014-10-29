@@ -82,7 +82,7 @@ public class MoPubNativeTest {
     public void
     makeRequest_whenGooglePlayServicesIsLinkedAndAdInfoIsNotCached_shouldCacheAdInfoBeforeFetchingAd() throws Exception {
         SharedPreferencesHelper.getSharedPreferences(context).edit().clear().commit();
-        GpsHelperTest.verifyCleanSharedPreferences(context);
+        GpsHelperTest.verifyCleanClientMetadata(context);
 
         GpsHelper.setClassNamesForTesting();
         GpsHelperTest.TestAdInfo adInfo = new GpsHelperTest.TestAdInfo();
@@ -100,13 +100,13 @@ public class MoPubNativeTest {
         semaphore.acquire();
 
         verify(nativeGpsHelperListener).onFetchAdInfoCompleted();
-        GpsHelperTest.verifySharedPreferences(context, adInfo);
+        GpsHelperTest.verifyClientMetadata(context, adInfo);
     }
 
     @Test
     public void makeRequest_whenGooglePlayServicesIsNotLinked_shouldFetchAdFast() throws Exception {
         SharedPreferencesHelper.getSharedPreferences(context).edit().clear().commit();
-        GpsHelperTest.verifyCleanSharedPreferences(context);
+        GpsHelperTest.verifyCleanClientMetadata(context);
 
         GpsHelper.setClassNamesForTesting();
         when(methodBuilder.setStatic(any(Class.class))).thenReturn(methodBuilder);
@@ -119,7 +119,7 @@ public class MoPubNativeTest {
         // no need to sleep since it run the callback without an async task
 
         verify(nativeGpsHelperListener).onFetchAdInfoCompleted();
-        GpsHelperTest.verifyCleanSharedPreferences(context);
+        GpsHelperTest.verifyCleanClientMetadata(context);
     }
 
     @Test
@@ -142,7 +142,7 @@ public class MoPubNativeTest {
     @Test
     public void makeRequest_whenGooglePlayServicesIsLinkedAndAdInfoIsCached_shouldFetchAdFast() throws Exception {
         GpsHelperTest.TestAdInfo adInfo = new GpsHelperTest.TestAdInfo();
-        GpsHelperTest.populateAndVerifySharedPreferences(context, adInfo);
+        GpsHelperTest.populateAndVerifyClientMetadata(context, adInfo);
         GpsHelper.setClassNamesForTesting();
 
         when(methodBuilder.setStatic(any(Class.class))).thenReturn(methodBuilder);
@@ -155,7 +155,7 @@ public class MoPubNativeTest {
         // no need to sleep since it run the callback without an async task
 
         verify(nativeGpsHelperListener).onFetchAdInfoCompleted();
-        GpsHelperTest.verifySharedPreferences(context, adInfo);
+        GpsHelperTest.verifyClientMetadata(context, adInfo);
     }
 
     @Test

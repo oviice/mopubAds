@@ -39,7 +39,7 @@ public class MoPubConversionTracker {
         mSharedPreferences = SharedPreferencesHelper.getSharedPreferences(mContext);
 
         if (!isAlreadyTracked()) {
-            GpsHelper.asyncFetchAdvertisingInfo(mContext, mConversionTrackerGpsHelperListener);
+            GpsHelper.fetchAdvertisingInfoAsync(mContext, mConversionTrackerGpsHelperListener);
         } else {
             MoPubLog.d("Conversion already tracked");
         }
@@ -58,8 +58,8 @@ public class MoPubConversionTracker {
             setPackageId(mPackageName);
 
             ClientMetadata clientMetadata = ClientMetadata.getInstance(mContext);
-            setUdid(clientMetadata.getUdid());
-            setDoNotTrack(GpsHelper.isLimitAdTrackingEnabled(mContext));
+            setUdid(clientMetadata.getAdvertisingId());
+            setDoNotTrack(clientMetadata.isDoNotTrackSet());
             setAppVersion(clientMetadata.getAppVersion());
             return getFinalUrlString();
         }

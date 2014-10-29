@@ -1,7 +1,7 @@
 package com.mopub.common;
 
 public class MoPub {
-    public static final String SDK_VERSION = "3.2.1";
+    public static final String SDK_VERSION = "3.2.2";
 
     public static enum LocationAwareness { NORMAL, TRUNCATED, DISABLED }
 

@@ -221,7 +221,7 @@ class NativeAdSource {
     void replenishCache() {
         if (!mRequestInFlight && mMoPubNative != null && mNativeAdCache.size() < CACHE_LIMIT) {
             mRequestInFlight = true;
-            mMoPubNative.loadNativeAd(mRequestParameters, mSequenceNumber);
+            mMoPubNative.makeRequest(mRequestParameters, mSequenceNumber);
         }
     }
 

@@ -61,7 +61,7 @@ public class NativeAdSourceTest {
     public void loadAds_shouldReplenishCache() {
         subject.loadAds(requestParameters, mockMoPubNative);
         assertThat(subject.mRequestInFlight).isTrue();
-        verify(mockMoPubNative).loadNativeAd(requestParameters, 0);
+        verify(mockMoPubNative).makeRequest(requestParameters, 0);
     }
 
     @Test
@@ -195,7 +195,7 @@ public class NativeAdSourceTest {
 
         subject.replenishCache();
 
-        verify(mockMoPubNative).loadNativeAd(any(RequestParameters.class), eq(0));
+        verify(mockMoPubNative).makeRequest(any(RequestParameters.class), eq(0));
         assertThat(subject.mRequestInFlight).isTrue();
     }
 
@@ -206,7 +206,7 @@ public class NativeAdSourceTest {
 
         subject.replenishCache();
 
-        verify(mockMoPubNative, never()).loadNativeAd(requestParameters, 0);
+        verify(mockMoPubNative, never()).makeRequest(requestParameters, 0);
         assertThat(subject.mRequestInFlight).isTrue();
     }
 
@@ -221,7 +221,7 @@ public class NativeAdSourceTest {
 
         subject.replenishCache();
 
-        verify(mockMoPubNative, never()).loadNativeAd(any(RequestParameters.class), any(Integer.class));
+        verify(mockMoPubNative, never()).makeRequest(any(RequestParameters.class), any(Integer.class));
         assertThat(subject.mRequestInFlight).isFalse();
     }
 
@@ -294,7 +294,7 @@ public class NativeAdSourceTest {
         subject.getMoPubNativeNetworkListener().onNativeLoad(mockNativeResponse);
 
         assertThat(subject.mRequestInFlight).isEqualTo(true);
-        verify(mockMoPubNative).loadNativeAd(any(RequestParameters.class), eq(1));
+        verify(mockMoPubNative).makeRequest(any(RequestParameters.class), eq(1));
     }
 
     @Test

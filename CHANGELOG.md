@@ -1,3 +1,6 @@
+## Version 3.2.2 (October 29, 2014)
+  - **Bug Fix** Fixes a bug in fetching the Google Advertising ID from Google Play Services.
+
 ## Version 3.2.1 (October 21, 2014)
   - **Bug Fix** Fixes a bug in processing certain HTTP headers for Native Ads.
 

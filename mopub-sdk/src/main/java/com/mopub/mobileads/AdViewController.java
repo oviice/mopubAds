@@ -10,6 +10,8 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
+
+import com.mopub.common.GpsHelper;
 import com.mopub.common.MoPub;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Dips;
@@ -23,8 +25,6 @@ import java.util.*;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
 import static com.mopub.common.GpsHelper.GpsHelperListener;
-import static com.mopub.common.GpsHelper.asyncFetchAdvertisingInfo;
-import static com.mopub.common.GpsHelper.asyncFetchAdvertisingInfoIfNotCached;
 import static com.mopub.common.LocationService.getLastKnownLocation;
 
 public class AdViewController {
@@ -77,7 +77,7 @@ public class AdViewController {
 
         mGpsHelperListener = new AdViewControllerGpsHelperListener();
 
-        asyncFetchAdvertisingInfo(mContext);
+        GpsHelper.fetchAdvertisingInfoAsync(mContext, null);
 
         mRefreshRunnable = new Runnable() {
             public void run() {
@@ -115,7 +115,7 @@ public class AdViewController {
         // If we have access to Google Play Services (GPS) but the advertising info
         // is not cached then guarantee we get it before building the ad request url
         // in the callback, this is a requirement from Google
-        asyncFetchAdvertisingInfoIfNotCached(mContext, mGpsHelperListener);
+        GpsHelper.fetchAdvertisingInfoAsync(mContext, mGpsHelperListener);
     }
 
     void loadNonJavascript(String url) {
