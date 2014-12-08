@@ -1,5 +1,7 @@
 package com.mopub.nativeads.test.support;
 
+import android.support.annotation.NonNull;
+
 import com.mopub.nativeads.CustomEventNative;
 import com.mopub.nativeads.factories.CustomEventNativeFactory;
 
@@ -17,7 +19,7 @@ public class TestCustomEventNativeFactory extends CustomEventNativeFactory {
     }
 
     @Override
-    protected CustomEventNative internalCreate(final Class<? extends CustomEventNative> nativeClass) {
+    protected CustomEventNative internalCreate(@NonNull final Class<? extends CustomEventNative> nativeClass) {
         return instance;
     }
 }

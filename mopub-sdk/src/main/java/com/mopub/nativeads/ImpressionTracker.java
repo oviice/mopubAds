@@ -2,6 +2,8 @@ package com.mopub.nativeads;
 
 import android.content.Context;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.View;
 
 import com.mopub.common.VisibleForTesting;
@@ -19,27 +21,27 @@ class ImpressionTracker {
     private static final int PERIOD = 250;
 
     // Object tracking visibility of added views
-    private final VisibilityTracker mVisibilityTracker;
+    @NonNull private final VisibilityTracker mVisibilityTracker;
 
     // All views and responses being tracked for impressions
-    private final Map<View, NativeResponse> mTrackedViews;
+    @NonNull private final Map<View, NativeResponse> mTrackedViews;
 
     // Visible views being polled for time on screen before tracking impression
-    private final Map<View, TimestampWrapper<NativeResponse>> mPollingViews;
+    @NonNull private final Map<View, TimestampWrapper<NativeResponse>> mPollingViews;
 
     // Handler for polling visible views
-    private final Handler mPollHandler;
+    @NonNull private final Handler mPollHandler;
 
     // Runnable to run on each visibility loop
-    private final PollingRunnable mPollingRunnable;
+    @NonNull private final PollingRunnable mPollingRunnable;
 
     // Object to check actual visibility
-    private final VisibilityChecker mVisibilityChecker;
+    @NonNull private final VisibilityChecker mVisibilityChecker;
 
     // Listener for when a view becomes visible or non visible
-    private VisibilityTrackerListener mVisibilityTrackerListener;
+    @Nullable private VisibilityTrackerListener mVisibilityTrackerListener;
 
-    ImpressionTracker(final Context context) {
+    ImpressionTracker(@NonNull final Context context) {
         this(new WeakHashMap<View, NativeResponse>(),
                 new WeakHashMap<View, TimestampWrapper<NativeResponse>>(),
                 new VisibilityChecker(),
@@ -48,11 +50,11 @@ class ImpressionTracker {
     }
 
     @VisibleForTesting
-    ImpressionTracker(final Map<View, NativeResponse> trackedViews,
-                      final Map<View, TimestampWrapper<NativeResponse>> pollingViews,
-                      final VisibilityChecker visibilityChecker,
-                      final VisibilityTracker visibilityTracker,
-                      final Handler handler) {
+    ImpressionTracker(@NonNull final Map<View, NativeResponse> trackedViews,
+            @NonNull final Map<View, TimestampWrapper<NativeResponse>> pollingViews,
+            @NonNull final VisibilityChecker visibilityChecker,
+            @NonNull final VisibilityTracker visibilityTracker,
+            @NonNull final Handler handler) {
         mTrackedViews = trackedViews;
         mPollingViews = pollingViews;
         mVisibilityChecker = visibilityChecker;
@@ -60,7 +62,7 @@ class ImpressionTracker {
 
         mVisibilityTrackerListener = new VisibilityTrackerListener() {
             @Override
-            public void onVisibilityChanged(final List<View> visibleViews, final List<View> invisibleViews) {
+            public void onVisibilityChanged(@NonNull final List<View> visibleViews, @NonNull final List<View> invisibleViews) {
                 for (final View view : visibleViews) {
                     // It's possible for native response to be null if the view was GC'd from this class
                     // but not from VisibilityTracker
@@ -96,7 +98,7 @@ class ImpressionTracker {
     /**
      * Tracks the given view for impressions.
      */
-    void addView(final View view, final NativeResponse nativeResponse) {
+    void addView(final View view, @NonNull final NativeResponse nativeResponse) {
         // View is already associated with same native response
         if (mTrackedViews.get(view) == nativeResponse) {
             return;
@@ -153,7 +155,7 @@ class ImpressionTracker {
     class PollingRunnable implements Runnable {
         // Create this once to avoid excessive garbage collection observed when calculating
         // these on each pass.
-        private final ArrayList<View> mRemovedViews;
+        @NonNull private final ArrayList<View> mRemovedViews;
 
         PollingRunnable() {
             mRemovedViews = new ArrayList<View>();
@@ -189,6 +191,7 @@ class ImpressionTracker {
         }
     }
 
+    @Nullable
     @Deprecated
     @VisibleForTesting
     VisibilityTrackerListener getVisibilityTrackerListener() {

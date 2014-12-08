@@ -28,7 +28,6 @@ import static org.mockito.Mockito.mock;
 import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(SdkTestRunner.class)
-@Config(shadows={MoPubShadowBitmap.class})
 public class NativeViewHolderTest {
     private Context context;
     private RelativeLayout relativeLayout;
@@ -346,8 +345,7 @@ public class NativeViewHolderTest {
         assertThat(extrasImageView.getDrawable()).isNull();
     }
 
-    @Test
-    public void fromViewBinder_withMixedViewTypes_shouldReturnNull() throws Exception {
+    public void fromViewBinder_withMixedViewTypes_shouldReturnEmptyViewHolder() throws Exception {
         viewBinder = new ViewBinder.Builder(relativeLayout.getId())
                 .titleId(mainImageView.getId())
                 .textId(textView.getId())
@@ -355,7 +353,6 @@ public class NativeViewHolderTest {
 
         NativeViewHolder nativeViewHolder =
                 NativeViewHolder.fromViewBinder(relativeLayout, viewBinder);
-
-        assertThat(nativeViewHolder).isNull();
+        assertThat(nativeViewHolder).isEqualTo(NativeViewHolder.EMPTY_VIEW_HOLDER);
     }
 }

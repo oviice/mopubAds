@@ -62,12 +62,6 @@ public class VastManagerTest {
         }).when(vastManagerListener).onVastVideoConfigurationPrepared(any(VastVideoConfiguration.class));
     }
 
-    @After
-    public void tearDown() {
-        Robolectric.getFakeHttpLayer().clearPendingHttpResponses();
-        CacheService.clearAndNullCaches();
-    }
-
     private void prepareVastVideoConfiguration() {
         subject.prepareVastVideoConfiguration(TEST_VAST_XML_STRING, vastManagerListener);
 
@@ -220,7 +214,6 @@ public class VastManagerTest {
 
     @Test
     public void prepareVastVideoConfiguration_withUninitializedDiskCache_shouldReturnNull() throws Exception {
-        CacheService.clearAndNullCaches();
         mFakeHttpLayer.addPendingHttpResponse(200, TEST_NESTED_VAST_XML_STRING);
 
         prepareVastVideoConfiguration();

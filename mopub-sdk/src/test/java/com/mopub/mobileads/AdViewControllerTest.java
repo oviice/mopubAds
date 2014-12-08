@@ -9,6 +9,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
+
 import com.mopub.common.GpsHelper;
 import com.mopub.common.GpsHelperTest;
 import com.mopub.common.MoPub;
@@ -19,6 +20,7 @@ import com.mopub.mobileads.factories.HttpClientFactory;
 import com.mopub.mobileads.test.support.TestAdFetcherFactory;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 import com.mopub.mobileads.test.support.ThreadUtils;
+
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -242,19 +244,6 @@ public class AdViewControllerTest {
         }
     }
 
-    // this test for impressionUrl is unnecessary (since we're catching the NullPointerException)
-    @Test
-    public void trackImpression_shouldDoNothingIfImpressionUrlNotSpecified() throws Exception {
-        subject.configureUsingHttpResponse(response);
-        FakeHttpLayer fakeHttpLayer = Robolectric.getFakeHttpLayer();
-        fakeHttpLayer.addPendingHttpResponse(200, "");
-
-        subject.trackImpression();
-        Thread.sleep(300); // does this make the test flaky?
-
-        assertThat(fakeHttpLayer.getLastSentHttpRequestInfo()).isNull();
-    }
-
     @Test
     public void registerClick_shouldHttpGetTheClickthroughUrl() throws Exception {
         response.addHeader("X-Clickthrough", "http://clickUrl");
@@ -279,19 +268,6 @@ public class AdViewControllerTest {
         } catch (InvocationTargetException expected) {
             assertThat(expected.getCause()).isInstanceOf(IllegalStateException.class);
         }
-    }
-
-    // this test for clickthroughUrl is unnecessary (since we're catching the NullPointerException)
-    @Test
-    public void trackImpression_shouldDoNothingIfClickthroughUrlNotSpecified() throws Exception {
-        subject.configureUsingHttpResponse(response);
-        FakeHttpLayer fakeHttpLayer = Robolectric.getFakeHttpLayer();
-        fakeHttpLayer.addPendingHttpResponse(200, "");
-
-        subject.registerClick();
-        Thread.sleep(50); // does this make the test flaky?
-
-        assertThat(fakeHttpLayer.getLastSentHttpRequestInfo()).isNull();
     }
 
     @Test

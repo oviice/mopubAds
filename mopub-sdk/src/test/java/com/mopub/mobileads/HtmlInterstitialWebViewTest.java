@@ -1,7 +1,6 @@
 package com.mopub.mobileads;
 
 import android.app.Activity;
-import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.webkit.WebViewClient;
 
@@ -19,8 +18,6 @@ import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitia
 import static com.mopub.mobileads.HtmlInterstitialWebView.HtmlInterstitialWebViewListener;
 import static com.mopub.mobileads.HtmlInterstitialWebView.MOPUB_JS_INTERFACE_NAME;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
-import static com.mopub.common.util.VersionCode.GINGERBREAD_MR1;
-import static com.mopub.common.util.VersionCode.HONEYCOMB;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;

@@ -12,7 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static com.mopub.common.util.ResponseHeader.AD_TYPE;
-import static com.mopub.common.util.ResponseHeader.CLICKTHROUGH_URL;
+import static com.mopub.common.util.ResponseHeader.CLICK_TRACKING_URL;
 import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_DATA;
 import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_NAME;
 import static com.mopub.common.util.ResponseHeader.CUSTOM_SELECTOR;
@@ -188,6 +188,6 @@ public class AdLoadTaskTest {
         response.addHeader(SCROLLABLE.getKey(), "0");
         response.addHeader(AD_TYPE.getKey(), adType);
         response.addHeader(REDIRECT_URL.getKey(), "redirect");
-        response.addHeader(CLICKTHROUGH_URL.getKey(), "clickthrough");
+        response.addHeader(CLICK_TRACKING_URL.getKey(), "clickthrough");
     }
 }

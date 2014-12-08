@@ -18,7 +18,9 @@ import org.robolectric.tester.org.apache.http.FakeHttpLayer;
 
 import static junit.framework.Assert.fail;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @RunWith(SdkTestRunner.class)
@@ -45,27 +47,26 @@ public class DownloadTaskTest {
         mTestResponse = "TEST RESPONSE";
         mTestHttpResponseWithHeaders = new TestHttpResponseWithHeaders(200, mTestResponse);
         mTestHttpResponseWithHeaders.addHeader(ResponseHeader.IMPRESSION_URL.getKey(), "moPubImpressionTrackerUrl");
-        mTestHttpResponseWithHeaders.addHeader(ResponseHeader.CLICKTHROUGH_URL.getKey(), "moPubClickTrackerUrl");
+        mTestHttpResponseWithHeaders.addHeader(ResponseHeader.CLICK_TRACKING_URL.getKey(), "moPubClickTrackerUrl");
 
         mFakeHttpLayer = Robolectric.getFakeHttpLayer();
     }
 
     @Test
-    public void execute_whenDownloadTaskAndHttpClientCompleteSuccessfully_shouldReturn200HttpResponse() {
+    public void whenDownloadTaskAndHttpClientCompleteSuccessfully_shouldReturn200HttpResponse() {
         mFakeHttpLayer.addPendingHttpResponse(mTestHttpResponseWithHeaders);
         mDownloadTask.execute(httpGet);
 
-        verify(mockDownloadTaskListener).onComplete(eq(httpGet.getURI().toString()),
-                responseCaptor.capture());
+        verify(mockDownloadTaskListener).onComplete(eq(httpGet.getURI().toString()), responseCaptor.capture());
         DownloadResponse response = responseCaptor.getValue();
         assertThat(response.getStatusCode()).isEqualTo(200);
         assertThat(response.getFirstHeader(ResponseHeader.IMPRESSION_URL)).isEqualTo("moPubImpressionTrackerUrl");
-        assertThat(response.getFirstHeader(ResponseHeader.CLICKTHROUGH_URL)).isEqualTo("moPubClickTrackerUrl");
+        assertThat(response.getFirstHeader(ResponseHeader.CLICK_TRACKING_URL)).isEqualTo("moPubClickTrackerUrl");
         assertThat(HttpResponses.asResponseString(response)).isEqualTo(mTestResponse);
     }
 
     @Test
-    public void execute_whenDownloadTaskCompletesSuccessfullyAndHttpClientTimesOut_shouldReturn599HttpResponse() {
+    public void whenDownloadTaskCompletesSuccessfullyAndHttpClientTimesOut_shouldReturn599HttpResponse() {
         mFakeHttpLayer.addPendingHttpResponse(599, "");
         mDownloadTask.execute(httpGet);
 
@@ -77,40 +78,35 @@ public class DownloadTaskTest {
     }
 
     @Test
-    public void execute_whenDownloadTaskIsCancelledBeforeExecute_shouldReturnNullHttpReponseAndNullUrl() {
+    public void whenDownloadTaskIsCancelledBeforeExecute_shouldNotCallOnComplete() {
         mFakeHttpLayer.addPendingHttpResponse(200, mTestResponse);
         mDownloadTask.cancel(true);
         mDownloadTask.execute(httpGet);
 
-        verify(mockDownloadTaskListener).onComplete(null, null);
+        verify(mockDownloadTaskListener, never()).onComplete(
+                any(String.class), any(DownloadResponse.class));
     }
 
     @Ignore("pending")
     @Test
-        // need a way to reliably cancel task during doInBackground
-    public void execute_whenDownloadTaskIsCancelledDuringDoInBackground_shouldReturnNullHttpReponse() {
-    }
-
-    @Ignore("pending")
-    @Test
-    public void execute_whenHttpUriRequestThrowsIOException_shouldCancelTaskAndReturnNullHttpResponse() {
+    public void whenHttpUriRequestThrowsIOException_shouldCancelTaskAndReturnNullHttpResponse() {
         // need a way to force HttpUriRequest to throw on execute
     }
 
     @Test
-    public void execute_whenHttpUriRequestIsNull_shouldReturnNullHttpReponseAndNullUrl() {
+    public void whenHttpUriRequestIsNull_shouldReturnNullHttpReponseAndNullUrl() {
         mDownloadTask.execute((HttpUriRequest) null);
         verify(mockDownloadTaskListener).onComplete(null, null);
     }
 
     @Test
-    public void execute_whenHttpUriRequestIsNullArray_shouldReturnNullHttpReponseAndNullUrl() {
+    public void whenHttpUriRequestIsNullArray_shouldReturnNullHttpReponseAndNullUrl() {
         mDownloadTask.execute((HttpUriRequest[]) null);
         verify(mockDownloadTaskListener).onComplete(null, null);
     }
 
     @Test
-    public void execute_whenHttpUriRequestIsArray_shouldOnlyReturnFirstResponse() {
+    public void whenHttpUriRequestIsArray_shouldOnlyReturnFirstResponse() {
         mFakeHttpLayer.addPendingHttpResponse(200, mTestResponse);
         mFakeHttpLayer.addPendingHttpResponse(500, "");
         mDownloadTask.execute(httpGet, new HttpGet("http://www.twitter.com/"));
@@ -123,13 +119,8 @@ public class DownloadTaskTest {
         assertThat(HttpResponses.asResponseString(response)).isEqualTo(mTestResponse);
     }
 
-    @Test
-    public void downLoadTask_whenConstructedWithNullListener_shouldThrowIllegalArgumentException() {
-        try {
-            new DownloadTask(null);
-            fail("DownloadTask didn't throw IllegalArgumentException when constructed with null");
-        } catch (IllegalArgumentException e) {
-            // passed
-        }
+    @Test(expected = IllegalArgumentException.class)
+    public void constructor_withNullListener_shouldThrowIllegalArgumentException() {
+        new DownloadTask(null);
     }
 }

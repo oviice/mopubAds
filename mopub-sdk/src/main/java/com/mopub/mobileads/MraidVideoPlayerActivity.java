@@ -4,18 +4,20 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.IntentUtils;
+import com.mopub.mraid.MraidVideoViewController;
 
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_FAIL;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.broadcastAction;
 
 public class MraidVideoPlayerActivity extends BaseVideoPlayerActivity implements BaseVideoViewController.BaseVideoViewControllerListener {
-    private BaseVideoViewController mBaseVideoController;
+    @Nullable private BaseVideoViewController mBaseVideoController;
     private long mBroadcastIdentifier;
 
     @Override
@@ -35,6 +37,9 @@ public class MraidVideoPlayerActivity extends BaseVideoPlayerActivity implements
         try {
             mBaseVideoController = createVideoViewController();
         } catch (IllegalStateException e) {
+            // This can happen if the activity was started without valid intent extras. We leave
+            // mBaseVideoController set to null, and finish the activity immediately.
+            
             broadcastAction(this, mBroadcastIdentifier, ACTION_INTERSTITIAL_FAIL);
             finish();
             return;
@@ -45,32 +50,40 @@ public class MraidVideoPlayerActivity extends BaseVideoPlayerActivity implements
 
     @Override
     protected void onPause() {
-        mBaseVideoController.onPause();
+        if (mBaseVideoController != null) {
+            mBaseVideoController.onPause();
+        }
         super.onPause();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mBaseVideoController.onResume();
+        if (mBaseVideoController != null) {
+            mBaseVideoController.onResume();
+        }
     }
 
     @Override
     protected void onDestroy() {
-        mBaseVideoController.onDestroy();
+        if (mBaseVideoController != null) {
+            mBaseVideoController.onDestroy();
+        }
         super.onDestroy();
     }
 
     @Override
     public void onBackPressed() {
-        if (mBaseVideoController.backButtonEnabled()) {
+        if (mBaseVideoController != null && mBaseVideoController.backButtonEnabled()) {
             super.onBackPressed();
         }
     }
 
     @Override
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-        mBaseVideoController.onActivityResult(requestCode, resultCode, data);
+        if (mBaseVideoController != null) {
+            mBaseVideoController.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     private AdConfiguration getAdConfiguration() {

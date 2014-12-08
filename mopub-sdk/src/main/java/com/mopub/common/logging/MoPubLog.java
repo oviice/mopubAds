@@ -1,12 +1,8 @@
 package com.mopub.common.logging;
 
 import android.util.Log;
-import android.util.SparseArray;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Handler;
 import java.util.logging.Level;

@@ -2,6 +2,7 @@ package com.mopub.common;
 
 import android.content.Context;
 import android.os.AsyncTask;
+
 import com.mopub.common.factories.MethodBuilderFactory;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.AsyncTasks;
@@ -114,7 +115,7 @@ public class GpsHelper {
                     updateClientMetadata(context, adInfo);
                 }
             } catch (Exception exception) {
-                MoPubLog.d("Unable to obtain AdvertisingIdClient.getAdvertisingIdInfo()");
+                MoPubLog.d("Unable to obtain Google AdvertisingIdClient.Info via reflection.");
             }
 
             return null;

@@ -4,6 +4,7 @@ import com.mopub.common.util.ResponseHeader;
 import com.mopub.common.util.Streams;
 
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 
 import java.io.BufferedInputStream;
@@ -19,9 +20,12 @@ public class DownloadResponse {
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         BufferedInputStream inputStream = null;
         try {
-            inputStream = new BufferedInputStream(httpResponse.getEntity().getContent());
-            Streams.copyContent(inputStream, outputStream);
-            mBytes = outputStream.toByteArray();
+            HttpEntity httpEntity = httpResponse.getEntity();
+            if (httpEntity != null) {
+                inputStream = new BufferedInputStream(httpEntity.getContent());
+                Streams.copyContent(inputStream, outputStream);
+                mBytes = outputStream.toByteArray();
+            }
         } finally {
             Streams.closeStream(inputStream);
             Streams.closeStream(outputStream);

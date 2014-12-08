@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 
-import com.mopub.common.CacheService;
 import com.mopub.common.CacheServiceTest;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
@@ -85,7 +84,6 @@ public class VastVideoInterstitialTest extends ResponseBodyInterstitialTest {
     @After
     public void tearDown() throws Exception {
         reset(vastVideoDownloadTask);
-        CacheService.clearAndNullCaches();
     }
 
     @Test

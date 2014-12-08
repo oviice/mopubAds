@@ -3,13 +3,18 @@ package com.mopub.mobileads;
 import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
+
 import com.chartboost.sdk.Chartboost;
 import com.chartboost.sdk.ChartboostDelegate;
+import com.mopub.common.VisibleForTesting;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.chartboost.sdk.Model.CBError.CBImpressionError;
 
 /*
- * Tested with Chartboost SDK 3.1.5.
+ * Tested with Chartboost SDK 5.0.4.
  */
 class ChartboostInterstitial extends CustomEventInterstitial {
     /*
@@ -37,11 +42,6 @@ class ChartboostInterstitial extends CustomEventInterstitial {
         return SingletonChartboostDelegate.instance;
     }
 
-    @Deprecated // for test only
-    public static void resetDelegate() {
-        SingletonChartboostDelegate.instance = new SingletonChartboostDelegate();
-    }
-
     /*
      * Abstract methods from CustomEventInterstitial
      */
@@ -52,9 +52,6 @@ class ChartboostInterstitial extends CustomEventInterstitial {
             interstitialListener.onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
             return;
         }
-
-        Activity activity = (Activity) context;
-        Chartboost chartboost = Chartboost.sharedChartboost();
 
         if (extrasAreValid(serverExtras)) {
             setAppId(serverExtras.get(APP_ID_KEY));
@@ -68,6 +65,9 @@ class ChartboostInterstitial extends CustomEventInterstitial {
             return;
         }
 
+        Activity activity = (Activity) context;
+        Chartboost.startWithAppId(activity, appId, appSignature);
+
         if (getDelegate().hasLocation(location) &&
                 getDelegate().getListener(location) != interstitialListener) {
             interstitialListener.onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
@@ -75,16 +75,19 @@ class ChartboostInterstitial extends CustomEventInterstitial {
         }
 
         getDelegate().registerListener(location, interstitialListener);
-        chartboost.onCreate(activity, appId, appSignature, getDelegate());
-        chartboost.onStart(activity);
-
-        chartboost.cacheInterstitial(location);
+        Chartboost.setDelegate(getDelegate());
+        Chartboost.setAutoCacheAds(false);
+        Chartboost.setShouldRequestInterstitialsInFirstSession(true);
+        Chartboost.setShouldDisplayLoadingViewForMoreApps(false);
+        Chartboost.onCreate(activity);
+        Chartboost.onStart(activity);
+        Chartboost.cacheInterstitial(location);
     }
 
     @Override
     protected void showInterstitial() {
         Log.d("MoPub", "Showing Chartboost interstitial ad.");
-        Chartboost.sharedChartboost().showInterstitial(location);
+        Chartboost.showInterstitial(location);
     }
 
     @Override
@@ -108,7 +111,8 @@ class ChartboostInterstitial extends CustomEventInterstitial {
         return serverExtras.containsKey(APP_ID_KEY) && serverExtras.containsKey(APP_SIGNATURE_KEY);
     }
 
-    private static class SingletonChartboostDelegate implements ChartboostDelegate {
+    @VisibleForTesting
+    static class SingletonChartboostDelegate extends ChartboostDelegate {
         private static final CustomEventInterstitialListener NULL_LISTENER = new CustomEventInterstitialListener() {
             @Override public void onInterstitialLoaded() { }
             @Override public void onInterstitialFailed(MoPubErrorCode errorCode) { }
@@ -147,19 +151,14 @@ class ChartboostInterstitial extends CustomEventInterstitial {
         }
 
         @Override
-        public boolean shouldRequestInterstitialsInFirstSession() {
-            return true;
-        }
-
-        @Override
         public void didCacheInterstitial(String location) {
             Log.d("MoPub", "Chartboost interstitial loaded successfully.");
             getListener(location).onInterstitialLoaded();
         }
 
         @Override
-        public void didFailToLoadInterstitial(String location) {
-            Log.d("MoPub", "Chartboost interstitial ad failed to load.");
+        public void didFailToLoadInterstitial(String location, CBImpressionError error) {
+            Log.d("MoPub", "Chartboost interstitial ad failed to load. Error: " + error.name());
             getListener(location).onInterstitialFailed(MoPubErrorCode.NETWORK_NO_FILL);
         }
 
@@ -181,7 +180,7 @@ class ChartboostInterstitial extends CustomEventInterstitial {
         }
 
         @Override
-        public void didShowInterstitial(String location) {
+        public void didDisplayInterstitial(String location) {
             Log.d("MoPub", "Chartboost interstitial ad shown.");
             getListener(location).onInterstitialShown();
         }
@@ -190,42 +189,33 @@ class ChartboostInterstitial extends CustomEventInterstitial {
          * More Apps delegate methods
          */
         @Override
-        public boolean shouldDisplayLoadingViewForMoreApps() {
+        public boolean shouldRequestMoreApps(String location) {
             return false;
         }
 
         @Override
-        public boolean shouldRequestMoreApps() {
+        public boolean shouldDisplayMoreApps(String location) {
             return false;
         }
 
         @Override
-        public boolean shouldDisplayMoreApps() {
-            return false;
+        public void didFailToLoadMoreApps(String location, CBImpressionError error) {
         }
 
         @Override
-        public void didFailToLoadMoreApps() {
+        public void didCacheMoreApps(String location) {
         }
 
         @Override
-        public void didCacheMoreApps() {
+        public void didDismissMoreApps(String location) {
         }
 
         @Override
-        public void didDismissMoreApps() {
+        public void didCloseMoreApps(String location) {
         }
 
         @Override
-        public void didCloseMoreApps() {
-        }
-
-        @Override
-        public void didClickMoreApps() {
-        }
-
-        @Override
-        public void didShowMoreApps() {
+        public void didClickMoreApps(String location) {
         }
 
         CustomEventInterstitialListener getListener(String location) {
@@ -233,4 +223,11 @@ class ChartboostInterstitial extends CustomEventInterstitial {
             return listener != null ? listener : NULL_LISTENER;
         }
     }
+
+    @VisibleForTesting
+    @Deprecated
+    public static void resetDelegate() {
+        SingletonChartboostDelegate.instance = new SingletonChartboostDelegate();
+    }
+
 }

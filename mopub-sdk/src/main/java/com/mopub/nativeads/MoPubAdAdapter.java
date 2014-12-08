@@ -2,6 +2,8 @@ package com.mopub.nativeads;
 
 import android.content.Context;
 import android.database.DataSetObserver;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Adapter;
@@ -9,12 +11,15 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+
+import com.mopub.common.Preconditions;
+import com.mopub.common.Preconditions.NoThrow;
 import com.mopub.common.VisibleForTesting;
-import com.mopub.common.logging.MoPubLog;
 import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
 import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubServerPositioning;
 
-import java.util.*;
+import java.util.List;
+import java.util.WeakHashMap;
 
 import static android.widget.AdapterView.OnItemClickListener;
 import static android.widget.AdapterView.OnItemLongClickListener;
@@ -32,12 +37,12 @@ import static com.mopub.nativeads.VisibilityTracker.VisibilityTrackerListener;
  * wish to avoid wrapping your original adapter, you can use {@code MoPubStreamAdPlacer} directly.
  */
 public class MoPubAdAdapter extends BaseAdapter {
-    private final WeakHashMap<View, Integer> mViewPositionMap;
-    private final Adapter mOriginalAdapter;
-    private final MoPubStreamAdPlacer mStreamAdPlacer;
-    private final VisibilityTracker mVisibilityTracker;
+    @NonNull private final WeakHashMap<View, Integer> mViewPositionMap;
+    @NonNull private final Adapter mOriginalAdapter;
+    @NonNull private final MoPubStreamAdPlacer mStreamAdPlacer;
+    @NonNull private final VisibilityTracker mVisibilityTracker;
 
-    private MoPubNativeAdLoadedListener mAdLoadedListener;
+    @Nullable private MoPubNativeAdLoadedListener mAdLoadedListener;
 
     /**
      * Creates a new MoPubAdAdapter object.
@@ -49,7 +54,7 @@ public class MoPubAdAdapter extends BaseAdapter {
      * @param context The activity context.
      * @param originalAdapter Your original adapter.
      */
-    public MoPubAdAdapter(final Context context, final Adapter originalAdapter) {
+    public MoPubAdAdapter(@NonNull final Context context, @NonNull final Adapter originalAdapter) {
         this(context, originalAdapter, MoPubNativeAdPositioning.serverPositioning());
     }
 
@@ -61,9 +66,9 @@ public class MoPubAdAdapter extends BaseAdapter {
      * @param adPositioning A positioning object for specifying where ads will be placed in your
      * stream. See {@link MoPubNativeAdPositioning#serverPositioning()}.
      */
-    public MoPubAdAdapter(final Context context,
-            final Adapter originalAdapter,
-            final MoPubServerPositioning adPositioning) {
+    public MoPubAdAdapter(@NonNull final Context context,
+            @NonNull final Adapter originalAdapter,
+            @NonNull final MoPubServerPositioning adPositioning) {
         this(new MoPubStreamAdPlacer(context, adPositioning), originalAdapter,
                 new VisibilityTracker(context));
     }
@@ -76,17 +81,17 @@ public class MoPubAdAdapter extends BaseAdapter {
      * @param adPositioning A positioning object for specifying where ads will be placed in your
      * stream. See {@link MoPubNativeAdPositioning#clientPositioning()}.
      */
-    public MoPubAdAdapter(final Context context,
-            final Adapter originalAdapter,
-            final MoPubClientPositioning adPositioning) {
+    public MoPubAdAdapter(@NonNull final Context context,
+            @NonNull final Adapter originalAdapter,
+            @NonNull final MoPubClientPositioning adPositioning) {
         this(new MoPubStreamAdPlacer(context, adPositioning), originalAdapter,
                 new VisibilityTracker(context));
     }
 
     @VisibleForTesting
-    MoPubAdAdapter(final MoPubStreamAdPlacer streamAdPlacer,
-            final Adapter originalAdapter,
-            final VisibilityTracker visibilityTracker) {
+    MoPubAdAdapter(@NonNull final MoPubStreamAdPlacer streamAdPlacer,
+            @NonNull final Adapter originalAdapter,
+            @NonNull final VisibilityTracker visibilityTracker) {
         mOriginalAdapter = originalAdapter;
         mStreamAdPlacer = streamAdPlacer;
         mViewPositionMap = new WeakHashMap<View, Integer>();
@@ -94,7 +99,7 @@ public class MoPubAdAdapter extends BaseAdapter {
         mVisibilityTracker = visibilityTracker;
         mVisibilityTracker.setVisibilityTrackerListener(new VisibilityTrackerListener() {
             @Override
-            public void onVisibilityChanged(final List<View> visibleViews,
+            public void onVisibilityChanged(@NonNull final List<View> visibleViews,
                     final List<View> invisibleViews) {
                 handleVisibilityChange(visibleViews);
             }
@@ -153,9 +158,9 @@ public class MoPubAdAdapter extends BaseAdapter {
      *
      * @param adRenderer The ad renderer.
      */
-    public final void registerAdRenderer(final MoPubAdRenderer adRenderer) {
-        if (adRenderer == null) {
-            MoPubLog.w("Tried to set a null ad renderer on the placer.");
+    public final void registerAdRenderer(@NonNull final MoPubAdRenderer adRenderer) {
+        if (!Preconditions.NoThrow.checkNotNull(
+                adRenderer, "Tried to set a null ad renderer on the placer.")) {
             return;
         }
         mStreamAdPlacer.registerAdRenderer(adRenderer);
@@ -173,7 +178,7 @@ public class MoPubAdAdapter extends BaseAdapter {
      *
      * @param listener The listener.
      */
-    public final void setAdLoadedListener(final MoPubNativeAdLoadedListener listener) {
+    public final void setAdLoadedListener(@Nullable final MoPubNativeAdLoadedListener listener) {
         mAdLoadedListener = listener;
     }
 
@@ -185,7 +190,7 @@ public class MoPubAdAdapter extends BaseAdapter {
      *
      * @param adUnitId The ad unit ID to use when loading ads.
      */
-    public void loadAds(final String adUnitId) {
+    public void loadAds(@NonNull final String adUnitId) {
         mStreamAdPlacer.loadAds(adUnitId);
     }
 
@@ -203,8 +208,8 @@ public class MoPubAdAdapter extends BaseAdapter {
      * @param adUnitId The ad unit ID to use when loading ads.
      * @param requestParameters Targeting information to pass to the ad server.
      */
-    public void loadAds(final String adUnitId,
-            final RequestParameters requestParameters) {
+    public void loadAds(@NonNull final String adUnitId,
+            @Nullable final RequestParameters requestParameters) {
         mStreamAdPlacer.loadAds(adUnitId, requestParameters);
     }
 
@@ -280,6 +285,7 @@ public class MoPubAdAdapter extends BaseAdapter {
      *
      * @inheritDoc
      */
+    @Nullable
     @Override
     public Object getItem(final int position) {
         final Object ad = mStreamAdPlacer.getAdData(position);
@@ -323,6 +329,7 @@ public class MoPubAdAdapter extends BaseAdapter {
      *
      * @inheritDoc
      */
+    @Nullable
     @Override
     public View getView(final int position, final View view, final ViewGroup viewGroup) {
         final View resultView;
@@ -377,7 +384,7 @@ public class MoPubAdAdapter extends BaseAdapter {
         return mOriginalAdapter.isEmpty() && mStreamAdPlacer.getAdjustedCount(0) == 0;
     }
 
-    private void handleVisibilityChange(final List<View> visibleViews) {
+    private void handleVisibilityChange(@NonNull final List<View> visibleViews) {
         // Loop through all visible positions in order to build a max and min range, and then
         // place ads into that range.
         int min = Integer.MAX_VALUE;
@@ -451,7 +458,6 @@ public class MoPubAdAdapter extends BaseAdapter {
         mStreamAdPlacer.removeItem(originalPosition);
     }
 
-
     /**
      * Sets an on click listener for the given ListView, automatically adjusting the listener
      * callback positions based on ads in the adapter.
@@ -461,8 +467,17 @@ public class MoPubAdAdapter extends BaseAdapter {
      * @param listView The ListView for this adapter.
      * @param listener An on click listener.
      */
-    public void setOnClickListener(final ListView listView,
-            final OnItemClickListener listener) {
+    public void setOnClickListener(@NonNull final ListView listView,
+            @Nullable final OnItemClickListener listener) {
+        if (!NoThrow.checkNotNull(listView, "You called MoPubAdAdapter.setOnClickListener with a" +
+                " null ListView")) {
+            return;
+        }
+        if (listener == null) {
+            listView.setOnItemClickListener(null);
+            return;
+        }
+
         listView.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(final AdapterView<?> adapterView, final View view,
@@ -484,8 +499,17 @@ public class MoPubAdAdapter extends BaseAdapter {
      * @param listView The ListView for this adapter.
      * @param listener An an long click listener.
      */
-    public void setOnItemLongClickListener(final ListView listView,
-            final OnItemLongClickListener listener) {
+    public void setOnItemLongClickListener(@NonNull final ListView listView,
+            @Nullable final OnItemLongClickListener listener) {
+        if (!NoThrow.checkNotNull(listView, "You called MoPubAdAdapter." +
+                "setOnItemLongClickListener with a null ListView")) {
+            return;
+        }
+        if (listener == null) {
+            listView.setOnItemLongClickListener(null);
+            return;
+        }
+
         listView.setOnItemLongClickListener(new OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(final AdapterView<?> adapterView,
@@ -503,8 +527,17 @@ public class MoPubAdAdapter extends BaseAdapter {
      * @param listView The ListView for this adapter.
      * @param listener An an item selected listener.
      */
-    public void setOnItemSelectedListener(final ListView listView,
-            final OnItemSelectedListener listener) {
+    public void setOnItemSelectedListener(@NonNull final ListView listView,
+            @Nullable final OnItemSelectedListener listener) {
+        if (!NoThrow.checkNotNull(listView, "You called MoPubAdAdapter.setOnItemSelectedListener" +
+                " with a null ListView")) {
+            return;
+        }
+        if (listener == null) {
+            listView.setOnItemSelectedListener(null);
+            return;
+        }
+
         listView.setOnItemSelectedListener(new OnItemSelectedListener() {
             @Override
             public void onItemSelected(final AdapterView<?> adapterView,
@@ -529,7 +562,12 @@ public class MoPubAdAdapter extends BaseAdapter {
      * @param listView The ListView for this adapter.
      * @param originalPosition The original content position before loading ads.
      */
-    public void setSelection(final ListView listView, final int originalPosition) {
+    public void setSelection(@NonNull final ListView listView, final int originalPosition) {
+        if (!NoThrow.checkNotNull(listView, "You called MoPubAdAdapter.setSelection with a null " +
+                "ListView")) {
+            return;
+        }
+
         listView.setSelection(mStreamAdPlacer.getAdjustedPosition(originalPosition));
     }
 
@@ -540,7 +578,13 @@ public class MoPubAdAdapter extends BaseAdapter {
      * @param listView The ListView for this adapter.
      * @param originalPosition The original content position before loading ads.
      */
-    public void smoothScrollToPosition(final ListView listView, final int originalPosition) {
+    public void smoothScrollToPosition(@NonNull final ListView listView,
+            final int originalPosition) {
+        if (!NoThrow.checkNotNull(listView, "You called MoPubAdAdapter.smoothScrollToPosition " +
+                "with a null ListView")) {
+            return;
+        }
+
         listView.smoothScrollToPosition(mStreamAdPlacer.getAdjustedPosition(originalPosition));
     }
 
@@ -552,7 +596,7 @@ public class MoPubAdAdapter extends BaseAdapter {
      *
      * @param adUnitId The ad unit ID to use when loading ads.
      */
-    public void refreshAds(final ListView listView, String adUnitId) {
+    public void refreshAds(@NonNull final ListView listView, @NonNull String adUnitId) {
         refreshAds(listView, adUnitId, null);
     }
 
@@ -565,10 +609,10 @@ public class MoPubAdAdapter extends BaseAdapter {
      * @param adUnitId The ad unit ID to use when loading ads.
      * @param requestParameters Targeting information to pass to the ad server.
      */
-    public void refreshAds(final ListView listView,
-            String adUnitId, RequestParameters requestParameters) {
-        if (listView.getAdapter() != this) {
-            MoPubLog.w("You called refreshAds on a ListView whose adapter is not an ad placer");
+    public void refreshAds(@NonNull final ListView listView,
+            @NonNull String adUnitId, @Nullable RequestParameters requestParameters) {
+        if (!NoThrow.checkNotNull(listView, "You called MoPubAdAdapter.refreshAds with a null " +
+                "ListView")) {
             return;
         }
 

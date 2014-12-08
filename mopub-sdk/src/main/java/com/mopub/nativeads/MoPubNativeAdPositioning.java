@@ -1,5 +1,7 @@
 package com.mopub.nativeads;
 
+import android.support.annotation.NonNull;
+
 import com.mopub.common.Preconditions;
 
 import java.util.ArrayList;
@@ -38,7 +40,7 @@ public final class MoPubNativeAdPositioning {
          */
         public static final int NO_REPEAT = Integer.MAX_VALUE;
 
-        private final ArrayList<Integer> mFixedPositions = new ArrayList<Integer>();
+        @NonNull private final ArrayList<Integer> mFixedPositions = new ArrayList<Integer>();
         private int mRepeatInterval = NO_REPEAT;
 
         public MoPubClientPositioning() {
@@ -50,6 +52,7 @@ public final class MoPubNativeAdPositioning {
          * @param position The ad position.
          * @return This object for easy use in chained setters.
          */
+        @NonNull
         public MoPubClientPositioning addFixedPosition(final int position) {
             if (!Preconditions.NoThrow.checkArgument(position >= 0)) {
                 return this;
@@ -68,6 +71,7 @@ public final class MoPubNativeAdPositioning {
          *
          * @return Fixed ad positions.
          */
+        @NonNull
         List<Integer> getFixedPositions() {
             return mFixedPositions;
         }
@@ -79,6 +83,7 @@ public final class MoPubNativeAdPositioning {
          * the constant NO_REPEAT.
          * @return This object for easy use in chained setters.
          */
+        @NonNull
         public MoPubClientPositioning enableRepeatingPositions(final int interval) {
             if (!Preconditions.NoThrow.checkArgument(
                     interval > 1, "Repeating interval must be greater than 1")) {
@@ -102,7 +107,10 @@ public final class MoPubNativeAdPositioning {
         }
     }
 
-    static MoPubClientPositioning clone(MoPubClientPositioning positioning) {
+    @NonNull
+    static MoPubClientPositioning clone(@NonNull MoPubClientPositioning positioning) {
+        Preconditions.checkNotNull(positioning);
+
         MoPubClientPositioning clone = new MoPubClientPositioning();
         clone.mFixedPositions.addAll(positioning.mFixedPositions);
         clone.mRepeatInterval = positioning.mRepeatInterval;
@@ -113,6 +121,7 @@ public final class MoPubNativeAdPositioning {
      * Creates and returns a {@link MoPubClientPositioning} object.
      * @return A new positioning object.
      */
+    @NonNull
     public static MoPubClientPositioning clientPositioning() {
         return new MoPubClientPositioning();
     }
@@ -121,6 +130,7 @@ public final class MoPubNativeAdPositioning {
      * Creates and returns a {@link MoPubServerPositioning} object.
      * @return A new positioning object.
      */
+    @NonNull
     public static MoPubServerPositioning serverPositioning() {
         return new MoPubServerPositioning();
     }
@@ -133,6 +143,7 @@ public final class MoPubNativeAdPositioning {
      * the MoPub UI. If you still want to hard-code positioning information in your app,
      * use {@link #clientPositioning} instead of this builder.
      */
+    @NonNull
     @Deprecated
     public static Builder newBuilder() {
         return new Builder();
@@ -143,12 +154,14 @@ public final class MoPubNativeAdPositioning {
      */
     @Deprecated
     public static final class Builder extends MoPubClientPositioning {
+        @NonNull
         @Override
         public Builder addFixedPosition(final int position) {
             super.addFixedPosition(position);
             return this;
         }
 
+        @NonNull
         @Override
         public Builder enableRepeatingPositions(final int interval) {
             super.enableRepeatingPositions(interval);
@@ -160,6 +173,7 @@ public final class MoPubNativeAdPositioning {
          *
          * @return A new positioning object.
          */
+        @NonNull
         @Deprecated
         public MoPubClientPositioning build() {
             return this;

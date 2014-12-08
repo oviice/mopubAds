@@ -42,7 +42,6 @@ public class IntentUtils {
         return intent;
     }
 
-
     public static boolean deviceCanHandleIntent(final Context context, final Intent intent) {
         try {
             final PackageManager packageManager = context.getPackageManager();

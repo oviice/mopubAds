@@ -62,14 +62,14 @@ public class AdTypeTranslatorTest {
     public void getMraidBanner() throws Exception {
         customEventName = AdTypeTranslator.getCustomEventNameForAdType(moPubView, "mraid", null);
 
-        assertThat(customEventName).isEqualTo("com.mopub.mobileads.MraidBanner");
+        assertThat(customEventName).isEqualTo("com.mopub.mraid.MraidBanner");
     }
 
     @Test
     public void getMraidInterstitial() throws Exception {
         customEventName = AdTypeTranslator.getCustomEventNameForAdType(moPubInterstitialView, "mraid", null);
 
-        assertThat(customEventName).isEqualTo("com.mopub.mobileads.MraidInterstitial");
+        assertThat(customEventName).isEqualTo("com.mopub.mraid.MraidInterstitial");
     }
 
     @Test

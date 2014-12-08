@@ -1,6 +1,7 @@
 package com.mopub.nativeads;
 
 import android.app.Activity;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -56,7 +57,7 @@ public class NativeResponseTest {
             }
 
             @Override
-            public void handleClick(final View view) {
+            public void handleClick(@NonNull final View view) {
                 baseNativeAdIsClicked = true;
             }
         };
@@ -75,7 +76,7 @@ public class NativeResponseTest {
 
         final TestHttpResponseWithHeaders testHttpResponseWithHeaders = new TestHttpResponseWithHeaders(200, "");
         testHttpResponseWithHeaders.addHeader(ResponseHeader.IMPRESSION_URL.getKey(), "moPubImpressionTrackerUrl");
-        testHttpResponseWithHeaders.addHeader(ResponseHeader.CLICKTHROUGH_URL.getKey(), "moPubClickTrackerUrl");
+        testHttpResponseWithHeaders.addHeader(ResponseHeader.CLICK_TRACKING_URL.getKey(), "moPubClickTrackerUrl");
         downloadResponse = new DownloadResponse(testHttpResponseWithHeaders);
 
         moPubNativeListener = mock(MoPubNative.MoPubNativeListener.class);

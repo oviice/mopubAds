@@ -1,21 +1,52 @@
 package com.mopub.common.event;
 
-import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Message;
 
-import com.mopub.common.ClientMetadata;
 import com.mopub.common.VisibleForTesting;
 
 import java.util.ArrayList;
 
 /**
- * Records both untimed and timed events. This class maintains a queue of events to be recorded and
- * launches a background thread to handler their recording.
+ * Public interface used to record client events.
  */
 public class MoPubEvents {
+    public enum Type {
+        // Networking
+        AD_REQUEST("ad_request"),
+        IMPRESSION_REQUEST("impression_request"),
+        CLICK_REQUEST("click_request"),
+        POSITIONING_REQUEST("positioning_request"),
+
+        // Errors
+        AD_REQUEST_ERROR("ad_request_error"),
+        TRACKING_ERROR("track_error"),
+
+        // The SDK doesn't distinguish types of tracking at a level where this more-specific logging works yet.
+        IMPRESSION_ERROR("imp_track_error"),
+        CLICK_ERROR("click_track_error"),
+        CONVERSION_ERROR("conv_track_error"),
+        DATA_ERROR("invalid_data");
+
+        public final String mName;
+        Type(String name) {
+            mName = name;
+        }
+    }
 
     private static volatile EventDispatcher sEventDispatcher;
+
+    /**
+     * Log a BaseEvent. MoPub uses logged events to analyze and improve performance.
+     * This method should not be called by app developers.
+     */
+    public static void log(BaseEvent baseEvent) {
+        MoPubEvents.getDispatcher().dispatch(baseEvent);
+    }
+
+    @VisibleForTesting
+    public static void setEventDispatcher(EventDispatcher dispatcher) {
+        sEventDispatcher = dispatcher;
+    }
 
     private static EventDispatcher getDispatcher() {
         EventDispatcher result = sEventDispatcher;
@@ -31,95 +62,5 @@ public class MoPubEvents {
             }
         }
         return result;
-    }
-
-    @VisibleForTesting
-    public static void setEventDispatcher(EventDispatcher dispatcher) {
-        sEventDispatcher = dispatcher;
-    }
-
-    /**
-     * Log a ClientEvent. MoPub uses logged events to analyze and improve performance.
-     * This method should not be called by app developers.
-     */
-    public static void event(Event.Type eventType, String requestUrl) {
-        final EventDispatcher dispatcher = MoPubEvents.getDispatcher();
-        final Event event = new Event(eventType, requestUrl, ClientMetadata.getInstance());
-        dispatcher.sendEventToHandlerThread(event);
-    }
-
-
-    /**
-     * Create and start a TimedEvent. A TimedEvent isn't recored until
-     * {@link com.mopub.common.event.TimedEvent#stop(int)} is called.
-     */
-    public static TimedEvent timedEvent(Event.Type eventType, String requestUrl) {
-        final EventDispatcher events = getDispatcher();
-        final TimedEvent event =
-                new TimedEvent(eventType, requestUrl, ClientMetadata.getInstance(), events);
-        return event;
-    }
-
-    private static class NoopEventRecorder implements EventRecorder {
-
-        @Override
-        public void recordEvent(final Event event) {
-
-        }
-
-        @Override
-        public void recordTimedEvent(final TimedEvent event) {
-
-        }
-    }
-
-    @VisibleForTesting
-    public static class EventDispatcher implements TimedEvent.Listener {
-        private final Iterable<EventRecorder> mEventRecorders;
-        private final HandlerThread mHandlerThread;
-        private final Handler mMessageHandler;
-
-        @VisibleForTesting Handler.Callback mHandlerCallback;
-
-        @VisibleForTesting
-        EventDispatcher(Iterable<EventRecorder> recorders, HandlerThread handlerThread) {
-            mEventRecorders = recorders;
-            mHandlerCallback = new Handler.Callback() {
-                @Override
-                public boolean handleMessage(final Message msg) {
-                    if (msg.obj instanceof TimedEvent) {
-                        final TimedEvent event = (TimedEvent) msg.obj;
-                        for (final EventRecorder recorder : mEventRecorders) {
-                            recorder.recordTimedEvent(event);
-                        }
-
-                    } else if (msg.obj instanceof Event) {
-                        final Event event = (Event) msg.obj;
-                        for (final EventRecorder recorder : mEventRecorders) {
-                            recorder.recordEvent(event);
-                        }
-                    }
-                    return true; // Even if it's not an event, swallow the message.
-                }
-            };
-            mHandlerThread = handlerThread;
-            mHandlerThread.start();
-            mMessageHandler = new Handler(mHandlerThread.getLooper(), mHandlerCallback);
-        }
-
-        private void sendEventToHandlerThread(BaseEvent event) {
-            final Message message = Message.obtain(mMessageHandler, 0, event);
-            message.sendToTarget();
-        }
-
-        @Override
-        public void onStopped(final TimedEvent event) {
-            this.sendEventToHandlerThread(event);
-        }
-
-        @Override
-        public void onCancelled(final TimedEvent event) {
-            // Nothing to do for now.
-        }
     }
 }

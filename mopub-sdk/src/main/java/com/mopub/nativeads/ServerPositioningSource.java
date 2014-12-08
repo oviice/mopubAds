@@ -2,14 +2,19 @@ package com.mopub.nativeads;
 
 import android.content.Context;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
+import com.mopub.common.ClientMetadata;
+import com.mopub.common.Constants;
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.DownloadTask;
 import com.mopub.common.DownloadTask.DownloadTaskListener;
 import com.mopub.common.HttpClient;
 import com.mopub.common.HttpResponses;
-import com.mopub.common.Preconditions;
 import com.mopub.common.VisibleForTesting;
+import com.mopub.common.event.Event;
+import com.mopub.common.event.MoPubEvents;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
@@ -64,28 +69,28 @@ class ServerPositioningSource implements PositioningSource {
     // Max value to avoid bad integer math calculations. This is 2 ^ 16.
     private static final int MAX_VALUE = 1 << 16;
 
-    private final Context mContext;
+    @NonNull private final Context mContext;
 
-    private final DownloadTaskProvider mDownloadTaskProvider;
+    @NonNull private final DownloadTaskProvider mDownloadTaskProvider;
 
     // Handler and runnable for retrying after a failed response.
-    private final Handler mRetryHandler;
-    private final Runnable mRetryRunnable;
+    @NonNull private final Handler mRetryHandler;
+    @NonNull private final Runnable mRetryRunnable;
 
     // Only exists while a request is in flight.
-    private DownloadTask mDownloadTask;
+    @Nullable private DownloadTask mDownloadTask;
 
-    private PositioningListener mListener;
+    @Nullable private PositioningListener mListener;
     private int mRetryCount;
-    private String mRetryUrl;
+    @Nullable private String mRetryUrl;
 
-    ServerPositioningSource(final Context context) {
+    ServerPositioningSource(@NonNull final Context context) {
         this(context, new DownloadTaskProvider());
     }
 
     @VisibleForTesting
-    ServerPositioningSource(final Context context,
-            final DownloadTaskProvider downloadTaskProvider) {
+    ServerPositioningSource(@NonNull final Context context,
+            @NonNull final DownloadTaskProvider downloadTaskProvider) {
         mContext = context.getApplicationContext();
         mDownloadTaskProvider = downloadTaskProvider;
         mRetryHandler = new Handler();
@@ -98,7 +103,7 @@ class ServerPositioningSource implements PositioningSource {
     }
 
     @Override
-    public void loadPositions(String adUnitId, PositioningListener listener) {
+    public void loadPositions(@NonNull String adUnitId, @NonNull PositioningListener listener) {
         // If a request is in flight, remove it.
         if (mDownloadTask != null) {
             mDownloadTask.cancel(true);
@@ -114,7 +119,7 @@ class ServerPositioningSource implements PositioningSource {
         mListener = listener;
         mRetryUrl = new PositioningUrlGenerator(mContext)
                 .withAdUnitId(adUnitId)
-                .generateUrlString(Constants.POSITIONING_HOST);
+                .generateUrlString(Constants.HOST);
         requestPositioningInternal();
     }
 
@@ -125,17 +130,15 @@ class ServerPositioningSource implements PositioningSource {
         AsyncTasks.safeExecuteOnExecutor(mDownloadTask, httpGet);
     }
 
-    private DownloadTaskListener mTaskListener = new DownloadTask.DownloadTaskListener() {
+    @NonNull
+    @VisibleForTesting
+    DownloadTaskListener mTaskListener = new DownloadTask.DownloadTaskListener() {
         @Override
-        public void onComplete(final String url, final DownloadResponse downloadResponse) {
-            // Will be null only if cancelled.
-            if (downloadResponse == null) {
-                return;
-            }
-
+        public void onComplete(@Nullable final String url,
+                @Nullable final DownloadResponse downloadResponse) {
             mDownloadTask = null;
-            if (downloadResponse.getStatusCode() != HttpStatus.SC_OK) {
-                MoPubLog.e("Invalid positioning download response ");
+            if (downloadResponse == null || downloadResponse.getStatusCode() != HttpStatus.SC_OK) {
+                MoPubLog.e("Invalid positioning download response");
                 handleFailure();
                 return;
             }
@@ -146,6 +149,7 @@ class ServerPositioningSource implements PositioningSource {
                 positioning = parseJsonResponse(responseText);
             } catch (JSONException exception) {
                 MoPubLog.e("Error parsing JSON: ", exception);
+                MoPubEvents.log(new Event.Builder("", "").build());
                 handleFailure();
                 return;
             }
@@ -156,13 +160,16 @@ class ServerPositioningSource implements PositioningSource {
 
     @VisibleForTesting
     static class DownloadTaskProvider {
+        @NonNull
         DownloadTask get(DownloadTaskListener listener) {
-            return new DownloadTask(listener);
+            return new DownloadTask(listener, MoPubEvents.Type.POSITIONING_REQUEST);
         }
     }
 
-    private void handleSuccess(MoPubClientPositioning positioning) {
-        mListener.onLoad(positioning);
+    private void handleSuccess(@NonNull MoPubClientPositioning positioning) {
+        if (mListener != null) {
+            mListener.onLoad(positioning);
+        }
         mListener = null;
         mRetryCount = 0;
     }
@@ -172,7 +179,9 @@ class ServerPositioningSource implements PositioningSource {
         int delay = (int) (DEFAULT_RETRY_TIME_MILLISECONDS * multiplier);
         if (delay >= MAXIMUM_RETRY_TIME_MILLISECONDS) {
             MoPubLog.d("Error downloading positioning information");
-            mListener.onFailed();
+            if (mListener != null) {
+                mListener.onFailed();
+            }
             mListener = null;
             return;
         }
@@ -181,8 +190,9 @@ class ServerPositioningSource implements PositioningSource {
         mRetryHandler.postDelayed(mRetryRunnable, delay);
     }
 
+    @NonNull
     @VisibleForTesting
-    MoPubClientPositioning parseJsonResponse(String json) throws JSONException {
+    MoPubClientPositioning parseJsonResponse(@Nullable String json) throws JSONException {
         if (json == null || json.equals("")) {
             throw new JSONException("Empty response");
         }
@@ -210,8 +220,8 @@ class ServerPositioningSource implements PositioningSource {
         return positioning;
     }
 
-    private void parseFixedJson(final JSONArray fixed,
-            final MoPubClientPositioning positioning) throws JSONException {
+    private void parseFixedJson(@NonNull final JSONArray fixed,
+            @NonNull final MoPubClientPositioning positioning) throws JSONException {
         for (int i = 0; i < fixed.length(); ++i) {
             JSONObject positionObject = fixed.getJSONObject(i);
             int section = positionObject.optInt(SECTION_KEY, 0);
@@ -230,8 +240,8 @@ class ServerPositioningSource implements PositioningSource {
         }
     }
 
-    private void parseRepeatingJson(final JSONObject repeatingObject,
-            final MoPubClientPositioning positioning) throws JSONException {
+    private void parseRepeatingJson(@NonNull final JSONObject repeatingObject,
+            @NonNull final MoPubClientPositioning positioning) throws JSONException {
         int interval = repeatingObject.getInt(INTERVAL_KEY);
         if (interval < 2 || interval > MAX_VALUE) {
             throw new JSONException("Invalid interval " + interval + " in JSON response");

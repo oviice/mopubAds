@@ -1,5 +1,11 @@
 package com.mopub.nativeads;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import com.mopub.common.Preconditions;
+import com.mopub.common.Preconditions.NoThrow;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -8,27 +14,24 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 abstract class TaskManager<T> {
-    protected final TaskManagerListener<T> mImageTaskManagerListener;
+    @NonNull protected final TaskManagerListener<T> mImageTaskManagerListener;
     protected final int mSize;
-    protected final Map<String, T> mResults;
+    @NonNull protected final Map<String, T> mResults;
 
-    protected final AtomicInteger mCompletedCount;
-    protected final AtomicBoolean mFailed;
+    @NonNull protected final AtomicInteger mCompletedCount;
+    @NonNull protected final AtomicBoolean mFailed;
 
     interface TaskManagerListener<T> {
-        void onSuccess(final Map<String, T> images);
+        void onSuccess(@NonNull final Map<String, T> images);
         void onFail();
     }
 
-    TaskManager(final List<String> urls, final TaskManagerListener<T> imageTaskManagerListener)
+    TaskManager(@NonNull final List<String> urls,
+            @NonNull final TaskManagerListener<T> imageTaskManagerListener)
             throws IllegalArgumentException {
-        if (urls == null) {
-            throw new IllegalArgumentException("Urls list cannot be null");
-        } else if (urls.contains(null)) {
-            throw new IllegalArgumentException("Urls list cannot contain null");
-        } else if (imageTaskManagerListener == null) {
-            throw new IllegalArgumentException("ImageTaskManagerListener cannot be null");
-        }
+        Preconditions.checkNotNull(urls, "Urls list cannot be null");
+        Preconditions.checkNotNull(imageTaskManagerListener, "ImageTaskManagerListener cannot be null");
+        Preconditions.checkState(!urls.contains(null), "Urls list cannot contain null");
 
         mSize = urls.size();
 

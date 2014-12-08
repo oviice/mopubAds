@@ -1,7 +1,6 @@
 package com.mopub.common.util;
 
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.os.Handler;
 import android.os.Looper;

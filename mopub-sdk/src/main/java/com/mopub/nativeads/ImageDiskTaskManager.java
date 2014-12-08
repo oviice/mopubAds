@@ -1,18 +1,21 @@
 package com.mopub.nativeads;
 
 import android.graphics.Bitmap;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.mopub.common.CacheService;
 
-import java.util.*;
+import java.util.List;
 
 import static com.mopub.common.CacheService.DiskLruCacheGetListener;
 
 class ImageDiskTaskManager extends TaskManager<Bitmap> {
-    private final List<String> mUrls;
+    @NonNull private final List<String> mUrls;
     private final int mMaxImageWidth;
 
-    ImageDiskTaskManager(final List<String> urls,
-            final TaskManagerListener<Bitmap> imageTaskManagerListener,
+    ImageDiskTaskManager(@NonNull final List<String> urls,
+            @NonNull final TaskManagerListener<Bitmap> imageTaskManagerListener,
             final int maxImageWidth)
             throws IllegalArgumentException {
         super(urls, imageTaskManagerListener);
@@ -47,7 +50,7 @@ class ImageDiskTaskManager extends TaskManager<Bitmap> {
         }
 
         @Override
-        public void onComplete(final String key, final byte[] content) {
+        public void onComplete(@Nullable final String key, @Nullable final byte[] content) {
             if (key == null) {
                 failAllTasks();
                 return;

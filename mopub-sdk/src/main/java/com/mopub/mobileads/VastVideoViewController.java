@@ -17,11 +17,13 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.VideoView;
+
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.DownloadTask;
 import com.mopub.common.HttpResponses;
 import com.mopub.common.MoPubBrowser;
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.event.MoPubEvents;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.Dips;
 import com.mopub.common.util.Drawables;
@@ -29,12 +31,17 @@ import com.mopub.common.util.Streams;
 import com.mopub.common.util.VersionCode;
 import com.mopub.mobileads.util.vast.VastCompanionAd;
 import com.mopub.mobileads.util.vast.VastVideoConfiguration;
+
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.Serializable;
+import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
 import static com.mopub.common.HttpClient.initializeHttpGet;
@@ -125,18 +132,22 @@ public class VastVideoViewController extends BaseVideoViewController implements 
 
         mCompanionAdImageView = createCompanionAdImageView(context);
 
-        makeTrackingHttpRequest(mVastVideoConfiguration.getImpressionTrackers(), context);
+        makeTrackingHttpRequest(
+                mVastVideoConfiguration.getImpressionTrackers(),
+                context,
+                MoPubEvents.Type.IMPRESSION_REQUEST
+        );
 
         mVideoProgressCheckerRunnable = createVideoProgressCheckerRunnable();
     }
 
     @Override
-    VideoView getVideoView() {
+    protected VideoView getVideoView() {
         return mVideoView;
     }
 
     @Override
-    void onCreate() {
+    protected void onCreate() {
         super.onCreate();
         getBaseVideoViewControllerListener().onSetRequestedOrientation(SCREEN_ORIENTATION_LANDSCAPE);
 
@@ -146,7 +157,7 @@ public class VastVideoViewController extends BaseVideoViewController implements 
     }
 
     @Override
-    void onResume() {
+    protected void onResume() {
         // When resuming, VideoView needs to reinitialize its MediaPlayer with the video path
         // and therefore reset the count to zero, to let it retry on error
         mVideoRetries = 0;
@@ -159,21 +170,21 @@ public class VastVideoViewController extends BaseVideoViewController implements 
     }
 
     @Override
-    void onPause() {
+    protected void onPause() {
         stopProgressChecker();
         mSeekerPositionOnPause = mVideoView.getCurrentPosition();
         mVideoView.pause();
     }
 
     @Override
-    void onDestroy() {
+    protected void onDestroy() {
         stopProgressChecker();
         broadcastAction(ACTION_INTERSTITIAL_DISMISS);
     }
 
     // Enable the device's back button when the video close button has been displayed
     @Override
-    boolean backButtonEnabled() {
+    public boolean backButtonEnabled() {
         return mShowCloseButtonEventFired;
     }
 
@@ -228,6 +239,8 @@ public class VastVideoViewController extends BaseVideoViewController implements 
     }
 
     private Runnable createVideoProgressCheckerRunnable() {
+        // This Runnable must only be run from the main thread due to accessing
+        // class instance variables
         return new Runnable() {
             @Override
             public void run() {
@@ -281,7 +294,7 @@ public class VastVideoViewController extends BaseVideoViewController implements 
                 new int[] {Color.argb(0,0,0,0), Color.argb(255,0,0,0)}
         );
         Drawable[] layers = new Drawable[2];
-        layers[0] = Drawables.THATCHED_BACKGROUND.decodeImage(context);
+        layers[0] = Drawables.THATCHED_BACKGROUND.createDrawable(context);
         layers[1] = gradientDrawable;
         LayerDrawable layerList = new LayerDrawable(layers);
         getLayout().setBackgroundDrawable(layerList);
@@ -307,6 +320,7 @@ public class VastVideoViewController extends BaseVideoViewController implements 
         videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
+                // Called when media source is ready for playback
                 if (mVideoView.getDuration() < MAX_VIDEO_DURATION_FOR_CLOSE_BUTTON) {
                     mShowCloseButtonDelay = mVideoView.getDuration();
                 }
@@ -413,7 +427,7 @@ public class VastVideoViewController extends BaseVideoViewController implements 
     }
 
     private void handleClick(final List<String> clickThroughTrackers, final String clickThroughUrl) {
-        makeTrackingHttpRequest(clickThroughTrackers, getContext());
+        makeTrackingHttpRequest(clickThroughTrackers, getContext(), MoPubEvents.Type.CLICK_REQUEST);
 
         videoClicked();
 
@@ -465,12 +479,6 @@ public class VastVideoViewController extends BaseVideoViewController implements 
     @Deprecated
     int getVideoRetries() {
         return mVideoRetries;
-    }
-
-    // for testing
-    @Deprecated
-    Runnable getVideoProgressCheckerRunnable() {
-        return mVideoProgressCheckerRunnable;
     }
 
     // for testing

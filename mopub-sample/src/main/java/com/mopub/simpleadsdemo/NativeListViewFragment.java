@@ -10,7 +10,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.mopub.nativeads.MoPubAdAdapter;
-import com.mopub.nativeads.MoPubNativeAdPositioning;
 import com.mopub.nativeads.MoPubNativeAdRenderer;
 import com.mopub.nativeads.RequestParameters;
 import com.mopub.nativeads.ViewBinder;
@@ -69,12 +68,9 @@ public class NativeListViewFragment extends Fragment {
             adapter.add("Item " + i);
         }
 
-        // Create an ad adapter with ads in positions 0, 4, and every 10 places thereafter.
+        // Create an ad adapter that gets its positioning information from the MoPub Ad Server.
         // This adapter will be used in place of the original adapter for the ListView.
-        mAdAdapter = new MoPubAdAdapter(getActivity(), adapter, MoPubNativeAdPositioning.clientPositioning()
-                .addFixedPosition(0)
-                .addFixedPosition(4)
-                .enableRepeatingPositions(10));
+        mAdAdapter = new MoPubAdAdapter(getActivity(), adapter);
 
         // Set up an renderer that knows how to put ad data in an ad view.
         final MoPubNativeAdRenderer adRenderer = new MoPubNativeAdRenderer(

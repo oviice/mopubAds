@@ -25,7 +25,6 @@ import static org.fest.assertions.api.Assertions.assertThat;
 import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(SdkTestRunner.class)
-@Config(shadows={MoPubShadowBitmap.class, MoPubShadowDisplay.class})
 public class ImageViewServiceTest {
 
     private ImageView imageView;
@@ -48,11 +47,6 @@ public class ImageViewServiceTest {
         imageData2 = "image_data_2";
         image1 = BitmapFactory.decodeByteArray(imageData1.getBytes(), 0, imageData1.getBytes().length);
         fakeHttpLayer = Robolectric.getFakeHttpLayer();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        CacheService.clearAndNullCaches();
     }
 
     @Test

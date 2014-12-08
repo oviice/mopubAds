@@ -1,6 +1,5 @@
 package com.mopub.mobileads;
 
-import android.os.Build;
 import android.os.Build.VERSION_CODES;
 
 import com.mopub.common.test.support.SdkTestRunner;
@@ -24,8 +23,6 @@ import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_DATA;
 import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_NAME;
 import static com.mopub.common.util.ResponseHeader.FULL_AD_TYPE;
 import static com.mopub.common.util.ResponseHeader.NATIVE_PARAMS;
-import static com.mopub.common.util.VersionCode.GINGERBREAD;
-import static com.mopub.common.util.VersionCode.ICE_CREAM_SANDWICH;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;

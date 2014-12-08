@@ -2,7 +2,6 @@ package com.mopub.mobileads.resource;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.Point;
 
 public class CloseButtonDrawable extends CircleDrawable {

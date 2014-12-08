@@ -1,5 +1,8 @@
 package com.mopub.nativeads;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
 
@@ -127,24 +130,25 @@ class PlacementData {
 
     // Initialize all of these to their max capacity. This prevents garbage collection when
     // reallocating the list, which causes noticeable stuttering when scrolling on some devices.
-    private final int[] mDesiredOriginalPositions = new int[MAX_ADS];
-    private final int[] mDesiredInsertionPositions = new int[MAX_ADS];
+    @NonNull private final int[] mDesiredOriginalPositions = new int[MAX_ADS];
+    @NonNull private final int[] mDesiredInsertionPositions = new int[MAX_ADS];
     private int mDesiredCount = 0;
-    private final int[] mOriginalAdPositions = new int[MAX_ADS];
-    private final int[] mAdjustedAdPositions = new int[MAX_ADS];
-    private final NativeAdData[] mAdDataObjects = new NativeAdData[MAX_ADS];
+    @NonNull private final int[] mOriginalAdPositions = new int[MAX_ADS];
+    @NonNull private final int[] mAdjustedAdPositions = new int[MAX_ADS];
+    @NonNull private final NativeAdData[] mAdDataObjects = new NativeAdData[MAX_ADS];
     private int mPlacedCount = 0;
 
     /**
      * @param desiredInsertionPositions Insertion positions, expressed as original positions
      */
-    private PlacementData(final int[] desiredInsertionPositions) {
+    private PlacementData(@NonNull final int[] desiredInsertionPositions) {
         mDesiredCount = Math.min(desiredInsertionPositions.length, MAX_ADS);
         System.arraycopy(desiredInsertionPositions, 0, mDesiredInsertionPositions, 0, mDesiredCount);
         System.arraycopy(desiredInsertionPositions, 0, mDesiredOriginalPositions, 0, mDesiredCount);
     }
 
-    static PlacementData fromAdPositioning(final MoPubClientPositioning adPositioning) {
+    @NonNull
+    static PlacementData fromAdPositioning(@NonNull final MoPubClientPositioning adPositioning) {
         final List<Integer> fixed = adPositioning.getFixedPositions();
         final int interval = adPositioning.getRepeatingInterval();
 
@@ -168,6 +172,7 @@ class PlacementData {
         return new PlacementData(desiredInsertionPositions);
     }
 
+    @NonNull
     static PlacementData empty() {
         return new PlacementData(new int[] {});
     }
@@ -265,6 +270,7 @@ class PlacementData {
      * Returns the ad data associated with the given ad position, or {@code null} if there is
      * no ad at this position.
      */
+    @Nullable
     NativeAdData getPlacedAd(final int position) {
         final int index = binarySearch(mAdjustedAdPositions, 0, mPlacedCount, position);
         if (index < 0) {
@@ -277,6 +283,7 @@ class PlacementData {
      * Returns all placed ad positions. This method allocates new memory on every invocation. Do
      * not call it from performance critical code.
      */
+    @NonNull
     int[] getPlacedAdPositions() {
         int[] positions = new int[mPlacedCount];
         System.arraycopy(mAdjustedAdPositions, 0, positions, 0, mPlacedCount);

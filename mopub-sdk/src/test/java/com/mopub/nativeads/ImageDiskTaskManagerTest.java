@@ -47,7 +47,7 @@ public class ImageDiskTaskManagerTest {
     private static final int TEST_WIDTH = 400;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         context = new Activity();
         semaphore = new Semaphore(0);
         doAnswer(new Answer() {
@@ -81,41 +81,21 @@ public class ImageDiskTaskManagerTest {
         list.add(url2);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        CacheService.clearAndNullCaches();
+    @Test(expected = NullPointerException.class)
+    public void constructor_withNullUrlsList_shouldThrowNullPointerException() {
+        new ImageDiskTaskManager(null, imageTaskManagerListener, TEST_WIDTH);
     }
 
-    @Test
-    public void constructor_withNullUrlsList_shouldThrowIllegalArgumentException() throws Exception {
-        try {
-            new ImageDiskTaskManager(null, imageTaskManagerListener, TEST_WIDTH);
-            fail("Should have thrown IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // pass
-        }
-    }
-
-    @Test
-    public void constructor_withNullInUrlsList_shouldThrowIllegalArgumentException() throws Exception {
+    @Test(expected = IllegalStateException.class)
+    public void constructor_withNullInUrlsList_shouldThrowIllegalStateException() {
         List<String> myList = new ArrayList<String>();
         myList.add(null);
-        try {
-            new ImageDiskTaskManager(myList, imageTaskManagerListener, TEST_WIDTH);
-            fail("Should have thrown IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // pass
-        }
+        new ImageDiskTaskManager(myList, imageTaskManagerListener, TEST_WIDTH);
     }
 
-    @Test
-    public void constructor_withNullImageTaskManagerListener_shouldThrowIllegalArgumentException() throws Exception {
-        try {
-            new ImageDiskTaskManager(list, null, TEST_WIDTH);
-            fail("Should have thrown IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // pass
-        }
+    @Test(expected = NullPointerException.class)
+    public void constructor_withNullImageTaskManagerListener_shouldThrowNullPointerException() {
+        new ImageDiskTaskManager(list, null, TEST_WIDTH);
     }
 
     @Test

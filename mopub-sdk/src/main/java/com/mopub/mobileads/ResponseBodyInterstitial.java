@@ -7,7 +7,7 @@ import java.util.Map;
 import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
 
-abstract class ResponseBodyInterstitial extends CustomEventInterstitial {
+public abstract class ResponseBodyInterstitial extends CustomEventInterstitial {
     private EventForwardingBroadcastReceiver mBroadcastReceiver;
     protected Context mContext;
     protected AdConfiguration mAdConfiguration;
@@ -15,10 +15,10 @@ abstract class ResponseBodyInterstitial extends CustomEventInterstitial {
 
     abstract protected void extractExtras(Map<String, String> serverExtras);
     abstract protected void preRenderHtml(CustomEventInterstitialListener customEventInterstitialListener);
-    abstract protected void showInterstitial();
+    public abstract void showInterstitial();
 
     @Override
-    protected void loadInterstitial(
+    public void loadInterstitial(
             Context context,
             CustomEventInterstitialListener customEventInterstitialListener,
             Map<String, Object> localExtras,
@@ -45,7 +45,7 @@ abstract class ResponseBodyInterstitial extends CustomEventInterstitial {
     }
 
     @Override
-    protected void onInvalidate() {
+    public void onInvalidate() {
         if (mBroadcastReceiver != null) {
             mBroadcastReceiver.unregister();
         }

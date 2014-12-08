@@ -109,35 +109,37 @@ public class ImageDownloadTaskManagerTest {
                     mMockImageTaskManagerListener,
                     testMaxWidth
             );
-            fail("ImageDownloadTaskManager didn't throw an illegal argument exception");
-        } catch (IllegalArgumentException e) {
+            fail("ImageDownloadTaskManager didn't throw an illegal state exception");
+        } catch (IllegalStateException e) {
             // pass
         }
     }
 
-    @Test
-    public void constructor_withAnyNullParams_shouldThrowIllegalArgumentException() throws Exception {
-        try {
-            subject = new ImageDownloadTaskManager(
-                    null,
-                    mMockImageTaskManagerListener,
-                    testMaxWidth
-            );
-            fail("ImageDownloadTaskManager didn't throw an illegal argument exception");
-        } catch (IllegalArgumentException e) {
-            // pass
-        }
+    @Test(expected = NullPointerException.class)
+    public void constructor_withNullUrlsList_shouldThrowNullPointerException() {
+        subject = new ImageDownloadTaskManager(
+                null,
+                mMockImageTaskManagerListener,
+                testMaxWidth
+        );
+    }
 
-        try {
-            subject = new ImageDownloadTaskManager(
-                    Arrays.asList(url1, url2),
-                    null,
-                    testMaxWidth
-            );
-            fail("ImageDownloadTaskManager didn't throw an illegal argument exception");
-        } catch (IllegalArgumentException e) {
-            // pass
-        }
+    @Test(expected = IllegalStateException.class)
+    public void constructor_withAnyNullUrls_shouldThrowIllegalStateException() {
+        subject = new ImageDownloadTaskManager(
+                Arrays.asList(url1, null),
+                mMockImageTaskManagerListener,
+                testMaxWidth
+        );
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void constructor_withAnyNullListener_shouldThrowNullPointerException() {
+        subject = new ImageDownloadTaskManager(
+                Arrays.asList(url1, url2),
+                null,
+                testMaxWidth
+        );
     }
 
     @Test

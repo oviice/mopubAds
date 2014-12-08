@@ -2,22 +2,25 @@ package com.mopub.nativeads;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
+import com.mopub.common.Preconditions;
 import com.mopub.common.util.Dips;
 import com.mopub.common.util.Views;
 
 import static android.widget.RelativeLayout.LayoutParams.MATCH_PARENT;
 
 class SpinningProgressView extends ViewGroup {
-    private final ProgressBar mProgressBar;
+    @NonNull private final ProgressBar mProgressBar;
     private int mProgressIndicatorRadius;
 
-    SpinningProgressView(final Context context) {
+    SpinningProgressView(@NonNull final Context context) {
         super(context);
 
         final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
@@ -49,10 +52,8 @@ class SpinningProgressView extends ViewGroup {
 
     }
 
-    boolean addToRoot(final View view) {
-        if (view == null) {
-            return false;
-        }
+    boolean addToRoot(@NonNull final View view) {
+        Preconditions.checkNotNull(view);
 
         final View rootView = view.getRootView();
 

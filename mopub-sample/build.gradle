@@ -6,13 +6,24 @@ description = '''MoPub SDK'''
 
 android {
     compileSdkVersion 19
-    buildToolsVersion '19.1.0'
+    buildToolsVersion '21.1.1'
 
     defaultConfig {
         versionCode 1
-        versionName "3.2.1"
+        versionName "3.3.0"
         minSdkVersion 9
         targetSdkVersion 19
+    }
+
+    buildTypes {
+      release {
+        minifyEnabled true
+        proguardFiles = [getDefaultProguardFile('proguard-android.txt'), 'proguard.cfg']
+      }
+      debug {
+        minifyEnabled true
+        proguardFiles = [getDefaultProguardFile('proguard-android.txt'), 'proguard.cfg']
+      }
     }
 
     sourceSets {

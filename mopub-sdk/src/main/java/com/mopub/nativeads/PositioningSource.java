@@ -1,8 +1,7 @@
 package com.mopub.nativeads;
 
-import android.os.Handler;
+import android.support.annotation.NonNull;
 
-import com.mopub.common.VisibleForTesting;
 import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
 
 /**
@@ -11,11 +10,11 @@ import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
 interface PositioningSource {
 
     interface PositioningListener {
-        void onLoad(MoPubClientPositioning positioning);
+        void onLoad(@NonNull MoPubClientPositioning positioning);
 
         void onFailed();
     }
 
-    void loadPositions(String adUnitId, PositioningListener listener);
+    void loadPositions(@NonNull String adUnitId, @NonNull PositioningListener listener);
 
 }

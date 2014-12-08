@@ -18,7 +18,7 @@ import java.util.*;
 import static com.mopub.mobileads.AdViewController.MINIMUM_REFRESH_TIME_MILLISECONDS;
 import static com.mopub.common.util.ResponseHeader.AD_TIMEOUT;
 import static com.mopub.common.util.ResponseHeader.AD_TYPE;
-import static com.mopub.common.util.ResponseHeader.CLICKTHROUGH_URL;
+import static com.mopub.common.util.ResponseHeader.CLICK_TRACKING_URL;
 import static com.mopub.common.util.ResponseHeader.DSP_CREATIVE_ID;
 import static com.mopub.common.util.ResponseHeader.FAIL_URL;
 import static com.mopub.common.util.ResponseHeader.HEIGHT;
@@ -125,7 +125,7 @@ public class AdConfigurationTest {
         httpResponse.addHeader(AD_TYPE.getKey(), "this is an ad type");
         httpResponse.addHeader(NETWORK_TYPE.getKey(), "network type!");
         httpResponse.addHeader(REDIRECT_URL.getKey(), "redirect url");
-        httpResponse.addHeader(CLICKTHROUGH_URL.getKey(), "clickthrough url");
+        httpResponse.addHeader(CLICK_TRACKING_URL.getKey(), "clickthrough url");
         httpResponse.addHeader(FAIL_URL.getKey(), "fail url");
         httpResponse.addHeader(IMPRESSION_URL.getKey(), "impression url");
         httpResponse.addHeader(WIDTH.getKey(), "320  ");
@@ -219,7 +219,7 @@ public class AdConfigurationTest {
         httpResponse.addHeader(AD_TYPE.getKey(), "this is an ad type");
         httpResponse.addHeader(NETWORK_TYPE.getKey(), "network type!");
         httpResponse.addHeader(REDIRECT_URL.getKey(), "redirect url");
-        httpResponse.addHeader(CLICKTHROUGH_URL.getKey(), "clickthrough url");
+        httpResponse.addHeader(CLICK_TRACKING_URL.getKey(), "clickthrough url");
         httpResponse.addHeader(FAIL_URL.getKey(), "fail url");
         httpResponse.addHeader(IMPRESSION_URL.getKey(), "impression url");
         httpResponse.addHeader(WIDTH.getKey(), "320  ");

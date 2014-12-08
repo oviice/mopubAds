@@ -5,6 +5,8 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
@@ -33,7 +35,7 @@ class VisibilityTracker {
     @VisibleForTesting static final int NUM_ACCESSES_BEFORE_TRIMMING = 50;
 
     // Temporary array of trimmed views so that we don't allocate this on every trim.
-    private final ArrayList<View> mTrimmedViews;
+    @NonNull private final ArrayList<View> mTrimmedViews;
 
     // Incrementing access counter. Use a long to support very long-lived apps.
     private long mAccessCounter = 0;
@@ -43,8 +45,8 @@ class VisibilityTracker {
         void onVisibilityChanged(List<View> visibleViews, List<View> invisibleViews);
     }
 
-    @VisibleForTesting OnPreDrawListener mOnPreDrawListener;
-    @VisibleForTesting final WeakReference<View> mRootView;
+    @Nullable @VisibleForTesting OnPreDrawListener mOnPreDrawListener;
+    @NonNull @VisibleForTesting final WeakReference<View> mRootView;
 
     static class TrackingInfo {
         int mMinViewablePercent;
@@ -52,24 +54,24 @@ class VisibilityTracker {
     }
 
     // Views that are being tracked, mapped to the min viewable percentage
-    private final Map<View, TrackingInfo> mTrackedViews;
+    @NonNull private final Map<View, TrackingInfo> mTrackedViews;
 
     // Object to check actual visibility
-    private final VisibilityChecker mVisibilityChecker;
+    @NonNull private final VisibilityChecker mVisibilityChecker;
 
     // Callback listener
-    private VisibilityTrackerListener mVisibilityTrackerListener;
+    @Nullable private VisibilityTrackerListener mVisibilityTrackerListener;
 
     // Runnable to run on each visibility loop
-    private final VisibilityRunnable mVisibilityRunnable;
+    @NonNull private final VisibilityRunnable mVisibilityRunnable;
 
     // Handler for visibility
-    private final Handler mVisibilityHandler;
+    @NonNull private final Handler mVisibilityHandler;
 
     // Whether the visibility runnable is scheduled
     private boolean mIsVisibilityScheduled;
 
-    public VisibilityTracker(final Context context) {
+    public VisibilityTracker(@NonNull final Context context) {
         this(context,
                 new WeakHashMap<View, TrackingInfo>(10),
                 new VisibilityChecker(),
@@ -77,10 +79,10 @@ class VisibilityTracker {
     }
 
     @VisibleForTesting
-    VisibilityTracker(final Context context,
-            final Map<View, TrackingInfo> trackedViews,
-            final VisibilityChecker visibilityChecker,
-            final Handler visibilityHandler) {
+    VisibilityTracker(@NonNull final Context context,
+            @NonNull final Map<View, TrackingInfo> trackedViews,
+            @NonNull final VisibilityChecker visibilityChecker,
+            @NonNull final Handler visibilityHandler) {
         mTrackedViews = trackedViews;
         mVisibilityChecker = visibilityChecker;
         mVisibilityHandler = visibilityHandler;
@@ -105,14 +107,15 @@ class VisibilityTracker {
         }
     }
 
-    void setVisibilityTrackerListener(final VisibilityTrackerListener visibilityTrackerListener) {
+    void setVisibilityTrackerListener(
+            @Nullable final VisibilityTrackerListener visibilityTrackerListener) {
         mVisibilityTrackerListener = visibilityTrackerListener;
     }
 
     /**
      * Tracks the given view for visibility.
      */
-    void addView(final View view, final int minPercentageViewed) {
+    void addView(@NonNull final View view, final int minPercentageViewed) {
         // Find the view if already tracked
         TrackingInfo trackingInfo = mTrackedViews.get(view);
         if (trackingInfo == null) {
@@ -147,7 +150,7 @@ class VisibilityTracker {
     /**
      * Stops tracking a view, cleaning any pending tracking
      */
-    void removeView(final View view) {
+    void removeView(@NonNull final View view) {
         mTrackedViews.remove(view);
     }
 
@@ -190,8 +193,8 @@ class VisibilityTracker {
     class VisibilityRunnable implements Runnable {
         // Set of views that are visible or invisible. We create these once to avoid excessive
         // garbage collection observed when calculating these on each pass.
-        private final ArrayList<View> mVisibleViews;
-        private final ArrayList<View> mInvisibleViews;
+        @NonNull private final ArrayList<View> mVisibleViews;
+        @NonNull private final ArrayList<View> mInvisibleViews;
 
         VisibilityRunnable() {
             mInvisibleViews = new ArrayList<View>();
@@ -236,7 +239,7 @@ class VisibilityTracker {
         /**
          * Whether the view is at least certain % visible
          */
-        boolean isVisible(final View view, final int minPercentageViewed) {
+        boolean isVisible(@Nullable final View view, final int minPercentageViewed) {
             // ListView & GridView both call detachFromParent() for views that can be recycled for
             // new data. This is one of the rare instances where a view will have a null parent for
             // an extended period of time and will not be the main window.

@@ -22,6 +22,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
+import org.robolectric.tester.org.apache.http.TestHttpResponse;
 
 import java.util.concurrent.Executor;
 
@@ -29,6 +30,7 @@ import static junit.framework.Assert.fail;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -87,13 +89,9 @@ public class ServerPositioningSourceTest {
     @Test
     public void loadPositionsTwice_shouldCancelPreviousDownloadTask_shouldNotCallListener() {
         subject.loadPositions("test_ad_unit", mockPositioningListener);
-        verify(mockDownloadTaskProvider).get(taskListenerCaptor.capture());
-
         subject.loadPositions("test_ad_unit", mockPositioningListener);
         verify(mockDownloadTask).cancel(true);
 
-        // Cancelling completes the download tasks with a null response.
-        taskListenerCaptor.getValue().onComplete("some_url", null);
         verify(mockPositioningListener, never()).onFailed();
         verify(mockPositioningListener, never()).onLoad(any(MoPubClientPositioning.class));
     }
@@ -124,6 +122,19 @@ public class ServerPositioningSourceTest {
 
     @Config(reportSdk = VERSION_CODES.ICE_CREAM_SANDWICH)
     @Test
+    public void loadPositions_thenComplete_withNullResponse_shouldRetry() throws Exception {
+        subject.loadPositions("test_ad_unit", mockPositioningListener);
+
+        verify(mockDownloadTaskProvider).get(taskListenerCaptor.capture());
+        taskListenerCaptor.getValue().onComplete("some_url", null);
+
+        Robolectric.getUiThreadScheduler().advanceToLastPostedRunnable();
+        verify(mockDownloadTask, times(2))
+                .executeOnExecutor(any(Executor.class), any(HttpGet.class));
+    }
+
+    @Config(reportSdk = VERSION_CODES.ICE_CREAM_SANDWICH)
+    @Test
     public void loadPositions_thenComplete_withNotFoundResponse_shouldRetry() {
         subject.loadPositions("test_ad_unit", mockPositioningListener);
         
@@ -135,6 +146,7 @@ public class ServerPositioningSourceTest {
                 .executeOnExecutor(any(Executor.class), any(HttpGet.class));
     }
 
+    @Config(reportSdk = VERSION_CODES.ICE_CREAM_SANDWICH)
     @Test
     public void loadPositions_thenComplete_withWarmingUpResponse_shouldRetry() {
         subject.loadPositions("test_ad_unit", mockPositioningListener);
@@ -147,6 +159,7 @@ public class ServerPositioningSourceTest {
                 .executeOnExecutor(any(Executor.class), any(HttpGet.class));
     }
 
+    @Config(reportSdk = VERSION_CODES.ICE_CREAM_SANDWICH)
     @Test
     public void loadPositions_thenComplete_withInvalidJsonResponse_shouldRetry() {
         subject.loadPositions("test_ad_unit", mockPositioningListener);
@@ -159,6 +172,7 @@ public class ServerPositioningSourceTest {
                 .executeOnExecutor(any(Executor.class), any(HttpGet.class));
     }
 
+    @Config(reportSdk = VERSION_CODES.ICE_CREAM_SANDWICH)
     @Test
     public void loadPositions_withPendingRetry_shouldNotRetry() {
         subject.loadPositions("test_ad_unit", mockPositioningListener);

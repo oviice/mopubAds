@@ -1,5 +1,7 @@
 package com.mopub.nativeads;
 
+import android.support.annotation.NonNull;
+
 public enum NativeErrorCode {
     EMPTY_AD_RESPONSE("Server returned empty response."),
     INVALID_JSON("Unable to parse JSON response from server."),
@@ -24,6 +26,7 @@ public enum NativeErrorCode {
         this.message = message;
     }
 
+    @NonNull
     @Override
     public final String toString() {
         return message;

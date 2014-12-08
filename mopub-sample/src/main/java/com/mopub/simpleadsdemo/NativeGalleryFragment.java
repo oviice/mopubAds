@@ -13,7 +13,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.mopub.nativeads.MoPubNativeAdLoadedListener;
-import com.mopub.nativeads.MoPubNativeAdPositioning;
 import com.mopub.nativeads.MoPubNativeAdRenderer;
 import com.mopub.nativeads.MoPubStreamAdPlacer;
 import com.mopub.nativeads.RequestParameters;
@@ -69,12 +68,9 @@ public class NativeGalleryFragment extends Fragment implements MoPubNativeAdLoad
         views.mDescriptionView.setText(mAdConfiguration.getDescription());
         views.mAdUnitIdView.setText(adUnitId);
         mViewPager = (ViewPager) view.findViewById(R.id.gallery_pager);
-        mStreamAdPlacer = new MoPubStreamAdPlacer(getActivity(),
-                MoPubNativeAdPositioning.clientPositioning()
-                        .addFixedPosition(4)
-                        .addFixedPosition(1)
-                        .enableRepeatingPositions(3)
-        );
+
+        // This ad placer is used to automatically insert ads into the ViewPager.
+        mStreamAdPlacer = new MoPubStreamAdPlacer(getActivity());
         final MoPubNativeAdRenderer adRenderer = new MoPubNativeAdRenderer(
                 new ViewBinder.Builder(R.layout.native_ad_list_item)
                         .titleId(R.id.native_title)

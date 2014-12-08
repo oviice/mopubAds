@@ -2,6 +2,7 @@ package com.mopub.common;
 
 import android.content.Context;
 import android.location.Location;
+import android.support.annotation.Nullable;
 
 import com.mopub.common.util.IntentUtils;
 
@@ -52,10 +53,24 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
         addParam("q", keywords);
     }
 
-    protected void setLocation(Location location) {
-        if (location != null) {
-            addParam("ll", location.getLatitude() + "," + location.getLongitude());
-            addParam("lla", "" + (int) location.getAccuracy());
+    protected void setLocation(@Nullable Location location) {
+        Location bestLocation = location;
+        Location locationFromLocationService = LocationService.getLastKnownLocation(mContext,
+                MoPub.getLocationPrecision(),
+                MoPub.getLocationAwareness());
+
+        if (locationFromLocationService != null &&
+                (location == null || locationFromLocationService.getTime() >= location.getTime())) {
+            bestLocation = locationFromLocationService;
+        }
+
+        if (bestLocation != null) {
+            addParam("ll", bestLocation.getLatitude() + "," + bestLocation.getLongitude());
+            addParam("lla", "" + (int) bestLocation.getAccuracy());
+
+            if (bestLocation == locationFromLocationService) {
+                addParam("llsdk", "1");
+            }
         }
     }
 

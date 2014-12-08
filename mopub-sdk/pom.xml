@@ -24,6 +24,12 @@
         <!--main-->
         <dependency>
             <groupId>com.android.support</groupId>
+            <artifactId>support-annotations</artifactId>
+            <version>20.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.android.support</groupId>
             <artifactId>support-v4</artifactId>
             <version>19.1.0</version>
         </dependency>

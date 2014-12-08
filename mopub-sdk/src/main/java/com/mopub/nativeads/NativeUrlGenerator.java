@@ -2,29 +2,34 @@ package com.mopub.nativeads;
 
 import android.content.Context;
 import android.location.Location;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
+
 import com.mopub.common.AdUrlGenerator;
 import com.mopub.common.ClientMetadata;
+import com.mopub.common.Constants;
 import com.mopub.common.LocationService;
 import com.mopub.common.MoPub;
 import com.mopub.common.util.DateAndTime;
-import com.mopub.common.util.Strings;
 
 class NativeUrlGenerator extends AdUrlGenerator {
-    private String mDesiredAssets;
-    private String mSequenceNumber;
+    @Nullable private String mDesiredAssets;
+    @Nullable private String mSequenceNumber;
 
     NativeUrlGenerator(Context context) {
         super(context);
     }
 
+    @NonNull
     @Override
     public NativeUrlGenerator withAdUnitId(final String adUnitId) {
         mAdUnitId = adUnitId;
         return this;
     }
 
-    NativeUrlGenerator withRequest(final RequestParameters requestParameters) {
+    @NonNull
+    NativeUrlGenerator withRequest(@Nullable final RequestParameters requestParameters) {
         if (requestParameters != null) {
             mKeywords = requestParameters.getKeywords();
             mLocation = requestParameters.getLocation();
@@ -33,6 +38,7 @@ class NativeUrlGenerator extends AdUrlGenerator {
         return this;
     }
 
+    @NonNull
     NativeUrlGenerator withSequenceNumber(final int sequenceNumber) {
         mSequenceNumber = String.valueOf(sequenceNumber);
         return this;
@@ -40,19 +46,13 @@ class NativeUrlGenerator extends AdUrlGenerator {
 
     @Override
     public String generateUrlString(final String serverHostname) {
-        initUrlString(serverHostname, Constants.NATIVE_HANDLER);
+        initUrlString(serverHostname, Constants.AD_HANDLER);
 
         setAdUnitId(mAdUnitId);
 
         setKeywords(mKeywords);
 
-        Location location = mLocation;
-        if (location == null) {
-            location = LocationService.getLastKnownLocation(mContext,
-                    MoPub.getLocationPrecision(),
-                    MoPub.getLocationAwareness());
-        }
-        setLocation(location);
+        setLocation(mLocation);
 
         ClientMetadata clientMetadata = ClientMetadata.getInstance(mContext);
         setSdkVersion(clientMetadata.getSdkVersion());
@@ -71,7 +71,7 @@ class NativeUrlGenerator extends AdUrlGenerator {
 
         setDensity(clientMetadata.getDensity());
 
-        String networkOperator = clientMetadata.getNetworkOperator();
+        String networkOperator = clientMetadata.getNetworkOperatorForUrl();
         setMccCode(networkOperator);
         setMncCode(networkOperator);
 
@@ -98,7 +98,7 @@ class NativeUrlGenerator extends AdUrlGenerator {
     }
 
     private void setDesiredAssets() {
-        if (mDesiredAssets != null && !Strings.isEmpty(mDesiredAssets)) {
+        if (!TextUtils.isEmpty(mDesiredAssets)) {
             addParam("assets", mDesiredAssets);
         }
     }

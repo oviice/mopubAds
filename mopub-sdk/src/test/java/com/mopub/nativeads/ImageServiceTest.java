@@ -8,8 +8,6 @@ import android.graphics.BitmapFactory;
 import com.mopub.common.CacheService;
 import com.mopub.common.CacheServiceTest;
 import com.mopub.common.DownloadResponse;
-import com.mopub.nativeads.test.support.MoPubShadowBitmap;
-import com.mopub.nativeads.test.support.MoPubShadowDisplay;
 import com.mopub.common.test.support.SdkTestRunner;
 
 import org.junit.After;
@@ -19,7 +17,6 @@ import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.Robolectric;
-import org.robolectric.annotation.Config;
 import org.robolectric.tester.org.apache.http.FakeHttpLayer;
 
 import java.io.ByteArrayInputStream;
@@ -41,7 +38,6 @@ import static org.mockito.Mockito.when;
 import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(SdkTestRunner.class)
-@Config(shadows={MoPubShadowBitmap.class, MoPubShadowDisplay.class})
 public class ImageServiceTest {
     private ImageServiceListener imageServiceListener;
     private Semaphore semaphore;
@@ -95,14 +91,8 @@ public class ImageServiceTest {
         ImageService.initialize(context);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        CacheService.clearAndNullCaches();
-    }
-
     @Test
     public void get_shouldInitializeCaches() throws Exception {
-        CacheService.clearAndNullCaches();
         assertThat(CacheService.getBitmapLruCache()).isNull();
         assertThat(CacheService.getDiskLruCache()).isNull();
 
@@ -373,11 +363,9 @@ public class ImageServiceTest {
         assertThat(bitmap).isInstanceOf(Bitmap.class);
     }
 
-    @Test
-    public void asBitmap_withNullResponse_shouldReturnNull() throws Exception {
-        final Bitmap bitmap = ImageService.asBitmap(null, 30);
-
-        assertThat(bitmap).isNull();
+    @Test(expected = NullPointerException.class)
+    public void asBitmap_withNullResponse_shouldThrowNullPointerException() throws Exception {
+        ImageService.asBitmap(null, 30);
     }
 
     @Test

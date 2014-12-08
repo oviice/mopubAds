@@ -1,6 +1,8 @@
 package com.mopub.nativeads;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -17,7 +19,8 @@ import static com.mopub.nativeads.MoPubNative.MoPubNativeListener;
  */
 @Deprecated
 class NativeAdViewHelper {
-    private NativeAdViewHelper() {}
+    private NativeAdViewHelper() {
+    }
 
     // Because the impression tracker requires tracking drawing views,
     // each context requires a separate impression tracker. To avoid leaking, keep weak references.
@@ -31,17 +34,12 @@ class NativeAdViewHelper {
             new WeakHashMap<View, NativeResponse>();
 
     @Deprecated
-    static View getAdView(View convertView,
-                          final ViewGroup parent,
-                          final Context context,
-                          final NativeResponse nativeResponse,
-                          final ViewBinder viewBinder,
-                          final MoPubNativeListener moPubNativeListener) {
-
-        if (viewBinder == null) {
-            MoPubLog.d("ViewBinder is null, returning empty view.");
-            return new View(context);
-        }
+    @NonNull
+    static View getAdView(@Nullable View convertView,
+            @Nullable final ViewGroup parent,
+            @NonNull final Context context,
+            @NonNull final NativeResponse nativeResponse,
+            @NonNull final ViewBinder viewBinder) {
 
         final MoPubNativeAdRenderer moPubNativeAdRenderer = new MoPubNativeAdRenderer(viewBinder);
         if (convertView == null) {
@@ -50,11 +48,7 @@ class NativeAdViewHelper {
 
         clearNativeResponse(context, convertView);
 
-        if (nativeResponse == null) {
-            // If we don't have content for the view, then hide the view for now
-            MoPubLog.d("NativeResponse is null, returning hidden view.");
-            convertView.setVisibility(GONE);
-        } else if (nativeResponse.isDestroyed()) {
+        if (nativeResponse.isDestroyed()) {
             MoPubLog.d("NativeResponse is destroyed, returning hidden view.");
             convertView.setVisibility(GONE);
         } else {
@@ -65,7 +59,8 @@ class NativeAdViewHelper {
         return convertView;
     }
 
-    private static void clearNativeResponse(final Context context, final View view) {
+    private static void clearNativeResponse(@NonNull final Context context,
+            @NonNull final View view) {
         getImpressionTracker(context).removeView(view);
         final NativeResponse nativeResponse = sNativeResponseMap.get(view);
         if (nativeResponse != null) {
@@ -73,9 +68,9 @@ class NativeAdViewHelper {
         }
     }
 
-    private static void prepareNativeResponse(final Context context,
-            final View view,
-            final NativeResponse nativeResponse) {
+    private static void prepareNativeResponse(@NonNull final Context context,
+            @NonNull final View view,
+            @NonNull final NativeResponse nativeResponse) {
         sNativeResponseMap.put(view, nativeResponse);
         if (!nativeResponse.isOverridingImpressionTracker()) {
             getImpressionTracker(context).addView(view, nativeResponse);
@@ -83,7 +78,7 @@ class NativeAdViewHelper {
         nativeResponse.prepare(view);
     }
 
-    private static ImpressionTracker getImpressionTracker(final Context context) {
+    private static ImpressionTracker getImpressionTracker(@NonNull final Context context) {
         ImpressionTracker impressionTracker = sImpressionTrackerMap.get(context);
         if (impressionTracker == null) {
             impressionTracker = new ImpressionTracker(context);

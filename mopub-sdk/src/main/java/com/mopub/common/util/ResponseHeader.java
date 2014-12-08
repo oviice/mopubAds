@@ -3,7 +3,7 @@ package com.mopub.common.util;
 public enum ResponseHeader {
     AD_TIMEOUT("X-AdTimeout"),
     AD_TYPE("X-Adtype"),
-    CLICKTHROUGH_URL("X-Clickthrough"),
+    CLICK_TRACKING_URL("X-Clickthrough"),
     CUSTOM_EVENT_DATA("X-Custom-Event-Class-Data"),
     CUSTOM_EVENT_NAME("X-Custom-Event-Class-Name"),
     CUSTOM_EVENT_HTML_DATA("X-Custom-Event-Html-Data"),

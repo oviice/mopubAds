@@ -1,6 +1,8 @@
 package com.mopub.nativeads;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -27,7 +29,7 @@ public interface MoPubAdRenderer<T> {
      * @param context The context. Useful for creating a view.
      * @return A new ad view.
      */
-    View createAdView(Context context, ViewGroup parent);
+    View createAdView(@NonNull Context context, @Nullable ViewGroup parent);
 
     /**
      * Renders a view created by {@link #createAdView} by filling it with ad data.
@@ -35,5 +37,5 @@ public interface MoPubAdRenderer<T> {
      * @param view The ad View
      * @param ad The ad data that should be bound to the view.
      */
-    void renderAdView(View view, T ad);
+    void renderAdView(@NonNull View view, @NonNull T ad);
 }

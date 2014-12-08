@@ -15,7 +15,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.shadows.ShadowLocalBroadcastManager;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.Set;
 
 import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
@@ -48,7 +49,7 @@ public class EventForwardingBroadcastReceiverTest {
         context = new Activity();
     }
 
-    @Ignore("pending")
+    @Ignore("Difficult with the number of test factories and mocking involved.")
     @Test
     public void twoDifferentInterstitials_shouldNotHearEachOthersBroadcasts() throws Exception {
         final MoPubInterstitial interstitialA = new MoPubInterstitial(context, "adunitid");
@@ -205,7 +206,7 @@ public class EventForwardingBroadcastReceiverTest {
         verify(customEventInterstitialListener).onInterstitialShown();
     }
 
-    static Intent getIntentForActionAndIdentifier(final String action, final long broadcastIdentifier) {
+    public static Intent getIntentForActionAndIdentifier(final String action, final long broadcastIdentifier) {
         final Intent intent = new Intent(action);
         intent.putExtra("broadcastIdentifier", broadcastIdentifier);
         return intent;

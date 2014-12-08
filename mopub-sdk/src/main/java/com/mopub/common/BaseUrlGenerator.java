@@ -1,8 +1,7 @@
 package com.mopub.common;
 
 import android.net.Uri;
-
-import static com.mopub.common.util.Strings.isEmpty;
+import android.text.TextUtils;
 
 public abstract class BaseUrlGenerator {
     private static final String IFA_PREFIX = "ifa:";
@@ -23,7 +22,7 @@ public abstract class BaseUrlGenerator {
     }
 
     protected void addParam(String key, String value) {
-        if (value == null || isEmpty(value)) {
+        if (TextUtils.isEmpty(value)) {
             return;
         }
 

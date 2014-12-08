@@ -2,6 +2,8 @@ package com.mopub.nativeads;
 
 import android.app.Activity;
 import android.content.Context;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -13,7 +15,9 @@ import com.mopub.common.test.support.SdkTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowLocationManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +26,7 @@ import java.util.List;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.robolectric.Robolectric.application;
 import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(SdkTestRunner.class)
@@ -128,12 +133,104 @@ public class NativeUrlGeneratorTest {
     }
 
     @Test
+    public void generateAdUrl_whenLocationServiceGpsProviderHasMostRecentLocation_shouldUseLocationServiceValue() {
+        Location locationFromDeveloper = new Location("");
+        locationFromDeveloper.setLatitude(42);
+        locationFromDeveloper.setLongitude(-42);
+        locationFromDeveloper.setAccuracy(3.5f);
+        locationFromDeveloper.setTime(1000);
+
+        // Mock out the LocationManager's last known location to be more recent than the
+        // developer-supplied location.
+        ShadowLocationManager shadowLocationManager = Robolectric.shadowOf(
+                (LocationManager) application.getSystemService(Context.LOCATION_SERVICE));
+        Location locationFromSdk = new Location("");
+        locationFromSdk.setLatitude(37);
+        locationFromSdk.setLongitude(-122);
+        locationFromSdk.setAccuracy(5.0f);
+        locationFromSdk.setTime(2000);
+        shadowLocationManager.setLastKnownLocation(LocationManager.GPS_PROVIDER, locationFromSdk);
+
+        RequestParameters requestParameters = new RequestParameters.Builder()
+                .location(locationFromDeveloper)
+                .build();
+        subject = new NativeUrlGenerator(context).withAdUnitId(AD_UNIT_ID);
+        String adUrl = subject.withRequest(requestParameters)
+                .generateUrlString("ads.mopub.com");
+        assertThat(getParameterFromRequestUrl(adUrl, "ll")).isEqualTo("37.0,-122.0");
+        assertThat(getParameterFromRequestUrl(adUrl, "lla")).isEqualTo("5");
+        assertThat(getParameterFromRequestUrl(adUrl, "llsdk")).isEqualTo("1");
+    }
+
+    @Test
+    public void generateAdUrl_whenDeveloperSuppliesMoreRecentLocationThanLocationService_shouldUseDeveloperSuppliedLocation() {
+        Location locationFromDeveloper = new Location("");
+        locationFromDeveloper.setLatitude(42);
+        locationFromDeveloper.setLongitude(-42);
+        locationFromDeveloper.setAccuracy(3.5f);
+        locationFromDeveloper.setTime(1000);
+
+        ShadowLocationManager shadowLocationManager = Robolectric.shadowOf(
+                (LocationManager) application.getSystemService(Context.LOCATION_SERVICE));
+
+        // Mock out the LocationManager's last known location to be older than the
+        // developer-supplied location.
+        Location olderLocation = new Location("");
+        olderLocation.setLatitude(40);
+        olderLocation.setLongitude(-105);
+        olderLocation.setAccuracy(8.0f);
+        olderLocation.setTime(500);
+        shadowLocationManager.setLastKnownLocation(LocationManager.GPS_PROVIDER, olderLocation);
+
+        RequestParameters requestParameters = new RequestParameters.Builder()
+                .location(locationFromDeveloper)
+                .build();
+        subject = new NativeUrlGenerator(context).withAdUnitId(AD_UNIT_ID);
+        String adUrl = subject.withRequest(requestParameters)
+                .generateUrlString("ads.mopub.com");
+        assertThat(getParameterFromRequestUrl(adUrl, "ll")).isEqualTo("42.0,-42.0");
+        assertThat(getParameterFromRequestUrl(adUrl, "lla")).isEqualTo("3");
+        assertThat(getParameterFromRequestUrl(adUrl, "llsdk")).isEmpty();
+    }
+
+    @Test
+    public void generateAdUrl_whenLocationServiceNetworkProviderHasMostRecentLocation_shouldUseLocationServiceValue() {
+        Location locationFromDeveloper = new Location("");
+        locationFromDeveloper.setLatitude(42);
+        locationFromDeveloper.setLongitude(-42);
+        locationFromDeveloper.setAccuracy(3.5f);
+        locationFromDeveloper.setTime(1000);
+
+        // Mock out the LocationManager's last known location to be more recent than the
+        // developer-supplied location.
+        ShadowLocationManager shadowLocationManager = Robolectric.shadowOf(
+                (LocationManager) application.getSystemService(Context.LOCATION_SERVICE));
+        Location locationFromSdk = new Location("");
+        locationFromSdk.setLatitude(38);
+        locationFromSdk.setLongitude(-123);
+        locationFromSdk.setAccuracy(5.0f);
+        locationFromSdk.setTime(2000);
+        shadowLocationManager.setLastKnownLocation(LocationManager.NETWORK_PROVIDER,
+                locationFromSdk);
+
+        RequestParameters requestParameters = new RequestParameters.Builder()
+                .location(locationFromDeveloper)
+                .build();
+        subject = new NativeUrlGenerator(context).withAdUnitId(AD_UNIT_ID);
+        String adUrl = subject.withRequest(requestParameters)
+                .generateUrlString("ads.mopub.com");
+        assertThat(getParameterFromRequestUrl(adUrl, "ll")).isEqualTo("38.0,-123.0");
+        assertThat(getParameterFromRequestUrl(adUrl, "lla")).isEqualTo("5");
+        assertThat(getParameterFromRequestUrl(adUrl, "llsdk")).isEqualTo("1");
+    }
+
+    @Test
     public void enableLocation_shouldIncludeLocationInUrl() {
         MoPub.setLocationAwareness(MoPub.LocationAwareness.NORMAL);
         subject = new NativeUrlGenerator(context).withAdUnitId(AD_UNIT_ID);
 
         String requestString = generateMinimumUrlString();
-        assertThat(getLocationFromRequestUrl(requestString)).isNotNull();
+        assertThat(getParameterFromRequestUrl(requestString, "ll")).isNotNull();
     }
 
     @Test
@@ -142,7 +239,26 @@ public class NativeUrlGeneratorTest {
         subject = new NativeUrlGenerator(context).withAdUnitId(AD_UNIT_ID);
 
         String requestString = generateMinimumUrlString();
-        assertThat(getLocationFromRequestUrl(requestString)).isNullOrEmpty();
+        assertThat(getParameterFromRequestUrl(requestString, "ll")).isNullOrEmpty();
+    }
+
+    @Test
+    public void disableLocationCollection_whenLocationServiceHasMostRecentLocation_shouldNotIncludeLocationInUrl() {
+        MoPub.setLocationAwareness(MoPub.LocationAwareness.DISABLED);
+        subject = new NativeUrlGenerator(context);
+
+        // Mock out the LocationManager's last known location.
+        ShadowLocationManager shadowLocationManager = Robolectric.shadowOf(
+                (LocationManager) application.getSystemService(Context.LOCATION_SERVICE));
+        Location locationFromSdk = new Location("");
+        locationFromSdk.setLatitude(37);
+        locationFromSdk.setLongitude(-122);
+        locationFromSdk.setAccuracy(5.0f);
+        locationFromSdk.setTime(2000);
+        shadowLocationManager.setLastKnownLocation(LocationManager.GPS_PROVIDER, locationFromSdk);
+
+        String requestString = generateMinimumUrlString();
+        assertThat(getParameterFromRequestUrl(requestString, "ll")).isNullOrEmpty();
     }
 
     private List<String> getDesiredAssetsListFromRequestUrlString(String requestString) {
@@ -164,15 +280,15 @@ public class NativeUrlGeneratorTest {
         return networkOperatorName;
     }
 
-    private String getLocationFromRequestUrl(String requestString) {
+    private String getParameterFromRequestUrl(String requestString, String key) {
         Uri requestUri = Uri.parse(requestString);
-        String location = requestUri.getQueryParameter("ll");
+        String parameter = requestUri.getQueryParameter(key);
 
-        if (TextUtils.isEmpty(location)) {
+        if (TextUtils.isEmpty(parameter)) {
             return "";
         }
 
-        return location;
+        return parameter;
     }
 
     private String generateMinimumUrlString() {

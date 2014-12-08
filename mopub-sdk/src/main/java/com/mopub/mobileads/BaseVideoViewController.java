@@ -8,18 +8,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.VideoView;
+
 import com.mopub.common.logging.MoPubLog;
 
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_FAIL;
 
-abstract class BaseVideoViewController {
+public abstract class BaseVideoViewController {
     private final Context mContext;
     private final RelativeLayout mLayout;
     private final BaseVideoViewControllerListener mBaseVideoViewControllerListener;
     private long mBroadcastIdentifier;
 
-    interface BaseVideoViewControllerListener {
+    public interface BaseVideoViewControllerListener {
         void onSetContentView(final View view);
         void onSetRequestedOrientation(final int requestedOrientation);
         void onFinish();
@@ -28,14 +29,14 @@ abstract class BaseVideoViewController {
                 final Bundle extras);
     }
 
-    BaseVideoViewController(final Context context, final long broadcastIdentifier, final BaseVideoViewControllerListener baseVideoViewControllerListener) {
+    protected BaseVideoViewController(final Context context, final long broadcastIdentifier, final BaseVideoViewControllerListener baseVideoViewControllerListener) {
         mContext = context.getApplicationContext();
         mBroadcastIdentifier = broadcastIdentifier;
         mBaseVideoViewControllerListener = baseVideoViewControllerListener;
         mLayout = new RelativeLayout(mContext);
     }
 
-     void onCreate() {
+     protected void onCreate() {
         final RelativeLayout.LayoutParams adViewLayout = new RelativeLayout.LayoutParams(
                 RelativeLayout.LayoutParams.FILL_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
         adViewLayout.addRule(RelativeLayout.CENTER_IN_PARENT);
@@ -43,12 +44,12 @@ abstract class BaseVideoViewController {
         mBaseVideoViewControllerListener.onSetContentView(mLayout);
     }
 
-    abstract VideoView getVideoView();
-    abstract void onPause();
-    abstract void onResume();
-    abstract void onDestroy();
+    protected abstract VideoView getVideoView();
+    protected abstract void onPause();
+    protected abstract void onResume();
+    protected abstract void onDestroy();
 
-    boolean backButtonEnabled() {
+    public boolean backButtonEnabled() {
         return true;
     }
 
@@ -56,28 +57,27 @@ abstract class BaseVideoViewController {
         // By default, the activity result is ignored
     }
 
-    BaseVideoViewControllerListener getBaseVideoViewControllerListener() {
+    protected BaseVideoViewControllerListener getBaseVideoViewControllerListener() {
         return mBaseVideoViewControllerListener;
     }
 
-    Context getContext() {
+    protected Context getContext() {
         return mContext;
     }
 
-    ViewGroup getLayout() {
+    public ViewGroup getLayout() {
         return mLayout;
     }
 
-
-    void videoError(boolean shouldFinish) {
-        MoPubLog.d("Error: video can not be played.");
+    protected void videoError(boolean shouldFinish) {
+        MoPubLog.e("Video cannot be played.");
         broadcastAction(ACTION_INTERSTITIAL_FAIL);
         if (shouldFinish) {
            mBaseVideoViewControllerListener.onFinish();
         }
     }
 
-    void videoCompleted(boolean shouldFinish) {
+    protected void videoCompleted(boolean shouldFinish) {
         if (shouldFinish) {
             mBaseVideoViewControllerListener.onFinish();
         }

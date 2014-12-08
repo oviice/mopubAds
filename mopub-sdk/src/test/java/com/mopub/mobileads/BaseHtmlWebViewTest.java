@@ -1,7 +1,6 @@
 package com.mopub.mobileads;
 
 import android.app.Activity;
-import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.view.MotionEvent;
 import android.view.View;
@@ -12,13 +11,10 @@ import com.mopub.common.test.support.SdkTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowWebView;
 
 import static android.webkit.WebSettings.PluginState;
-import static com.mopub.common.util.VersionCode.HONEYCOMB_MR2;
-import static com.mopub.common.util.VersionCode.ICE_CREAM_SANDWICH;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;

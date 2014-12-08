@@ -17,8 +17,8 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.tester.org.apache.http.RequestMatcher;
 import org.robolectric.tester.org.apache.http.TestHttpResponse;
 
+import static com.mopub.common.HttpClient.getWebViewUserAgent;
 import static com.mopub.common.HttpClient.initializeHttpGet;
-import static junit.framework.Assert.fail;
 import static org.fest.assertions.api.Assertions.assertThat;
 
 @RunWith(RobolectricTestRunner.class)
@@ -69,13 +69,13 @@ public class HttpClientTest {
     }
 
     @Test
+    public void getWebViewUserAgent_whenUserAgentNotSet_shouldReturnDefault() {
+        assertThat(getWebViewUserAgent("test")).isEqualTo("test");
+    }
+
+    @Test(expected = NullPointerException.class)
     public void initializeHttpGet_withNullUrl_shouldThrowNullPointerException() throws Exception {
-        try {
-            HttpGet httpGet = initializeHttpGet(null, context);
-            fail("Expecting null pointer expection to be thrown");
-        } catch (NullPointerException e) {
-            // pass
-        }
+        HttpGet httpGet = initializeHttpGet(null, context);
     }
 
     @Test

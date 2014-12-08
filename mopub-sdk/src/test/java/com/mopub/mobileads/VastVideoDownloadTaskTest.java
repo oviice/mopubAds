@@ -55,11 +55,6 @@ public class VastVideoDownloadTaskTest {
         subject = new VastVideoDownloadTask(mVastVideoDownloadTaskListener);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        CacheService.clearAndNullCaches();
-    }
-
     @Test
     public void execute_shouldAddToCacheAndSignalDownloadSuccess() throws Exception {
         subject.execute(videoUrl);

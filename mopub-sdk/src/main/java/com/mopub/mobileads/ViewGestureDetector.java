@@ -10,7 +10,7 @@ import com.mopub.common.logging.MoPubLog;
 public class ViewGestureDetector extends GestureDetector {
     private final View mView;
 
-    interface UserClickListener {
+    public interface UserClickListener {
         void onUserClick();
         void onResetUserClick();
         boolean wasClicked();
@@ -32,7 +32,7 @@ public class ViewGestureDetector extends GestureDetector {
         setIsLongpressEnabled(false);
     }
 
-    void sendTouchEvent(MotionEvent motionEvent) {
+    public void sendTouchEvent(MotionEvent motionEvent) {
         switch (motionEvent.getAction()) {
             case MotionEvent.ACTION_UP:
                 if (mUserClickListener != null) {
@@ -60,7 +60,7 @@ public class ViewGestureDetector extends GestureDetector {
         }
     }
 
-    void setUserClickListener(UserClickListener listener) {
+    public void setUserClickListener(UserClickListener listener) {
         mUserClickListener = listener;
     }
 

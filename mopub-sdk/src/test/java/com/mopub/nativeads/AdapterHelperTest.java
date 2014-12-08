@@ -1,6 +1,7 @@
 package com.mopub.nativeads;
 
 import android.app.Activity;
+import android.content.Context;
 
 import com.mopub.common.test.support.SdkTestRunner;
 
@@ -9,7 +10,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static org.fest.assertions.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 
 @RunWith(SdkTestRunner.class)
 public class AdapterHelperTest {
@@ -20,31 +21,29 @@ public class AdapterHelperTest {
     private int interval;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         context = new Activity();
         start = 1;
         interval = 2;
         subject = new AdapterHelper(context, start, interval);
     }
 
-    @Test
-    public void constructor_whenPassedAnApplicationContext_shouldThrowIllegalArgumentException() throws Exception {
-        try {
-            new AdapterHelper(context.getApplicationContext(), start, interval);
-            fail("Expected IllegalArgumentException to be thrown");
-        } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage()).isEqualTo("Illegal argument: Context must be instance of Activity.");
-        }
+    @Test(expected = IllegalArgumentException.class)
+    public void constructor_whenPassedAnApplicationContext_shouldThrowIllegalArgumentException() {
+        new AdapterHelper(context.getApplicationContext(), start, interval);
     }
 
     @Test
-    public void getAdView_withNullActivityContext_shouldReturnEmptyViewWithApplicationContext() throws Exception {
+    public void getAdView_withNullActivityContext_shouldReturnEmptyViewWithApplicationContext() {
         subject.clearActivityContext();
-        assertThat(subject.getAdView(null, null, null, null, null).getContext()).isEqualTo(context.getApplication());
+        Context viewContext = subject.getAdView(null, null, mock(NativeResponse.class),
+                mock(ViewBinder.class),
+                null).getContext();
+        assertThat(viewContext).isEqualTo(context.getApplication());
     }
 
     @Test
-    public void adapterHelper_withContentRowCountOf10_shouldCalculateCorrectly() throws Exception {
+    public void adapterHelper_withContentRowCountOf10_shouldCalculateCorrectly() {
         contentRowCount = 10;
 
         start = 0;
@@ -158,7 +157,7 @@ public class AdapterHelperTest {
     }
 
     @Test
-    public void adapterHelper_withContentRowCountOf1_shouldCalculateCorrectly() throws Exception {
+    public void adapterHelper_withContentRowCountOf1_shouldCalculateCorrectly() {
         contentRowCount = 1;
         start = 0;
         interval = 2;

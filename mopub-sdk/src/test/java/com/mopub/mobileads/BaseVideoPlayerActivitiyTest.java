@@ -61,8 +61,7 @@ public class BaseVideoPlayerActivitiyTest {
         assertThat(expectedVastVideoConfiguration).isEqualsToByComparingFields(vastVideoConfiguration);
     }
 
-    static void assertMraidVideoPlayerActivityStarted(final Class clazz,
-            final String url,
+    public static void assertMraidVideoPlayerActivityStarted(final Class clazz, final String url,
             final AdConfiguration adConfiguration) {
         final Intent intent = Robolectric.getShadowApplication().getNextStartedActivity();
         assertIntentAndAdConfigurationAreCorrect(intent, clazz, adConfiguration);

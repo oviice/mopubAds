@@ -1,8 +1,11 @@
 package com.mopub.mobileads;
 
 import android.os.AsyncTask;
+
+import com.mopub.common.event.MoPubEvents;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.factories.HttpClientFactory;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
@@ -12,7 +15,7 @@ import org.apache.http.conn.ClientConnectionManager;
 import static com.mopub.common.util.ResponseHeader.AD_TYPE;
 import static com.mopub.common.util.ResponseHeader.USER_AGENT;
 import static com.mopub.common.util.ResponseHeader.WARMUP;
-import static com.mopub.mobileads.util.HttpResponses.extractHeader;
+import static com.mopub.common.network.HeaderUtils.extractHeader;
 
 public class AdFetchTask extends AsyncTask<String, Void, AdLoadTask> {
     private TaskTracker mTaskTracker;
@@ -25,6 +28,7 @@ public class AdFetchTask extends AsyncTask<String, Void, AdLoadTask> {
     private AdFetcher.FetchStatus mFetchStatus = AdFetcher.FetchStatus.NOT_SET;
     private static final int MAXIMUM_REFRESH_TIME_MILLISECONDS = 600000;
     private static final double EXPONENTIAL_BACKOFF_FACTOR = 1.5;
+    private static final MoPubEvents.Type EVENT_TYPE = MoPubEvents.Type.AD_REQUEST;
 
     public AdFetchTask(TaskTracker taskTracker, AdViewController adViewController, String userAgent, int timeoutMilliseconds) {
         mTaskTracker = taskTracker;

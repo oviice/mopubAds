@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.webkit.WebView;
+
 import com.mopub.common.MoPubBrowser;
 import com.mopub.common.test.support.SdkTestRunner;
 
@@ -451,6 +452,8 @@ public class HtmlWebViewClientTest {
 
         verify(htmlWebView, never()).onResetUserClick();
         assertThat(result).isFalse();
+
+        assertThat(Robolectric.getShadowApplication().getNextStartedActivity()).isNull();
     }
 
     @Test

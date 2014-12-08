@@ -12,11 +12,11 @@ description = '''MoPub SDK'''
 
 android {
     compileSdkVersion 19
-    buildToolsVersion '19.1.0'
+    buildToolsVersion '21.1.1'
 
     defaultConfig {
         versionCode 1
-        versionName "3.2.2"
+        versionName "3.3.0"
         minSdkVersion 9
         targetSdkVersion 19
         consumerProguardFiles 'proguard.txt'
@@ -36,7 +36,7 @@ android {
 
     buildTypes {
         release {
-            runProguard false
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), file('proguard.txt')
         }
     }
@@ -49,6 +49,7 @@ android {
 
 dependencies {
     compile 'com.android.support:support-v4:19.1.+'
+    compile 'com.android.support:support-annotations:20.0.0'
 }
 
 // Don't run the Robolectric Unit Tests. They don't build properly in Gradle or Android Studio in this version.

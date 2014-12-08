@@ -34,12 +34,12 @@ class VastVideoInterstitial extends ResponseBodyInterstitial implements VastMana
     }
 
     @Override
-    protected void showInterstitial() {
+    public void showInterstitial() {
         MraidVideoPlayerActivity.startVast(mContext, mVastVideoConfiguration, mAdConfiguration);
     }
 
     @Override
-    protected void onInvalidate() {
+    public void onInvalidate() {
         if (mVastManager != null) {
             mVastManager.cancel();
         }

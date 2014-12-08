@@ -39,8 +39,6 @@ public class CacheServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        CacheService.clearAndNullCaches();
-
         context = new Activity();
         key1 = "http://www.mopub.com/";
         data1 = "image_data_1";
@@ -57,11 +55,6 @@ public class CacheServiceTest {
                 return null;
             }
         }).when(diskCacheGetListener).onComplete(anyString(), any(byte[].class));
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        CacheService.clearAndNullCaches();
     }
 
     @Test

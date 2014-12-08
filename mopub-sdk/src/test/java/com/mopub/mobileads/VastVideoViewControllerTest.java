@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.VideoView;
+
 import com.mopub.common.MoPubBrowser;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.Dips;
@@ -22,6 +23,7 @@ import com.mopub.common.util.Drawables;
 import com.mopub.mobileads.test.support.GestureUtils;
 import com.mopub.mobileads.util.vast.VastCompanionAd;
 import com.mopub.mobileads.util.vast.VastVideoConfiguration;
+
 import org.apache.http.HttpRequest;
 import org.apache.maven.artifact.ant.shaded.ReflectionUtils;
 import org.junit.After;
@@ -37,10 +39,10 @@ import org.robolectric.shadows.ShadowVideoView;
 import org.robolectric.tester.org.apache.http.RequestMatcher;
 import org.robolectric.tester.org.apache.http.TestHttpResponse;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 
-import static android.media.MediaPlayer.OnPreparedListener;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static com.mopub.common.MoPubBrowser.DESTINATION_URL_KEY;
 import static com.mopub.common.util.test.support.CommonUtils.assertHttpRequestsMade;
@@ -197,7 +199,8 @@ public class VastVideoViewControllerTest {
         initializeSubject();
         ViewGroup viewGroup = subject.getLayout();
         LayerDrawable layerDrawable = (LayerDrawable) viewGroup.getBackground();
-        assertThat(layerDrawable.getDrawable(0)).isEqualTo(Drawables.THATCHED_BACKGROUND.decodeImage(context));
+        assertThat(layerDrawable.getDrawable(0)).isEqualTo(Drawables.THATCHED_BACKGROUND.createDrawable(
+                context));
         assertThat(layerDrawable.getDrawable(1)).isEqualTo(
                 new GradientDrawable(
                         GradientDrawable.Orientation.TOP_BOTTOM,
@@ -344,7 +347,6 @@ public class VastVideoViewControllerTest {
 
         verify(baseVideoViewControllerListener, never()).onFinish();
     }
-
 
     @Test
     public void onTouch_withTouchUp_whenVideoLessThan16Seconds_andClickBeforeEnd_shouldDoNothing() throws Exception {
@@ -496,10 +498,7 @@ public class VastVideoViewControllerTest {
         stub(mediaPlayer.getDuration()).toReturn(1000);
         setMediaPlayer(mediaPlayer);
 
-        // this callback is typically called when the media filed is loaded and ready to play
-        // invoke this manually since we are using a mock url and don't want to wait
-        final OnPreparedListener onPreparedListener = getShadowVideoView().getOnPreparedListener();
-        onPreparedListener.onPrepared(null);
+        getShadowVideoView().getOnPreparedListener().onPrepared(null);
 
         assertThat(subject.getShowCloseButtonDelay()).isEqualTo(1000);
     }

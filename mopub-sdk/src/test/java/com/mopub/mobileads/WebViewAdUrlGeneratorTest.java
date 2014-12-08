@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.location.Location;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -17,20 +18,22 @@ import com.mopub.common.ClientMetadata;
 import com.mopub.common.GpsHelper;
 import com.mopub.common.GpsHelperTest;
 import com.mopub.common.MoPub;
-import com.mopub.common.SharedPreferencesHelper;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.Reflection.MethodBuilder;
 import com.mopub.common.util.Utils;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
 import com.mopub.mobileads.test.support.MoPubShadowTelephonyManager;
+import com.mopub.mraid.MraidNativeCommandHandler;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowConnectivityManager;
+import org.robolectric.shadows.ShadowLocationManager;
 import org.robolectric.shadows.ShadowNetworkInfo;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
@@ -45,7 +48,6 @@ import static android.net.ConnectivityManager.TYPE_WIFI;
 import static android.telephony.TelephonyManager.NETWORK_TYPE_UNKNOWN;
 import static com.mopub.common.AdUrlGenerator.TwitterAppInstalledStatus;
 import static com.mopub.common.ClientMetadata.MoPubNetworkType;
-import static com.mopub.common.util.Strings.isEmpty;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -71,7 +73,8 @@ public class WebViewAdUrlGeneratorTest {
     public void setup() {
         context = new Activity();
         shadowOf(context).grantPermissions(ACCESS_NETWORK_STATE);
-        subject = new WebViewAdUrlGenerator(context);
+        subject = new WebViewAdUrlGenerator(context,
+                new MraidNativeCommandHandler().isStorePictureSupported(context));
         Settings.Secure.putString(application.getContentResolver(), Settings.Secure.ANDROID_ID, TEST_UDID);
         expectedUdid = "sha%3A" + Utils.sha1(TEST_UDID);
         configuration = application.getResources().getConfiguration();
@@ -340,11 +343,8 @@ public class WebViewAdUrlGeneratorTest {
         when(methodBuilder.execute()).thenReturn(GpsHelper.GOOGLE_PLAY_SUCCESS_CODE);
 
         GpsHelperTest.TestAdInfo adInfo = new GpsHelperTest.TestAdInfo();
-        SharedPreferencesHelper.getSharedPreferences(context)
-                .edit()
-                .putString(GpsHelper.ADVERTISING_ID_KEY, adInfo.ADVERTISING_ID)
-                .putBoolean(GpsHelper.IS_LIMIT_AD_TRACKING_ENABLED_KEY, adInfo.LIMIT_AD_TRACKING_ENABLED)
-                .commit();
+        final ClientMetadata clientMetadata = ClientMetadata.getInstance(context);
+        clientMetadata.setAdvertisingInfo(adInfo.mAdId, adInfo.mLimitAdTrackingEnabled);
 
         expectedUdid = "ifa%3A" + adInfo.ADVERTISING_ID;
         String expectedAdUrl = new AdUrlBuilder(expectedUdid)
@@ -354,28 +354,126 @@ public class WebViewAdUrlGeneratorTest {
     }
 
     @Test
+    public void generateAdUrl_whenLocationServiceGpsProviderHasMostRecentLocation_shouldUseLocationServiceValue() {
+        Location locationFromDeveloper = new Location("");
+        locationFromDeveloper.setLatitude(42);
+        locationFromDeveloper.setLongitude(-42);
+        locationFromDeveloper.setAccuracy(3.5f);
+        locationFromDeveloper.setTime(1000);
+
+        // Mock out the LocationManager's last known location to be more recent than the
+        // developer-supplied location.
+        ShadowLocationManager shadowLocationManager = Robolectric.shadowOf(
+                (LocationManager) application.getSystemService(Context.LOCATION_SERVICE));
+        Location locationFromSdk = new Location("");
+        locationFromSdk.setLatitude(37);
+        locationFromSdk.setLongitude(-122);
+        locationFromSdk.setAccuracy(5.0f);
+        locationFromSdk.setTime(2000);
+        shadowLocationManager.setLastKnownLocation(LocationManager.GPS_PROVIDER, locationFromSdk);
+
+        String adUrl = subject.withLocation(locationFromDeveloper)
+                .generateUrlString("ads.mopub.com");
+        assertThat(getParameterFromRequestUrl(adUrl, "ll")).isEqualTo("37.0,-122.0");
+        assertThat(getParameterFromRequestUrl(adUrl, "lla")).isEqualTo("5");
+        assertThat(getParameterFromRequestUrl(adUrl, "llsdk")).isEqualTo("1");
+    }
+
+    @Test
+    public void generateAdUrl_whenDeveloperSuppliesMoreRecentLocationThanLocationService_shouldUseDeveloperSuppliedLocation() {
+        Location locationFromDeveloper = new Location("");
+        locationFromDeveloper.setLatitude(42);
+        locationFromDeveloper.setLongitude(-42);
+        locationFromDeveloper.setAccuracy(3.5f);
+        locationFromDeveloper.setTime(1000);
+
+        ShadowLocationManager shadowLocationManager = Robolectric.shadowOf(
+                (LocationManager) application.getSystemService(Context.LOCATION_SERVICE));
+
+        // Mock out the LocationManager's last known location to be older than the
+        // developer-supplied location.
+        Location olderLocation = new Location("");
+        olderLocation.setLatitude(40);
+        olderLocation.setLongitude(-105);
+        olderLocation.setAccuracy(8.0f);
+        olderLocation.setTime(500);
+        shadowLocationManager.setLastKnownLocation(LocationManager.GPS_PROVIDER, olderLocation);
+
+        String adUrl = subject.withLocation(locationFromDeveloper)
+                .generateUrlString("ads.mopub.com");
+        assertThat(getParameterFromRequestUrl(adUrl, "ll")).isEqualTo("42.0,-42.0");
+        assertThat(getParameterFromRequestUrl(adUrl, "lla")).isEqualTo("3");
+        assertThat(getParameterFromRequestUrl(adUrl, "llsdk")).isEmpty();
+    }
+
+    @Test
+    public void generateAdUrl_whenLocationServiceNetworkProviderHasMostRecentLocation_shouldUseLocationServiceValue() {
+        Location locationFromDeveloper = new Location("");
+        locationFromDeveloper.setLatitude(42);
+        locationFromDeveloper.setLongitude(-42);
+        locationFromDeveloper.setAccuracy(3.5f);
+        locationFromDeveloper.setTime(1000);
+
+        // Mock out the LocationManager's last known location to be more recent than the
+        // developer-supplied location.
+        ShadowLocationManager shadowLocationManager = Robolectric.shadowOf(
+                (LocationManager) application.getSystemService(Context.LOCATION_SERVICE));
+        Location locationFromSdk = new Location("");
+        locationFromSdk.setLatitude(38);
+        locationFromSdk.setLongitude(-123);
+        locationFromSdk.setAccuracy(5.0f);
+        locationFromSdk.setTime(2000);
+        shadowLocationManager.setLastKnownLocation(LocationManager.NETWORK_PROVIDER,
+                locationFromSdk);
+
+        String adUrl = subject.withLocation(locationFromDeveloper)
+                .generateUrlString("ads.mopub.com");
+        assertThat(getParameterFromRequestUrl(adUrl, "ll")).isEqualTo("38.0,-123.0");
+        assertThat(getParameterFromRequestUrl(adUrl, "lla")).isEqualTo("5");
+        assertThat(getParameterFromRequestUrl(adUrl, "llsdk")).isEqualTo("1");
+    }
+
+    @Test
     public void enableLocationTracking_shouldIncludeLocationInUrl() {
         MoPub.setLocationAwareness(MoPub.LocationAwareness.NORMAL);
         String adUrl = generateMinimumUrlString();
-        assertThat(getLocationFromRequestUrl(adUrl)).isNotNull();
+        assertThat(getParameterFromRequestUrl(adUrl, "ll")).isNotNull();
     }
 
     @Test
     public void disableLocationCollection_shouldNotIncludeLocationInUrl() {
         MoPub.setLocationAwareness(MoPub.LocationAwareness.DISABLED);
         String adUrl = generateMinimumUrlString();
-        assertThat(getLocationFromRequestUrl(adUrl)).isNullOrEmpty();
+        assertThat(getParameterFromRequestUrl(adUrl, "ll")).isNullOrEmpty();
     }
 
-    private String getLocationFromRequestUrl(String requestString) {
-        Uri requestUri = Uri.parse(requestString);
-        String location = requestUri.getQueryParameter("ll");
+    @Test
+    public void disableLocationCollection_whenLocationServiceHasMostRecentLocation_shouldNotIncludeLocationInUrl() {
+        MoPub.setLocationAwareness(MoPub.LocationAwareness.DISABLED);
 
-        if (TextUtils.isEmpty(location)) {
+        // Mock out the LocationManager's last known location.
+        ShadowLocationManager shadowLocationManager = Robolectric.shadowOf(
+                (LocationManager) application.getSystemService(Context.LOCATION_SERVICE));
+        Location locationFromSdk = new Location("");
+        locationFromSdk.setLatitude(37);
+        locationFromSdk.setLongitude(-122);
+        locationFromSdk.setAccuracy(5.0f);
+        locationFromSdk.setTime(2000);
+        shadowLocationManager.setLastKnownLocation(LocationManager.GPS_PROVIDER, locationFromSdk);
+
+        String adUrl = generateMinimumUrlString();
+        assertThat(getParameterFromRequestUrl(adUrl, "ll")).isNullOrEmpty();
+    }
+
+    private String getParameterFromRequestUrl(String requestString, String key) {
+        Uri requestUri = Uri.parse(requestString);
+        String parameter = requestUri.getQueryParameter(key);
+
+        if (TextUtils.isEmpty(parameter)) {
             return "";
         }
 
-        return location;
+        return parameter;
     }
 
     private NetworkInfo createNetworkInfo(int type) {
@@ -418,7 +516,7 @@ public class WebViewAdUrlGeneratorTest {
                     "&udid=" + expectedUdid +
                     paramIfNotEmpty("dnt", dnt) +
                     paramIfNotEmpty("q", query) +
-                    (isEmpty(latLon) ? "" : "&ll=" + latLon + "&lla=" + locationAccuracy) +
+                    (TextUtils.isEmpty(latLon) ? "" : "&ll=" + latLon + "&lla=" + locationAccuracy) +
                     "&z=-0700" +
                     "&o=u" +
                     "&sc_a=1.0" +
@@ -493,7 +591,7 @@ public class WebViewAdUrlGeneratorTest {
         }
 
         private String paramIfNotEmpty(String key, String value) {
-            if (isEmpty(value)) {
+            if (TextUtils.isEmpty(value)) {
                 return "";
             } else {
                 return "&" + key + "=" + value;

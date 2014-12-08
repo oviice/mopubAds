@@ -1,6 +1,9 @@
 package com.mopub.common.util;
 
+import com.mopub.common.VisibleForTesting;
+
 import java.security.MessageDigest;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Utils {
@@ -19,7 +22,7 @@ public class Utils {
                 stringBuilder.append(String.format("%02X", b));
             }
 
-            return stringBuilder.toString().toLowerCase();
+            return stringBuilder.toString().toLowerCase(Locale.US);
         } catch (Exception e) {
             return "";
         }

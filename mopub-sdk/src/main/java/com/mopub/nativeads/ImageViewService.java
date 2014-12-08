@@ -1,6 +1,8 @@
 package com.mopub.nativeads;
 
 import android.graphics.Bitmap;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.widget.ImageView;
 
 import com.mopub.common.VisibleForTesting;
@@ -22,7 +24,7 @@ class ImageViewService {
 
     private ImageViewService(){}
 
-    static void loadImageView(final String url, final ImageView imageView) {
+    static void loadImageView(@Nullable final String url, @Nullable final ImageView imageView) {
         if (imageView == null) {
             MoPubLog.d("Attempted to load an image into a null ImageView");
             return;
@@ -45,7 +47,7 @@ class ImageViewService {
     }
 
     private static class MyImageViewServiceListener implements ImageServiceListener {
-        private final WeakReference<ImageView> mImageView;
+        @NonNull private final WeakReference<ImageView> mImageView;
         private final String mUrl;
         private final long mUniqueId;
 
@@ -56,7 +58,7 @@ class ImageViewService {
         }
 
         @Override
-        public void onSuccess(final Map<String, Bitmap> bitmaps) {
+        public void onSuccess(@Nullable final Map<String, Bitmap> bitmaps) {
             final ImageView imageView = mImageView.get();
             if (imageView == null || bitmaps == null || !bitmaps.containsKey(mUrl)) {
                 return;

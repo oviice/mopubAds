@@ -110,7 +110,7 @@ public class MoPubBrowser extends Activity {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
-                mForwardButton.setImageDrawable(UNRIGHT_ARROW.decodeImage(MoPubBrowser.this));
+                mForwardButton.setImageDrawable(UNRIGHT_ARROW.createDrawable(MoPubBrowser.this));
             }
 
             @Override
@@ -118,13 +118,13 @@ public class MoPubBrowser extends Activity {
                 super.onPageFinished(view, url);
 
                 Drawable backImageDrawable = view.canGoBack()
-                        ? LEFT_ARROW.decodeImage(MoPubBrowser.this)
-                        : UNLEFT_ARROW.decodeImage(MoPubBrowser.this);
+                        ? LEFT_ARROW.createDrawable(MoPubBrowser.this)
+                        : UNLEFT_ARROW.createDrawable(MoPubBrowser.this);
                 mBackButton.setImageDrawable(backImageDrawable);
 
                 Drawable forwardImageDrawable = view.canGoForward()
-                        ? RIGHT_ARROW.decodeImage(MoPubBrowser.this)
-                        : UNRIGHT_ARROW.decodeImage(MoPubBrowser.this);
+                        ? RIGHT_ARROW.createDrawable(MoPubBrowser.this)
+                        : UNRIGHT_ARROW.createDrawable(MoPubBrowser.this);
                 mForwardButton.setImageDrawable(forwardImageDrawable);
             }
         });
@@ -207,13 +207,13 @@ public class MoPubBrowser extends Activity {
         RelativeLayout.LayoutParams innerLayoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
         innerLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
         innerLayout.setLayoutParams(innerLayoutParams);
-        innerLayout.setBackgroundDrawable(BACKGROUND.decodeImage(this));
+        innerLayout.setBackgroundDrawable(BACKGROUND.createDrawable(this));
         outerLayout.addView(innerLayout);
 
-        mBackButton = getButton(LEFT_ARROW.decodeImage(this));
-        mForwardButton = getButton(RIGHT_ARROW.decodeImage(this));
-        mRefreshButton = getButton(REFRESH.decodeImage(this));
-        mCloseButton = getButton(CLOSE.decodeImage(this));
+        mBackButton = getButton(LEFT_ARROW.createDrawable(this));
+        mForwardButton = getButton(RIGHT_ARROW.createDrawable(this));
+        mRefreshButton = getButton(REFRESH.createDrawable(this));
+        mCloseButton = getButton(CLOSE.createDrawable(this));
 
         innerLayout.addView(mBackButton);
         innerLayout.addView(mForwardButton);

@@ -6,7 +6,7 @@ import java.io.InputStream;
 public class Strings {
     public static String fromStream(InputStream inputStream) throws IOException {
         int numberBytesRead = 0;
-        StringBuffer out = new StringBuffer();
+        StringBuilder out = new StringBuilder();
         byte[] bytes = new byte[4096];
 
         while (numberBytesRead != -1) {
@@ -17,13 +17,5 @@ public class Strings {
         inputStream.close();
 
         return out.toString();
-    }
-
-    public static boolean isEmpty(String input) {
-        if (input == null) {
-            return false;
-        } else {
-            return input.length() == 0;
-        }
     }
 }

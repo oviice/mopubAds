@@ -1,27 +1,30 @@
 package com.mopub.nativeads;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 
 import com.mopub.common.BaseUrlGenerator;
 import com.mopub.common.ClientMetadata;
+import com.mopub.common.Constants;
 
 class PositioningUrlGenerator extends BaseUrlGenerator {
     private static final String POSITIONING_API_VERSION = "1";
 
-    private final Context mContext;
-    private String mAdUnitId;
+    @NonNull private final Context mContext;
+    @NonNull private String mAdUnitId;
 
-    public PositioningUrlGenerator(Context context) {
+    public PositioningUrlGenerator(@NonNull Context context) {
         mContext = context;
     }
 
-    public PositioningUrlGenerator withAdUnitId(final String adUnitId) {
+    @NonNull
+    public PositioningUrlGenerator withAdUnitId(@NonNull final String adUnitId) {
         mAdUnitId = adUnitId;
         return this;
     }
 
     @Override
-    public String generateUrlString(final String serverHostname) {
+    public String generateUrlString(@NonNull final String serverHostname) {
         initUrlString(serverHostname, Constants.POSITIONING_HANDLER);
 
         setAdUnitId(mAdUnitId);
@@ -43,11 +46,11 @@ class PositioningUrlGenerator extends BaseUrlGenerator {
         return getFinalUrlString();
     }
 
-    private void setAdUnitId(String adUnitId) {
+    private void setAdUnitId(@NonNull String adUnitId) {
         addParam("id", adUnitId);
     }
 
-    private void setSdkVersion(String sdkVersion) {
+    private void setSdkVersion(@NonNull String sdkVersion) {
         addParam("nsv", sdkVersion);
     }
 }

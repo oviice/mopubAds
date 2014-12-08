@@ -29,7 +29,7 @@ public class HtmlInterstitial extends ResponseBodyInterstitial {
     }
 
     @Override
-    protected void showInterstitial() {
+    public void showInterstitial() {
         MoPubActivity.start(mContext, mHtmlData, mIsScrollable, mRedirectUrl, mClickthroughUrl, mAdConfiguration);
     }
 }

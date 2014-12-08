@@ -11,8 +11,14 @@ import static org.fest.assertions.api.Assertions.assertThat;
 @RunWith(RobolectricTestRunner.class)
 public class DrawablesTest {
     @Test
-    public void decodeImage_shouldCacheDrawables() throws Exception {
-        assertThat(Drawables.BACKGROUND.decodeImage(new Activity()))
-                .isSameAs(Drawables.BACKGROUND.decodeImage(new Activity()));
+    public void createDrawable_shouldNotCacheDrawables() throws Exception {
+        assertThat(Drawables.BACKGROUND.createDrawable(new Activity()))
+                .isNotSameAs(Drawables.BACKGROUND.createDrawable(new Activity()));
+    }
+
+    @Test
+    public void getBitmap_shouldCacheBitmap() throws Exception {
+        assertThat(Drawables.BACKGROUND.getBitmap())
+                .isSameAs(Drawables.BACKGROUND.getBitmap());
     }
 }

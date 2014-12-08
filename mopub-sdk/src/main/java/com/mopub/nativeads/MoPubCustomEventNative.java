@@ -1,7 +1,13 @@
 package com.mopub.nativeads;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
+import com.mopub.common.ClientMetadata;
+import com.mopub.common.event.ErrorEvent;
+import com.mopub.common.event.Event;
+import com.mopub.common.event.MoPubEvents;
 import com.mopub.common.logging.MoPubLog;
 
 import org.json.JSONArray;
@@ -13,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,10 +30,10 @@ import static com.mopub.nativeads.NativeResponse.Parameter;
 public class MoPubCustomEventNative extends CustomEventNative {
 
     @Override
-    protected void loadNativeAd(final Context context,
-            final CustomEventNativeListener customEventNativeListener,
-            final Map<String, Object> localExtras,
-            final Map<String, String> serverExtras) {
+    protected void loadNativeAd(@NonNull final Context context,
+            @NonNull final CustomEventNativeListener customEventNativeListener,
+            @NonNull final Map<String, Object> localExtras,
+            @NonNull final Map<String, String> serverExtras) {
 
         final MoPubForwardingNativeAd moPubForwardingNativeAd =
                 new MoPubForwardingNativeAd(context.getApplicationContext(),
@@ -37,10 +44,10 @@ public class MoPubCustomEventNative extends CustomEventNative {
             moPubForwardingNativeAd.loadAd();
         } catch (IllegalArgumentException e) {
             customEventNativeListener.onNativeAdFailed(NativeErrorCode.UNSPECIFIED);
-            return;
+            MoPubEvents.log(new ErrorEvent.Builder("","").withException(e).build());
         } catch (JSONException e) {
             customEventNativeListener.onNativeAdFailed(NativeErrorCode.INVALID_JSON);
-            return;
+            MoPubEvents.log(new ErrorEvent.Builder("","").withException(e).build());
         }
     }
 
@@ -98,7 +105,7 @@ public class MoPubCustomEventNative extends CustomEventNative {
             });
         }
 
-        private boolean containsRequiredKeys(final JSONObject jsonObject) {
+        private boolean containsRequiredKeys(@NonNull final JSONObject jsonObject) {
             final Set<String> keys = new HashSet<String>();
 
             final Iterator<String> jsonKeys = jsonObject.keys();
@@ -109,7 +116,8 @@ public class MoPubCustomEventNative extends CustomEventNative {
             return keys.containsAll(Parameter.requiredKeys);
         }
 
-        private void addInstanceVariable(final Parameter key, final Object value) throws ClassCastException {
+        private void addInstanceVariable(@NonNull final Parameter key,
+                @Nullable final Object value) throws ClassCastException {
             try {
                 switch (key) {
                     case MAIN_IMAGE:
@@ -167,10 +175,11 @@ public class MoPubCustomEventNative extends CustomEventNative {
             }
         }
 
-        private boolean isImageKey(final String name) {
-            return name != null && name.toLowerCase().endsWith("image");
+        private boolean isImageKey(@Nullable final String name) {
+            return name != null && name.toLowerCase(Locale.US).endsWith("image");
         }
 
+        @NonNull
         List<String> getExtrasImageUrls() {
             final List<String> extrasBitmapUrls = new ArrayList<String>(getExtras().size());
             for (final Map.Entry<String, Object> entry : getExtras().entrySet()) {
@@ -182,6 +191,7 @@ public class MoPubCustomEventNative extends CustomEventNative {
             return extrasBitmapUrls;
         }
 
+        @NonNull
         List<String> getAllImageUrls() {
             final List<String> imageUrls = new ArrayList<String>();
             if (getMainImageUrl() != null) {

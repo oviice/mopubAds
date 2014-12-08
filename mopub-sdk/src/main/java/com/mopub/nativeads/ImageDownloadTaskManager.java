@@ -1,9 +1,12 @@
 package com.mopub.nativeads;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.DownloadTask;
-import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.util.AsyncTasks;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
@@ -18,11 +21,11 @@ import static java.util.Map.Entry;
 
 class ImageDownloadTaskManager extends TaskManager<DownloadResponse> {
 
-    private final Map<HttpUriRequest, DownloadTask> mDownloadTasks;
+    @NonNull private final Map<HttpUriRequest, DownloadTask> mDownloadTasks;
     private final int mRequestedWidth;
 
-    ImageDownloadTaskManager(final List<String> urls,
-                             final TaskManagerListener<DownloadResponse> imageTaskManagerListener,
+    ImageDownloadTaskManager(@NonNull final List<String> urls,
+                             @NonNull final TaskManagerListener<DownloadResponse> imageTaskManagerListener,
                              final int requestedWidth)
             throws IllegalArgumentException {
         super(urls, imageTaskManagerListener);
@@ -68,7 +71,8 @@ class ImageDownloadTaskManager extends TaskManager<DownloadResponse> {
 
     private class ImageDownloadTaskListener implements DownloadTaskListener {
         @Override
-        public void onComplete(final String url, final DownloadResponse downloadResponse) {
+        public void onComplete(@Nullable final String url, @Nullable final DownloadResponse
+                downloadResponse) {
             if (downloadResponse == null || downloadResponse.getStatusCode() != HttpStatus.SC_OK) {
                 MoPubLog.d("Failed to download image: " + url);
                 failAllTasks();

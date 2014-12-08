@@ -3,6 +3,8 @@ package com.mopub.nativeads;
 import android.content.Context;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.mopub.common.VisibleForTesting;
 
@@ -34,21 +36,21 @@ class NativeAdSource {
     private static final int MAXIMUM_RETRY_TIME_MILLISECONDS = 5 * 60 * 1000; // 5 minutes.
     private static final double EXPONENTIAL_BACKOFF_FACTOR = 2.0;
 
-    private final List<TimestampWrapper<NativeResponse>> mNativeAdCache;
-    private final Handler mReplenishCacheHandler;
-    private final Runnable mReplenishCacheRunnable;
-    private final MoPubNativeNetworkListener mMoPubNativeNetworkListener;
+    @NonNull private final List<TimestampWrapper<NativeResponse>> mNativeAdCache;
+    @NonNull private final Handler mReplenishCacheHandler;
+    @NonNull private final Runnable mReplenishCacheRunnable;
+    @NonNull private final MoPubNativeNetworkListener mMoPubNativeNetworkListener;
 
     @VisibleForTesting boolean mRequestInFlight;
     @VisibleForTesting boolean mRetryInFlight;
     @VisibleForTesting int mSequenceNumber;
     @VisibleForTesting int mRetryTimeMilliseconds;
 
-    private AdSourceListener mAdSourceListener;
+    @Nullable private AdSourceListener mAdSourceListener;
 
     // We will need collections of these when we support multiple ad units.
-    private RequestParameters mRequestParameters;
-    private MoPubNative mMoPubNative;
+    @Nullable private RequestParameters mRequestParameters;
+    @Nullable private MoPubNative mMoPubNative;
 
     /**
      * A listener for when ads are available for dequeueing.
@@ -65,8 +67,8 @@ class NativeAdSource {
     }
 
     @VisibleForTesting
-    NativeAdSource(final List<TimestampWrapper<NativeResponse>> nativeAdCache,
-            final Handler replenishCacheHandler) {
+    NativeAdSource(@NonNull final List<TimestampWrapper<NativeResponse>> nativeAdCache,
+            @NonNull final Handler replenishCacheHandler) {
         mNativeAdCache = nativeAdCache;
         mReplenishCacheHandler = replenishCacheHandler;
         mReplenishCacheRunnable = new Runnable() {
@@ -80,7 +82,7 @@ class NativeAdSource {
         // Construct native URL and start filling the cache
         mMoPubNativeNetworkListener = new MoPubNativeNetworkListener() {
             @Override
-            public void onNativeLoad(final NativeResponse nativeResponse) {
+            public void onNativeLoad(@NonNull final NativeResponse nativeResponse) {
                 // This can be null if the ad source was cleared as the AsyncTask is posting
                 // back to the UI handler. Drop this response.
                 if (mMoPubNative == null) {
@@ -125,12 +127,12 @@ class NativeAdSource {
      * Sets a adSourceListener for determining when ads are available.
      * @param adSourceListener An AdSourceListener.
      */
-    void setAdSourceListener(final AdSourceListener adSourceListener) {
+    void setAdSourceListener(@Nullable final AdSourceListener adSourceListener) {
         mAdSourceListener = adSourceListener;
     }
 
-    void loadAds(final Context context,
-            final String adUnitId,
+    void loadAds(@NonNull final Context context,
+            @NonNull final String adUnitId,
             final RequestParameters requestParameters) {
         loadAds(requestParameters, new MoPubNative(context, adUnitId, mMoPubNativeNetworkListener));
     }
@@ -179,6 +181,7 @@ class NativeAdSource {
      *
      * @return Ad ad item that should be rendered into a view.
      */
+    @Nullable
     NativeResponse dequeueAd() {
         final long now = SystemClock.uptimeMillis();
 
@@ -231,6 +234,7 @@ class NativeAdSource {
         mMoPubNative = moPubNative;
     }
 
+    @NonNull
     @Deprecated
     @VisibleForTesting
     MoPubNativeNetworkListener getMoPubNativeNetworkListener() {

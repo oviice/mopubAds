@@ -33,7 +33,6 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.stub;
 import static org.mockito.Mockito.verify;
 
-
 @RunWith(SdkTestRunner.class)
 public class CustomEventBannerAdapterTest {
     private CustomEventBannerAdapter subject;

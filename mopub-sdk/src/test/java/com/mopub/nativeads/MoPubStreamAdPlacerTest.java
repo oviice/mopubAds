@@ -7,11 +7,13 @@ import android.view.ViewGroup;
 
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
+import com.mopub.nativeads.PositioningSource.PositioningListener;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.robolectric.Robolectric;
 
@@ -22,6 +24,7 @@ import java.util.List;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -84,6 +87,9 @@ public class MoPubStreamAdPlacerTest {
     @Test
     public void isAd_loadAds_thenLoadPositions_hasAds() {
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
+
         subject.handleAdsAvailable();
         subject.handlePositioningLoad(positioning);
         subject.setItemCount(4);
@@ -93,6 +99,9 @@ public class MoPubStreamAdPlacerTest {
     @Test
     public void isAd_loadPositions_thenLoadAds_hasAds() {
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
+
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
         subject.setItemCount(4);
@@ -108,6 +117,8 @@ public class MoPubStreamAdPlacerTest {
         assertThat(subject.getOriginalPosition(4)).isEqualTo(4);
 
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
         subject.setItemCount(4);
@@ -133,6 +144,8 @@ public class MoPubStreamAdPlacerTest {
         assertThat(subject.getAdjustedPosition(4)).isEqualTo(4);
 
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
         subject.setItemCount(4);
@@ -158,6 +171,8 @@ public class MoPubStreamAdPlacerTest {
         assertThat(subject.getOriginalCount(4)).isEqualTo(4);
 
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
         subject.setItemCount(4);
@@ -183,6 +198,8 @@ public class MoPubStreamAdPlacerTest {
         assertThat(subject.getAdjustedCount(4)).isEqualTo(4);
 
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
         subject.setItemCount(4);
@@ -202,6 +219,8 @@ public class MoPubStreamAdPlacerTest {
     @Test
     public void placeAds_shouldCallListener() {
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
         subject.setItemCount(4);
@@ -219,6 +238,8 @@ public class MoPubStreamAdPlacerTest {
     @Test
     public void placeAdsInRange_shouldPlaceAfter() {
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
 
@@ -239,6 +260,8 @@ public class MoPubStreamAdPlacerTest {
     @Test
     public void placeAdsInRange_shouldCallListener() {
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
 
@@ -259,6 +282,8 @@ public class MoPubStreamAdPlacerTest {
     @Test
     public void placeAdsInRange_aboveItemCount_shouldNotInsert() {
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
 
@@ -278,12 +303,14 @@ public class MoPubStreamAdPlacerTest {
     @Test
     public void loadAds_shouldClearAds_afterFirstAdLoads() {
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
         subject.setItemCount(2);
         subject.placeAdsInRange(0, 1);
 
-        subject.loadAds("test_ad-unit-id");
+        subject.loadAds("test-ad-unit-id");
 
         // Ad should still exist until a new ad is available
         checkAdPositions(1);
@@ -298,11 +325,26 @@ public class MoPubStreamAdPlacerTest {
     }
 
     @Test
+    public void loadAds_withFailingPositioningSource_shouldNotLoadAds() {
+        ArgumentCaptor<PositioningListener> listenerCaptor =
+                ArgumentCaptor.forClass(PositioningListener.class);
+
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
+        verify(mockPositioningSource).loadPositions(
+                eq("test-ad-unit-id"), listenerCaptor.capture());
+        listenerCaptor.getValue().onFailed();
+        verify(mockAdLoadedListener, never()).onAdLoaded(anyInt());
+    }
+
+    @Test
     public void destroy_shouldClearAdSource_shouldDestroyImpressionTracker_shouldDestroyResponse() {
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
 
         subject = new MoPubStreamAdPlacer(context,
                 mockAdSource, mockImpressionTracker, mockPositioningSource);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
         subject.setItemCount(2);  // Places 1 ad
@@ -320,6 +362,8 @@ public class MoPubStreamAdPlacerTest {
         when(mockAdRenderer.createAdView(any(Context.class), any(ViewGroup.class)))
                 .thenReturn(view);
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
         subject.setItemCount(100);
@@ -334,6 +378,8 @@ public class MoPubStreamAdPlacerTest {
     public void getAdView_withConvertView_callsRenderer_addsToImpressionTracker() {
         View convertView = new View(context);
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
         subject.setItemCount(4);
@@ -349,6 +395,8 @@ public class MoPubStreamAdPlacerTest {
         NativeResponse mockNativeResponse = mock(NativeResponse.class);
         View mockView = mock(View.class);
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse, mockNativeResponse, stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
         subject.setItemCount(100);
@@ -371,6 +419,8 @@ public class MoPubStreamAdPlacerTest {
     public void getAdView_withNetworkImpressionTracker_shouldNotAddViewToImpressionTracker_shouldPrepareNativeResponse() throws Exception {
         View mockView = mock(View.class);
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
         subject.setItemCount(100);
@@ -386,6 +436,8 @@ public class MoPubStreamAdPlacerTest {
     public void getAdView_withoutNetworkImpressionTracker_shouldAddViewToImpressionTracker_shouldPrepareNativeResponse() throws Exception {
         View mockView = mock(View.class);
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
         subject.setItemCount(100);
@@ -403,6 +455,8 @@ public class MoPubStreamAdPlacerTest {
 
         subject = new MoPubStreamAdPlacer(context,
                 mockAdSource, mockImpressionTracker, mockPositioningSource);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         subject.handleAdsAvailable();
         subject.setItemCount(2);  // Places 1 ad
@@ -417,6 +471,8 @@ public class MoPubStreamAdPlacerTest {
     @Test
     public void modifyClientPositioning_afterConstructingAdPlacer_shouldNotModifyAdPositions() {
         when(mockAdSource.dequeueAd()).thenReturn(stubNativeResponse);
+        subject.registerAdRenderer(mockAdRenderer);
+        subject.loadAds("test-ad-unit-id");
         subject.handlePositioningLoad(positioning);
         positioning.enableRepeatingPositions(5);
 

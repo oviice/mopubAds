@@ -17,63 +17,48 @@ public class MraidJavascript {
             "  }\n" +
             "}());\n" +
             "\n" +
+            "\n" +
             "(function() {\n" +
-            "  // Establish the root mraidbridge object.\n" +
-            "  var mraidbridge = window.mraidbridge = {};\n" +
-            "\n" +
-            "  // native SDK is ready to process mraid commands.\n" +
-            "  var nativeSDKFiredReady = false;\n" +
-            "\n" +
-            "  // Listeners for bridge events.\n" +
-            "  var listeners = {};\n" +
-            "\n" +
-            "  // Queue to track pending calls to the native SDK.\n" +
-            "  var nativeCallQueue = [];\n" +
-            "\n" +
-            "  // Whether a native call is currently in progress.\n" +
-            "  var nativeCallInFlight = false;\n" +
+            "  var mraid = window.mraid = {};\n" +
             "\n" +
             "  //////////////////////////////////////////////////////////////////////////////////////////////////\n" +
             "\n" +
-            "  mraidbridge.fireReadyEvent = function() {\n" +
-            "    nativeSDKFiredReady = true;\n" +
-            "    mraidbridge.fireEvent('ready');\n" +
+            "  // Bridge interface to SDK\n" +
+            "\n" +
+            "  var bridge = window.mraidbridge = {\n" +
+            "    nativeSDKFiredReady: false,\n" +
+            "    nativeCallQueue: [],\n" +
+            "    nativeCallInFlight: false,\n" +
+            "    lastSizeChangeProperties: null\n" +
             "  };\n" +
             "\n" +
-            "  mraidbridge.fireChangeEvent = function(properties) {\n" +
-            "    mraidbridge.fireEvent('change', properties);\n" +
-            "  };\n" +
             "\n" +
-            "  mraidbridge.fireErrorEvent = function(message, action) {\n" +
-            "    mraidbridge.fireEvent('error', message, action);\n" +
-            "  };\n" +
-            "\n" +
-            "  mraidbridge.fireEvent = function(type) {\n" +
-            "    var ls = listeners[type];\n" +
-            "    if (ls) {\n" +
-            "      var args = Array.prototype.slice.call(arguments);\n" +
-            "      args.shift();\n" +
-            "      var l = ls.length;\n" +
-            "      for (var i = 0; i < l; i++) {\n" +
-            "        ls[i].apply(null, args);\n" +
+            "  bridge.fireChangeEvent = function(properties) {\n" +
+            "    for (var p in properties) {\n" +
+            "      if (properties.hasOwnProperty(p)) {\n" +
+            "        // Change handlers defined by MRAID below\n" +
+            "        var handler = changeHandlers[p];\n" +
+            "        handler(properties[p]);\n" +
             "      }\n" +
             "    }\n" +
             "  };\n" +
             "\n" +
-            "  mraidbridge.nativeCallComplete = function(command) {\n" +
-            "    if (nativeCallQueue.length === 0) {\n" +
-            "      nativeCallInFlight = false;\n" +
+            "  bridge.nativeCallComplete = function(command) {\n" +
+            "    if (this.nativeCallQueue.length === 0) {\n" +
+            "      this.nativeCallInFlight = false;\n" +
             "      return;\n" +
             "    }\n" +
             "\n" +
-            "    var nextCall = nativeCallQueue.pop();\n" +
+            "    var nextCall = this.nativeCallQueue.pop();\n" +
             "    window.location = nextCall;\n" +
             "  };\n" +
             "\n" +
-            "  mraidbridge.executeNativeCall = function(command) {\n" +
-            "    if (!nativeSDKFiredReady) {\n" +
+            "  bridge.executeNativeCall = function(args) {\n" +
+            "    var command = args.shift();\n" +
+            "\n" +
+            "    if (!this.nativeSDKFiredReady) {\n" +
             "        console.log('rejecting ' + command + ' because mraid is not ready');\n" +
-            "        mraidbridge.fireErrorEvent('mraid is not ready', command);\n" +
+            "        bridge.notifyErrorEvent('mraid is not ready', command);\n" +
             "        return;\n" +
             "    }\n" +
             "\n" +
@@ -82,9 +67,9 @@ public class MraidJavascript {
             "    var key, value;\n" +
             "    var isFirstArgument = true;\n" +
             "\n" +
-            "    for (var i = 1; i < arguments.length; i += 2) {\n" +
-            "      key = arguments[i];\n" +
-            "      value = arguments[i + 1];\n" +
+            "    for (var i = 0; i < args.length; i += 2) {\n" +
+            "      key = args[i];\n" +
+            "      value = args[i + 1];\n" +
             "\n" +
             "      if (value === null) continue;\n" +
             "\n" +
@@ -98,55 +83,133 @@ public class MraidJavascript {
             "      call += encodeURIComponent(key) + '=' + encodeURIComponent(value);\n" +
             "    }\n" +
             "\n" +
-            "    if (nativeCallInFlight) {\n" +
-            "      nativeCallQueue.push(call);\n" +
+            "    if (this.nativeCallInFlight) {\n" +
+            "      this.nativeCallQueue.push(call);\n" +
             "    } else {\n" +
-            "      nativeCallInFlight = true;\n" +
+            "      this.nativeCallInFlight = true;\n" +
             "      window.location = call;\n" +
             "    }\n" +
             "  };\n" +
             "\n" +
-            "  //////////////////////////////////////////////////////////////////////////////////////////////////\n" +
             "\n" +
-            "  mraidbridge.addEventListener = function(event, listener) {\n" +
-            "    var eventListeners;\n" +
-            "    listeners[event] = listeners[event] || [];\n" +
-            "    eventListeners = listeners[event];\n" +
-            "\n" +
-            "    for (var l in eventListeners) {\n" +
-            "      // Listener already registered, so no need to add it.\n" +
-            "      if (listener === l) return;\n" +
-            "    }\n" +
-            "\n" +
-            "    eventListeners.push(listener);\n" +
+            "  bridge.setCurrentPosition = function(x, y, width, height) {\n" +
+            "    currentPosition = {\n" +
+            "      x: x,\n" +
+            "      y: y,\n" +
+            "      width: width,\n" +
+            "      height: height\n" +
+            "    };\n" +
+            "    broadcastEvent(EVENTS.INFO, 'Set current position to ' + stringify(currentPosition));\n" +
             "  };\n" +
             "\n" +
-            "  mraidbridge.removeEventListener = function(event, listener) {\n" +
-            "    if (listeners.hasOwnProperty(event)) {\n" +
-            "      var eventListeners = listeners[event];\n" +
-            "      if (eventListeners) {\n" +
-            "        var idx = eventListeners.indexOf(listener);\n" +
-            "        if (idx !== -1) {\n" +
-            "          eventListeners.splice(idx, 1);\n" +
-            "        }\n" +
-            "      }\n" +
-            "    }\n" +
+            "  bridge.setDefaultPosition = function(x, y, width, height) {\n" +
+            "    defaultPosition = {\n" +
+            "      x: x,\n" +
+            "      y: y,\n" +
+            "      width: width,\n" +
+            "      height: height\n" +
+            "    };\n" +
+            "    broadcastEvent(EVENTS.INFO, 'Set default position to ' + stringify(defaultPosition));\n" +
             "  };\n" +
-            "}());\n" +
             "\n" +
-            "(function() {\n" +
-            "  var mraid = window.mraid = {};\n" +
-            "  var bridge = window.mraidbridge;\n" +
+            "  bridge.setMaxSize = function(width, height) {\n" +
+            "    maxSize = {\n" +
+            "      width: width,\n" +
+            "      height: height\n" +
+            "    };\n" +
+            "\n" +
+            "    expandProperties.width = width;\n" +
+            "    expandProperties.height = height;\n" +
+            "\n" +
+            "    broadcastEvent(EVENTS.INFO, 'Set max size to ' + stringify(maxSize));\n" +
+            "  };\n" +
+            "\n" +
+            "  bridge.setPlacementType = function(_placementType) {\n" +
+            "    placementType = _placementType;\n" +
+            "    broadcastEvent(EVENTS.INFO, 'Set placement type to ' + stringify(placementType));\n" +
+            "  };\n" +
+            "\n" +
+            "  bridge.setScreenSize = function(width, height) {\n" +
+            "    screenSize = {\n" +
+            "      width: width,\n" +
+            "      height: height\n" +
+            "    };\n" +
+            "    broadcastEvent(EVENTS.INFO, 'Set screen size to ' + stringify(screenSize));\n" +
+            "  };\n" +
+            "\n" +
+            "  bridge.setState = function(_state) {\n" +
+            "    state = _state;\n" +
+            "    broadcastEvent(EVENTS.INFO, 'Set state to ' + stringify(state));\n" +
+            "    broadcastEvent(EVENTS.STATECHANGE, state);\n" +
+            "  };\n" +
+            "\n" +
+            "  bridge.setIsViewable = function(_isViewable) {\n" +
+            "    isViewable = _isViewable;\n" +
+            "    broadcastEvent(EVENTS.INFO, 'Set isViewable to ' + stringify(isViewable));\n" +
+            "    broadcastEvent(EVENTS.VIEWABLECHANGE, isViewable);\n" +
+            "  };\n" +
+            "\n" +
+            "  bridge.setSupports = function(sms, tel, calendar, storePicture, inlineVideo) {\n" +
+            "    supportProperties = {\n" +
+            "      sms: sms,\n" +
+            "      tel: tel,\n" +
+            "      calendar: calendar,\n" +
+            "      storePicture: storePicture,\n" +
+            "      inlineVideo: inlineVideo\n" +
+            "    };\n" +
+            "  };\n" +
+            "\n" +
+            "  bridge.notifyReadyEvent = function() {\n" +
+            "    this.nativeSDKFiredReady = true;\n" +
+            "    broadcastEvent(EVENTS.READY);\n" +
+            "  };\n" +
+            "\n" +
+            "  bridge.notifyErrorEvent = function(message, action) {\n" +
+            "    broadcastEvent(EVENTS.ERROR, message, action);\n" +
+            "  };\n" +
+            "\n" +
+            "  // Temporary aliases while we migrate to the new API\n" +
+            "  bridge.fireReadyEvent = bridge.notifyReadyEvent;\n" +
+            "  bridge.fireErrorEvent = bridge.notifyErrorEvent;\n" +
+            "\n" +
+            "  bridge.notifySizeChangeEvent = function(width, height) {\n" +
+            "    if (this.lastSizeChangeProperties &&\n" +
+            "          width == this.lastSizeChangeProperties.width && height == this.lastSizeChangeProperties.height) {\n" +
+            "      return;\n" +
+            "    }\n" +
+            "\n" +
+            "    this.lastSizeChangeProperties = {\n" +
+            "        width: width,\n" +
+            "        height: height\n" +
+            "    };\n" +
+            "    broadcastEvent(EVENTS.SIZECHANGE, width, height);\n" +
+            "  };\n" +
+            "\n" +
+            "  bridge.notifyStateChangeEvent = function() {\n" +
+            "    if (state === STATES.LOADING) {\n" +
+            "      broadcastEvent(EVENTS.INFO, 'Native SDK initialized.');\n" +
+            "    }\n" +
+            "\n" +
+            "    broadcastEvent(EVENTS.INFO, 'Set state to ' + stringify(state));\n" +
+            "    broadcastEvent(EVENTS.STATECHANGE, state);\n" +
+            "  };\n" +
+            "\n" +
+            "  bridge.notifyViewableChangeEvent = function() {\n" +
+            "    broadcastEvent(EVENTS.INFO, 'Set isViewable to ' + stringify(isViewable));\n" +
+            "    broadcastEvent(EVENTS.VIEWABLECHANGE, isViewable);\n" +
+            "  };\n" +
+            "\n" +
             "\n" +
             "  // Constants. ////////////////////////////////////////////////////////////////////////////////////\n" +
             "\n" +
-            "  var VERSION = mraid.VERSION = '1.0';\n" +
+            "  var VERSION = mraid.VERSION = '2.0';\n" +
             "\n" +
             "  var STATES = mraid.STATES = {\n" +
-            "    LOADING: 'loading',     // Initial state.\n" +
+            "    LOADING: 'loading',\n" +
             "    DEFAULT: 'default',\n" +
             "    EXPANDED: 'expanded',\n" +
-            "    HIDDEN: 'hidden'\n" +
+            "    HIDDEN: 'hidden',\n" +
+            "    RESIZED: 'resized'\n" +
             "  };\n" +
             "\n" +
             "  var EVENTS = mraid.EVENTS = {\n" +
@@ -154,7 +217,8 @@ public class MraidJavascript {
             "    INFO: 'info',\n" +
             "    READY: 'ready',\n" +
             "    STATECHANGE: 'stateChange',\n" +
-            "    VIEWABLECHANGE: 'viewableChange'\n" +
+            "    VIEWABLECHANGE: 'viewableChange',\n" +
+            "    SIZECHANGE: 'sizeChange'\n" +
             "  };\n" +
             "\n" +
             "  var PLACEMENT_TYPES = mraid.PLACEMENT_TYPES = {\n" +
@@ -167,14 +231,44 @@ public class MraidJavascript {
             "\n" +
             "  // Properties which define the behavior of an expandable ad.\n" +
             "  var expandProperties = {\n" +
-            "    width: -1,\n" +
-            "    height: -1,\n" +
+            "    width: false,\n" +
+            "    height: false,\n" +
             "    useCustomClose: false,\n" +
-            "    isModal: true,\n" +
-            "    lockOrientation: false\n" +
+            "    isModal: true\n" +
             "  };\n" +
             "\n" +
-            "  var hasSetCustomSize = false;\n" +
+            "  var resizeProperties = {\n" +
+            "    width: false,\n" +
+            "    height: false,\n" +
+            "    offsetX: false,\n" +
+            "    offsetY: false,\n" +
+            "    customClosePosition: 'top-right',\n" +
+            "    allowOffscreen: true\n" +
+            "  };\n" +
+            "\n" +
+            "  var orientationProperties = {\n" +
+            "    allowOrientationChange: true,\n" +
+            "    forceOrientation: \"none\"\n" +
+            "  };\n" +
+            "\n" +
+            "  var supportProperties = {\n" +
+            "    sms: false,\n" +
+            "    tel: false,\n" +
+            "    calendar: false,\n" +
+            "    storePicture: false,\n" +
+            "    inlineVideo: false\n" +
+            "  };\n" +
+            "\n" +
+            "  // default is undefined so that notifySizeChangeEvent can track changes\n" +
+            "  var lastSizeChangeProperties;\n" +
+            "\n" +
+            "  var maxSize = {};\n" +
+            "\n" +
+            "  var currentPosition = {};\n" +
+            "\n" +
+            "  var defaultPosition = {};\n" +
+            "\n" +
+            "  var screenSize = {};\n" +
             "\n" +
             "  var hasSetCustomClose = false;\n" +
             "\n" +
@@ -186,17 +280,7 @@ public class MraidJavascript {
             "\n" +
             "  var isViewable = false;\n" +
             "\n" +
-            "  var screenSize = { width: -1, height: -1 };\n" +
-            "\n" +
             "  var placementType = PLACEMENT_TYPES.UNKNOWN;\n" +
-            "\n" +
-            "  var supports = {\n" +
-            "    sms: false,\n" +
-            "    tel: false,\n" +
-            "    calendar: false,\n" +
-            "    storePicture: false,\n" +
-            "    inlineVideo: false\n" +
-            "  };\n" +
             "\n" +
             "  //////////////////////////////////////////////////////////////////////////////////////////////////\n" +
             "\n" +
@@ -233,7 +317,7 @@ public class MraidJavascript {
             "\n" +
             "    this.broadcast = function(args) {\n" +
             "      for (var id in listeners) {\n" +
-            "        if (listeners.hasOwnProperty(id)) listeners[id].apply({}, args);\n" +
+            "        if (listeners.hasOwnProperty(id)) listeners[id].apply(mraid, args);\n" +
             "      }\n" +
             "    };\n" +
             "\n" +
@@ -309,29 +393,17 @@ public class MraidJavascript {
             "      placementType = val;\n" +
             "    },\n" +
             "\n" +
-            "    screenSize: function(val) {\n" +
+            "    sizeChange: function(val) {\n" +
             "      broadcastEvent(EVENTS.INFO, 'Set screenSize to ' + stringify(val));\n" +
             "      for (var key in val) {\n" +
             "        if (val.hasOwnProperty(key)) screenSize[key] = val[key];\n" +
-            "      }\n" +
-            "\n" +
-            "      if (!hasSetCustomSize) {\n" +
-            "        expandProperties['width'] = screenSize['width'];\n" +
-            "        expandProperties['height'] = screenSize['height'];\n" +
-            "      }\n" +
-            "    },\n" +
-            "\n" +
-            "    expandProperties: function(val) {\n" +
-            "      broadcastEvent(EVENTS.INFO, 'Merging expandProperties with ' + stringify(val));\n" +
-            "      for (var key in val) {\n" +
-            "        if (val.hasOwnProperty(key)) expandProperties[key] = val[key];\n" +
             "      }\n" +
             "    },\n" +
             "\n" +
             "    supports: function(val) {\n" +
             "      broadcastEvent(EVENTS.INFO, 'Set supports to ' + stringify(val));\n" +
-            "        supports = val;\n" +
-            "    },\n" +
+            "        supportProperties = val;\n" +
+            "    }\n" +
             "  };\n" +
             "\n" +
             "  var validate = function(obj, validators, action, merge) {\n" +
@@ -343,7 +415,7 @@ public class MraidJavascript {
             "      } else {\n" +
             "        for (var i in validators) {\n" +
             "          if (validators.hasOwnProperty(i) && obj[i] === undefined) {\n" +
-            "            broadcastEvent(EVENTS.ERROR, 'Object is missing required property: ' + i + '.', action);\n" +
+            "            broadcastEvent(EVENTS.ERROR, 'Object is missing required property: ' + i, action);\n" +
             "            return false;\n" +
             "          }\n" +
             "        }\n" +
@@ -355,8 +427,7 @@ public class MraidJavascript {
             "      var value = obj[prop];\n" +
             "      if (validator && !validator(value)) {\n" +
             "        // Failed validation.\n" +
-            "        broadcastEvent(EVENTS.ERROR, 'Value of property ' + prop + ' is invalid.',\n" +
-            "          action);\n" +
+            "        broadcastEvent(EVENTS.ERROR, 'Value of property ' + prop + ' is invalid: ' + value, action);\n" +
             "        return false;\n" +
             "      }\n" +
             "    }\n" +
@@ -364,30 +435,8 @@ public class MraidJavascript {
             "  };\n" +
             "\n" +
             "  var expandPropertyValidators = {\n" +
-            "    width: function(v) { return !isNaN(v) && v >= 0; },\n" +
-            "    height: function(v) { return !isNaN(v) && v >= 0; },\n" +
             "    useCustomClose: function(v) { return (typeof v === 'boolean'); },\n" +
-            "    lockOrientation: function(v) { return (typeof v === 'boolean'); }\n" +
             "  };\n" +
-            "\n" +
-            "  //////////////////////////////////////////////////////////////////////////////////////////////////\n" +
-            "\n" +
-            "  bridge.addEventListener('change', function(properties) {\n" +
-            "    for (var p in properties) {\n" +
-            "      if (properties.hasOwnProperty(p)) {\n" +
-            "        var handler = changeHandlers[p];\n" +
-            "        handler(properties[p]);\n" +
-            "      }\n" +
-            "    }\n" +
-            "  });\n" +
-            "\n" +
-            "  bridge.addEventListener('error', function(message, action) {\n" +
-            "    broadcastEvent(EVENTS.ERROR, message, action);\n" +
-            "  });\n" +
-            "\n" +
-            "  bridge.addEventListener('ready', function() {\n" +
-            "    broadcastEvent(EVENTS.READY);\n" +
-            "  });\n" +
             "\n" +
             "  //////////////////////////////////////////////////////////////////////////////////////////////////\n" +
             "\n" +
@@ -397,7 +446,9 @@ public class MraidJavascript {
             "    } else if (!contains(event, EVENTS)) {\n" +
             "      broadcastEvent(EVENTS.ERROR, 'Unknown MRAID event: ' + event, 'addEventListener');\n" +
             "    } else {\n" +
-            "      if (!listeners[event]) listeners[event] = new EventListeners(event);\n" +
+            "      if (!listeners[event]) {\n" +
+            "        listeners[event] = new EventListeners(event);\n" +
+            "      }\n" +
             "      listeners[event].add(listener);\n" +
             "    }\n" +
             "  };\n" +
@@ -406,43 +457,23 @@ public class MraidJavascript {
             "    if (state === STATES.HIDDEN) {\n" +
             "      broadcastEvent(EVENTS.ERROR, 'Ad cannot be closed when it is already hidden.',\n" +
             "        'close');\n" +
-            "    } else bridge.executeNativeCall('close');\n" +
+            "    } else bridge.executeNativeCall(['close']);\n" +
             "  };\n" +
             "\n" +
             "  mraid.expand = function(URL) {\n" +
-            "    if (this.getState() !== STATES.DEFAULT) {\n" +
-            "      broadcastEvent(EVENTS.ERROR, 'Ad can only be expanded from the default state.', 'expand');\n" +
+            "    if (!(this.getState() === STATES.DEFAULT || this.getState() === STATES.RESIZED)) {\n" +
+            "      broadcastEvent(EVENTS.ERROR, 'Ad can only be expanded from the default or resized state.', 'expand');\n" +
             "    } else {\n" +
-            "      var args = ['expand'];\n" +
-            "\n" +
-            "      if (this.getHasSetCustomClose()) {\n" +
-            "        args = args.concat(['shouldUseCustomClose', expandProperties.useCustomClose ? 'true' : 'false']);\n" +
-            "      }\n" +
-            "\n" +
-            "      if (this.getHasSetCustomSize()) {\n" +
-            "        if (expandProperties.width >= 0 && expandProperties.height >= 0) {\n" +
-            "          args = args.concat(['w', expandProperties.width, 'h', expandProperties.height]);\n" +
-            "        }\n" +
-            "      }\n" +
-            "\n" +
-            "      if (typeof expandProperties.lockOrientation !== 'undefined') {\n" +
-            "        args = args.concat(['lockOrientation', expandProperties.lockOrientation]);\n" +
-            "      }\n" +
+            "      var args = ['expand',\n" +
+            "        'shouldUseCustomClose', expandProperties.useCustomClose\n" +
+            "      ];\n" +
             "\n" +
             "      if (URL) {\n" +
             "        args = args.concat(['url', URL]);\n" +
             "      }\n" +
             "\n" +
-            "      bridge.executeNativeCall.apply(this, args);\n" +
+            "      bridge.executeNativeCall(args);\n" +
             "    }\n" +
-            "  };\n" +
-            "\n" +
-            "  mraid.getHasSetCustomClose = function() {\n" +
-            "      return hasSetCustomClose;\n" +
-            "  };\n" +
-            "\n" +
-            "  mraid.getHasSetCustomSize = function() {\n" +
-            "      return hasSetCustomSize;\n" +
             "  };\n" +
             "\n" +
             "  mraid.getExpandProperties = function() {\n" +
@@ -455,56 +486,93 @@ public class MraidJavascript {
             "    return properties;\n" +
             "  };\n" +
             "\n" +
+            "\n" +
+            "  mraid.getCurrentPosition = function() {\n" +
+            "    return {\n" +
+            "      x: currentPosition.x,\n" +
+            "      y: currentPosition.y,\n" +
+            "      width: currentPosition.width,\n" +
+            "      height: currentPosition.height\n" +
+            "    };\n" +
+            "  };\n" +
+            "\n" +
+            "  mraid.getDefaultPosition = function() {\n" +
+            "    return {\n" +
+            "      x: defaultPosition.x,\n" +
+            "      y: defaultPosition.y,\n" +
+            "      width: defaultPosition.width,\n" +
+            "      height: defaultPosition.height\n" +
+            "    };\n" +
+            "  };\n" +
+            "\n" +
+            "  mraid.getMaxSize = function() {\n" +
+            "    return {\n" +
+            "      width: maxSize.width,\n" +
+            "      height: maxSize.height\n" +
+            "    };\n" +
+            "  };\n" +
+            "\n" +
             "  mraid.getPlacementType = function() {\n" +
             "    return placementType;\n" +
+            "  };\n" +
+            "\n" +
+            "  mraid.getScreenSize = function() {\n" +
+            "    return {\n" +
+            "      width: screenSize.width,\n" +
+            "      height: screenSize.height\n" +
+            "    };\n" +
             "  };\n" +
             "\n" +
             "  mraid.getState = function() {\n" +
             "    return state;\n" +
             "  };\n" +
             "\n" +
-            "  mraid.getVersion = function() {\n" +
-            "    return mraid.VERSION;\n" +
-            "  };\n" +
-            "\n" +
             "  mraid.isViewable = function() {\n" +
             "    return isViewable;\n" +
             "  };\n" +
             "\n" +
+            "  mraid.getVersion = function() {\n" +
+            "    return mraid.VERSION;\n" +
+            "  };\n" +
+            "\n" +
             "  mraid.open = function(URL) {\n" +
             "    if (!URL) broadcastEvent(EVENTS.ERROR, 'URL is required.', 'open');\n" +
-            "    else bridge.executeNativeCall('open', 'url', URL);\n" +
+            "    else bridge.executeNativeCall(['open', 'url', URL]);\n" +
             "  };\n" +
             "\n" +
             "  mraid.removeEventListener = function(event, listener) {\n" +
-            "    if (!event) broadcastEvent(EVENTS.ERROR, 'Event is required.', 'removeEventListener');\n" +
-            "    else {\n" +
-            "      if (listener && (!listeners[event] || !listeners[event].remove(listener))) {\n" +
-            "        broadcastEvent(EVENTS.ERROR, 'Listener not currently registered for event.',\n" +
-            "          'removeEventListener');\n" +
-            "        return;\n" +
-            "      } else if (listeners[event]) listeners[event].removeAll();\n" +
+            "    if (!event) {\n" +
+            "      broadcastEvent(EVENTS.ERROR, 'Event is required.', 'removeEventListener');\n" +
+            "      return;\n" +
+            "    }\n" +
             "\n" +
-            "      if (listeners[event] && listeners[event].count === 0) {\n" +
-            "        listeners[event] = null;\n" +
-            "        delete listeners[event];\n" +
+            "    if (listener) {\n" +
+            "      // If we have a valid event, we'll try to remove the listener from it.\n" +
+            "      var success = false;\n" +
+            "      if (listeners[event]) {\n" +
+            "        success = listeners[event].remove(listener);\n" +
             "      }\n" +
+            "\n" +
+            "      // If we didn't have a valid event or couldn't remove the listener from the event, broadcast an error and return early.\n" +
+            "      if (!success) {\n" +
+            "        broadcastEvent(EVENTS.ERROR, 'Listener not currently registered for event.', 'removeEventListener');\n" +
+            "        return;\n" +
+            "      }\n" +
+            "\n" +
+            "    } else if (!listener && listeners[event]) {\n" +
+            "      listeners[event].removeAll();\n" +
+            "    }\n" +
+            "\n" +
+            "    if (listeners[event] && listeners[event].count === 0) {\n" +
+            "      listeners[event] = null;\n" +
+            "      delete listeners[event];\n" +
             "    }\n" +
             "  };\n" +
             "\n" +
             "  mraid.setExpandProperties = function(properties) {\n" +
             "    if (validate(properties, expandPropertyValidators, 'setExpandProperties', true)) {\n" +
-            "      if (properties.hasOwnProperty('width') || properties.hasOwnProperty('height')) {\n" +
-            "        hasSetCustomSize = true;\n" +
-            "      }\n" +
-            "\n" +
-            "      if (properties.hasOwnProperty('useCustomClose')) hasSetCustomClose = true;\n" +
-            "\n" +
-            "      var desiredProperties = ['width', 'height', 'useCustomClose', 'lockOrientation'];\n" +
-            "      var length = desiredProperties.length;\n" +
-            "      for (var i = 0; i < length; i++) {\n" +
-            "        var propname = desiredProperties[i];\n" +
-            "        if (properties.hasOwnProperty(propname)) expandProperties[propname] = properties[propname];\n" +
+            "      if (properties.hasOwnProperty('useCustomClose')) {\n" +
+            "        expandProperties.useCustomClose = properties.useCustomClose;\n" +
             "      }\n" +
             "    }\n" +
             "  };\n" +
@@ -512,7 +580,7 @@ public class MraidJavascript {
             "  mraid.useCustomClose = function(shouldUseCustomClose) {\n" +
             "    expandProperties.useCustomClose = shouldUseCustomClose;\n" +
             "    hasSetCustomClose = true;\n" +
-            "    bridge.executeNativeCall('usecustomclose', 'shouldUseCustomClose', shouldUseCustomClose);\n" +
+            "    bridge.executeNativeCall(['usecustomclose', 'shouldUseCustomClose', shouldUseCustomClose]);\n" +
             "  };\n" +
             "\n" +
             "  // MRAID 2.0 APIs ////////////////////////////////////////////////////////////////////////////////\n" +
@@ -520,14 +588,14 @@ public class MraidJavascript {
             "  mraid.createCalendarEvent = function(parameters) {\n" +
             "    CalendarEventParser.initialize(parameters);\n" +
             "    if (CalendarEventParser.parse()) {\n" +
-            "      bridge.executeNativeCall.apply(this, CalendarEventParser.arguments);\n" +
+            "      bridge.executeNativeCall(CalendarEventParser.arguments);\n" +
             "    } else {\n" +
             "      broadcastEvent(EVENTS.ERROR, CalendarEventParser.errors[0], 'createCalendarEvent');\n" +
             "    }\n" +
             "  };\n" +
             "\n" +
             "  mraid.supports = function(feature) {\n" +
-            "    return supports[feature];\n" +
+            "    return supportProperties[feature];\n" +
             "  };\n" +
             "\n" +
             "  mraid.playVideo = function(uri) {\n" +
@@ -539,7 +607,7 @@ public class MraidJavascript {
             "    if (!uri) {\n" +
             "      broadcastEvent(EVENTS.ERROR, 'playVideo must be called with a valid URI', 'playVideo');\n" +
             "    } else {\n" +
-            "      bridge.executeNativeCall.apply(this, ['playVideo', 'uri', uri]);\n" +
+            "      bridge.executeNativeCall(['playVideo', 'uri', uri]);\n" +
             "    }\n" +
             "  };\n" +
             "\n" +
@@ -552,36 +620,102 @@ public class MraidJavascript {
             "    if (!uri) {\n" +
             "      broadcastEvent(EVENTS.ERROR, 'storePicture must be called with a valid URI', 'storePicture');\n" +
             "    } else {\n" +
-            "      bridge.executeNativeCall.apply(this, ['storePicture', 'uri', uri]);\n" +
+            "      bridge.executeNativeCall(['storePicture', 'uri', uri]);\n" +
             "    }\n" +
             "  };\n" +
             "\n" +
+            "\n" +
+            "  var resizePropertyValidators = {\n" +
+            "    width: function(v) {\n" +
+            "      return !isNaN(v) && v > 0;\n" +
+            "    },\n" +
+            "    height: function(v) {\n" +
+            "      return !isNaN(v) && v > 0;\n" +
+            "    },\n" +
+            "    offsetX: function(v) {\n" +
+            "      return !isNaN(v);\n" +
+            "    },\n" +
+            "    offsetY: function(v) {\n" +
+            "      return !isNaN(v);\n" +
+            "    },\n" +
+            "    customClosePosition: function(v) {\n" +
+            "      return (typeof v === 'string' &&\n" +
+            "        ['top-right', 'bottom-right', 'top-left', 'bottom-left', 'center', 'top-center', 'bottom-center'].indexOf(v) > -1);\n" +
+            "    },\n" +
+            "    allowOffscreen: function(v) {\n" +
+            "      return (typeof v === 'boolean');\n" +
+            "    }\n" +
+            "  };\n" +
+            "\n" +
+            "  mraid.setOrientationProperties = function(properties) {\n" +
+            "\n" +
+            "    if (properties.hasOwnProperty('allowOrientationChange')) {\n" +
+            "      orientationProperties.allowOrientationChange = properties.allowOrientationChange;\n" +
+            "    }\n" +
+            "\n" +
+            "    if (properties.hasOwnProperty('forceOrientation')) {\n" +
+            "      orientationProperties.forceOrientation = properties.forceOrientation;\n" +
+            "    }\n" +
+            "\n" +
+            "    var args = ['setOrientationProperties',\n" +
+            "      'allowOrientationChange', orientationProperties.allowOrientationChange,\n" +
+            "      'forceOrientation', orientationProperties.forceOrientation\n" +
+            "    ];\n" +
+            "    bridge.executeNativeCall(args);\n" +
+            "  };\n" +
+            "\n" +
+            "  mraid.getOrientationProperties = function() {\n" +
+            "    return {\n" +
+            "      allowOrientationChange: orientationProperties.allowOrientationChange,\n" +
+            "      forceOrientation: orientationProperties.forceOrientation\n" +
+            "    };\n" +
+            "  };\n" +
+            "\n" +
             "  mraid.resize = function() {\n" +
-            "    bridge.executeNativeCall('resize');\n" +
+            "    if (!(this.getState() === STATES.DEFAULT || this.getState() === STATES.RESIZED)) {\n" +
+            "      broadcastEvent(EVENTS.ERROR, 'Ad can only be resized from the default or resized state.', 'resize');\n" +
+            "    } else if (!resizeProperties.width || !resizeProperties.height) {\n" +
+            "      broadcastEvent(EVENTS.ERROR, 'Must set resize properties before calling resize()', 'resize');\n" +
+            "    } else {\n" +
+            "      var args = ['resize',\n" +
+            "        'width', resizeProperties.width,\n" +
+            "        'height', resizeProperties.height,\n" +
+            "        'offsetX', resizeProperties.offsetX || 0,\n" +
+            "        'offsetY', resizeProperties.offsetY || 0,\n" +
+            "        'customClosePosition', resizeProperties.customClosePosition,\n" +
+            "        'allowOffscreen', !!resizeProperties.allowOffscreen\n" +
+            "        ];\n" +
+            "\n" +
+            "      bridge.executeNativeCall(args);\n" +
+            "    }\n" +
             "  };\n" +
             "\n" +
             "  mraid.getResizeProperties = function() {\n" +
-            "    bridge.executeNativeCall('getResizeProperties');\n" +
+            "    var properties = {\n" +
+            "      width: resizeProperties.width,\n" +
+            "      height: resizeProperties.height,\n" +
+            "      offsetX: resizeProperties.offsetX,\n" +
+            "      offsetY: resizeProperties.offsetY,\n" +
+            "      customClosePosition: resizeProperties.customClosePosition,\n" +
+            "      allowOffscreen: resizeProperties.allowOffscreen\n" +
+            "    };\n" +
+            "    return properties;\n" +
             "  };\n" +
             "\n" +
-            "  mraid.setResizeProperties = function(resizeProperties) {\n" +
-            "    bridge.executeNativeCall('setResizeProperties', 'resizeProperties', resizeProperties);\n" +
-            "  };\n" +
+            "  mraid.setResizeProperties = function(properties) {\n" +
+            "    if (validate(properties, resizePropertyValidators, 'setResizeProperties', true)) {\n" +
             "\n" +
-            "  mraid.getCurrentPosition = function() {\n" +
-            "    bridge.executeNativeCall('getCurrentPosition');\n" +
-            "  };\n" +
+            "      var desiredProperties = ['width', 'height', 'offsetX', 'offsetY', 'customClosePosition', 'allowOffscreen'];\n" +
             "\n" +
-            "  mraid.getDefaultPosition = function() {\n" +
-            "    bridge.executeNativeCall('getDefaultPosition');\n" +
-            "  };\n" +
+            "      var length = desiredProperties.length;\n" +
             "\n" +
-            "  mraid.getMaxSize = function() {\n" +
-            "    bridge.executeNativeCall('getMaxSize');\n" +
-            "  };\n" +
-            "\n" +
-            "  mraid.getScreenSize = function() {\n" +
-            "    bridge.executeNativeCall('getScreenSize');\n" +
+            "      for (var i = 0; i < length; i++) {\n" +
+            "        var propname = desiredProperties[i];\n" +
+            "        if (properties.hasOwnProperty(propname)) {\n" +
+            "          resizeProperties[propname] = properties[propname];\n" +
+            "        }\n" +
+            "      }\n" +
+            "    }\n" +
             "  };\n" +
             "\n" +
             "  var CalendarEventParser = {\n" +
@@ -663,7 +797,7 @@ public class MraidJavascript {
             "      var validValues = ['opaque', 'transparent'];\n" +
             "\n" +
             "      if (this.parameters.hasOwnProperty('transparency')) {\n" +
-            "        var transparency = this.parameters['transparency'];\n" +
+            "        var transparency = this.parameters.transparency;\n" +
             "        if (contains(transparency, validValues)) {\n" +
             "          this.arguments.push('transparency');\n" +
             "          this.arguments.push(transparency);\n" +
@@ -688,7 +822,7 @@ public class MraidJavascript {
             "\n" +
             "    parseRecurrenceInterval: function(recurrenceDict) {\n" +
             "      if (recurrenceDict.hasOwnProperty('interval')) {\n" +
-            "        var interval = recurrenceDict['interval'];\n" +
+            "        var interval = recurrenceDict.interval;\n" +
             "        if (!interval) {\n" +
             "          this.errors.push('Recurrence interval cannot be null.');\n" +
             "        } else {\n" +
@@ -704,7 +838,7 @@ public class MraidJavascript {
             "\n" +
             "    parseRecurrenceFrequency: function(recurrenceDict) {\n" +
             "      if (recurrenceDict.hasOwnProperty('frequency')) {\n" +
-            "        var frequency = recurrenceDict['frequency'];\n" +
+            "        var frequency = recurrenceDict.frequency;\n" +
             "        var validFrequencies = ['daily', 'weekly', 'monthly', 'yearly'];\n" +
             "        if (contains(frequency, validFrequencies)) {\n" +
             "          this.arguments.push('frequency');\n" +
@@ -716,7 +850,7 @@ public class MraidJavascript {
             "    },\n" +
             "\n" +
             "    parseRecurrenceEndDate: function(recurrenceDict) {\n" +
-            "      var expires = recurrenceDict['expires'];\n" +
+            "      var expires = recurrenceDict.expires;\n" +
             "\n" +
             "      if (!expires) {\n" +
             "        return;\n" +
@@ -748,7 +882,7 @@ public class MraidJavascript {
             "        this.arguments.push(kind);\n" +
             "        this.arguments.push(dateString);\n" +
             "      }\n" +
-            "    },\n" +
+            "    }\n" +
             "  };\n" +
             "}());\n";
 }

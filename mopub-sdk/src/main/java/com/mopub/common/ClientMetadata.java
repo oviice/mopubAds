@@ -1,18 +1,23 @@
 package com.mopub.common;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
+import android.view.Display;
+import android.view.WindowManager;
 
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Utils;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
+import static android.content.pm.PackageManager.NameNotFoundException;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 /**
@@ -30,49 +35,16 @@ public class ClientMetadata {
     private static final String SHA_PREFIX = "sha:";
     private static final int UNKNOWN_NETWORK = -1;
 
-    private static volatile ClientMetadata sInstance;
-
-    private String mNetworkOperator;
-    private String mIsoCountryCode;
+    private String mNetworkOperatorForUrl;
+    private final String mNetworkOperator;
+    private String mSimOperator;
+    private final String mIsoCountryCode;
+    private final String mSimIsoCountryCode;
     private String mNetworkOperatorName;
+    private String mSimOperatorName;
     private String mUdid;
     private boolean mDoNotTrack = false;
     private boolean mAdvertisingInfoSet = false;
-
-    /**
-     * Returns the singleton ClientMetadata object, using the context to obtain data if necessary.
-     */
-    public static ClientMetadata getInstance(Context context) {
-        // Use a local variable so we can reduce accesses of the volatile field.
-        ClientMetadata result = sInstance;
-        if (result == null) {
-            synchronized (ClientMetadata.class) {
-                result = sInstance;
-                if (result == null) {
-                    result = new ClientMetadata(context);
-                    sInstance = result;
-                }
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Can be used by background threads and other objects without a context to attempt to get
-     * ClientMetadata. If the object has never been referenced from a thread with a context,
-     * this will return null.
-     */
-    public static ClientMetadata getInstance() {
-        ClientMetadata result = sInstance;
-        if (result == null) {
-            // If it's being initialized in another thread, wait for the lock.
-            synchronized (ClientMetadata.class) {
-                result = sInstance;
-            }
-        }
-
-        return result;
-    }
 
     public static enum MoPubNetworkType {
         UNKNOWN(0),
@@ -109,42 +81,110 @@ public class ClientMetadata {
         }
     }
 
+    private static ClientMetadata sInstance;
+
     // Cached client metadata used for generating URLs and events.
     private final String mDeviceManufacturer;
     private final String mDeviceModel;
     private final String mDeviceProduct;
+    private final String mDeviceOsVersion;
+    private final int mDeviceScreenWidthPx;
+    private final int mDeviceScreenHeightPx;
     private final String mSdkVersion;
     private final String mAppVersion;
+    private final String mAppPackageName;
+    private String mAppName;
     private final Context mContext;
     private final ConnectivityManager mConnectivityManager;
 
-    private ClientMetadata(Context context) {
+    /**
+     * Returns the singleton ClientMetadata object, using the context to obtain data if necessary.
+     */
+    public static ClientMetadata getInstance(Context context) {
+        // Use a local variable so we can reduce accesses of the volatile field.
+        ClientMetadata result = sInstance;
+        if (result == null) {
+            synchronized (ClientMetadata.class) {
+                result = sInstance;
+                if (result == null) {
+                    result = new ClientMetadata(context);
+                    sInstance = result;
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Can be used by background threads and other objects without a context to attempt to get
+     * ClientMetadata. If the object has never been referenced from a thread with a context,
+     * this will return null.
+     */
+    public static ClientMetadata getInstance() {
+        ClientMetadata result = sInstance;
+        if (result == null) {
+            // If it's being initialized in another thread, wait for the lock.
+            synchronized (ClientMetadata.class) {
+                result = sInstance;
+            }
+        }
+
+        return result;
+    }
+
+
+    // NEVER CALL THIS AS A USER. Get it from the Singletons class.
+    public ClientMetadata(Context context) {
         mContext = context.getApplicationContext();
         mConnectivityManager =
                 (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         mDeviceManufacturer = Build.MANUFACTURER;
         mDeviceModel = Build.MODEL;
         mDeviceProduct = Build.PRODUCT;
+        mDeviceOsVersion = Build.VERSION.RELEASE;
+
+        WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+        mDeviceScreenWidthPx = display.getWidth();
+        mDeviceScreenHeightPx = display.getHeight();
+
         mSdkVersion = MoPub.SDK_VERSION;
 
         // Cache context items that don't change:
         mAppVersion = getAppVersionFromContext(mContext);
+        PackageManager packageManager = mContext.getPackageManager();
+        ApplicationInfo applicationInfo = null;
+        mAppPackageName = context.getPackageName();
+        try {
+            applicationInfo = packageManager.getApplicationInfo(mAppPackageName, 0);
+        } catch (final NameNotFoundException e) {
+            // swallow
+        }
+        if (applicationInfo != null) {
+            mAppName = (String) packageManager.getApplicationLabel(applicationInfo);
+        }
 
         final TelephonyManager telephonyManager =
                 (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
-
+        mNetworkOperatorForUrl = telephonyManager.getNetworkOperator();
         mNetworkOperator = telephonyManager.getNetworkOperator();
         if (telephonyManager.getPhoneType() == TelephonyManager.PHONE_TYPE_CDMA &&
                 telephonyManager.getSimState() == TelephonyManager.SIM_STATE_READY) {
-            mNetworkOperator = telephonyManager.getSimOperator();
+            mNetworkOperatorForUrl = telephonyManager.getSimOperator();
+            mSimOperator = telephonyManager.getSimOperator();
         }
 
         mIsoCountryCode = telephonyManager.getNetworkCountryIso();
+        mSimIsoCountryCode = telephonyManager.getSimCountryIso();
         try {
             // Some Lenovo devices require READ_PHONE_STATE here.
             mNetworkOperatorName = telephonyManager.getNetworkOperatorName();
+            if (telephonyManager.getSimState() == TelephonyManager.SIM_STATE_READY) {
+                mSimOperatorName = telephonyManager.getSimOperatorName();
+            }
         } catch (SecurityException e) {
             mNetworkOperatorName = null;
+            mSimOperatorName = null;
         }
 
         // Get the device ID. This will be replaced later when the Play Services callbacks complete.
@@ -206,10 +246,24 @@ public class ClientMetadata {
     }
 
     /**
+     * @return the network operator for URL generators.
+     */
+    public String getNetworkOperatorForUrl() {
+        return mNetworkOperatorForUrl;
+    }
+
+    /**
      * @return the network operator.
      */
     public String getNetworkOperator() {
         return mNetworkOperator;
+    }
+
+    /**
+     * @return the sim operator.
+     */
+    public String getSimOperator() {
+        return mSimOperator;
     }
 
     /**
@@ -220,10 +274,24 @@ public class ClientMetadata {
     }
 
     /**
+     * @return the sim provider's country code.
+     */
+    public String getSimIsoCountryCode() {
+        return mSimIsoCountryCode;
+    }
+
+    /**
      * @return the network operator name.
      */
     public String getNetworkOperatorName() {
         return mNetworkOperatorName;
+    }
+
+    /**
+     * @return the sim operator name.
+     */
+    public String getSimOperatorName() {
+        return mSimOperatorName;
     }
 
     /**
@@ -273,6 +341,27 @@ public class ClientMetadata {
     }
 
     /**
+     * @return the device os version.
+     */
+    public String getDeviceOsVersion() {
+        return mDeviceOsVersion;
+    }
+
+    /**
+     * @return the device screen width in pixels.
+     */
+    public int getDeviceScreenWidthPx() {
+        return mDeviceScreenWidthPx;
+    }
+
+    /**
+     * @return the device screen height in pixels.
+     */
+    public int getDeviceScreenHeightPx() {
+        return mDeviceScreenHeightPx;
+    }
+
+    /**
      * @return the MoPub SDK Version.
      */
     public String getSdkVersion() {
@@ -286,8 +375,22 @@ public class ClientMetadata {
         return mAppVersion;
     }
 
+    /**
+     * @return the package of the application the SDK is included in.
+     */
+    public String getAppPackageName() {
+        return mAppPackageName;
+    }
+
+    /**
+     * @return the name of the application the SDK is included in.
+     */
+    public String getAppName() {
+        return mAppName;
+    }
+
     @VisibleForTesting
-    public static synchronized void clearForTesting() {
+    public static void clearForTesting() {
         sInstance = null;
     }
 }

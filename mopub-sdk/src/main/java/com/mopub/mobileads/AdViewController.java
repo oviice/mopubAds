@@ -11,21 +11,25 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import com.mopub.common.Constants;
 import com.mopub.common.GpsHelper;
 import com.mopub.common.MoPub;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Dips;
 import com.mopub.mobileads.factories.AdFetcherFactory;
 import com.mopub.mobileads.factories.HttpClientFactory;
+import com.mopub.mraid.MraidNativeCommandHandler;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
 import static com.mopub.common.GpsHelper.GpsHelperListener;
-import static com.mopub.common.LocationService.getLastKnownLocation;
 
 public class AdViewController {
     static final int MINIMUM_REFRESH_TIME_MILLISECONDS = 10000;
@@ -58,7 +62,7 @@ public class AdViewController {
     private boolean mIsTesting;
     private boolean mAdWasLoaded;
 
-    protected static void setShouldHonorServerDimensions(View view) {
+    public static void setShouldHonorServerDimensions(View view) {
         sViewShouldHonorServerDimensions.put(view, true);
     }
 
@@ -70,7 +74,8 @@ public class AdViewController {
         mContext = context;
         mMoPubView = view;
 
-        mUrlGenerator = new WebViewAdUrlGenerator(context);
+        mUrlGenerator = new WebViewAdUrlGenerator(context,
+                new MraidNativeCommandHandler().isStorePictureSupported(context));
         mAdConfiguration = new AdConfiguration(mContext);
 
         mAdFetcher = AdFetcherFactory.create(this, mAdConfiguration.getUserAgent());
@@ -104,12 +109,6 @@ public class AdViewController {
             MoPubLog.d("Can't load an ad because there is no network connectivity.");
             scheduleRefreshTimerIfEnabled();
             return;
-        }
-
-        if (mLocation == null) {
-            mLocation = getLastKnownLocation(mContext,
-                    MoPub.getLocationPrecision(),
-                    MoPub.getLocationAwareness());
         }
 
         // If we have access to Google Play Services (GPS) but the advertising info
@@ -362,7 +361,7 @@ public class AdViewController {
                 .withAdUnitId(mAdConfiguration.getAdUnitId())
                 .withKeywords(mKeywords)
                 .withLocation(mLocation)
-                .generateUrlString(getServerHostname());
+                .generateUrlString(Constants.HOST);
     }
 
     void adDidFail(MoPubErrorCode errorCode) {
@@ -394,10 +393,6 @@ public class AdViewController {
 
     private void cancelRefreshTimer() {
         mHandler.removeCallbacks(mRefreshRunnable);
-    }
-
-    private String getServerHostname() {
-        return mIsTesting ? MoPubView.HOST_FOR_TESTING : MoPubView.HOST;
     }
 
     private boolean isNetworkAvailable() {

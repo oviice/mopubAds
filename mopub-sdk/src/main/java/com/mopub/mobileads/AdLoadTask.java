@@ -6,17 +6,21 @@ import android.net.Uri;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Json;
 import com.mopub.common.util.Strings;
+
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 
-import java.io.*;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
+import static com.mopub.common.network.HeaderUtils.extractBooleanHeader;
+import static com.mopub.common.network.HeaderUtils.extractHeader;
 import static com.mopub.common.util.ResponseHeader.AD_TYPE;
-import static com.mopub.common.util.ResponseHeader.CLICKTHROUGH_URL;
+import static com.mopub.common.util.ResponseHeader.CLICK_TRACKING_URL;
 import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_DATA;
 import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_NAME;
 import static com.mopub.common.util.ResponseHeader.CUSTOM_SELECTOR;
@@ -28,8 +32,6 @@ import static com.mopub.mobileads.AdFetcher.CLICKTHROUGH_URL_KEY;
 import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.AdFetcher.REDIRECT_URL_KEY;
 import static com.mopub.mobileads.AdFetcher.SCROLLABLE_KEY;
-import static com.mopub.mobileads.util.HttpResponses.extractBooleanHeader;
-import static com.mopub.mobileads.util.HttpResponses.extractHeader;
 
 abstract class AdLoadTask {
     WeakReference<AdViewController> mWeakAdViewController;
@@ -102,7 +104,7 @@ abstract class AdLoadTask {
             adViewController.getAdConfiguration().setResponseString(htmlData);
 
             String redirectUrl = extractHeader(response, REDIRECT_URL);
-            String clickthroughUrl = extractHeader(response, CLICKTHROUGH_URL);
+            String clickthroughUrl = extractHeader(response, CLICK_TRACKING_URL);
             boolean scrollingEnabled = extractBooleanHeader(response, SCROLLABLE, false);
 
             Map<String, String> eventDataMap = new HashMap<String, String>();

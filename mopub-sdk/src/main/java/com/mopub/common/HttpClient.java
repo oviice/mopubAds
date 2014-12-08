@@ -4,11 +4,13 @@ import android.content.Context;
 import android.net.http.AndroidHttpClient;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.webkit.WebView;
 
+import com.mopub.common.event.MoPubEvents;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.DeviceUtils;
-import com.mopub.common.logging.MoPubLog;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
@@ -26,7 +28,9 @@ public class HttpClient {
     private static String sWebViewUserAgent;
 
     public static AndroidHttpClient getHttpClient() {
-        String userAgent = DeviceUtils.getUserAgent();
+
+        String defaultUserAgent = DeviceUtils.getUserAgent();
+        String userAgent = getWebViewUserAgent(defaultUserAgent);
 
         AndroidHttpClient httpClient = AndroidHttpClient.newInstance(userAgent);
 
@@ -56,6 +60,12 @@ public class HttpClient {
     }
 
     public static void makeTrackingHttpRequest(final Iterable<String> urls, final Context context) {
+        makeTrackingHttpRequest(urls, context, null);
+    }
+
+    public static void makeTrackingHttpRequest(final Iterable<String> urls,
+            final Context context,
+            final MoPubEvents.Type type) {
         if (urls == null || context == null) {
             return;
         }
@@ -68,8 +78,7 @@ public class HttpClient {
                     return;
                 }
 
-                String result = HttpResponses.asResponseString(downloadResponse);
-
+                final String result = HttpResponses.asResponseString(downloadResponse);
                 if (result != null) {
                     MoPubLog.d("Successfully hit tracking endpoint: " + url);
                 } else {
@@ -86,7 +95,10 @@ public class HttpClient {
                 for (final String url : urls) {
                     try {
                         final HttpGet httpGet = initializeHttpGet(url, appContext);
-                        AsyncTasks.safeExecuteOnExecutor(new DownloadTask(downloadTaskListener), httpGet);
+                        AsyncTasks.safeExecuteOnExecutor(
+                                new DownloadTask(downloadTaskListener, type),
+                                httpGet
+                        );
                     } catch (Exception e) {
                         MoPubLog.d("Failed to hit tracking endpoint: " + url);
                     }
@@ -97,12 +109,33 @@ public class HttpClient {
         new Handler(Looper.getMainLooper()).post(trackingHttpRequestRunnable);
     }
 
-    public static void makeTrackingHttpRequest(final String url, final Context context) {
-        makeTrackingHttpRequest(Arrays.asList(url), context);
+    public static void makeTrackingHttpRequest(final String url,
+            final Context context) {
+        makeTrackingHttpRequest(url, context, null);
     }
 
-    public synchronized static String getWebViewUserAgent() {
+    public static void makeTrackingHttpRequest(final String url,
+            final Context context,
+            final MoPubEvents.Type type) {
+        makeTrackingHttpRequest(Arrays.asList(url), context, type);
+    }
+
+    /**
+     * @param defaultUserAgent the String to return if the WebView user agent hasn't been generated.
+     * @return the user agent of an Android WebView, or {@code defaultUserAgent}
+     */
+    public synchronized static String getWebViewUserAgent(String defaultUserAgent) {
+        if (TextUtils.isEmpty(sWebViewUserAgent)) {
+            return defaultUserAgent;
+        }
         return sWebViewUserAgent;
+    }
+
+    /**
+     * @return the user agent of an Androd WebView or {@code null}
+     */
+    public synchronized static String getWebViewUserAgent() {
+        return getWebViewUserAgent(null);
     }
 
     public synchronized static void setWebViewUserAgent(final String userAgent) {

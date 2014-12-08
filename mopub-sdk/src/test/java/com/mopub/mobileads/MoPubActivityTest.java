@@ -5,14 +5,18 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.WebViewClient;
-import android.widget.RelativeLayout;
+import android.widget.FrameLayout;
+
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestHtmlInterstitialWebViewFactory;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowLocalBroadcastManager;
 
@@ -22,9 +26,12 @@ import static com.mopub.mobileads.AdFetcher.REDIRECT_URL_KEY;
 import static com.mopub.mobileads.AdFetcher.SCROLLABLE_KEY;
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_FAIL;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_SHOW;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.getHtmlInterstitialIntentFilter;
-import static com.mopub.mobileads.EventForwardingBroadcastReceiverTest.getIntentForActionAndIdentifier;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiverTest
+        .getIntentForActionAndIdentifier;
 import static com.mopub.mobileads.HtmlInterstitialWebView.MoPubUriJavascriptFireFinishLoadListener;
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -35,43 +42,50 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.stub;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(SdkTestRunner.class)
-public class MoPubActivityTest extends BaseInterstitialActivityTest {
-    public static final String EXPECTED_HTML_DATA = "htmlData";
-    public static final boolean EXPECTED_IS_SCROLLABLE = true;
-    public static final String EXPECTED_REDIRECT_URL = "redirectUrl";
-    public static final String EXPECTED_CLICKTHROUGH_URL = "http://expected_url";
+public class MoPubActivityTest {
+    private static final String EXPECTED_HTML_DATA = "htmlData";
+    private static final boolean EXPECTED_IS_SCROLLABLE = true;
+    private static final String EXPECTED_REDIRECT_URL = "redirectUrl";
+    private static final String EXPECTED_CLICKTHROUGH_URL = "http://expected_url";
+
+    @Mock private BroadcastReceiver broadcastReceiver;
+    private AdConfiguration adConfiguration;
+    private long testBroadcastIdentifier = 2222;
 
     private HtmlInterstitialWebView htmlInterstitialWebView;
-    private Activity context;
     private CustomEventInterstitialListener customEventInterstitialListener;
+
+    private MoPubActivity subject;
 
     @Before
     public void setUp() throws Exception {
-        super.setup();
-
-        adConfiguration = mock(AdConfiguration.class, withSettings().serializable());
-        stub(adConfiguration.getBroadcastIdentifier()).toReturn(testBroadcastIdentifier);
-
-        Intent moPubActivityIntent = createMoPubActivityIntent(EXPECTED_HTML_DATA, EXPECTED_IS_SCROLLABLE, EXPECTED_REDIRECT_URL, EXPECTED_CLICKTHROUGH_URL, adConfiguration);
         htmlInterstitialWebView = TestHtmlInterstitialWebViewFactory.getSingletonMock();
         resetMockedView(htmlInterstitialWebView);
-        subject = Robolectric.buildActivity(MoPubActivity.class).withIntent(moPubActivityIntent).create().get();
 
-        context = new Activity();
+        adConfiguration = mock(AdConfiguration.class, withSettings().serializable());
+        when(adConfiguration.getBroadcastIdentifier()).thenReturn(testBroadcastIdentifier);
+
+        Context context = Robolectric.buildActivity(Activity.class).create().get();
+        Intent moPubActivityIntent = MoPubActivity.createIntent(context,
+                EXPECTED_HTML_DATA, EXPECTED_IS_SCROLLABLE,
+                EXPECTED_REDIRECT_URL,
+                EXPECTED_CLICKTHROUGH_URL, adConfiguration);
+
+        subject = Robolectric.buildActivity(MoPubActivity.class).withIntent(moPubActivityIntent).create().get();
         customEventInterstitialListener = mock(CustomEventInterstitialListener.class);
 
-        reset(htmlInterstitialWebView);
         resetMockedView(htmlInterstitialWebView);
     }
 
     @Test
     public void preRenderHtml_shouldPreloadTheHtml() throws Exception {
         String htmlData = "this is nonsense";
-        MoPubActivity.preRenderHtml(context, customEventInterstitialListener, htmlData);
+        MoPubActivity.preRenderHtml(subject, customEventInterstitialListener, htmlData);
 
         verify(htmlInterstitialWebView).enablePlugins(eq(false));
         verify(htmlInterstitialWebView).addMoPubUriJavascriptInterface(any(MoPubUriJavascriptFireFinishLoadListener.class));
@@ -80,7 +94,7 @@ public class MoPubActivityTest extends BaseInterstitialActivityTest {
 
     @Test
     public void preRenderHtml_shouldHaveAWebViewClientThatForwardsFinishLoad() throws Exception {
-        MoPubActivity.preRenderHtml(context, customEventInterstitialListener, null);
+        MoPubActivity.preRenderHtml(subject, customEventInterstitialListener, null);
 
         ArgumentCaptor<WebViewClient> webViewClientCaptor = ArgumentCaptor.forClass(WebViewClient.class);
         verify(htmlInterstitialWebView).setWebViewClient(webViewClientCaptor.capture());
@@ -94,7 +108,7 @@ public class MoPubActivityTest extends BaseInterstitialActivityTest {
 
     @Test
     public void preRenderHtml_shouldHaveAWebViewClientThatForwardsFailLoad() throws Exception {
-        MoPubActivity.preRenderHtml(context, customEventInterstitialListener, null);
+        MoPubActivity.preRenderHtml(subject, customEventInterstitialListener, null);
 
         ArgumentCaptor<WebViewClient> webViewClientCaptor = ArgumentCaptor.forClass(WebViewClient.class);
         verify(htmlInterstitialWebView).setWebViewClient(webViewClientCaptor.capture());
@@ -108,7 +122,7 @@ public class MoPubActivityTest extends BaseInterstitialActivityTest {
 
     @Test
     public void preRenderHtml_shouldHaveAMoPubUriInterfaceThatForwardsOnInterstitialLoaded() throws Exception {
-        MoPubActivity.preRenderHtml(context, customEventInterstitialListener, null);
+        MoPubActivity.preRenderHtml(subject, customEventInterstitialListener, null);
 
         ArgumentCaptor<MoPubUriJavascriptFireFinishLoadListener> moPubUriJavascriptFireFinishLoadListenerCaptor = ArgumentCaptor.forClass(MoPubUriJavascriptFireFinishLoadListener.class);
         verify(htmlInterstitialWebView).addMoPubUriJavascriptInterface(moPubUriJavascriptFireFinishLoadListenerCaptor.capture());
@@ -123,19 +137,19 @@ public class MoPubActivityTest extends BaseInterstitialActivityTest {
     public void onCreate_shouldSetContentView() throws Exception {
         subject.onCreate(null);
 
-        assertThat(getContentView(subject).getChildCount()).isEqualTo(2);
+        assertThat(getContentView().getChildCount()).isEqualTo(1);
     }
 
     @Test
     public void onCreate_shouldLayoutWebView() throws Exception {
         subject.onCreate(null);
 
-        ArgumentCaptor<RelativeLayout.LayoutParams> captor = ArgumentCaptor.forClass(RelativeLayout.LayoutParams.class);
+        ArgumentCaptor<FrameLayout.LayoutParams> captor = ArgumentCaptor.forClass(FrameLayout.LayoutParams.class);
         verify(htmlInterstitialWebView).setLayoutParams(captor.capture());
-        RelativeLayout.LayoutParams actualLayoutParams = captor.getValue();
+        FrameLayout.LayoutParams actualLayoutParams = captor.getValue();
 
-        assertThat(actualLayoutParams.width).isEqualTo(RelativeLayout.LayoutParams.MATCH_PARENT);
-        assertThat(actualLayoutParams.height).isEqualTo(RelativeLayout.LayoutParams.MATCH_PARENT);
+        assertThat(actualLayoutParams.width).isEqualTo(FrameLayout.LayoutParams.MATCH_PARENT);
+        assertThat(actualLayoutParams.height).isEqualTo(FrameLayout.LayoutParams.MATCH_PARENT);
     }
 
     @Test
@@ -156,7 +170,7 @@ public class MoPubActivityTest extends BaseInterstitialActivityTest {
         subject.onDestroy();
 
         verify(htmlInterstitialWebView).destroy();
-        assertThat(getContentView(subject).getChildCount()).isEqualTo(0);
+        assertThat(getContentView().getChildCount()).isEqualTo(0);
     }
 
     @Test
@@ -253,8 +267,36 @@ public class MoPubActivityTest extends BaseInterstitialActivityTest {
         verify(broadcastReceiver).onReceive(any(Context.class), eq(expectedIntent));
     }
 
-    private Intent createMoPubActivityIntent(String htmlData, boolean isScrollable, String redirectUrl, String clickthroughUrl, AdConfiguration adConfiguration) {
-        return MoPubActivity.createIntent(new Activity(), htmlData, isScrollable, redirectUrl, clickthroughUrl, adConfiguration);
+    @Test
+    public void onCreate_shouldBroadcastInterstitialShow() throws Exception {
+        Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_SHOW, testBroadcastIdentifier);
+        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
+
+        subject.onCreate(null);
+
+        verify(broadcastReceiver).onReceive(any(Context.class), eq(expectedIntent));
+    }
+
+    @Test
+    public void onDestroy_shouldBroadcastInterstitialDismiss() throws Exception {
+        Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_DISMISS, testBroadcastIdentifier);
+        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
+
+        subject.onCreate(null);
+        subject.onDestroy();
+
+        verify(broadcastReceiver).onReceive(any(Context.class), eq(expectedIntent));
+    }
+
+    private FrameLayout getContentView() {
+        return (FrameLayout) ((ViewGroup) subject.findViewById(android.R.id.content)).getChildAt(0);
+    }
+
+    protected void resetMockedView(View view) {
+        reset(view);
+        when(view.getLayoutParams()).thenReturn(
+                new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT));
     }
 }
 

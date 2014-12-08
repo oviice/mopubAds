@@ -12,11 +12,11 @@ import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
 import static com.mopub.mobileads.VastVideoViewController.VAST_VIDEO_CONFIGURATION;
 
-class BaseVideoPlayerActivity extends Activity {
+public class BaseVideoPlayerActivity extends Activity {
     static final String VIDEO_CLASS_EXTRAS_KEY = "video_view_class_name";
-    static final String VIDEO_URL = "video_url";
+    public static final String VIDEO_URL = "video_url";
 
-    static void startMraid(final Context context, final String videoUrl, final AdConfiguration adConfiguration) {
+    public static void startMraid(final Context context, final String videoUrl, final AdConfiguration adConfiguration) {
         final Intent intentVideoPlayerActivity = createIntentMraid(context, videoUrl, adConfiguration);
         try {
             context.startActivity(intentVideoPlayerActivity);

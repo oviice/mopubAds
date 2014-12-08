@@ -4,6 +4,8 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.Display;
 import android.view.WindowManager;
 
@@ -35,7 +37,7 @@ class ImageService {
 
     @TargetApi(13)
     @VisibleForTesting
-    static void initialize(Context context) {
+    static void initialize(@NonNull Context context) {
         if (sTargetWidth == -1) {
             // Get Display Options
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -52,13 +54,15 @@ class ImageService {
         }
     }
 
-    static void get(final Context context, final List<String> urls, final ImageServiceListener imageServiceListener) {
+    static void get(@NonNull final Context context, @NonNull final List<String> urls,
+            @NonNull final ImageServiceListener imageServiceListener) {
         initialize(context);
         CacheService.initialize(context);
         get(urls, imageServiceListener);
     }
 
-    static void get(final List<String> urls, final ImageServiceListener imageServiceListener) {
+    static void get(@NonNull final List<String> urls,
+            @NonNull final ImageServiceListener imageServiceListener) {
         final Map<String, Bitmap> cacheBitmaps = new HashMap<String, Bitmap>(urls.size());
         final List<String> urlCacheMisses = getBitmapsFromMemoryCache(urls, cacheBitmaps);
 
@@ -94,7 +98,9 @@ class ImageService {
         CacheService.putToDiskCacheAsync(key, byteData);
     }
 
-    static List<String> getBitmapsFromMemoryCache(final List<String> urls, final Map<String, Bitmap> hits) {
+    @NonNull
+    static List<String> getBitmapsFromMemoryCache(@NonNull final List<String> urls,
+            @NonNull final Map<String, Bitmap> hits) {
         final List<String> cacheMisses = new ArrayList<String>();
         for (final String url : urls) {
             final Bitmap bitmap = getBitmapFromMemoryCache(url);
@@ -109,6 +115,7 @@ class ImageService {
         return cacheMisses;
     }
 
+    @Nullable
     static Bitmap getBitmapFromMemoryCache(final String key) {
         return CacheService.getFromBitmapCache(key);
     }
@@ -124,7 +131,7 @@ class ImageService {
         }
 
         @Override
-        public void onSuccess(final Map<String, Bitmap> diskBitmaps) {
+        public void onSuccess(@NonNull final Map<String, Bitmap> diskBitmaps) {
             final List<String> urlDiskMisses = new ArrayList<String>();
             for (final Entry <String, Bitmap> entry : diskBitmaps.entrySet()) {
                 if (entry.getValue() == null) {
@@ -173,7 +180,7 @@ class ImageService {
         }
 
         @Override
-        public void onSuccess(final Map<String, DownloadResponse> responses) {
+        public void onSuccess(@NonNull final Map<String, DownloadResponse> responses) {
             for (final Entry<String, DownloadResponse> entry : responses.entrySet()) {
                 final Bitmap bitmap = asBitmap(entry.getValue(), sTargetWidth);
                 final String key = entry.getKey();
@@ -195,16 +202,14 @@ class ImageService {
         }
     }
 
-    public static Bitmap asBitmap(final DownloadResponse downloadResponse, final int requestedWidth) {
-        if (downloadResponse == null) {
-            return null;
-        }
-
+    @Nullable
+    public static Bitmap asBitmap(@NonNull final DownloadResponse downloadResponse, final int requestedWidth) {
         final byte[] bytes = downloadResponse.getByteArray();
         return byteArrayToBitmap(bytes, requestedWidth);
     }
 
-    public static Bitmap byteArrayToBitmap(final byte[] bytes, final int requestedWidth) {
+    @Nullable
+    public static Bitmap byteArrayToBitmap(@NonNull final byte[] bytes, final int requestedWidth) {
         if (requestedWidth <= 0) {
             return null;
         }
@@ -241,7 +246,7 @@ class ImageService {
     /**
      * Returns the size of the byte array that the bitmap described by the options object will consume.
      */
-    public static long getMemBytes(Options options) {
+    public static long getMemBytes(@NonNull Options options) {
         long memBytes = 4 * (long) options.outWidth * (long) options.outHeight / options.inSampleSize / options.inSampleSize;
         return memBytes;
     }
@@ -265,8 +270,9 @@ class ImageService {
     }
 
     // Testing, also performs disk IO
+    @Nullable
     @Deprecated
-    static Bitmap getBitmapFromDiskCache(final String key) {
+    static Bitmap getBitmapFromDiskCache(@NonNull final String key) {
         Bitmap bitmap = null;
         byte[] bytes = CacheService.getFromDiskCache(key);
         if (bytes != null) {

@@ -77,7 +77,7 @@ public class NativeAdViewHelperTest {
         when(mockNativeResponse1.getText()).thenReturn("test text");
         when(mockNativeResponse1.getCallToAction()).thenReturn("test call to action");
 
-        View view = NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, mockNativeResponse1, viewBinder, null);
+        View view = NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, mockNativeResponse1, viewBinder);
 
         assertThat(((TextView)view.findViewById(titleView.getId())).getText()).isEqualTo("test title");
         assertThat(((TextView)view.findViewById(textView.getId())).getText()).isEqualTo("test text");
@@ -87,25 +87,9 @@ public class NativeAdViewHelperTest {
     }
 
     @Test
-    public void getAdView_withNullViewBinder_shouldReturnEmptyView() throws Exception {
-        View view = NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, mockNativeResponse1, null, null);
-
-        assertThat(view).isNotNull();
-        assertThat(view).isNotEqualTo(relativeLayout);
-    }
-
-    @Test
-    public void getAdView_withNullNativeResponse_shouldReturnGONEConvertView() throws Exception {
-        View view = NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, null, viewBinder, null);
-
-        assertThat(view).isEqualTo(relativeLayout);
-        assertThat(view.getVisibility()).isEqualTo(View.GONE);
-    }
-
-    @Test
     public void getAdView_withDestroyedNativeResponse_shouldReturnGONEConvertView() throws Exception {
         when(mockNativeResponse1.isDestroyed()).thenReturn(true);
-        View view = NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, mockNativeResponse1, viewBinder, null);
+        View view = NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, mockNativeResponse1, viewBinder);
 
         assertThat(view).isEqualTo(relativeLayout);
         assertThat(view.getVisibility()).isEqualTo(View.GONE);
@@ -115,16 +99,16 @@ public class NativeAdViewHelperTest {
     public void getAdView_shouldRemoveViewFromImpressionTracker_shouldClearPreviousNativeResponse() throws Exception {
         NativeAdViewHelper.sImpressionTrackerMap.put(context, mockImpressionTracker);
 
-        NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, mockNativeResponse1, viewBinder, null);
+        NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, mockNativeResponse1, viewBinder);
         verify(mockImpressionTracker).removeView(relativeLayout);
 
         // Second call should clear the first NativeResponse
-        NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, mockNativeResponse2, viewBinder, null);
+        NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, mockNativeResponse2, viewBinder);
         verify(mockImpressionTracker, times(2)).removeView(relativeLayout);
         verify(mockNativeResponse1).clear(relativeLayout);
 
         // Third call should clear the second NativeResponse
-        NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, mockNativeResponse1, viewBinder, null);
+        NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, mockNativeResponse1, viewBinder);
         verify(mockImpressionTracker, times(3)).removeView(relativeLayout);
         verify(mockNativeResponse2).clear(relativeLayout);
     }
@@ -134,7 +118,7 @@ public class NativeAdViewHelperTest {
         NativeAdViewHelper.sImpressionTrackerMap.put(context, mockImpressionTracker);
         when(mockNativeResponse1.isOverridingImpressionTracker()).thenReturn(true);
 
-        NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, mockNativeResponse1, viewBinder, null);
+        NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, mockNativeResponse1, viewBinder);
 
         verify(mockImpressionTracker, never()).addView(any(View.class), any(NativeResponse.class));
         verify(mockNativeResponse1).prepare(relativeLayout);
@@ -145,7 +129,7 @@ public class NativeAdViewHelperTest {
         NativeAdViewHelper.sImpressionTrackerMap.put(context, mockImpressionTracker);
         when(mockNativeResponse1.isOverridingImpressionTracker()).thenReturn(false);
 
-        NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, mockNativeResponse1, viewBinder, null);
+        NativeAdViewHelper.getAdView(relativeLayout, viewGroup, context, mockNativeResponse1, viewBinder);
 
         verify(mockImpressionTracker).addView(relativeLayout, mockNativeResponse1);
         verify(mockNativeResponse1).prepare(relativeLayout);

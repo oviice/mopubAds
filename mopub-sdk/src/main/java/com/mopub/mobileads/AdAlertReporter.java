@@ -5,14 +5,19 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.view.View;
+
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.DateAndTime;
 import com.mopub.common.util.Streams;
 import com.mopub.mobileads.util.Base64;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 public class AdAlertReporter {
     private static final String EMAIL_RECIPIENT = "creative-review@mopub.com";
@@ -41,7 +46,7 @@ public class AdAlertReporter {
 
         mEmailAttachments = new ArrayList<Uri>();
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_PATTERN);
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_PATTERN, Locale.US);
         mDateString = dateFormat.format(DateAndTime.now());
 
         initEmailIntent();
@@ -63,7 +68,6 @@ public class AdAlertReporter {
         Intent chooserIntent = Intent.createChooser(mEmailIntent, "Send Email...");
         chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         mContext.startActivity(chooserIntent);
-
     }
 
     private void initEmailIntent() {
@@ -200,7 +204,7 @@ public class AdAlertReporter {
 
     private String getFormattedTimeStamp(long timeStamp) {
         if (timeStamp != -1) {
-            SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_PATTERN);
+            SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_PATTERN, Locale.US);
             return dateFormat.format(new Date(timeStamp));
         } else {
             return null;

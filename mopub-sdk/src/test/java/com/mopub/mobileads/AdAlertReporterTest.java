@@ -12,6 +12,7 @@ import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.test.support.TestDateAndTime;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
@@ -79,7 +80,7 @@ public class AdAlertReporterTest {
         assertThat(title).isEqualTo("New creative violation report");
 
         String dateTimeString = subjectParts[1];
-        SimpleDateFormat dateFormat = new SimpleDateFormat("M/d/yy hh:mm:ss a z");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("M/d/yy hh:mm:ss a z", Locale.US);
 
         Date date = dateFormat.parse(dateTimeString);
 
@@ -280,6 +281,7 @@ public class AdAlertReporterTest {
         assertThat(intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isNotEqualTo(0);
     }
 
+    @Ignore("pending")
     @Test
     public void getScreenshot_whenIsDrawingCacheEnabled_shouldKeepDrawingCacheEnabled() throws Exception {
 //        reset(view);
@@ -291,6 +293,7 @@ public class AdAlertReporterTest {
 //        verify(view, never()).setDrawingCacheEnabled(false);
     }
 
+    @Ignore("pending")
     @Test
     public void getScreenshot_whenIsDrawingCacheDisabled_shouldKeepDrawingCacheDisabled() throws Exception {
 //        reset(view);
@@ -328,7 +331,7 @@ public class AdAlertReporterTest {
     }
 
     private String getCurrentDateTime() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("M/d/yy hh:mm:ss a z");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("M/d/yy hh:mm:ss a z", Locale.US);
         return dateFormat.format(now);
     }
 }

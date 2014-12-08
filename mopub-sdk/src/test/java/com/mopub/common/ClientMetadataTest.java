@@ -62,7 +62,7 @@ public class ClientMetadataTest {
 
         final ClientMetadata clientMetadata = ClientMetadata.getInstance(activityContext);
         // Telephony manager data.
-        assertThat(clientMetadata.getNetworkOperator()).isEqualTo("testNetworkOperator");
+        assertThat(clientMetadata.getNetworkOperatorForUrl()).isEqualTo("testNetworkOperator");
         assertThat(clientMetadata.getNetworkOperatorName()).isEqualTo("testNetworkOperatorName");
         assertThat(clientMetadata.getIsoCountryCode()).isEqualTo("1");
 
