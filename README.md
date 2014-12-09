@@ -32,10 +32,14 @@ Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/mast
     
     As before, you may still disable MoPub SDK's location polling by calling `MoPub.setLocationAwareness(LocationAwareness.DISABLED)`.
   - **Updated Chartboost SDK** Updated the `ChartboostInterstitial` custom event to support Chartboost SDK 5.0.4
+  - **Android Support Annotations** Introduced a dependency on android-support-annotations.jar to support code analysis of `@Nullable` and `@NonNull` annotations.
 
 ## Requirements
 
-Android 2.3.1 (API Version 9) and up
+- Android 2.3.1 (API Version 9) and up
+- android-support-v4.jar
+- android-support-annotations.jar
+- **Recommended** Google Play Services 5.0.89 & up.
 
 ## License
 
