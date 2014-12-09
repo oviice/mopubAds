@@ -38,8 +38,11 @@ Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/mast
 
 - Android 2.3.1 (API Version 9) and up
 - android-support-v4.jar
-- android-support-annotations.jar
+- android-support-annotations.jar (**New in 3.3.0**)
 - **Recommended** Google Play Services 5.0.89 & up.
+
+## Upgrading from 3.2.0 and Prior
+In 3.3.0 a dependency on android-support-annotations.jar was added. If you are using Maven or Gradle to include the MoPub SDK, this dependency is included in the build scripts. For instructions on adding dependencies for Eclipse projects, see our [Getting Started Guide](https://github.com/mopub/mopub-android-sdk/wiki/Getting-Started#adding-the-support-libraries-to-your-project)
 
 ## License
 
