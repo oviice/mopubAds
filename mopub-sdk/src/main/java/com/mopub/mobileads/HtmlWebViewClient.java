@@ -4,13 +4,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-
 import com.mopub.common.MoPubBrowser;
+import com.mopub.common.Preconditions;
 import com.mopub.common.logging.MoPubLog;
-import com.mopub.common.util.IntentUtils;
-import com.mopub.mobileads.util.Utils;
+import com.mopub.common.util.Intents;
+import com.mopub.exceptions.IntentNotResolvableException;
+import com.mopub.exceptions.UrlParseException;
 
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
 
@@ -32,19 +36,36 @@ class HtmlWebViewClient extends WebViewClient {
         mContext = htmlWebView.getContext();
     }
 
+    /**
+     * Called upon user click, when the WebView attempts to load a new URL. Attempts to handle mopub
+     * and phone-specific schemes, open mopubnativebrowser links in the device browser, deep-links
+     * in the corresponding application, and all other links in the MoPub in-app browser.
+     */
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
-        if (handleSpecialMoPubScheme(url) || handlePhoneScheme(url) || handleNativeBrowserScheme(url)) {
+        MoPubLog.d("Ad clicked. Click URL: " + url);
+
+        if (handleSpecialMoPubScheme(url) || handlePhoneScheme(url)) {
             return true;
         }
 
-        MoPubLog.d("Ad clicked. Click URL: " + url);
-
-        // this is added because http/s can also be intercepted
-        if (!isWebSiteUrl(url) && IntentUtils.canHandleApplicationUrl(mContext, url)) {
-            if (launchApplicationUrl(url)) {
-                return true;
+        // MoPubNativeBrowser URLs
+        if (Intents.isNativeBrowserScheme(url)) {
+            final String errorMessage = "Unable to load mopub native browser url: " + url;
+            try {
+                final Intent intent = Intents.intentForNativeBrowserScheme(url);
+                launchIntentForUserClick(mContext, intent, errorMessage);
+            } catch (UrlParseException e) {
+                MoPubLog.d(errorMessage + ". " + e.getMessage());
             }
+
+            return true;
+        }
+
+        // Non-http(s) URLs
+        if (!Intents.isHttpUrl(url) && Intents.canHandleApplicationUrl(mContext, url)) {
+            launchApplicationUrl(url);
+            return true;
         }
 
         showMoPubBrowserForUrl(url);
@@ -105,46 +126,6 @@ class HtmlWebViewClient extends WebViewClient {
         return true;
     }
 
-    private boolean isNativeBrowserScheme(String url) {
-        return url.startsWith("mopubnativebrowser://");
-    }
-
-    private boolean handleNativeBrowserScheme(String url) {
-        if (!isNativeBrowserScheme(url)) {
-            return false;
-        }
-
-        Uri uri = Uri.parse(url);
-
-        String urlToOpenInNativeBrowser;
-        try {
-            urlToOpenInNativeBrowser = uri.getQueryParameter("url");
-        } catch (UnsupportedOperationException e) {
-            MoPubLog.w("Could not handle url: " + url);
-            return false;
-        }
-
-        if (!"navigate".equals(uri.getHost()) || urlToOpenInNativeBrowser == null) {
-            return false;
-        }
-
-        Uri intentUri = Uri.parse(urlToOpenInNativeBrowser);
-
-        Intent intent = new Intent(Intent.ACTION_VIEW, intentUri);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        String errorMessage = "Could not handle intent with URI: " + url
-                + ". Is this intent supported on your phone?";
-
-        launchIntentForUserClick(mContext, intent, errorMessage);
-
-        return true;
-    }
-
-    private boolean isWebSiteUrl(String url) {
-        return url.startsWith("http://") || url.startsWith("https://");
-    }
-
     private boolean launchApplicationUrl(String url) {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -155,11 +136,14 @@ class HtmlWebViewClient extends WebViewClient {
     }
 
     private void showMoPubBrowserForUrl(String url) {
-        if (url == null || url.equals("")) url = "about:blank";
+        if (url == null || url.equals("")) {
+            url = "about:blank";
+        }
         MoPubLog.d("Final URI to show in browser: " + url);
-        Intent intent = new Intent(mContext, MoPubBrowser.class);
-        intent.putExtra(MoPubBrowser.DESTINATION_URL_KEY, url);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        final Bundle extras = new Bundle();
+        extras.putString(MoPubBrowser.DESTINATION_URL_KEY, url);
+        Intent intent = Intents.getStartActivityIntent(mContext, MoPubBrowser.class, extras);
 
         String errorMessage = "Could not handle intent action. "
                 + ". Perhaps you forgot to declare com.mopub.common.MoPubBrowser"
@@ -195,17 +179,27 @@ class HtmlWebViewClient extends WebViewClient {
         launchIntentForUserClick(mContext, customIntent, errorMessage);
     }
 
-    boolean launchIntentForUserClick(Context context, Intent intent, String errorMessage) {
+    boolean launchIntentForUserClick(@Nullable final Context context, @NonNull final Intent intent,
+            @Nullable final String errorMessage) {
+        Preconditions.NoThrow.checkNotNull(intent);
+
+        if (context == null) {
+            MoPubLog.d(errorMessage);
+            return false;
+        }
+
         if (!mHtmlWebView.wasClicked()) {
             return false;
         }
 
-        boolean wasIntentStarted = Utils.executeIntent(context, intent, errorMessage);
-        if (wasIntentStarted) {
+        try {
+            Intents.startActivity(context, intent);
             mHtmlWebViewListener.onClicked();
             mHtmlWebView.onResetUserClick();
+            return true;
+        } catch (IntentNotResolvableException e) {
+            MoPubLog.d(errorMessage);
+            return false;
         }
-
-        return wasIntentStarted;
     }
 }

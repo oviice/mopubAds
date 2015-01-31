@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.mopub.common.AdReport;
 import com.mopub.common.Constants;
 import com.mopub.common.logging.MoPubLog;
 
@@ -16,13 +17,13 @@ public class BaseHtmlWebView extends BaseWebView implements UserClickListener {
     private final ViewGestureDetector mViewGestureDetector;
     private boolean mClicked;
 
-    public BaseHtmlWebView(Context context, AdConfiguration adConfiguration) {
+    public BaseHtmlWebView(Context context, AdReport adReport) {
         super(context);
 
         disableScrollingAndZoom();
         getSettings().setJavaScriptEnabled(true);
 
-        mViewGestureDetector = new ViewGestureDetector(context, this, adConfiguration);
+        mViewGestureDetector = new ViewGestureDetector(context, this, adReport);
         mViewGestureDetector.setUserClickListener(this);
 
         if (currentApiLevel().isAtLeast(ICE_CREAM_SANDWICH)) {

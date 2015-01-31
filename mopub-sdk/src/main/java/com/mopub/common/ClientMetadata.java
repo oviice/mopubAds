@@ -16,6 +16,8 @@ import android.view.WindowManager;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Utils;
 
+import java.util.Locale;
+
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
 import static android.content.pm.PackageManager.NameNotFoundException;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
@@ -259,6 +261,10 @@ public class ClientMetadata {
         return mNetworkOperator;
     }
 
+    public Locale getDeviceLocale() {
+        return mContext.getResources().getConfiguration().locale;
+    }
+
     /**
      * @return the sim operator.
      */
@@ -297,7 +303,7 @@ public class ClientMetadata {
     /**
      * @return the stored device ID.
      */
-    public synchronized String getAdvertisingId() {
+    public synchronized String getDeviceId() {
         return mUdid;
     }
 

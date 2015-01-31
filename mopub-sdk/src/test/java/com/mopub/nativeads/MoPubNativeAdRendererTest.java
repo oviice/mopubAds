@@ -8,11 +8,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.mopub.common.DownloadResponse;
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.common.util.ResponseHeader;
 import com.mopub.common.util.Utils;
-import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -20,7 +17,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
-import static com.mopub.nativeads.MoPubNative.MoPubNativeListener;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -53,10 +49,11 @@ public class MoPubNativeAdRendererTest {
         mNativeAd.setCallToAction("test call to action");
         mNativeAd.setClickDestinationUrl("destinationUrl");
 
-        final TestHttpResponseWithHeaders testHttpResponseWithHeaders = new TestHttpResponseWithHeaders(200, "");
-        testHttpResponseWithHeaders.addHeader(ResponseHeader.CLICK_TRACKING_URL.getKey(), "clickTrackerUrl");
-        final DownloadResponse downloadResponse = new DownloadResponse(testHttpResponseWithHeaders);
-        nativeResponse = new NativeResponse(context, downloadResponse, "test ID", mNativeAd, mock(MoPubNativeListener.class));
+        nativeResponse = new NativeResponse(context,
+                "impressionTrackerUrl",
+                "clickTrackerUrl",
+                "test ID", mNativeAd,
+                mock(MoPubNative.MoPubNativeListener.class));
 
         titleView = new TextView(context);
         titleView.setId((int) Utils.generateUniqueId());

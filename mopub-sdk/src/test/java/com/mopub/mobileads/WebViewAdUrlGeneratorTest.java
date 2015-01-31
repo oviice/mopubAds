@@ -12,7 +12,6 @@ import android.os.Build;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
-
 import com.mopub.common.AdUrlGenerator;
 import com.mopub.common.ClientMetadata;
 import com.mopub.common.GpsHelper;
@@ -24,7 +23,7 @@ import com.mopub.common.util.Utils;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
 import com.mopub.mobileads.test.support.MoPubShadowTelephonyManager;
 import com.mopub.mraid.MraidNativeCommandHandler;
-
+import com.mopub.network.PlayServicesUrlRewriter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -513,8 +512,7 @@ public class WebViewAdUrlGeneratorTest {
                     "&dn=" + Build.MANUFACTURER +
                     "%2C" + Build.MODEL +
                     "%2C" + Build.PRODUCT +
-                    "&udid=" + expectedUdid +
-                    paramIfNotEmpty("dnt", dnt) +
+
                     paramIfNotEmpty("q", query) +
                     (TextUtils.isEmpty(latLon) ? "" : "&ll=" + latLon + "&lla=" + locationAccuracy) +
                     "&z=-0700" +
@@ -528,7 +526,9 @@ public class WebViewAdUrlGeneratorTest {
                     "&ct=" + networkType +
                     "&av=1.0" +
                     "&android_perms_ext_storage=" + externalStoragePermission +
-                    ((twitterAppInstalledStatus == TwitterAppInstalledStatus.INSTALLED) ? "&ts=1" : "");
+                    ((twitterAppInstalledStatus == TwitterAppInstalledStatus.INSTALLED) ? "&ts=1" : "") +
+                    "&udid=" + PlayServicesUrlRewriter.UDID_TEMPLATE +
+                    "&dnt=" + PlayServicesUrlRewriter.DO_NOT_TRACK_TEMPLATE;
 
         }
 

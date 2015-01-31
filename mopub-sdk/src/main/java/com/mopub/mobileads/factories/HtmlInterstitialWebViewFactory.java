@@ -2,7 +2,7 @@ package com.mopub.mobileads.factories;
 
 import android.content.Context;
 
-import com.mopub.mobileads.AdConfiguration;
+import com.mopub.common.AdReport;
 import com.mopub.mobileads.HtmlInterstitialWebView;
 
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
@@ -12,22 +12,22 @@ public class HtmlInterstitialWebViewFactory {
 
     public static HtmlInterstitialWebView create(
             Context context,
+            AdReport adReport,
             CustomEventInterstitialListener customEventInterstitialListener,
             boolean isScrollable,
             String redirectUrl,
-            String clickthroughUrl,
-            AdConfiguration adConfiguration) {
-        return instance.internalCreate(context, customEventInterstitialListener, isScrollable, redirectUrl, clickthroughUrl, adConfiguration);
+            String clickthroughUrl) {
+        return instance.internalCreate(context, adReport, customEventInterstitialListener, isScrollable, redirectUrl, clickthroughUrl);
     }
 
     public HtmlInterstitialWebView internalCreate(
             Context context,
+            AdReport adReport,
             CustomEventInterstitialListener customEventInterstitialListener,
             boolean isScrollable,
             String redirectUrl,
-            String clickthroughUrl,
-            AdConfiguration adConfiguration) {
-        HtmlInterstitialWebView htmlInterstitialWebView = new HtmlInterstitialWebView(context, adConfiguration);
+            String clickthroughUrl) {
+        HtmlInterstitialWebView htmlInterstitialWebView = new HtmlInterstitialWebView(context, adReport);
         htmlInterstitialWebView.init(customEventInterstitialListener, isScrollable, redirectUrl, clickthroughUrl);
         return htmlInterstitialWebView;
     }

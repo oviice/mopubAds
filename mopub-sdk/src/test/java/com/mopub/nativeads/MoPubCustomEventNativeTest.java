@@ -2,6 +2,7 @@ package com.mopub.nativeads;
 
 import android.app.Activity;
 
+import com.mopub.common.DataKeys;
 import com.mopub.common.test.support.SdkTestRunner;
 
 import org.json.JSONArray;
@@ -45,7 +46,7 @@ public class MoPubCustomEventNativeTest {
         fakeJsonObject.put("iconimage", "iconimageurl");
         fakeJsonObject.put("extraimage", "extraimageurl");
 
-        serverExtras.put(CustomEventNativeAdapter.RESPONSE_BODY_KEY, fakeJsonObject.toString());
+        localExtras.put(DataKeys.JSON_BODY_KEY, fakeJsonObject);
 
         mCustomEventNativeListener = mock(CustomEventNativeListener.class);
     }
@@ -56,20 +57,11 @@ public class MoPubCustomEventNativeTest {
     }
 
     @Test
-    public void loadNativeAd_withInvalidResponseBody_shouldNotifyListenerOfOnNativeAdFailed() throws Exception {
-        serverExtras.put(CustomEventNativeAdapter.RESPONSE_BODY_KEY, "{ \"bad json");
+    public void loadNativeAd_withNullResponseBody_shouldNotifyListenerOfOnNativeAdFailed() throws Exception {
+        localExtras.remove(DataKeys.JSON_BODY_KEY);
 
         subject.loadNativeAd(context, mCustomEventNativeListener, localExtras, serverExtras);
         verify(mCustomEventNativeListener, never()).onNativeAdLoaded(any(MoPubCustomEventNative.MoPubForwardingNativeAd.class));
         verify(mCustomEventNativeListener).onNativeAdFailed(NativeErrorCode.INVALID_JSON);
-    }
-
-    @Test
-    public void loadNativeAd_withNullResponseBody_shouldNotifyListenerOfOnNativeAdFailed() throws Exception {
-        serverExtras.put(CustomEventNativeAdapter.RESPONSE_BODY_KEY, null);
-
-        subject.loadNativeAd(context, mCustomEventNativeListener, localExtras, serverExtras);
-        verify(mCustomEventNativeListener, never()).onNativeAdLoaded(any(MoPubCustomEventNative.MoPubForwardingNativeAd.class));
-        verify(mCustomEventNativeListener).onNativeAdFailed(NativeErrorCode.UNSPECIFIED);
     }
 }

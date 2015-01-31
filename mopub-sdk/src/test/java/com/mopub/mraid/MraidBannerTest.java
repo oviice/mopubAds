@@ -5,7 +5,6 @@ import android.content.Context;
 import android.view.View;
 
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.mobileads.AdConfiguration;
 import com.mopub.mobileads.test.support.TestMraidControllerFactory;
 import com.mopub.mraid.MraidController.MraidListener;
 
@@ -18,8 +17,7 @@ import org.mockito.Mock;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
-import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
+import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;
 import static com.mopub.mobileads.MoPubErrorCode.MRAID_LOAD_ERROR;
 import static org.mockito.Matchers.any;
@@ -31,7 +29,6 @@ public class MraidBannerTest {
     private static final String INPUT_HTML_DATA = "%3Chtml%3E%3C%2Fhtml%3E";
 
     MraidController mockMraidController;
-    @Mock AdConfiguration mockAdConfiguration;
     @Mock CustomEventBannerListener mockBannerListener;
 
     private Context context;
@@ -47,8 +44,7 @@ public class MraidBannerTest {
 
         context = new Activity();
         localExtras = new HashMap<String, Object>();
-        localExtras.put(AD_CONFIGURATION_KEY, mockAdConfiguration);
-
+        localExtras.put("broadcastIdentifier", 123L);
         serverExtras = new HashMap<String, String>();
         serverExtras.put(HTML_RESPONSE_BODY_KEY, INPUT_HTML_DATA);
     }
@@ -56,15 +52,6 @@ public class MraidBannerTest {
     @Test
     public void loadBanner_whenExtrasAreMalformed_shouldNotifyBannerListenerFailureAndReturn() {
         serverExtras.remove(HTML_RESPONSE_BODY_KEY);
-
-        subject.loadBanner(context, mockBannerListener, localExtras, serverExtras);
-
-        verify(mockBannerListener).onBannerFailed(eq(MRAID_LOAD_ERROR));
-    }
-
-    @Test
-    public void loadBanner_whenAdConfigurationMissing_shouldNotifyBannerListenerFailureAndReturn() {
-        localExtras.remove(AD_CONFIGURATION_KEY);
 
         subject.loadBanner(context, mockBannerListener, localExtras, serverExtras);
 

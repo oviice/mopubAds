@@ -1,5 +1,7 @@
 package com.mopub.common.util;
 
+import android.text.TextUtils;
+
 import com.mopub.common.logging.MoPubLog;
 
 import org.json.JSONArray;
@@ -12,10 +14,10 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class Json {
-    public static Map<String, String> jsonStringToMap(String jsonParams) throws Exception {
+    public static Map<String, String> jsonStringToMap(String jsonParams) throws JSONException {
         Map<String, String> jsonMap = new HashMap<String, String>();
 
-        if (jsonParams == null || jsonParams.equals("")) return jsonMap;
+        if (TextUtils.isEmpty(jsonParams)) return jsonMap;
 
         JSONObject jsonObject = (JSONObject) new JSONTokener(jsonParams).nextValue();
         Iterator<?> keys = jsonObject.keys();

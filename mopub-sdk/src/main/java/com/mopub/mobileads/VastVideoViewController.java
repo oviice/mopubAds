@@ -17,37 +17,35 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.VideoView;
-
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.DownloadTask;
 import com.mopub.common.HttpResponses;
 import com.mopub.common.MoPubBrowser;
-import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.VisibleForTesting;
 import com.mopub.common.event.MoPubEvents;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.Dips;
 import com.mopub.common.util.Drawables;
+import com.mopub.common.util.Intents;
 import com.mopub.common.util.Streams;
 import com.mopub.common.util.VersionCode;
+import com.mopub.exceptions.IntentNotResolvableException;
+import com.mopub.exceptions.UrlParseException;
 import com.mopub.mobileads.util.vast.VastCompanionAd;
 import com.mopub.mobileads.util.vast.VastVideoConfiguration;
-
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.Serializable;
-import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.io.*;
+import java.util.*;
 
 import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
 import static com.mopub.common.HttpClient.initializeHttpGet;
-import static com.mopub.common.HttpClient.makeTrackingHttpRequest;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_SHOW;
+import static com.mopub.network.TrackingRequest.makeTrackingHttpRequest;
 
 public class VastVideoViewController extends BaseVideoViewController implements DownloadTask.DownloadTaskListener {
     static final String VAST_VIDEO_CONFIGURATION = "vast_video_configuration";
@@ -60,9 +58,9 @@ public class VastVideoViewController extends BaseVideoViewController implements 
     private static final int MAX_VIDEO_RETRIES = 1;
     private static final int VIDEO_VIEW_FILE_PERMISSION_ERROR = Integer.MIN_VALUE;
 
-    private static final ThreadPoolExecutor sThreadPoolExecutor = new ThreadPoolExecutor(10, 50, 1, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
     static final int DEFAULT_VIDEO_DURATION_FOR_CLOSE_BUTTON = 5 * 1000;
     static final int MAX_VIDEO_DURATION_FOR_CLOSE_BUTTON = 16 * 1000;
+    static final int START_MARK_THRESHOLD = 2000;
 
     private final VastVideoConfiguration mVastVideoConfiguration;
     private final VastCompanionAd mVastCompanionAd;
@@ -81,9 +79,18 @@ public class VastVideoViewController extends BaseVideoViewController implements 
     private boolean mIsFirstMarkHit;
     private boolean mIsSecondMarkHit;
     private boolean mIsThirdMarkHit;
+    // This flag indicates that the final video checkpoint has been reached, therefore allowing
+    // us to fire the video completion tracker in MediaPlayer#onCompletion.
+    // This is a safeguard against inconsistent MediaPlayer#onCompletion callbacks due to differing
+    // implementations across Android versions and devices.
+    private boolean mIsFinalMarkHit;
+
     private int mSeekerPositionOnPause;
     private boolean mIsVideoFinishedPlaying;
     private int mVideoRetries;
+
+    private boolean mVideoError;
+    private boolean mCompletionTrackerFired;
 
     VastVideoViewController(final Context context,
             final Bundle bundle,
@@ -131,13 +138,6 @@ public class VastVideoViewController extends BaseVideoViewController implements 
         getLayout().addView(mVastVideoToolbar);
 
         mCompanionAdImageView = createCompanionAdImageView(context);
-
-        makeTrackingHttpRequest(
-                mVastVideoConfiguration.getImpressionTrackers(),
-                context,
-                MoPubEvents.Type.IMPRESSION_REQUEST
-        );
-
         mVideoProgressCheckerRunnable = createVideoProgressCheckerRunnable();
     }
 
@@ -150,10 +150,14 @@ public class VastVideoViewController extends BaseVideoViewController implements 
     protected void onCreate() {
         super.onCreate();
         getBaseVideoViewControllerListener().onSetRequestedOrientation(SCREEN_ORIENTATION_LANDSCAPE);
-
-        broadcastAction(ACTION_INTERSTITIAL_SHOW);
-
         downloadCompanionAd();
+
+        makeTrackingHttpRequest(
+                mVastVideoConfiguration.getImpressionTrackers(),
+                getContext(),
+                MoPubEvents.Type.IMPRESSION_REQUEST
+        );
+        broadcastAction(ACTION_INTERSTITIAL_SHOW);
     }
 
     @Override
@@ -250,7 +254,7 @@ public class VastVideoViewController extends BaseVideoViewController implements 
                 if (videoLength > 0) {
                     float progressPercentage = currentPosition / videoLength;
 
-                    if (!mIsStartMarkHit && currentPosition >= 1000) {
+                    if (!mIsStartMarkHit && currentPosition >= START_MARK_THRESHOLD) {
                         mIsStartMarkHit = true;
                         makeTrackingHttpRequest(mVastVideoConfiguration.getStartTrackers(), getContext());
                     }
@@ -267,6 +271,7 @@ public class VastVideoViewController extends BaseVideoViewController implements 
 
                     if (!mIsThirdMarkHit && progressPercentage > THIRD_QUARTER_MARKER) {
                         mIsThirdMarkHit = true;
+                        mIsFinalMarkHit = true;
                         makeTrackingHttpRequest(mVastVideoConfiguration.getThirdQuartileTrackers(), getContext());
                     }
 
@@ -335,9 +340,12 @@ public class VastVideoViewController extends BaseVideoViewController implements 
                 makeVideoInteractable();
 
                 videoCompleted(false);
-
-                makeTrackingHttpRequest(mVastVideoConfiguration.getCompleteTrackers(), context);
                 mIsVideoFinishedPlaying = true;
+
+                if (!mVideoError && mIsFinalMarkHit && !mCompletionTrackerFired) {
+                    makeTrackingHttpRequest(mVastVideoConfiguration.getCompleteTrackers(), context);
+                    mCompletionTrackerFired = true;
+                }
 
                 videoView.setVisibility(View.GONE);
                 // check the drawable to see if the image view was populated with content
@@ -356,6 +364,7 @@ public class VastVideoViewController extends BaseVideoViewController implements 
                     stopProgressChecker();
                     makeVideoInteractable();
                     videoError(false);
+                    mVideoError = true;
                     return false;
                 }
             }
@@ -403,6 +412,42 @@ public class VastVideoViewController extends BaseVideoViewController implements 
         return false;
     }
 
+    /**
+     * Called upon user click. Attempts open mopubnativebrowser links in the device browser and all
+     * other links in the MoPub in-app browser.
+     */
+    @VisibleForTesting
+    void handleClick(final List<String> clickThroughTrackers, final String clickThroughUrl) {
+        makeTrackingHttpRequest(clickThroughTrackers, getContext(), MoPubEvents.Type.CLICK_REQUEST);
+
+        if (clickThroughUrl == null) {
+            return;
+        }
+
+        broadcastAction(ACTION_INTERSTITIAL_CLICK);
+
+        if (Intents.isNativeBrowserScheme(clickThroughUrl)) {
+            try {
+                final Intent intent = Intents.intentForNativeBrowserScheme(clickThroughUrl);
+                Intents.startActivity(getContext(), intent);
+                return;
+            } catch (UrlParseException e) {
+                MoPubLog.d(e.getMessage());
+            } catch (IntentNotResolvableException e) {
+                MoPubLog.d("Could not handle intent for URI: " + clickThroughUrl + ". "
+                        + e.getMessage());
+            }
+
+            return;
+        }
+
+        Bundle bundle = new Bundle();
+        bundle.putString(MoPubBrowser.DESTINATION_URL_KEY, clickThroughUrl);
+
+        getBaseVideoViewControllerListener().onStartActivityForResult(MoPubBrowser.class,
+                MOPUB_BROWSER_REQUEST_CODE, bundle);
+    }
+
     private ImageView createCompanionAdImageView(final Context context) {
         RelativeLayout relativeLayout = new RelativeLayout(context);
         relativeLayout.setGravity(Gravity.CENTER);
@@ -424,18 +469,6 @@ public class VastVideoViewController extends BaseVideoViewController implements 
 
         relativeLayout.addView(imageView, companionAdLayout);
         return imageView;
-    }
-
-    private void handleClick(final List<String> clickThroughTrackers, final String clickThroughUrl) {
-        makeTrackingHttpRequest(clickThroughTrackers, getContext(), MoPubEvents.Type.CLICK_REQUEST);
-
-        videoClicked();
-
-        Bundle bundle = new Bundle();
-        bundle.putString(MoPubBrowser.DESTINATION_URL_KEY, clickThroughUrl);
-
-        getBaseVideoViewControllerListener().onStartActivityForResult(MoPubBrowser.class,
-                MOPUB_BROWSER_REQUEST_CODE, bundle);
     }
 
     private boolean isLongVideo(final int duration) {
@@ -471,43 +504,71 @@ public class VastVideoViewController extends BaseVideoViewController implements 
 
     // for testing
     @Deprecated
+    @VisibleForTesting
     boolean getIsVideoProgressShouldBeChecked() {
         return mIsVideoProgressShouldBeChecked;
     }
 
     // for testing
     @Deprecated
+    @VisibleForTesting
     int getVideoRetries() {
         return mVideoRetries;
     }
 
     // for testing
     @Deprecated
+    @VisibleForTesting
     int getShowCloseButtonDelay() {
         return mShowCloseButtonDelay;
     }
 
     // for testing
     @Deprecated
+    @VisibleForTesting
     boolean isShowCloseButtonEventFired() {
         return mShowCloseButtonEventFired;
     }
 
     // for testing
     @Deprecated
+    @VisibleForTesting
     void setCloseButtonVisible(boolean visible) {
         mShowCloseButtonEventFired = visible;
     }
 
     // for testing
     @Deprecated
+    @VisibleForTesting
     boolean isVideoFinishedPlaying() {
         return mIsVideoFinishedPlaying;
     }
 
     // for testing
     @Deprecated
+    @VisibleForTesting
     ImageView getCompanionAdImageView() {
         return mCompanionAdImageView;
+    }
+
+    // for testing
+    @Deprecated
+    @VisibleForTesting
+    void setFinalMarkHit() {
+        mIsFinalMarkHit = true;
+    }
+
+    // for testing
+    @Deprecated
+    @VisibleForTesting
+    void setVideoError() {
+        mVideoError = true;
+    }
+
+    // for testing
+    @Deprecated
+    @VisibleForTesting
+    boolean getVideoError() {
+        return mVideoError;
     }
 }

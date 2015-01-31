@@ -9,13 +9,9 @@ import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.mopub.common.AdReport;
 import com.mopub.mobileads.factories.HtmlInterstitialWebViewFactory;
 
-import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
-import static com.mopub.mobileads.AdFetcher.CLICKTHROUGH_URL_KEY;
-import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
-import static com.mopub.mobileads.AdFetcher.REDIRECT_URL_KEY;
-import static com.mopub.mobileads.AdFetcher.SCROLLABLE_KEY;
 import static com.mopub.mobileads.BaseInterstitialActivity.JavaScriptWebViewCallbacks.WEB_VIEW_DID_APPEAR;
 import static com.mopub.mobileads.BaseInterstitialActivity.JavaScriptWebViewCallbacks.WEB_VIEW_DID_CLOSE;
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
@@ -23,15 +19,21 @@ import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERS
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_FAIL;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_SHOW;
+import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.broadcastAction;
+import static com.mopub.common.DataKeys.AD_REPORT_KEY;
+import static com.mopub.common.DataKeys.CLICKTHROUGH_URL_KEY;
+import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
+import static com.mopub.common.DataKeys.REDIRECT_URL_KEY;
+import static com.mopub.common.DataKeys.SCROLLABLE_KEY;
 import static com.mopub.mobileads.HtmlWebViewClient.MOPUB_FAIL_LOAD;
 import static com.mopub.mobileads.HtmlWebViewClient.MOPUB_FINISH_LOAD;
 
 public class MoPubActivity extends BaseInterstitialActivity {
     private HtmlInterstitialWebView mHtmlInterstitialWebView;
 
-    public static void start(Context context, String htmlData, boolean isScrollable, String redirectUrl, String clickthroughUrl, AdConfiguration adConfiguration) {
-        Intent intent = createIntent(context, htmlData, isScrollable, redirectUrl, clickthroughUrl, adConfiguration);
+    public static void start(Context context, String htmlData, AdReport adReport, boolean isScrollable, String redirectUrl, String clickthroughUrl, long broadcastIdentifier) {
+        Intent intent = createIntent(context, htmlData, adReport, isScrollable, redirectUrl, clickthroughUrl, broadcastIdentifier);
         try {
             context.startActivity(intent);
         } catch (ActivityNotFoundException anfe) {
@@ -39,19 +41,20 @@ public class MoPubActivity extends BaseInterstitialActivity {
         }
     }
 
-    static Intent createIntent(Context context, String htmlData, boolean isScrollable, String redirectUrl, String clickthroughUrl, AdConfiguration adConfiguration) {
+    static Intent createIntent(Context context, String htmlData, AdReport adReport, boolean isScrollable, String redirectUrl, String clickthroughUrl, long broadcastIdentifier) {
         Intent intent = new Intent(context, MoPubActivity.class);
         intent.putExtra(HTML_RESPONSE_BODY_KEY, htmlData);
         intent.putExtra(SCROLLABLE_KEY, isScrollable);
         intent.putExtra(CLICKTHROUGH_URL_KEY, clickthroughUrl);
         intent.putExtra(REDIRECT_URL_KEY, redirectUrl);
-        intent.putExtra(AD_CONFIGURATION_KEY, adConfiguration);
+        intent.putExtra(BROADCAST_IDENTIFIER_KEY, broadcastIdentifier);
+        intent.putExtra(AD_REPORT_KEY, adReport);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return intent;
     }
 
-    static void preRenderHtml(final Context context, final CustomEventInterstitialListener customEventInterstitialListener, String htmlData) {
-        HtmlInterstitialWebView dummyWebView = HtmlInterstitialWebViewFactory.create(context, customEventInterstitialListener, false, null, null, null);
+    static void preRenderHtml(final Context context, final AdReport adReport, final CustomEventInterstitialListener customEventInterstitialListener, String htmlData) {
+        HtmlInterstitialWebView dummyWebView = HtmlInterstitialWebViewFactory.create(context, adReport, customEventInterstitialListener, false, null, null);
         dummyWebView.enablePlugins(false);
 
         dummyWebView.addMoPubUriJavascriptInterface(new HtmlInterstitialWebView.MoPubUriJavascriptFireFinishLoadListener() {
@@ -83,7 +86,7 @@ public class MoPubActivity extends BaseInterstitialActivity {
         String clickthroughUrl = intent.getStringExtra(CLICKTHROUGH_URL_KEY);
         String htmlResponse = intent.getStringExtra(HTML_RESPONSE_BODY_KEY);
 
-        mHtmlInterstitialWebView = HtmlInterstitialWebViewFactory.create(getApplicationContext(), new BroadcastingInterstitialListener(), isScrollable, redirectUrl, clickthroughUrl, getAdConfiguration());
+        mHtmlInterstitialWebView = HtmlInterstitialWebViewFactory.create(getApplicationContext(), mAdReport, new BroadcastingInterstitialListener(), isScrollable, redirectUrl, clickthroughUrl);
         mHtmlInterstitialWebView.loadHtmlResponse(htmlResponse);
 
         return mHtmlInterstitialWebView;

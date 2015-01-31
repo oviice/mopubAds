@@ -300,7 +300,7 @@ public class GpsHelperTest {
 
     static public void verifyClientMetadata(Context context, TestAdInfo adInfo) {
         ClientMetadata clientMetadata = ClientMetadata.getInstance(context);
-        assertThat(clientMetadata.getAdvertisingId()).isEqualTo("ifa:" + adInfo.getId());
+        assertThat(clientMetadata.getDeviceId()).isEqualTo("ifa:" + adInfo.getId());
         assertThat(clientMetadata.isDoNotTrackSet()).isEqualTo(adInfo.isLimitAdTrackingEnabled());
     }
 

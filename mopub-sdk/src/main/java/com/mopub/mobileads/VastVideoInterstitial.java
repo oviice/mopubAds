@@ -1,8 +1,7 @@
 package com.mopub.mobileads;
 
-import android.net.Uri;
-
 import com.mopub.common.CacheService;
+import com.mopub.common.DataKeys;
 import com.mopub.mobileads.factories.VastManagerFactory;
 import com.mopub.mobileads.util.vast.VastManager;
 import com.mopub.mobileads.util.vast.VastVideoConfiguration;
@@ -17,7 +16,7 @@ class VastVideoInterstitial extends ResponseBodyInterstitial implements VastMana
 
     @Override
     protected void extractExtras(Map<String, String> serverExtras) {
-        mVastResponse = Uri.decode(serverExtras.get(AdFetcher.HTML_RESPONSE_BODY_KEY));
+        mVastResponse = serverExtras.get(DataKeys.HTML_RESPONSE_BODY_KEY);
     }
 
     @Override
@@ -35,7 +34,7 @@ class VastVideoInterstitial extends ResponseBodyInterstitial implements VastMana
 
     @Override
     public void showInterstitial() {
-        MraidVideoPlayerActivity.startVast(mContext, mVastVideoConfiguration, mAdConfiguration);
+        MraidVideoPlayerActivity.startVast(mContext, mVastVideoConfiguration, mBroadcastIdentifier);
     }
 
     @Override

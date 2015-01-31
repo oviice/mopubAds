@@ -1,25 +1,21 @@
 package com.mopub.nativeads;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import com.mopub.common.DownloadResponse;
-import com.mopub.common.HttpClient;
-import com.mopub.common.MoPubBrowser;
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.event.MoPubEvents;
 import com.mopub.common.logging.MoPubLog;
-import com.mopub.common.util.IntentUtils;
-import com.mopub.common.util.ResponseHeader;
 import com.mopub.nativeads.MoPubNative.MoPubNativeEventListener;
+import com.mopub.network.Networking;
+import com.mopub.network.TrackingRequest;
+import com.mopub.volley.VolleyError;
+import com.mopub.volley.toolbox.ImageLoader;
 
-import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -39,8 +35,6 @@ import static com.mopub.nativeads.NativeResponse.Parameter.MAIN_IMAGE;
 import static com.mopub.nativeads.NativeResponse.Parameter.STAR_RATING;
 import static com.mopub.nativeads.NativeResponse.Parameter.TEXT;
 import static com.mopub.nativeads.NativeResponse.Parameter.TITLE;
-import static com.mopub.nativeads.UrlResolutionTask.UrlResolutionListener;
-import static com.mopub.nativeads.UrlResolutionTask.getResolvedUrl;
 
 public class NativeResponse {
     enum Parameter {
@@ -89,6 +83,7 @@ public class NativeResponse {
     }
 
     @NonNull private final Context mContext;
+    @NonNull private final ImageLoader mImageLoader;
     @NonNull private MoPubNativeEventListener mMoPubNativeEventListener;
     @NonNull private final NativeAdInterface mNativeAd;
 
@@ -102,7 +97,8 @@ public class NativeResponse {
     private boolean mIsDestroyed;
 
     public NativeResponse(@NonNull final Context context,
-            @NonNull final DownloadResponse downloadResponse,
+            @NonNull final String impressionUrl,
+            @NonNull final String clickUrl,
             @NonNull final String adUnitId,
             @NonNull final NativeAdInterface nativeAd,
             @NonNull final MoPubNativeEventListener moPubNativeEventListener) {
@@ -123,8 +119,9 @@ public class NativeResponse {
         });
 
         mMoPubImpressionTrackers = new HashSet<String>();
-        mMoPubImpressionTrackers.add(downloadResponse.getFirstHeader(ResponseHeader.IMPRESSION_URL));
-        mMoPubClickTracker = downloadResponse.getFirstHeader(ResponseHeader.CLICK_TRACKING_URL);
+        mMoPubImpressionTrackers.add(impressionUrl);
+        mMoPubClickTracker = clickUrl;
+        mImageLoader = Networking.getImageLoader(context);
     }
 
     @Override
@@ -247,7 +244,7 @@ public class NativeResponse {
         }
 
         for (final String impressionTracker : getImpressionTrackers()) {
-            HttpClient.makeTrackingHttpRequest(
+            TrackingRequest.makeTrackingHttpRequest(
                     impressionTracker, mContext, MoPubEvents.Type.IMPRESSION_REQUEST);
         }
 
@@ -263,7 +260,7 @@ public class NativeResponse {
         }
 
         if (!isClicked()) {
-            HttpClient.makeTrackingHttpRequest(
+            TrackingRequest.makeTrackingHttpRequest(
                     mMoPubClickTracker, mContext, MoPubEvents.Type.CLICK_REQUEST);
         }
 
@@ -328,7 +325,22 @@ public class NativeResponse {
         if (url == null) {
             imageView.setImageDrawable(null);
         } else {
-            ImageViewService.loadImageView(url, imageView);
+            mImageLoader.get(url, new ImageLoader.ImageListener() {
+                @Override
+                public void onResponse(final ImageLoader.ImageContainer imageContainer,
+                        final boolean isImmediate) {
+                    if (!isImmediate) {
+                        MoPubLog.d("Image was not loaded immediately into your ad view. You should call preCacheImages as part of your custom event loading process.");
+                    }
+                    imageView.setImageBitmap(imageContainer.getBitmap());
+                }
+
+                @Override
+                public void onErrorResponse(final VolleyError volleyError) {
+                    MoPubLog.d("Failed to load image.", volleyError);
+                    imageView.setImageDrawable(null);
+                }
+            });
         }
     }
 
@@ -344,13 +356,9 @@ public class NativeResponse {
         }
 
         final Iterator<String> urlIterator = Arrays.asList(getClickDestinationUrl()).iterator();
-        final ClickDestinationUrlResolutionListener urlResolutionListener = new ClickDestinationUrlResolutionListener(
-                mContext,
-                urlIterator,
-                spinningProgressView
-        );
-
-        getResolvedUrl(urlIterator.next(), urlResolutionListener);
+        final ClickDestinationResolutionListener urlResolutionListener =
+                new ClickDestinationResolutionListener(mContext, urlIterator, spinningProgressView);
+        UrlResolutionTask.getResolvedUrl(urlIterator.next(), urlResolutionListener);
     }
 
     private void setOnClickListener(@NonNull final View view,
@@ -360,55 +368,6 @@ public class NativeResponse {
             ViewGroup viewGroup = (ViewGroup)view;
             for (int i = 0; i < viewGroup.getChildCount(); i++)
                 setOnClickListener(viewGroup.getChildAt(i), onClickListener);
-        }
-    }
-
-    private static class ClickDestinationUrlResolutionListener implements UrlResolutionListener {
-        private final Context mContext;
-        private final Iterator<String> mUrlIterator;
-        @NonNull private final SoftReference<SpinningProgressView> mSpinningProgressView;
-
-        public ClickDestinationUrlResolutionListener(@NonNull final Context context,
-                final Iterator<String> urlIterator,
-                final SpinningProgressView spinningProgressView) {
-            mContext = context.getApplicationContext();
-            mUrlIterator = urlIterator;
-            mSpinningProgressView = new SoftReference<SpinningProgressView>(spinningProgressView);
-        }
-
-        @Override
-        public void onSuccess(@NonNull final String resolvedUrl) {
-            final Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(resolvedUrl));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            if (IntentUtils.isDeepLink(resolvedUrl) && IntentUtils.deviceCanHandleIntent(mContext, intent)) {
-                // Open another Android app from deep link
-                mContext.startActivity(intent);
-            } else if (mUrlIterator.hasNext()) {
-                // If we can't handle a deep link then try the fallback url
-                getResolvedUrl(mUrlIterator.next(), this);
-                return;
-            } else {
-                // If we can't open the deep link and there are no backup links
-                // Or the link is a browser link then handle it here
-                MoPubBrowser.open(mContext, resolvedUrl);
-            }
-
-            removeSpinningProgressView();
-        }
-
-        @Override
-        public void onFailure() {
-            MoPubLog.d("Failed to resolve URL for click.");
-            removeSpinningProgressView();
-        }
-
-        private void removeSpinningProgressView() {
-            final SpinningProgressView spinningProgressView = mSpinningProgressView.get();
-            if (spinningProgressView != null) {
-                spinningProgressView.removeFromRoot();
-            }
         }
     }
 

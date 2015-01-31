@@ -1,10 +1,8 @@
 package com.mopub.mobileads;
 
-import android.annotation.TargetApi;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
@@ -16,6 +14,7 @@ import android.view.WindowManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.mopub.common.AdReport;
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
@@ -25,16 +24,14 @@ import com.mopub.mraid.MraidController.UseCustomCloseListener;
 import com.mopub.mraid.MraidWebViewDebugListener;
 import com.mopub.mraid.PlacementType;
 
-import static com.mopub.common.util.VersionCode.ICE_CREAM_SANDWICH;
-import static com.mopub.common.util.VersionCode.currentApiLevel;
-import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
-import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
-import static com.mopub.mobileads.BaseInterstitialActivity.JavaScriptWebViewCallbacks
-        .WEB_VIEW_DID_APPEAR;
-import static com.mopub.mobileads.BaseInterstitialActivity.JavaScriptWebViewCallbacks
-        .WEB_VIEW_DID_CLOSE;
+import static com.mopub.common.DataKeys.AD_REPORT_KEY;
+import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
+import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
+import static com.mopub.mobileads.BaseInterstitialActivity.JavaScriptWebViewCallbacks.WEB_VIEW_DID_APPEAR;
+import static com.mopub.mobileads.BaseInterstitialActivity.JavaScriptWebViewCallbacks.WEB_VIEW_DID_CLOSE;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_FAIL;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_SHOW;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.broadcastAction;
 
@@ -59,27 +56,35 @@ public class MraidActivity extends BaseInterstitialActivity {
                 return true;
             }
 
+            @Override
+            public void onReceivedError(final WebView view, final int errorCode,
+                    final String description,
+                    final String failingUrl) {
+                super.onReceivedError(view, errorCode, description, failingUrl);
+                customEventInterstitialListener.onInterstitialFailed(
+                        MoPubErrorCode.MRAID_LOAD_ERROR);
+            }
         });
 
         dummyWebView.loadDataWithBaseURL(null, htmlData, "text/html", "UTF-8", null);
     }
 
-    public static void start(@NonNull Context context, @NonNull String htmlData,
-            @NonNull AdConfiguration adConfiguration) {
-        Intent intent = createIntent(context, htmlData, adConfiguration);
+    public static void start(@NonNull Context context, @Nullable AdReport adreport, @NonNull String htmlData, long broadcastIdentifier) {
+        Intent intent = createIntent(context, adreport, htmlData, broadcastIdentifier);
         try {
             context.startActivity(intent);
-        } catch (ActivityNotFoundException anfe) {
+        } catch (ActivityNotFoundException exception) {
             Log.d("MraidInterstitial", "MraidActivity.class not found. Did you declare MraidActivity in your manifest?");
         }
     }
 
     @VisibleForTesting
-    protected static Intent createIntent(@NonNull Context context, @NonNull String htmlData,
-            @NonNull AdConfiguration adConfiguration) {
+    protected static Intent createIntent(@NonNull Context context, @Nullable AdReport adReport,
+            @NonNull String htmlData, long broadcastIdentifier) {
         Intent intent = new Intent(context, MraidActivity.class);
         intent.putExtra(HTML_RESPONSE_BODY_KEY, htmlData);
-        intent.putExtra(AD_CONFIGURATION_KEY, adConfiguration);
+        intent.putExtra(BROADCAST_IDENTIFIER_KEY, broadcastIdentifier);
+        intent.putExtra(AD_REPORT_KEY, adReport);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return intent;
     }
@@ -92,15 +97,9 @@ public class MraidActivity extends BaseInterstitialActivity {
             finish();
             return new View(this);
         }
-        AdConfiguration adConfiguration = getAdConfiguration();
-        if (adConfiguration == null) {
-            MoPubLog.w("MraidActivity received a null ad configuration. Finishing the activity.");
-            finish();
-            return new View(this);
-        }
 
         mMraidController = new MraidController(
-                this, adConfiguration, PlacementType.INTERSTITIAL);
+                this, mAdReport, PlacementType.INTERSTITIAL);
 
         mMraidController.setDebugListener(mDebugListener);
         mMraidController.setMraidListener(new MraidListener() {
@@ -113,6 +112,10 @@ public class MraidActivity extends BaseInterstitialActivity {
 
             @Override
             public void onFailedToLoad() {
+                MoPubLog.d("MraidActivity failed to load. Finishing the activity");
+                broadcastAction(MraidActivity.this, getBroadcastIdentifier(),
+                        ACTION_INTERSTITIAL_FAIL);
+                finish();
             }
 
             public void onClose() {
@@ -181,6 +184,7 @@ public class MraidActivity extends BaseInterstitialActivity {
         if (mMraidController != null) {
             mMraidController.destroy();
         }
+
         broadcastAction(this, getBroadcastIdentifier(), ACTION_INTERSTITIAL_DISMISS);
         super.onDestroy();
     }

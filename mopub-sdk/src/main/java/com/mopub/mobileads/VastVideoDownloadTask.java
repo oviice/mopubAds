@@ -37,7 +37,7 @@ public class VastVideoDownloadTask extends AsyncTask<String, Void, Boolean> {
         AndroidHttpClient httpClient = null;
         try {
             httpClient = HttpClient.getHttpClient();
-            final HttpGet httpget = new HttpGet(videoUrl);
+            final HttpGet httpget = HttpClient.initializeHttpGet(videoUrl);
             final HttpResponse response = httpClient.execute(httpget);
 
             if (response == null || response.getEntity() == null) {

@@ -2,17 +2,21 @@ package com.mopub.mobileads;
 
 import android.content.Context;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.View;
 
+import com.mopub.common.AdReport;
+import com.mopub.common.Preconditions;
 import com.mopub.common.logging.MoPubLog;
-import com.mopub.common.util.Json;
 import com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;
 import com.mopub.mobileads.factories.CustomEventBannerFactory;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
-import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
+import static com.mopub.common.DataKeys.AD_REPORT_KEY;
+import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_TIMEOUT;
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
@@ -30,12 +34,15 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
     private final Runnable mTimeout;
     private boolean mStoredAutorefresh;
 
-    public CustomEventBannerAdapter(MoPubView moPubView, String className, String classData) {
+    public CustomEventBannerAdapter(@NonNull MoPubView moPubView,
+            @NonNull String className,
+            @NonNull Map<String, String> serverExtras,
+            long broadcastIdentifier,
+            @Nullable AdReport adReport) {
+        Preconditions.checkNotNull(serverExtras);
         mHandler = new Handler();
         mMoPubView = moPubView;
         mContext = moPubView.getContext();
-        mLocalExtras = new HashMap<String, Object>();
-        mServerExtras = new HashMap<String, String>();
         mTimeout = new Runnable() {
             @Override
             public void run() {
@@ -55,19 +62,14 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
         }
 
         // Attempt to load the JSON extras into mServerExtras.
-        try {
-            mServerExtras = Json.jsonStringToMap(classData);
-        } catch (Exception exception) {
-            MoPubLog.d("Failed to create Map from JSON: " + classData + exception.toString());
-        }
+        mServerExtras = new TreeMap<String,String>(serverExtras);
 
         mLocalExtras = mMoPubView.getLocalExtras();
         if (mMoPubView.getLocation() != null) {
             mLocalExtras.put("location", mMoPubView.getLocation());
         }
-        if (mMoPubView.getAdViewController() != null) {
-            mLocalExtras.put(AD_CONFIGURATION_KEY, mMoPubView.getAdViewController().getAdConfiguration());
-        }
+        mLocalExtras.put(BROADCAST_IDENTIFIER_KEY, broadcastIdentifier);
+        mLocalExtras.put(AD_REPORT_KEY, adReport);
     }
 
     void loadAd() {

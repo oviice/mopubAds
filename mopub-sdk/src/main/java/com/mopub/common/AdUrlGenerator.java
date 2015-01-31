@@ -4,7 +4,7 @@ import android.content.Context;
 import android.location.Location;
 import android.support.annotation.Nullable;
 
-import com.mopub.common.util.IntentUtils;
+import com.mopub.common.util.Intents;
 
 import static com.mopub.common.ClientMetadata.MoPubNetworkType;
 
@@ -131,7 +131,7 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
     }
 
     public TwitterAppInstalledStatus getTwitterAppInstallStatus() {
-        return IntentUtils.canHandleTwitterUrl(mContext) ? TwitterAppInstalledStatus.INSTALLED : TwitterAppInstalledStatus.NOT_INSTALLED;
+        return Intents.canHandleTwitterUrl(mContext) ? TwitterAppInstalledStatus.INSTALLED : TwitterAppInstalledStatus.NOT_INSTALLED;
     }
 
     @Deprecated // for testing

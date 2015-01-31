@@ -11,7 +11,6 @@ import com.mopub.common.util.DateAndTime;
 import com.mopub.common.util.test.support.ShadowAsyncTasks;
 import com.mopub.common.util.test.support.TestDateAndTime;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
-import com.mopub.mobileads.factories.AdFetcherFactory;
 import com.mopub.mobileads.factories.AdViewControllerFactory;
 import com.mopub.mobileads.factories.CustomEventBannerAdapterFactory;
 import com.mopub.mobileads.factories.CustomEventBannerFactory;
@@ -24,8 +23,6 @@ import com.mopub.mobileads.factories.MoPubViewFactory;
 import com.mopub.mobileads.factories.MraidControllerFactory;
 import com.mopub.mobileads.factories.VastManagerFactory;
 import com.mopub.mobileads.factories.VastVideoDownloadTaskFactory;
-import com.mopub.mobileads.factories.ViewGestureDetectorFactory;
-import com.mopub.mobileads.test.support.TestAdFetcherFactory;
 import com.mopub.mobileads.test.support.TestAdViewControllerFactory;
 import com.mopub.mobileads.test.support.TestCustomEventBannerAdapterFactory;
 import com.mopub.mobileads.test.support.TestCustomEventBannerFactory;
@@ -38,7 +35,6 @@ import com.mopub.mobileads.test.support.TestMoPubViewFactory;
 import com.mopub.mobileads.test.support.TestMraidControllerFactory;
 import com.mopub.mobileads.test.support.TestVastManagerFactory;
 import com.mopub.mobileads.test.support.TestVastVideoDownloadTaskFactory;
-import com.mopub.mobileads.test.support.TestViewGestureDetectorFactory;
 import com.mopub.nativeads.factories.CustomEventNativeFactory;
 import com.mopub.nativeads.test.support.TestCustomEventNativeFactory;
 
@@ -82,7 +78,6 @@ public class SdkTestRunner extends RobolectricTestRunner {
         public void prepareTest(Object test) {
             ClientMetadata.clearForTesting();
 
-            AdFetcherFactory.setInstance(new TestAdFetcherFactory());
             HttpClientFactory.setInstance(new TestHttpClientFactory());
             DateAndTime.setInstance(new TestDateAndTime());
             CustomEventBannerFactory.setInstance(new TestCustomEventBannerFactory());
@@ -93,7 +88,6 @@ public class SdkTestRunner extends RobolectricTestRunner {
             HtmlBannerWebViewFactory.setInstance(new TestHtmlBannerWebViewFactory());
             HtmlInterstitialWebViewFactory.setInstance(new TestHtmlInterstitialWebViewFactory());
             AdViewControllerFactory.setInstance(new TestAdViewControllerFactory());
-            ViewGestureDetectorFactory.setInstance(new TestViewGestureDetectorFactory());
             VastManagerFactory.setInstance(new TestVastManagerFactory());
             VastVideoDownloadTaskFactory.setInstance(new TestVastVideoDownloadTaskFactory());
             MethodBuilderFactory.setInstance(new TestMethodBuilderFactory());

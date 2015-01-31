@@ -1,8 +1,9 @@
 package com.mopub.mobileads.test.support;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 
-import com.mopub.mobileads.AdConfiguration;
+import com.mopub.common.AdReport;
 import com.mopub.mobileads.factories.MraidControllerFactory;
 import com.mopub.mraid.MraidController;
 import com.mopub.mraid.PlacementType;
@@ -21,8 +22,9 @@ public class TestMraidControllerFactory extends MraidControllerFactory {
     }
 
     @Override
-    protected MraidController internalCreate(final Context context,
-            final AdConfiguration adConfiguration, final PlacementType placementType) {
+    protected MraidController internalCreate(@NonNull final Context context,
+            @NonNull AdReport adReport,
+            @NonNull final PlacementType placementType) {
         return mockMraidController;
     }
 }

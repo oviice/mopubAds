@@ -1,13 +1,13 @@
 package com.mopub.mraid;
 
 import android.content.Context;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.View;
 
+import com.mopub.common.AdReport;
 import com.mopub.common.VisibleForTesting;
-import com.mopub.mobileads.AdConfiguration;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.AdViewController;
 import com.mopub.mobileads.CustomEventBanner;
 import com.mopub.mobileads.factories.MraidControllerFactory;
@@ -15,7 +15,9 @@ import com.mopub.mraid.MraidController.MraidListener;
 
 import java.util.Map;
 
-import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
+import static com.mopub.common.DataKeys.AD_REPORT_KEY;
+import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
+import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.MoPubErrorCode.MRAID_LOAD_ERROR;
 
 class MraidBanner extends CustomEventBanner {
@@ -33,20 +35,21 @@ class MraidBanner extends CustomEventBanner {
 
         String htmlData;
         if (extrasAreValid(serverExtras)) {
-            htmlData = Uri.decode(serverExtras.get(HTML_RESPONSE_BODY_KEY));
+            htmlData = serverExtras.get(HTML_RESPONSE_BODY_KEY);
         } else {
             mBannerListener.onBannerFailed(MRAID_LOAD_ERROR);
             return;
         }
 
-        AdConfiguration adConfiguration = AdConfiguration.extractFromMap(localExtras);
-        if (htmlData == null || adConfiguration == null) {
+        try {
+            AdReport adReport = (AdReport) localExtras.get(AD_REPORT_KEY);
+            mMraidController = MraidControllerFactory.create(
+                    context, adReport, PlacementType.INLINE);
+        } catch (ClassCastException e) {
+            MoPubLog.w("MRAID banner creating failed:", e);
             mBannerListener.onBannerFailed(MRAID_LOAD_ERROR);
             return;
         }
-
-        mMraidController = MraidControllerFactory.create(
-                    context, adConfiguration, PlacementType.INLINE);
 
         mMraidController.setDebugListener(mDebugListener);
         mMraidController.setMraidListener(new MraidListener() {

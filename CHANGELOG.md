@@ -1,3 +1,12 @@
+## Version 3.4.0 (January 30, 2015)
+  
+  - **Volley networking stack** MoPub for Android now uses Google's Volley library for HTTP requests. You will need to add our bundled Volley JAR (available at `mopub-sdk/libs/mopub-volley-1.0.0.jar`) as a compile-time dependency. See instructions in our [integration page](https://dev.twitter.com/mopub/android/getting-started).
+  - **Updated Vungle Support** Certified the `VungleInterstitial` custom event against Vungle SDK 3.2.2
+  - **VAST Video Bug Fixes**
+    - Fixed inability to parse VAST tags referencing URLs that contain 3rd party macros
+    - VAST videos no longer fire completion trackers upon video playback error
+  - Added support for the `mopubnativebrowser://` click-destination scheme for Native, MRAID, and VAST ads (it was already supported for HTML ads). Links of this type (e.g. `mopubnativebrowser://navigate?url=http%3A%2F%2Fwww.mopub.com`) will open the specified URL in the device's default browser, rather than in MoPub's in-app browser.
+
 ## Version 3.3.0 (December 8, 2014)
 
   - **MRAID 2.0 Support** - The MoPub SDK is now compliant with the MRAID 2.0 specification to enable rich media ads in banners and interstitial ad units. Learn more about MRAID from the [IAB](http://www.iab.net/MRAID#MRAID).
@@ -5,6 +14,7 @@
     
     As before, you may still disable MoPub SDK's location polling by calling `MoPub.setLocationAwareness(LocationAwareness.DISABLED)`.
   - **Updated Chartboost SDK** Updated the `ChartboostInterstitial` custom event to support Chartboost SDK 5.0.4
+  - **Android Support Annotations** Introduced a dependency on android-support-annotations.jar to support code analysis of `@Nullable` and `@NonNull` annotations.
   
 #### Version 3.2.2 (October 29, 2014)
   - **Bug Fix** Fixes a bug in fetching the Google Advertising ID from Google Play Services. 

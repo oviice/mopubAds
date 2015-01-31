@@ -11,11 +11,11 @@ import android.os.Build;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import com.mopub.common.AdReport;
 import com.mopub.common.CloseableLayout.ClosePosition;
 import com.mopub.common.MoPubBrowser;
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.mobileads.AdConfiguration;
-import com.mopub.mobileads.BaseVideoPlayerActivitiyTest;
+import com.mopub.mobileads.BaseVideoPlayerActivityTest;
 import com.mopub.mobileads.MraidVideoPlayerActivity;
 import com.mopub.mraid.MraidBridge.MraidBridgeListener;
 import com.mopub.mraid.MraidBridge.MraidWebView;
@@ -52,11 +52,11 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.withSettings;
 
 @RunWith(SdkTestRunner.class)
 public class MraidControllerTest {
-    private AdConfiguration mockAdConfiguration;
+    private long broadcastIdentifier = 123;
+    @Mock private AdReport mockAdReport;
     @Mock private MraidBridge mockBridge;
     @Mock private MraidBridge mockTwoPartBridge;
     @Mock private ScreenMetricsWaiter mockScreenMetricsWaiter;
@@ -74,9 +74,6 @@ public class MraidControllerTest {
     @Before
     public void setUp() {
         Robolectric.setDisplayMetricsDensity(1.0f);
-
-        // Needs to be serializable because we put this into an Intent
-        mockAdConfiguration = mock(AdConfiguration.class, withSettings().serializable());
 
         activity = spy(Robolectric.buildActivity(Activity.class).create().get());
         activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -98,7 +95,7 @@ public class MraidControllerTest {
         }).when(mockWaitRequest).start(any(Runnable.class));
 
         subject = new MraidController(
-                activity, mockAdConfiguration, PlacementType.INLINE,
+                activity, mockAdReport, PlacementType.INLINE,
                 mockBridge, mockTwoPartBridge, mockScreenMetricsWaiter);
         subject.setMraidListener(mockMraidListener);
         subject.setOrientationBroadcastReceiver(mockOrientationBroadcastReceiver);
@@ -185,7 +182,7 @@ public class MraidControllerTest {
     @Test(expected = MraidCommandException.class)
     public void handleResize_shouldThrowExceptionForInterstitial() throws MraidCommandException {
         MraidListener listener = mock(MraidListener.class);
-        subject = new MraidController(activity, mockAdConfiguration, PlacementType.INTERSTITIAL,
+        subject = new MraidController(activity, mockAdReport, PlacementType.INTERSTITIAL,
                 mockBridge, mockTwoPartBridge, mockScreenMetricsWaiter);
         subject.setMraidListener(listener);
         subject.setRootView(rootView);
@@ -314,7 +311,7 @@ public class MraidControllerTest {
     @Test
     public void handleExpand_shouldBeIgnoredForInterstitial() throws MraidCommandException {
         MraidListener listener = mock(MraidListener.class);
-        subject = new MraidController(activity, mockAdConfiguration, PlacementType.INTERSTITIAL,
+        subject = new MraidController(activity, mockAdReport, PlacementType.INTERSTITIAL,
                 mockBridge, mockTwoPartBridge, mockScreenMetricsWaiter);
         subject.setMraidListener(listener);
         subject.setRootView(rootView);
@@ -438,8 +435,8 @@ public class MraidControllerTest {
     @Test
     public void handleShowVideo_shouldStartVideoPlayerActivity() {
         subject.handleShowVideo("http://video");
-        BaseVideoPlayerActivitiyTest.assertMraidVideoPlayerActivityStarted(
-                MraidVideoPlayerActivity.class, "http://video", mockAdConfiguration);
+        BaseVideoPlayerActivityTest.assertMraidVideoPlayerActivityStarted(
+                MraidVideoPlayerActivity.class, "http://video");
     }
 
     @Test
@@ -464,6 +461,23 @@ public class MraidControllerTest {
     }
 
     @Test
+    public void handleOpen_withMoPubNativeBrowserUrl_shouldOpenExternalBrowser() {
+        subject.handleOpen("mopubnativebrowser://navigate?url=https%3A%2F%2Fwww.example.com");
+
+        Intent intent = Robolectric.getShadowApplication().getNextStartedActivity();
+        assertThat(intent.getDataString()).isEqualTo("https://www.example.com");
+        assertThat(intent.getAction()).isEqualTo(Intent.ACTION_VIEW);
+    }
+
+    @Test
+    public void handleOpen_withMalformedMoPubNativeBrowserUrl_shouldNotStartNewActivity() {
+        // invalid host parameter 'nav'
+        subject.handleOpen("mopubnativebrowser://nav?url=https%3A%2F%2Fwww.example.com");
+
+        assertThat(Robolectric.getShadowApplication().getNextStartedActivity()).isNull();
+    }
+
+    @Test
     public void handleOpen_withApplicationUrl_shouldStartNewIntent() {
         String applicationUrl = "amzn://blah";
         Robolectric.packageManager.addResolveInfoForIntent(new Intent(Intent.ACTION_VIEW, Uri
@@ -473,7 +487,8 @@ public class MraidControllerTest {
 
         Intent startedIntent = Robolectric.getShadowApplication().getNextStartedActivity();
         assertThat(startedIntent).isNotNull();
-        assertThat(startedIntent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isNotEqualTo(0);
+        // Since we are using an Activity context, we do not need FLAG_ACTIVITY_NEW_TASK
+        assertThat(startedIntent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isEqualTo(0);
         assertThat(startedIntent.getComponent()).isNull();
 
         verify(mockMraidListener).onOpen();
@@ -487,7 +502,8 @@ public class MraidControllerTest {
 
         Intent startedIntent = Robolectric.getShadowApplication().getNextStartedActivity();
         assertThat(startedIntent).isNotNull();
-        assertThat(startedIntent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isNotEqualTo(0);
+        // Since we are using an Activity context, we do not need FLAG_ACTIVITY_NEW_TASK
+        assertThat(startedIntent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isEqualTo(0);
         assertThat(startedIntent.getComponent().getClassName())
                 .isEqualTo("com.mopub.common.MoPubBrowser");
 
@@ -503,7 +519,8 @@ public class MraidControllerTest {
 
         Intent startedIntent = Robolectric.getShadowApplication().getNextStartedActivity();
         assertThat(startedIntent).isNotNull();
-        assertThat(startedIntent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isNotEqualTo(0);
+        // Since we are using an Activity context, we do not need FLAG_ACTIVITY_NEW_TASK
+        assertThat(startedIntent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isEqualTo(0);
         assertThat(startedIntent.getComponent().getClassName())
                 .isEqualTo("com.mopub.common.MoPubBrowser");
         assertThat(startedIntent.getStringExtra(MoPubBrowser.DESTINATION_URL_KEY))
@@ -550,7 +567,7 @@ public class MraidControllerTest {
                 ActivityInfo.CONFIG_ORIENTATION | ActivityInfo.CONFIG_SCREEN_SIZE);
 
         subject = new MraidController(
-                activity.getApplicationContext(), mockAdConfiguration, PlacementType.INLINE,
+                activity.getApplicationContext(), mockAdReport, PlacementType.INLINE,
                 mockBridge, mockTwoPartBridge, mockScreenMetricsWaiter);
 
         subject.handleSetOrientationProperties(false, MraidOrientation.NONE);
@@ -565,7 +582,7 @@ public class MraidControllerTest {
                 ActivityInfo.CONFIG_ORIENTATION | ActivityInfo.CONFIG_SCREEN_SIZE);
 
         subject = new MraidController(
-                activity.getApplicationContext(), mockAdConfiguration, PlacementType.INLINE,
+                activity.getApplicationContext(), mockAdReport, PlacementType.INLINE,
                 mockBridge, mockTwoPartBridge, mockScreenMetricsWaiter);
 
         try {
@@ -716,7 +733,7 @@ public class MraidControllerTest {
                 ActivityInfo.CONFIG_ORIENTATION | ActivityInfo.CONFIG_SCREEN_SIZE);
 
         subject = new MraidController(
-                activity, mockAdConfiguration, PlacementType.INTERSTITIAL,
+                activity, mockAdReport, PlacementType.INTERSTITIAL,
                 mockBridge, mockTwoPartBridge, mockScreenMetricsWaiter);
 
         assertThat(activity.getRequestedOrientation()).isEqualTo(ActivityInfo
@@ -745,7 +762,7 @@ public class MraidControllerTest {
                 ActivityInfo.CONFIG_ORIENTATION | ActivityInfo.CONFIG_SCREEN_SIZE);
 
         subject = new MraidController(
-                activity.getApplicationContext(), mockAdConfiguration, PlacementType.INLINE,
+                activity.getApplicationContext(), mockAdReport, PlacementType.INLINE,
                 mockBridge, mockTwoPartBridge, mockScreenMetricsWaiter);
 
         final boolean result = subject.shouldAllowForceOrientation(MraidOrientation.PORTRAIT);
@@ -759,7 +776,7 @@ public class MraidControllerTest {
                 ActivityInfo.CONFIG_ORIENTATION | ActivityInfo.CONFIG_SCREEN_SIZE);
 
         subject = new MraidController(
-                activity.getApplicationContext(), mockAdConfiguration, PlacementType.INLINE,
+                activity.getApplicationContext(), mockAdReport, PlacementType.INLINE,
                 mockBridge, mockTwoPartBridge, mockScreenMetricsWaiter);
 
         subject.lockOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);

@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
 
+import com.mopub.common.DataKeys;
+
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
 
@@ -14,7 +16,6 @@ public class EventForwardingBroadcastReceiver extends BroadcastReceiver {
     private final long mBroadcastIdentifier;
     private Context mContext;
 
-    static final String BROADCAST_IDENTIFIER_KEY = "broadcastIdentifier";
     public static final String ACTION_INTERSTITIAL_FAIL = "com.mopub.action.interstitial.fail";
     public static final String ACTION_INTERSTITIAL_SHOW = "com.mopub.action.interstitial.show";
     public static final String ACTION_INTERSTITIAL_DISMISS = "com.mopub.action.interstitial.dismiss";
@@ -30,7 +31,7 @@ public class EventForwardingBroadcastReceiver extends BroadcastReceiver {
 
     static void broadcastAction(final Context context, final long broadcastIdentifier, final String action) {
         Intent intent = new Intent(action);
-        intent.putExtra(BROADCAST_IDENTIFIER_KEY, broadcastIdentifier);
+        intent.putExtra(DataKeys.BROADCAST_IDENTIFIER_KEY, broadcastIdentifier);
         LocalBroadcastManager.getInstance(context.getApplicationContext()).sendBroadcast(intent);
     }
 
@@ -57,7 +58,7 @@ public class EventForwardingBroadcastReceiver extends BroadcastReceiver {
          * this here because there is no appropriate IntentFilter condition that can recreate this
          * behavior.
          */
-        final long receivedIdentifier = intent.getLongExtra(BROADCAST_IDENTIFIER_KEY, -1);
+        final long receivedIdentifier = intent.getLongExtra(DataKeys.BROADCAST_IDENTIFIER_KEY, -1);
         if (mBroadcastIdentifier != receivedIdentifier) {
             return;
         }

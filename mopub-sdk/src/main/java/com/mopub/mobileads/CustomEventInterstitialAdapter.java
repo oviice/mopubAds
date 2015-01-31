@@ -2,16 +2,20 @@ package com.mopub.mobileads;
 
 import android.content.Context;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
+import com.mopub.common.AdReport;
+import com.mopub.common.Preconditions;
 import com.mopub.common.logging.MoPubLog;
-import com.mopub.common.util.Json;
 import com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
 import com.mopub.mobileads.factories.CustomEventInterstitialFactory;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
-import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
+import static com.mopub.common.DataKeys.AD_REPORT_KEY;
+import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_TIMEOUT;
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
@@ -29,11 +33,14 @@ public class CustomEventInterstitialAdapter implements CustomEventInterstitialLi
     private final Handler mHandler;
     private final Runnable mTimeout;
 
-    public CustomEventInterstitialAdapter(final MoPubInterstitial moPubInterstitial, final String className, final String jsonParams) {
+    public CustomEventInterstitialAdapter(@NonNull final MoPubInterstitial moPubInterstitial,
+            @NonNull final String className,
+            @NonNull final Map<String, String> serverExtras,
+            long broadcastIdentifier,
+            @Nullable AdReport adReport) {
+        Preconditions.checkNotNull(serverExtras);
         mHandler = new Handler();
         mMoPubInterstitial = moPubInterstitial;
-        mServerExtras = new HashMap<String, String>();
-        mLocalExtras = new HashMap<String, Object>();
         mContext = mMoPubInterstitial.getActivity();
         mTimeout = new Runnable() {
             @Override
@@ -53,22 +60,13 @@ public class CustomEventInterstitialAdapter implements CustomEventInterstitialLi
             return;
         }
 
-        // Attempt to load the JSON extras into mServerExtras.
-        try {
-            mServerExtras = Json.jsonStringToMap(jsonParams);
-        } catch (Exception exception) {
-            MoPubLog.d("Failed to create Map from JSON: " + jsonParams);
-        }
-
+        mServerExtras = new TreeMap<String, String>(serverExtras);
         mLocalExtras = mMoPubInterstitial.getLocalExtras();
         if (mMoPubInterstitial.getLocation() != null) {
             mLocalExtras.put("location", mMoPubInterstitial.getLocation());
         }
-
-        final AdViewController adViewController = mMoPubInterstitial.getMoPubInterstitialView().getAdViewController();
-        if (adViewController != null) {
-            mLocalExtras.put(AD_CONFIGURATION_KEY, adViewController.getAdConfiguration());
-        }
+        mLocalExtras.put(BROADCAST_IDENTIFIER_KEY, broadcastIdentifier);
+        mLocalExtras.put(AD_REPORT_KEY, adReport);
     }
     
     void loadInterstitial() {

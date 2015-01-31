@@ -3,7 +3,7 @@ package com.mopub.mobileads.test.support;
 import android.content.Context;
 import android.webkit.WebSettings;
 
-import com.mopub.mobileads.AdConfiguration;
+import com.mopub.common.AdReport;
 import com.mopub.mobileads.HtmlBannerWebView;
 import com.mopub.mobileads.factories.HtmlBannerWebViewFactory;
 
@@ -17,6 +17,7 @@ public class TestHtmlBannerWebViewFactory extends HtmlBannerWebViewFactory {
     private boolean latestIsScrollable;
     private String latestRedirectUrl;
     private String latestClickthroughUrl;
+    private AdReport latestAdReport;
 
     public TestHtmlBannerWebViewFactory() {
         WebSettings webSettings = mock(WebSettings.class);
@@ -34,15 +35,17 @@ public class TestHtmlBannerWebViewFactory extends HtmlBannerWebViewFactory {
 
     @Override
     public HtmlBannerWebView internalCreate(
-            Context context, CustomEventBannerListener
-            customEventBannerListener,
+            Context context,
+            AdReport adReport,
+            CustomEventBannerListener customEventBannerListener,
             boolean isScrollable,
             String redirectUrl,
-            String clickthroughUrl, AdConfiguration adConfiguration) {
+            String clickthroughUrl) {
         latestListener = customEventBannerListener;
         latestIsScrollable = isScrollable;
         latestRedirectUrl = redirectUrl;
         latestClickthroughUrl = clickthroughUrl;
+        latestAdReport = adReport;
         return mockHtmlBannerWebView;
     }
 
@@ -60,5 +63,9 @@ public class TestHtmlBannerWebViewFactory extends HtmlBannerWebViewFactory {
 
     public static String getLatestClickthroughUrl() {
         return getTestFactory().latestClickthroughUrl;
+    }
+
+    public static AdReport getLatestAdReport() {
+        return getTestFactory().latestAdReport;
     }
 }

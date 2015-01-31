@@ -32,8 +32,8 @@ import static com.mopub.common.util.Drawables.REFRESH;
 import static com.mopub.common.util.Drawables.RIGHT_ARROW;
 import static com.mopub.common.util.Drawables.UNLEFT_ARROW;
 import static com.mopub.common.util.Drawables.UNRIGHT_ARROW;
-import static com.mopub.common.util.IntentUtils.deviceCanHandleIntent;
-import static com.mopub.common.util.IntentUtils.isDeepLink;
+import static com.mopub.common.util.Intents.deviceCanHandleIntent;
+import static com.mopub.common.util.Intents.isDeepLink;
 
 public class MoPubBrowser extends Activity {
     public static final String DESTINATION_URL_KEY = "URL";

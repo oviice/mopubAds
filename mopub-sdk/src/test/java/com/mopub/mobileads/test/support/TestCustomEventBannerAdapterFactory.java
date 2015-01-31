@@ -1,8 +1,13 @@
 package com.mopub.mobileads.test.support;
 
+import android.support.annotation.NonNull;
+
+import com.mopub.common.AdReport;
 import com.mopub.mobileads.CustomEventBannerAdapter;
 import com.mopub.mobileads.MoPubView;
 import com.mopub.mobileads.factories.CustomEventBannerAdapterFactory;
+
+import java.util.Map;
 
 import static org.mockito.Mockito.mock;
 
@@ -10,7 +15,7 @@ public class TestCustomEventBannerAdapterFactory extends CustomEventBannerAdapte
     private CustomEventBannerAdapter mockCustomEventBannerAdapter = mock(CustomEventBannerAdapter.class);
     private MoPubView moPubView;
     private String className;
-    private String classData;
+    private Map<String, String> classData;
 
     public static CustomEventBannerAdapter getSingletonMock() {
         return getTestFactory().mockCustomEventBannerAdapter;
@@ -21,10 +26,14 @@ public class TestCustomEventBannerAdapterFactory extends CustomEventBannerAdapte
     }
 
     @Override
-    protected CustomEventBannerAdapter internalCreate(MoPubView moPubView, String className, String classData) {
+    protected CustomEventBannerAdapter internalCreate(@NonNull final MoPubView moPubView,
+            @NonNull final String className,
+            @NonNull final Map<String, String> serverExtras,
+            final long broadcastIdentifier,
+            @NonNull final AdReport adReport) {
         this.moPubView = moPubView;
         this.className = className;
-        this.classData = classData;
+        this.classData = serverExtras;
         return mockCustomEventBannerAdapter;
     }
 
@@ -36,7 +45,7 @@ public class TestCustomEventBannerAdapterFactory extends CustomEventBannerAdapte
         return getTestFactory().className;
     }
 
-    public static String getLatestClassData() {
+    public static Map<String, String> getLatestClassData() {
         return getTestFactory().classData;
     }
 }

@@ -2,7 +2,7 @@ package com.mopub.mobileads.test.support;
 
 import android.content.Context;
 
-import com.mopub.mobileads.AdConfiguration;
+import com.mopub.common.AdReport;
 import com.mopub.mobileads.HtmlInterstitialWebView;
 import com.mopub.mobileads.factories.HtmlInterstitialWebViewFactory;
 
@@ -16,7 +16,6 @@ public class TestHtmlInterstitialWebViewFactory extends HtmlInterstitialWebViewF
     private boolean latestIsScrollable;
     private String latestRedirectUrl;
     private String latestClickthroughUrl;
-    private AdConfiguration latestAdConfiguration;
 
     public static HtmlInterstitialWebView getSingletonMock() {
         return getTestFactory().mockHtmlInterstitialWebView;
@@ -27,12 +26,11 @@ public class TestHtmlInterstitialWebViewFactory extends HtmlInterstitialWebViewF
     }
 
     @Override
-    public HtmlInterstitialWebView internalCreate(Context context, CustomEventInterstitialListener customEventInterstitialListener, boolean isScrollable, String redirectUrl, String clickthroughUrl, AdConfiguration adConfiguration) {
+    public HtmlInterstitialWebView internalCreate(Context context, AdReport adReport, CustomEventInterstitialListener customEventInterstitialListener, boolean isScrollable, String redirectUrl, String clickthroughUrl) {
         latestListener = customEventInterstitialListener;
         latestIsScrollable = isScrollable;
         latestRedirectUrl = redirectUrl;
         latestClickthroughUrl = clickthroughUrl;
-        latestAdConfiguration = adConfiguration;
         return getTestFactory().mockHtmlInterstitialWebView;
     }
 
@@ -49,9 +47,5 @@ public class TestHtmlInterstitialWebViewFactory extends HtmlInterstitialWebViewF
 
     public static String getLatestClickthroughUrl() {
         return getTestFactory().latestClickthroughUrl;
-    }
-
-    public static AdConfiguration getLatestAdConfiguration() {
-        return getTestFactory().latestAdConfiguration;
     }
 }

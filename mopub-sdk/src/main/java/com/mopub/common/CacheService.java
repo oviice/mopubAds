@@ -32,19 +32,6 @@ public class CacheService {
     private static final int DISK_CACHE_INDEX = 0;
 
     private static DiskLruCache sDiskLruCache;
-    private static BitmapLruCache sBitmapLruCache;
-
-    public static boolean initializeBitmapCache(final Context context) {
-        if (context == null) {
-            return false;
-        }
-
-        if (sBitmapLruCache == null) {
-            final int memoryCacheSizeBytes = DeviceUtils.memoryCacheSizeBytes(context);
-            sBitmapLruCache = new BitmapLruCache(memoryCacheSizeBytes);
-        }
-        return true;
-    }
 
     public static boolean initializeDiskCache(final Context context) {
         if (context == null) {
@@ -69,7 +56,6 @@ public class CacheService {
     }
 
     public static void initialize(final Context context) {
-        initializeBitmapCache(context);
         initializeDiskCache(context);
     }
 
@@ -110,14 +96,6 @@ public class CacheService {
                 + DISK_CACHE_INDEX;
     }
 
-    public static Bitmap getFromBitmapCache(final String key) {
-        if (sBitmapLruCache == null) {
-            return null;
-        }
-
-        return sBitmapLruCache.get(key);
-    }
-
     public static byte[] getFromDiskCache(final String key) {
         if (sDiskLruCache == null) {
             return null;
@@ -154,14 +132,6 @@ public class CacheService {
 
     public static void getFromDiskCacheAsync(final String key, final DiskLruCacheGetListener diskLruCacheGetListener) {
         new DiskLruCacheGetTask(key, diskLruCacheGetListener).execute();
-    }
-
-    public static void putToBitmapCache(final String key, final Bitmap bitmap) {
-        if (sBitmapLruCache == null) {
-            return;
-        }
-
-        sBitmapLruCache.put(key, bitmap);
     }
 
     public static boolean putToDiskCache(final String key, final byte[] content) {
@@ -206,21 +176,6 @@ public class CacheService {
 
     public static void putToDiskCacheAsync(final String key, final byte[] content) {
         new DiskLruCachePutTask(key, content).execute();
-    }
-
-    private static class BitmapLruCache extends LruCache<String, Bitmap> {
-        public BitmapLruCache(final int maxSize) {
-            super(maxSize);
-        }
-
-        @Override
-        protected int sizeOf(final String key, final Bitmap bitmap) {
-            if (bitmap != null) {
-                return bitmap.getRowBytes() * bitmap.getHeight();
-            }
-
-            return super.sizeOf(key, bitmap);
-        }
     }
 
     private static class DiskLruCacheGetTask extends AsyncTask<Void, Void, byte[]> {
@@ -285,17 +240,6 @@ public class CacheService {
                 sDiskLruCache = null;
             }
         }
-        if (sBitmapLruCache != null) {
-            sBitmapLruCache.evictAll();
-            sBitmapLruCache = null;
-        }
-    }
-
-    // Testing
-    @Deprecated
-    @VisibleForTesting
-    public static LruCache<String, Bitmap> getBitmapLruCache() {
-        return sBitmapLruCache;
     }
 
     // Testing

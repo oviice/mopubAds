@@ -35,6 +35,9 @@ class Utils {
 
     static void logToast(Context context, String message) {
         Log.d(LOGTAG, message);
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+
+        if (context != null) {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+        }
     }
 }

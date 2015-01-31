@@ -89,10 +89,6 @@ public class DeviceUtils {
         return Utils.sha1(udid);
     }
 
-    public static String getUserAgent() {
-        return System.getProperty("http.agent");
-    }
-
     public static boolean isNetworkAvailable(final Context context) {
         if (context == null) {
             return false;
@@ -143,9 +139,8 @@ public class DeviceUtils {
         return (int) result;
     }
 
-    public static long diskCacheSizeBytes(File dir) {
-        long size = MIN_DISK_CACHE_SIZE;
-
+    public static long diskCacheSizeBytes(File dir, long minSize) {
+        long size = minSize;
         try {
             StatFs statFs = new StatFs(dir.getAbsolutePath());
             long availableBytes = ((long) statFs.getBlockCount()) * statFs.getBlockSize();
@@ -156,6 +151,10 @@ public class DeviceUtils {
 
         // Bound inside min/max size for disk cache.
         return Math.max(Math.min(size, MAX_DISK_CACHE_SIZE), MIN_DISK_CACHE_SIZE);
+    }
+
+    public static long diskCacheSizeBytes(File dir) {
+        return diskCacheSizeBytes(dir, MIN_DISK_CACHE_SIZE);
     }
 
     public static int getScreenOrientation(@NonNull final Activity activity) {

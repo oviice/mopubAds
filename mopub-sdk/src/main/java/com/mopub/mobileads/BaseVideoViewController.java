@@ -4,21 +4,20 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.VideoView;
-
 import com.mopub.common.logging.MoPubLog;
 
-import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_FAIL;
 
 public abstract class BaseVideoViewController {
     private final Context mContext;
     private final RelativeLayout mLayout;
     private final BaseVideoViewControllerListener mBaseVideoViewControllerListener;
-    private long mBroadcastIdentifier;
+    @Nullable private Long mBroadcastIdentifier;
 
     public interface BaseVideoViewControllerListener {
         void onSetContentView(final View view);
@@ -29,7 +28,7 @@ public abstract class BaseVideoViewController {
                 final Bundle extras);
     }
 
-    protected BaseVideoViewController(final Context context, final long broadcastIdentifier, final BaseVideoViewControllerListener baseVideoViewControllerListener) {
+    protected BaseVideoViewController(final Context context, @Nullable final Long broadcastIdentifier, final BaseVideoViewControllerListener baseVideoViewControllerListener) {
         mContext = context.getApplicationContext();
         mBroadcastIdentifier = broadcastIdentifier;
         mBaseVideoViewControllerListener = baseVideoViewControllerListener;
@@ -83,11 +82,11 @@ public abstract class BaseVideoViewController {
         }
     }
 
-    void videoClicked() {
-        broadcastAction(ACTION_INTERSTITIAL_CLICK);
-    }
-
     void broadcastAction(final String action) {
-        EventForwardingBroadcastReceiver.broadcastAction(mContext, mBroadcastIdentifier, action);
+        if (mBroadcastIdentifier != null) {
+            EventForwardingBroadcastReceiver.broadcastAction(mContext, mBroadcastIdentifier, action);
+        } else {
+            MoPubLog.w("Tried to broadcast a video event without a braodcast identifier to send to.");
+        }
     }
 }

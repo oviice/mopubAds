@@ -24,11 +24,12 @@ import com.mopub.common.Preconditions;
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.AsyncTasks;
-import com.mopub.common.util.IntentUtils;
+import com.mopub.common.util.Intents;
 import com.mopub.common.util.Streams;
 import com.mopub.common.util.Utils;
 import com.mopub.common.util.VersionCode;
 import com.mopub.mobileads.factories.HttpClientFactory;
+import com.mopub.network.HeaderUtils;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -50,7 +51,7 @@ import java.util.Map;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static android.os.Environment.MEDIA_MOUNTED;
-import static com.mopub.common.network.HeaderUtils.extractHeader;
+import static com.mopub.common.HttpClient.*;
 import static com.mopub.common.util.ResponseHeader.LOCATION;
 
 public class MraidNativeCommandHandler {
@@ -129,26 +130,26 @@ public class MraidNativeCommandHandler {
         Intent telIntent = new Intent(Intent.ACTION_DIAL);
         telIntent.setData(Uri.parse("tel:"));
 
-        return IntentUtils.deviceCanHandleIntent(context, telIntent);
+        return Intents.deviceCanHandleIntent(context, telIntent);
     }
 
     boolean isSmsAvailable(Context context) {
         Intent smsIntent = new Intent(Intent.ACTION_VIEW);
         smsIntent.setData(Uri.parse("sms:"));
 
-        return IntentUtils.deviceCanHandleIntent(context, smsIntent);
+        return Intents.deviceCanHandleIntent(context, smsIntent);
     }
 
-    public boolean isStorePictureSupported(Context context) {
+    public static boolean isStorePictureSupported(Context context) {
         return MEDIA_MOUNTED.equals(Environment.getExternalStorageState())
                 && context.checkCallingOrSelfPermission(WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
 
-    boolean isCalendarAvailable(Context context) {
+    static boolean isCalendarAvailable(Context context) {
         Intent calendarIntent = new Intent(Intent.ACTION_INSERT).setType(ANDROID_CALENDAR_CONTENT_TYPE);
 
         return VersionCode.currentApiLevel().isAtLeast(VersionCode.ICE_CREAM_SANDWICH)
-                && IntentUtils.deviceCanHandleIntent(context, calendarIntent);
+                && Intents.deviceCanHandleIntent(context, calendarIntent);
     }
 
     /**
@@ -469,7 +470,7 @@ public class MraidNativeCommandHandler {
             URI uri = URI.create(uriString);
 
             final HttpClient httpClient = HttpClientFactory.create();
-            final HttpGet httpGet = new HttpGet(uri);
+            final HttpGet httpGet = initializeHttpGet(uri.toString());
 
             InputStream pictureInputStream = null;
             OutputStream pictureOutputStream = null;
@@ -477,7 +478,7 @@ public class MraidNativeCommandHandler {
                 final HttpResponse httpResponse = httpClient.execute(httpGet);
                 pictureInputStream = httpResponse.getEntity().getContent();
 
-                final String redirectLocation = extractHeader(httpResponse, LOCATION);
+                final String redirectLocation = HeaderUtils.extractHeader(httpResponse, LOCATION);
                 if (redirectLocation != null) {
                     uri = URI.create(redirectLocation);
                 }

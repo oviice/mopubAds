@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.mobileads.AdConfiguration;
 import com.mopub.mobileads.ResponseBodyInterstitialTest;
 
 import org.junit.Before;
@@ -20,26 +19,21 @@ import org.robolectric.shadows.ShadowLocalBroadcastManager;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
-import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_SHOW;
-import static com.mopub.mobileads.EventForwardingBroadcastReceiverTest
-        .getIntentForActionAndIdentifier;
+import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
+import static com.mopub.mobileads.EventForwardingBroadcastReceiverTest.getIntentForActionAndIdentifier;
+import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
 import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.withSettings;
 import static org.robolectric.Robolectric.shadowOf_;
 
 @RunWith(SdkTestRunner.class)
 public class MraidInterstitialTest extends ResponseBodyInterstitialTest {
-    private static final String INPUT_HTML_DATA = "%3Chtml%3E%3C%2Fhtml%3E";
     private static final String EXPECTED_HTML_DATA = "<html></html>";
     private long broadcastIdentifier;
 
@@ -51,15 +45,12 @@ public class MraidInterstitialTest extends ResponseBodyInterstitialTest {
 
     @Before
     public void setUp() throws Exception {
-        AdConfiguration adConfiguration =
-                mock(AdConfiguration.class, withSettings().serializable());
         broadcastIdentifier = 2222;
-        when(adConfiguration.getBroadcastIdentifier()).thenReturn(broadcastIdentifier);
 
         localExtras = new HashMap<String, Object>();
         serverExtras = new HashMap<String, String>();
-        serverExtras.put(HTML_RESPONSE_BODY_KEY, INPUT_HTML_DATA);
-        localExtras.put(AD_CONFIGURATION_KEY, adConfiguration);
+        serverExtras.put(HTML_RESPONSE_BODY_KEY, EXPECTED_HTML_DATA);
+        localExtras.put(BROADCAST_IDENTIFIER_KEY, broadcastIdentifier);
 
         context = Robolectric.buildActivity(Activity.class).create().get();
 
@@ -117,7 +108,6 @@ public class MraidInterstitialTest extends ResponseBodyInterstitialTest {
         ShadowActivity shadowActivity = shadowOf_(context);
         Intent intent = shadowActivity.getNextStartedActivityForResult().intent;
 
-        assertThat(intent.getComponent().getPackageName()).isEqualTo("com.mopub.mobileads");
         assertThat(intent.getComponent().getClassName())
                 .isEqualTo("com.mopub.mobileads.MraidActivity");
         assertThat(intent.getExtras().get(HTML_RESPONSE_BODY_KEY)).isEqualTo(EXPECTED_HTML_DATA);

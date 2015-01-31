@@ -6,12 +6,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Location;
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 import android.webkit.WebViewDatabase;
 import android.widget.FrameLayout;
-
-import com.mopub.common.Constants;
+import com.mopub.common.AdFormat;
 import com.mopub.common.MoPub;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.ManifestUtils;
@@ -19,12 +20,9 @@ import com.mopub.common.util.Visibility;
 import com.mopub.mobileads.factories.AdViewControllerFactory;
 import com.mopub.mobileads.factories.CustomEventBannerAdapterFactory;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 import static com.mopub.common.LocationService.LocationAwareness;
-import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_DATA;
-import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_NAME;
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;
 
 public class MoPubView extends FrameLayout {
@@ -37,7 +35,7 @@ public class MoPubView extends FrameLayout {
     }
 
     public static final int DEFAULT_LOCATION_PRECISION = 6;
-
+    @Nullable
     protected AdViewController mAdViewController;
     protected CustomEventBannerAdapter mCustomEventBannerAdapter;
 
@@ -148,8 +146,11 @@ public class MoPubView extends FrameLayout {
         if (mAdViewController != null) mAdViewController.loadFailUrl(errorCode);
     }
 
-    protected void loadCustomEvent(Map<String, String> paramsMap) {
-        if (paramsMap == null) {
+    protected void loadCustomEvent(String customEventClassName, Map<String, String> serverExtras) {
+        if (mAdViewController == null) {
+            return;
+        }
+        if (TextUtils.isEmpty(customEventClassName)) {
             MoPubLog.d("Couldn't invoke custom event because the server did not specify one.");
             loadFailUrl(ADAPTER_NOT_FOUND);
             return;
@@ -163,8 +164,10 @@ public class MoPubView extends FrameLayout {
 
         mCustomEventBannerAdapter = CustomEventBannerAdapterFactory.create(
                 this,
-                paramsMap.get(CUSTOM_EVENT_NAME.getKey()),
-                paramsMap.get(CUSTOM_EVENT_DATA.getKey()));
+                customEventClassName,
+                serverExtras,
+                mAdViewController.getBroadcastIdentifier(),
+                mAdViewController.getAdReport());
         mCustomEventBannerAdapter.loadAd();
     }
 
@@ -292,12 +295,18 @@ public class MoPubView extends FrameLayout {
         return (mAdViewController != null) ? mAdViewController.getResponseString() : null;
     }
 
+    @Deprecated
     public void setClickthroughUrl(String url) {
-        if (mAdViewController != null) mAdViewController.setClickthroughUrl(url);
+        // Does nothing.
     }
 
+    public String getClickTrackingUrl() {
+        return (mAdViewController != null) ? mAdViewController.getClickTrackingUrl() : null;
+    }
+
+    @Deprecated
     public String getClickthroughUrl() {
-        return (mAdViewController != null) ? mAdViewController.getClickthroughUrl() : null;
+        return getClickTrackingUrl();
     }
 
     public Activity getActivity() {
@@ -317,8 +326,10 @@ public class MoPubView extends FrameLayout {
     }
 
     public Map<String, Object> getLocalExtras() {
-        if (mAdViewController != null) return mAdViewController.getLocalExtras();
-        return Collections.emptyMap();
+        if (mAdViewController != null) {
+            return mAdViewController.getLocalExtras();
+        }
+        return new TreeMap<String, Object>();
     }
 
     public void setAutorefreshEnabled(boolean enabled) {
@@ -364,6 +375,10 @@ public class MoPubView extends FrameLayout {
 
     AdViewController getAdViewController() {
         return mAdViewController;
+    }
+
+    public AdFormat getAdFormat() {
+        return AdFormat.BANNER;
     }
 
     @Deprecated

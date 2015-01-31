@@ -17,28 +17,27 @@ import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-
+import com.mopub.common.AdReport;
 import com.mopub.common.CloseableLayout.ClosePosition;
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
-import com.mopub.mobileads.AdConfiguration;
 import com.mopub.mobileads.BaseWebView;
 import com.mopub.mobileads.ViewGestureDetector;
 import com.mopub.mobileads.ViewGestureDetector.UserClickListener;
 import com.mopub.mobileads.resource.MraidJavascript;
 import com.mopub.mraid.MraidBridge.MraidWebView.OnVisibilityChangedListener;
 import com.mopub.mraid.MraidNativeCommandHandler.MraidCommandFailureListener;
-
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.json.JSONObject;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class MraidBridge {
+    private final AdReport mAdReport;
+
     public interface MraidBridgeListener {
         void onPageLoaded();
 
@@ -70,7 +69,6 @@ public class MraidBridge {
             .replaceAll("(?m)^\\s+", "")
             .replaceAll("(?m)^//.*(?=\\n)", "");
 
-    @NonNull private final AdConfiguration mAdConfiguration;
     @NonNull private final PlacementType mPlacementType;
 
     @NonNull private final MraidNativeCommandHandler mMraidNativeCommandHandler;
@@ -83,16 +81,14 @@ public class MraidBridge {
 
     private boolean mHasLoaded;
 
-    MraidBridge(@NonNull AdConfiguration adConfiguration,
-            @NonNull PlacementType placementType) {
-        this(adConfiguration, placementType, new MraidNativeCommandHandler());
+    MraidBridge(@Nullable AdReport adReport, @NonNull PlacementType placementType) {
+        this(adReport, placementType, new MraidNativeCommandHandler());
     }
 
     @VisibleForTesting
-    MraidBridge(@NonNull AdConfiguration adConfiguration,
-            @NonNull PlacementType placementType,
+    MraidBridge(@Nullable AdReport adReport, @NonNull PlacementType placementType,
             @NonNull MraidNativeCommandHandler mraidNativeCommandHandler) {
-        mAdConfiguration = adConfiguration;
+        mAdReport = adReport;
         mPlacementType = placementType;
         mMraidNativeCommandHandler = mraidNativeCommandHandler;
     }
@@ -138,7 +134,7 @@ public class MraidBridge {
         });
 
         final ViewGestureDetector gestureDetector = new ViewGestureDetector(
-                mMraidWebView.getContext(), mMraidWebView, mAdConfiguration);
+                mMraidWebView.getContext(), mMraidWebView, mAdReport);
         gestureDetector.setUserClickListener(new UserClickListener() {
             @Override
             public void onUserClick() {
@@ -315,6 +311,9 @@ public class MraidBridge {
             return true;
         }
 
+        // This block handles all other URLs, including sms://, tel://,
+        // clicking a hyperlink, or setting window.location directly in Javascript. It checks for
+        // clicked in order to avoid interfering with automatically browser redirects.
         if (mIsClicked) {
             Intent intent = new Intent();
             intent.setAction(Intent.ACTION_VIEW);
@@ -339,8 +338,10 @@ public class MraidBridge {
 
     @VisibleForTesting
     private void handlePageFinished() {
-        // This can happen a second time if the user sets window.location directly. We only want
-        // to fire onPageLoaded once.
+        // This can happen a second time if the ad does something that changes the window location,
+        // such as a redirect, changing window.location in Javascript, or programmatically clicking
+        // a hyperlink. Note that the handleShouldOverrideUrl method skips doing its own
+        // processing if the user hasn't clicked the ad.
         if (mHasLoaded) {
             return;
         }

@@ -3,11 +3,14 @@ package com.mopub.mobileads;
 import android.app.Activity;
 import android.webkit.WebViewClient;
 
+import com.mopub.common.AdReport;
 import com.mopub.common.test.support.SdkTestRunner;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.robolectric.Robolectric;
 
 import static com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
@@ -19,17 +22,17 @@ import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(SdkTestRunner.class)
 public class HtmlBannerWebViewTest {
-
-    private AdConfiguration adConfiguration;
     private HtmlBannerWebView subject;
+    @Mock
+    private AdReport mockAdReport;
     private CustomEventBannerListener customEventBannerListener;
     private String clickthroughUrl;
     private String redirectUrl;
 
     @Before
     public void setup() throws Exception {
-        adConfiguration = mock(AdConfiguration.class);
-        subject = new HtmlBannerWebView(new Activity(), adConfiguration);
+        subject = new HtmlBannerWebView(Robolectric.buildActivity(Activity.class).create().get(),
+                mockAdReport);
         customEventBannerListener = mock(CustomEventBannerListener.class);
         clickthroughUrl = "clickthroughUrl";
         redirectUrl = "redirectUrl";

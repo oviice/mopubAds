@@ -13,12 +13,12 @@ import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
-import android.view.Surface;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
@@ -26,10 +26,9 @@ import android.view.ViewTreeObserver.OnPreDrawListener;
 import android.view.WindowManager;
 import android.webkit.ConsoleMessage;
 import android.webkit.JsResult;
-import android.webkit.WebView;
 import android.widget.FrameLayout;
 import android.widget.FrameLayout.LayoutParams;
-
+import com.mopub.common.AdReport;
 import com.mopub.common.CloseableLayout;
 import com.mopub.common.CloseableLayout.ClosePosition;
 import com.mopub.common.CloseableLayout.OnCloseListener;
@@ -39,12 +38,11 @@ import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.DeviceUtils;
 import com.mopub.common.util.Dips;
-import com.mopub.common.util.IntentUtils;
+import com.mopub.common.util.Intents;
 import com.mopub.common.util.Views;
-import com.mopub.mobileads.AdConfiguration;
-import com.mopub.mobileads.BaseWebView;
+import com.mopub.exceptions.IntentNotResolvableException;
+import com.mopub.exceptions.UrlParseException;
 import com.mopub.mobileads.MraidVideoPlayerActivity;
-import com.mopub.mobileads.util.Utils;
 import com.mopub.mobileads.util.WebViews;
 import com.mopub.mraid.MraidBridge.MraidBridgeListener;
 import com.mopub.mraid.MraidBridge.MraidWebView;
@@ -56,6 +54,8 @@ import static android.content.pm.ActivityInfo.CONFIG_SCREEN_SIZE;
 import static com.mopub.common.util.Utils.bitMaskContainsFlag;
 
 public class MraidController {
+    private final AdReport mAdReport;
+
     public interface MraidListener {
         public void onLoaded(View view);
         public void onFailedToLoad();
@@ -70,7 +70,6 @@ public class MraidController {
 
     @Nullable private Activity mActivity;
     @NonNull private final Context mContext;
-    @NonNull private final AdConfiguration mAdConfiguration;
     @NonNull private final PlacementType mPlacementType;
 
     // An ad container, which contains the ad web view in default state, but is empty when expanded.
@@ -118,26 +117,25 @@ public class MraidController {
 
     private boolean mIsPaused;
 
-    public MraidController(@NonNull Context context, @NonNull AdConfiguration adConfiguration,
+    public MraidController(@NonNull Context context, @Nullable AdReport adReport,
             @NonNull PlacementType placementType) {
-        this(context, adConfiguration, placementType,
-                new MraidBridge(adConfiguration, placementType),
-                new MraidBridge(adConfiguration, PlacementType.INTERSTITIAL),
+        this(context, adReport, placementType,
+                new MraidBridge(adReport, placementType),
+                new MraidBridge(adReport, PlacementType.INTERSTITIAL),
                 new ScreenMetricsWaiter());
     }
 
     @VisibleForTesting
-    MraidController(@NonNull Context context, @NonNull AdConfiguration adConfiguration,
+    MraidController(@NonNull Context context, @Nullable AdReport adReport,
             @NonNull PlacementType placementType,
             @NonNull MraidBridge bridge, @NonNull MraidBridge twoPartBridge,
             @NonNull ScreenMetricsWaiter screenMetricsWaiter) {
         mContext = context;
-
+        mAdReport = adReport;
         if (mContext instanceof Activity) {
             mActivity = (Activity) mContext;
         }
 
-        mAdConfiguration = adConfiguration;
         mPlacementType = placementType;
         mMraidBridge = bridge;
         mTwoPartBridge = twoPartBridge;
@@ -444,8 +442,8 @@ public class MraidController {
                 mMraidBridge.notifySupports(
                         mMraidNativeCommandHandler.isSmsAvailable(mContext),
                         mMraidNativeCommandHandler.isTelAvailable(mContext),
-                        mMraidNativeCommandHandler.isCalendarAvailable(mContext),
-                        mMraidNativeCommandHandler.isStorePictureSupported(mContext),
+                        MraidNativeCommandHandler.isCalendarAvailable(mContext),
+                        MraidNativeCommandHandler.isStorePictureSupported(mContext),
                         isInlineVideoAvailable());
                 mMraidBridge.notifyPlacementType(mPlacementType);
                 mMraidBridge.notifyViewability(mMraidBridge.isVisible());
@@ -828,7 +826,7 @@ public class MraidController {
 
     @VisibleForTesting
     void handleShowVideo(@NonNull String videoUrl) {
-        MraidVideoPlayerActivity.startMraid(mContext, videoUrl, mAdConfiguration);
+        MraidVideoPlayerActivity.startMraid(mContext, videoUrl);
     }
 
     @VisibleForTesting
@@ -999,6 +997,10 @@ public class MraidController {
         }
     }
 
+    /**
+     * Attempts to handle mopubnativebrowser links in the device browser, deep-links in the
+     * corresponding application, and all other links in the MoPub in-app browser.
+     */
     @VisibleForTesting
     void handleOpen(@NonNull String url) {
         MoPubLog.d("Opening url: " + url);
@@ -1007,30 +1009,44 @@ public class MraidController {
             mMraidListener.onOpen();
         }
 
-        // this is added because http/s can also be intercepted
-        if (!isWebSiteUrl(url) && IntentUtils.canHandleApplicationUrl(mContext, url)) {
-            launchApplicationUrl(url);
+        // MoPubNativeBrowser URLs
+        if (Intents.isNativeBrowserScheme(url)) {
+            try {
+                final Intent intent = Intents.intentForNativeBrowserScheme(url);
+                Intents.startActivity(mContext, intent);
+            } catch (UrlParseException e) {
+                MoPubLog.d("Unable to load mopub native browser url: " + url + ". "
+                        + e.getMessage());
+            } catch (IntentNotResolvableException e) {
+                MoPubLog.d("Unable to load mopub native browser url: " + url + ". "
+                        + e.getMessage());
+            }
+
             return;
         }
 
-        Intent i = new Intent(mContext, MoPubBrowser.class);
-        i.putExtra(MoPubBrowser.DESTINATION_URL_KEY, url);
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        mContext.startActivity(i);
-    }
+        // Non-http(s) URLs
+        if (!Intents.isHttpUrl(url) && Intents.canHandleApplicationUrl(mContext, url)) {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
 
+            try {
+                Intents.startActivity(mContext, intent);
+            } catch (IntentNotResolvableException e) {
+                MoPubLog.d("Unable to resolve application url: " + url);
+            }
 
-    private boolean launchApplicationUrl(String url) {
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            return;
+        }
 
-        String errorMessage = "Unable to open intent.";
+        final Bundle extras = new Bundle();
+        extras.putString(MoPubBrowser.DESTINATION_URL_KEY, url);
 
-        return Utils.executeIntent(mContext, intent, errorMessage);
-    }
-
-    private boolean isWebSiteUrl(@NonNull String url) {
-        return url.startsWith("http://") || url.startsWith("https://");
+        final Intent intent = Intents.getStartActivityIntent(mContext, MoPubBrowser.class, extras);
+        try {
+            Intents.startActivity(mContext, intent);
+        } catch (IntentNotResolvableException e) {
+            MoPubLog.d("Unable to launch intent for URL: " + url +  ".");
+        }
     }
 
     @VisibleForTesting

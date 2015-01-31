@@ -126,14 +126,6 @@ abstract class BaseEvent {
         return ClientMetadata.getInstance().getAppVersion();
     }
 
-    public String getClientAdvertisingId() {
-        return ClientMetadata.getInstance().getAdvertisingId();
-    }
-
-    public Boolean getClientDoNotTrack() {
-        return ClientMetadata.getInstance().isDoNotTrackSet();
-    }
-
     public String getDeviceManufacturer() {
         return ClientMetadata.getInstance().getDeviceManufacturer();
     }
@@ -239,8 +231,6 @@ abstract class BaseEvent {
                 "AppName: " + getAppName() + "\n" +
                 "AppPackageName: " + getAppPackageName() + "\n" +
                 "AppVersion: " + getAppVersion() + "\n" +
-                "ClientAdvertisingId: " + getClientAdvertisingId() + "\n" +
-                "ClientDoNotTrack: " + getClientDoNotTrack() + "\n" +
                 "DeviceManufacturer: " + getDeviceManufacturer() + "\n" +
                 "DeviceModel: " + getDeviceModel() + "\n" +
                 "DeviceProduct: " + getDeviceProduct() + "\n" +

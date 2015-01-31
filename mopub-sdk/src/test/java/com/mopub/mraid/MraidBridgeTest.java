@@ -5,8 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.webkit.WebViewClient;
 
+import com.mopub.common.AdReport;
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.mobileads.AdConfiguration;
 import com.mopub.mraid.MraidBridge.MraidBridgeListener;
 import com.mopub.mraid.MraidBridge.MraidWebView;
 import com.mopub.mraid.MraidNativeCommandHandler.MraidCommandFailureListener;
@@ -38,9 +38,9 @@ import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
 public class MraidBridgeTest {
-    @Mock AdConfiguration mockAdConfiguration;
     @Mock MraidNativeCommandHandler mockNativeCommandHandler;
     @Mock MraidBridgeListener mockBridgeListener;
+    @Mock AdReport mockAdReport;
     @Mock(answer = Answers.RETURNS_DEEP_STUBS) MraidWebView mockBannerWebView;
     @Mock(answer = Answers.RETURNS_DEEP_STUBS) MraidWebView mockInterstitialWebView;
     @Captor ArgumentCaptor<WebViewClient> bannerWebViewClientCaptor;
@@ -53,13 +53,11 @@ public class MraidBridgeTest {
     public void setUp() {
         activity = Robolectric.buildActivity(Activity.class).create().get();
 
-        subjectBanner = new MraidBridge(
-                mockAdConfiguration, PlacementType.INLINE, mockNativeCommandHandler);
+        subjectBanner = new MraidBridge(mockAdReport, PlacementType.INLINE, mockNativeCommandHandler);
         subjectBanner.setMraidBridgeListener(mockBridgeListener);
         subjectBanner.attachView(mockBannerWebView);
 
-        subjectInterstitial = new MraidBridge(
-                mockAdConfiguration, PlacementType.INTERSTITIAL, mockNativeCommandHandler);
+        subjectInterstitial = new MraidBridge(mockAdReport, PlacementType.INTERSTITIAL, mockNativeCommandHandler);
         subjectInterstitial.setMraidBridgeListener(mockBridgeListener);
         subjectInterstitial.attachView(mockInterstitialWebView);
 
@@ -156,7 +154,7 @@ public class MraidBridgeTest {
     @Test(expected = MraidCommandException.class)
     public void runCommand_requiresClick_notClicked_shouldThrowException()
             throws MraidCommandException {
-        subjectBanner = new MraidBridge(mockAdConfiguration, PlacementType.INLINE);
+        subjectBanner = new MraidBridge(mockAdReport, PlacementType.INLINE);
         subjectBanner.attachView(mockBannerWebView);
         subjectBanner.setClicked(false);
         Map<String, String> params = new HashMap<String, String>();
@@ -198,7 +196,7 @@ public class MraidBridgeTest {
     public void runCommand_close_shouldCallListener()
             throws MraidCommandException {
         Map<String, String> params = new HashMap<String, String>();
-
+        
         subjectBanner.runCommand(MraidJavascriptCommand.CLOSE, params);
 
         verify(mockBridgeListener).onClose();

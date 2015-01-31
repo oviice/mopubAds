@@ -4,11 +4,13 @@ import android.app.Activity;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.mopub.common.AdReport;
 import com.mopub.common.test.support.SdkTestRunner;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.robolectric.shadows.ShadowGestureDetector;
 
 import static com.mopub.mobileads.ViewGestureDetector.UserClickListener;
@@ -25,7 +27,7 @@ public class ViewGestureDetectorTest {
     private ViewGestureDetector subject;
     private AdAlertGestureListener adAlertGestureListener;
     private View view;
-    private AdConfiguration adConfiguration;
+    @Mock AdReport mockAdReport;
 
     @Before
     public void setUp() throws Exception {
@@ -35,15 +37,14 @@ public class ViewGestureDetectorTest {
         stub(view.getHeight()).toReturn(50);
 
         adAlertGestureListener = mock(AdAlertGestureListener.class);
-        adConfiguration = mock(AdConfiguration.class);
 
-        subject = new ViewGestureDetector(context, view, adConfiguration);
+        subject = new ViewGestureDetector(context, view, mockAdReport);
         subject.setAdAlertGestureListener(adAlertGestureListener);
     }
 
     @Test
     public void constructor_shouldDisableLongPressAndSetGestureListener() throws Exception {
-        subject = new ViewGestureDetector(context, view, adConfiguration);
+        subject = new ViewGestureDetector(context, view, mockAdReport);
 
         ShadowGestureDetector shadowGestureDetector = shadowOf(subject);
 

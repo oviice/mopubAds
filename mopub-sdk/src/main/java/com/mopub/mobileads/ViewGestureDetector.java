@@ -1,10 +1,13 @@
 package com.mopub.mobileads;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.mopub.common.AdReport;
 import com.mopub.common.logging.MoPubLog;
 
 public class ViewGestureDetector extends GestureDetector {
@@ -19,8 +22,8 @@ public class ViewGestureDetector extends GestureDetector {
     private AdAlertGestureListener mAdAlertGestureListener;
     private UserClickListener mUserClickListener;
 
-    public ViewGestureDetector(Context context, View view, AdConfiguration adConfiguration)  {
-        this(context, view, new AdAlertGestureListener(view, adConfiguration));
+    public ViewGestureDetector(@NonNull Context context, @NonNull View view, @Nullable AdReport adReport)  {
+        this(context, view, new AdAlertGestureListener(view, adReport));
     }
 
     private ViewGestureDetector(Context context, View view, AdAlertGestureListener adAlertGestureListener) {

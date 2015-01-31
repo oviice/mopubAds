@@ -2,7 +2,7 @@ package com.mopub.mobileads.factories;
 
 import android.content.Context;
 
-import com.mopub.mobileads.AdConfiguration;
+import com.mopub.common.AdReport;
 import com.mopub.mobileads.HtmlBannerWebView;
 
 import static com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;
@@ -12,22 +12,22 @@ public class HtmlBannerWebViewFactory {
 
     public static HtmlBannerWebView create(
             Context context,
+            AdReport adReport,
             CustomEventBannerListener customEventBannerListener,
             boolean isScrollable,
             String redirectUrl,
-            String clickthroughUrl,
-            AdConfiguration adConfiguration) {
-        return instance.internalCreate(context, customEventBannerListener, isScrollable, redirectUrl, clickthroughUrl, adConfiguration);
+            String clickthroughUrl) {
+        return instance.internalCreate(context, adReport, customEventBannerListener, isScrollable, redirectUrl, clickthroughUrl);
     }
 
     public HtmlBannerWebView internalCreate(
             Context context,
+            AdReport adReport,
             CustomEventBannerListener customEventBannerListener,
             boolean isScrollable,
             String redirectUrl,
-            String clickthroughUrl,
-            AdConfiguration adConfiguration) {
-        HtmlBannerWebView htmlBannerWebView = new HtmlBannerWebView(context, adConfiguration);
+            String clickthroughUrl) {
+        HtmlBannerWebView htmlBannerWebView = new HtmlBannerWebView(context, adReport);
         htmlBannerWebView.init(customEventBannerListener, isScrollable, redirectUrl, clickthroughUrl);
         return htmlBannerWebView;
     }

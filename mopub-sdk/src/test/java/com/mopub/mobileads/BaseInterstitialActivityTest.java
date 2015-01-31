@@ -12,10 +12,9 @@ import com.mopub.common.test.support.SdkTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.robolectric.Robolectric;
 
-import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
+import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.stub;
@@ -23,7 +22,7 @@ import static org.mockito.Mockito.stub;
 @RunWith(SdkTestRunner.class)
 public class BaseInterstitialActivityTest {
     private BaseInterstitialActivity subject;
-    @Mock private AdConfiguration adConfiguration;
+    private long broadcastIdentifier;
 
     // Make a concrete version of the abstract class for testing purposes.
     private static class TestInterstitialActivity extends BaseInterstitialActivity {
@@ -40,7 +39,7 @@ public class BaseInterstitialActivityTest {
 
     @Before
     public void setup() {
-
+        broadcastIdentifier = 2222;
     }
 
     @Test
@@ -60,28 +59,28 @@ public class BaseInterstitialActivityTest {
     }
 
     @Test
-    public void getAdConfiguration_shouldReturnAdConfigurationFromIntent() throws Exception {
+    public void getBroadcastIdentifier_shouldReturnBroadcastIdFromIntent() throws Exception {
         Context context = Robolectric.buildActivity(Activity.class).create().get();
         Intent intent = new Intent(context, TestInterstitialActivity.class);
-        intent.putExtra(AD_CONFIGURATION_KEY, adConfiguration);
+        intent.putExtra(BROADCAST_IDENTIFIER_KEY, broadcastIdentifier);
 
         subject = Robolectric.buildActivity(TestInterstitialActivity.class)
                 .withIntent(intent)
                 .create().get();
-        assertThat(subject.getAdConfiguration()).isNotNull();
+        assertThat(subject.getBroadcastIdentifier()).isEqualTo(2222L);
     }
 
     @Test
-    public void getAdConfiguration_withMissingOrWrongAdConfiguration_shouldReturnNull() throws Exception {
+    public void getBroadcastIdentifier_withMissingBroadCastId_shouldReturnNull() throws Exception {
         Context context = Robolectric.buildActivity(Activity.class).create().get();
         Intent intent = new Intent(context, TestInterstitialActivity.class);
-        // This intent is missing an AdConfiguration extra.
+        // This intent is missing a broadcastidentifier extra.
 
         subject = Robolectric.buildActivity(TestInterstitialActivity.class)
                 .withIntent(intent)
                 .create().get();
 
-        assertThat(subject.getAdConfiguration()).isNull();
+        assertThat(subject.getBroadcastIdentifier()).isNull();
     }
 
     protected FrameLayout getContentView(BaseInterstitialActivity subject) {

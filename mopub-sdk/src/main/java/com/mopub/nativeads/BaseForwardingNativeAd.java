@@ -1,19 +1,24 @@
 package com.mopub.nativeads;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.view.View;
 
 import com.mopub.common.Preconditions.NoThrow;
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.network.Networking;
+import com.mopub.volley.VolleyError;
+import com.mopub.volley.toolbox.ImageLoader;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.mopub.nativeads.CustomEventNative.CustomEventNativeListener;
 import static com.mopub.nativeads.CustomEventNative.ImageListener;
@@ -356,16 +361,42 @@ abstract class BaseForwardingNativeAd implements NativeAdInterface {
     static void preCacheImages(@NonNull final Context context,
             @NonNull final List<String> imageUrls,
             @NonNull final ImageListener imageListener) {
-        ImageService.get(context, imageUrls, new ImageService.ImageServiceListener() {
+        final ImageLoader imageLoader = Networking.getImageLoader(context);
+        // These Atomics are only accessed on the main thread.
+        // We use Atomics here so we can change their values while keeping a reference for the inner class.
+        final AtomicInteger imageCounter = new AtomicInteger(imageUrls.size());
+        final AtomicBoolean anyFailures = new AtomicBoolean(false);
+        ImageLoader.ImageListener volleyImageListener = new ImageLoader.ImageListener() {
             @Override
-            public void onSuccess(final Map<String, Bitmap> bitmaps) {
-                imageListener.onImagesCached();
+            public void onResponse(final ImageLoader.ImageContainer imageContainer, final boolean isImmediate) {
+                // Image Loader returns a "default" response immediately. We want to ignore this
+                // unless the image is already cached.
+                if (imageContainer.getBitmap() != null) {
+                    final int count = imageCounter.decrementAndGet();
+                    if (count == 0 && !anyFailures.get()) {
+                        imageListener.onImagesCached();
+                    }
+                }
             }
 
             @Override
-            public void onFail() {
-                imageListener.onImagesFailedToCache(NativeErrorCode.IMAGE_DOWNLOAD_FAILURE);
+            public void onErrorResponse(final VolleyError volleyError) {
+                MoPubLog.d("Failed to download a native ads image:", volleyError);
+                boolean anyPreviousErrors = anyFailures.getAndSet(true);
+                imageCounter.decrementAndGet();
+                if (!anyPreviousErrors) {
+                    imageListener.onImagesFailedToCache(NativeErrorCode.IMAGE_DOWNLOAD_FAILURE);
+                }
             }
-        });
+        };
+
+        for (String url : imageUrls) {
+            if (TextUtils.isEmpty(url)) {
+                anyFailures.set(true);
+                imageListener.onImagesFailedToCache(NativeErrorCode.IMAGE_DOWNLOAD_FAILURE);
+                return;
+            }
+            imageLoader.get(url, volleyImageListener);
+        }
     }
 }

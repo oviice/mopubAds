@@ -2,13 +2,15 @@ package com.mopub.mobileads;
 
 import android.content.Context;
 
+import com.mopub.common.AdReport;
+
 import static com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;
 
 public class HtmlBannerWebView extends BaseHtmlWebView {
     public static final String EXTRA_AD_CLICK_DATA = "com.mopub.intent.extra.AD_CLICK_DATA";
 
-    public HtmlBannerWebView(Context context, AdConfiguration adConfiguration) {
-        super(context, adConfiguration);
+    public HtmlBannerWebView(Context context, AdReport adReport) {
+        super(context, adReport);
     }
 
     public void init(CustomEventBannerListener customEventBannerListener, boolean isScrollable, String redirectUrl, String clickthroughUrl) {

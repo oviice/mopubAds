@@ -5,6 +5,8 @@ import android.content.Context;
 import android.os.Handler;
 import android.webkit.JavascriptInterface;
 
+import com.mopub.common.AdReport;
+
 import static com.mopub.common.util.VersionCode.HONEYCOMB;
 import static com.mopub.common.util.VersionCode.currentApiLevel;
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
@@ -18,8 +20,8 @@ public class HtmlInterstitialWebView extends BaseHtmlWebView {
         abstract void onInterstitialLoaded();
     }
 
-    public HtmlInterstitialWebView(Context context, AdConfiguration adConfiguration) {
-        super(context, adConfiguration);
+    public HtmlInterstitialWebView(Context context, AdReport adReport) {
+        super(context, adReport);
 
         mHandler = new Handler();
     }

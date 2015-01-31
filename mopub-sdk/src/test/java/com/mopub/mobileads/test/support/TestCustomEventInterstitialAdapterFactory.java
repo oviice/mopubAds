@@ -1,8 +1,11 @@
 package com.mopub.mobileads.test.support;
 
+import com.mopub.common.AdReport;
 import com.mopub.mobileads.CustomEventInterstitialAdapter;
 import com.mopub.mobileads.MoPubInterstitial;
 import com.mopub.mobileads.factories.CustomEventInterstitialAdapterFactory;
+
+import java.util.Map;
 
 import static org.mockito.Mockito.mock;
 
@@ -10,7 +13,7 @@ public class TestCustomEventInterstitialAdapterFactory extends CustomEventInters
     private CustomEventInterstitialAdapter mockCustomEventInterstitalAdapter = mock(CustomEventInterstitialAdapter.class);
     private MoPubInterstitial latestMoPubInterstitial;
     private String latestClassName;
-    private String latestClassData;
+    private Map<String, String> latestClassData;
 
     public static CustomEventInterstitialAdapter getSingletonMock() {
         return getTestFactory().mockCustomEventInterstitalAdapter;
@@ -28,15 +31,15 @@ public class TestCustomEventInterstitialAdapterFactory extends CustomEventInters
         return getTestFactory().latestClassName;
     }
 
-    public static String getLatestClassData() {
+    public static Map<String, String> getLatestServerExtras() {
         return getTestFactory().latestClassData;
     }
 
     @Override
-    protected CustomEventInterstitialAdapter internalCreate(MoPubInterstitial moPubInterstitial, String className, String classData) {
+    protected CustomEventInterstitialAdapter internalCreate(MoPubInterstitial moPubInterstitial, String className, Map<String, String> serverExtras, long broadcastIdentifier, AdReport adReport) {
         latestMoPubInterstitial = moPubInterstitial;
         latestClassName = className;
-        latestClassData = classData;
+        latestClassData = serverExtras;
         return mockCustomEventInterstitalAdapter;
     }
 }

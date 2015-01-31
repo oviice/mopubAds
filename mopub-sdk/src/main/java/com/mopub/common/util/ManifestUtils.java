@@ -137,7 +137,7 @@ public class ManifestUtils {
         for (final Class<? extends Activity> activityClass : requiredActivities) {
             final Intent intent = new Intent(context, activityClass);
 
-            if (IntentUtils.deviceCanHandleIntent(context, intent) == isDeclared) {
+            if (Intents.deviceCanHandleIntent(context, intent) == isDeclared) {
                 activities.add(activityClass);
             }
         }

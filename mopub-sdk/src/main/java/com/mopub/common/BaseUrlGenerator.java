@@ -3,9 +3,11 @@ package com.mopub.common;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import com.mopub.network.PlayServicesUrlRewriter;
+
 public abstract class BaseUrlGenerator {
-    private static final String IFA_PREFIX = "ifa:";
-    private static final String SHA_PREFIX = "sha:";
+
+
 
     private StringBuilder mStringBuilder;
     private boolean mFirstParam;
@@ -74,5 +76,14 @@ public abstract class BaseUrlGenerator {
 
     protected void setUdid(String udid) {
         addParam("udid", udid);
+    }
+
+    /**
+     * Appends special keys/values for advertising id and do-not-track. PlayServicesUrlRewriter will
+     * replace these templates wiht the correct values when the request is processed.
+     */
+    protected void appendAdvertisingInfoTemplates() {
+        addParam("udid", PlayServicesUrlRewriter.UDID_TEMPLATE);
+        addParam("dnt", PlayServicesUrlRewriter.DO_NOT_TRACK_TEMPLATE);
     }
 }

@@ -2,6 +2,7 @@ package com.mopub.common;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.support.annotation.Nullable;
 
 import com.mopub.common.factories.MethodBuilderFactory;
 import com.mopub.common.logging.MoPubLog;
@@ -19,11 +20,21 @@ public class GpsHelper {
     private static String sPlayServicesUtilClassName = "com.google.android.gms.common.GooglePlayServicesUtil";
     private static String sAdvertisingIdClientClassName = "com.google.android.gms.ads.identifier.AdvertisingIdClient";
 
+    public static class AdvertisingInfo {
+        public final String advertisingId;
+        public final boolean limitAdTracking;
+
+        public AdvertisingInfo(String adId, boolean limitAdTrackingEnabled) {
+            advertisingId = adId;
+            limitAdTracking = limitAdTrackingEnabled;
+        }
+    }
+
     public interface GpsHelperListener {
         public void onFetchAdInfoCompleted();
     }
 
-    static boolean isPlayServicesAvailable(final Context context) {
+    public static boolean isPlayServicesAvailable(final Context context) {
         try {
             MethodBuilder methodBuilder = MethodBuilderFactory.create(null, "isGooglePlayServicesAvailable")
                     .setStatic(Class.forName(sPlayServicesUtilClassName))
@@ -67,6 +78,29 @@ public class GpsHelper {
                 internalFetchAdvertisingInfoAsync(context, null);
             }
         }
+    }
+
+    @Nullable
+    static public AdvertisingInfo fetchAdvertisingInfoSync(final Context context) {
+        if (context == null) {
+            return null;
+        }
+        Object adInfo = null;
+        try {
+            MethodBuilder methodBuilder = MethodBuilderFactory.create(null, "getAdvertisingIdInfo")
+                    .setStatic(Class.forName(sAdvertisingIdClientClassName))
+                    .addParam(Context.class, context);
+
+            adInfo = methodBuilder.execute();
+        } catch (Exception e) {
+            MoPubLog.d("Unable to obtain Google AdvertisingIdClient.Info via reflection.");
+            return null;
+        }
+
+        String advertisingId = reflectedGetAdvertisingId(adInfo, null);
+        boolean isLimitAdTrackingEnabled = reflectedIsLimitAdTrackingEnabled(adInfo, false);
+
+        return new AdvertisingInfo(advertisingId, isLimitAdTrackingEnabled);
     }
 
     static private void internalFetchAdvertisingInfoAsync(final Context context, final GpsHelperListener gpsHelperListener) {

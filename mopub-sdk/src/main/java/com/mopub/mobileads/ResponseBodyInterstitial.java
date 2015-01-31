@@ -2,16 +2,21 @@ package com.mopub.mobileads;
 
 import android.content.Context;
 
+import com.mopub.common.AdReport;
+import com.mopub.common.logging.MoPubLog;
+
 import java.util.Map;
 
-import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
+import static com.mopub.common.DataKeys.AD_REPORT_KEY;
+import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
+import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
 
 public abstract class ResponseBodyInterstitial extends CustomEventInterstitial {
     private EventForwardingBroadcastReceiver mBroadcastReceiver;
     protected Context mContext;
-    protected AdConfiguration mAdConfiguration;
-    long mBroadcastIdentifier;
+    protected AdReport mAdReport;
+    protected long mBroadcastIdentifier;
 
     abstract protected void extractExtras(Map<String, String> serverExtras);
     abstract protected void preRenderHtml(CustomEventInterstitialListener customEventInterstitialListener);
@@ -33,12 +38,24 @@ public abstract class ResponseBodyInterstitial extends CustomEventInterstitial {
             return;
         }
 
-        mAdConfiguration = AdConfiguration.extractFromMap(localExtras);
-        if (mAdConfiguration != null) {
-            mBroadcastIdentifier = mAdConfiguration.getBroadcastIdentifier();
+
+        try {
+            mAdReport = (AdReport) localExtras.get(AD_REPORT_KEY);
+            Long boxedBroadcastId = (Long) localExtras.get(BROADCAST_IDENTIFIER_KEY);
+            if (boxedBroadcastId == null) {
+                MoPubLog.e("Broadcast Identifier was not set in localExtras");
+                customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.INTERNAL_ERROR);
+                return;
+            }
+            mBroadcastIdentifier = boxedBroadcastId;
+        } catch (ClassCastException e) {
+            MoPubLog.e("LocalExtras contained an incorrect type.");
+            customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.INTERNAL_ERROR);
+            return;
         }
 
-        mBroadcastReceiver = new EventForwardingBroadcastReceiver(customEventInterstitialListener, mBroadcastIdentifier);
+        mBroadcastReceiver = new EventForwardingBroadcastReceiver(customEventInterstitialListener,
+                mBroadcastIdentifier);
         mBroadcastReceiver.register(context);
 
         preRenderHtml(customEventInterstitialListener);

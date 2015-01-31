@@ -2,35 +2,34 @@ package com.mopub.common;
 
 import android.content.Context;
 import android.net.http.AndroidHttpClient;
-import android.os.Handler;
-import android.os.Looper;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.webkit.WebView;
 
-import com.mopub.common.event.MoPubEvents;
 import com.mopub.common.logging.MoPubLog;
-import com.mopub.common.util.AsyncTasks;
-import com.mopub.common.util.DeviceUtils;
 
-import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.params.HttpClientParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
-import java.util.Arrays;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLDecoder;
 
 import static com.mopub.common.util.ResponseHeader.USER_AGENT;
 
 public class HttpClient {
     private static final int CONNECTION_TIMEOUT = 10000;
     private static final int SOCKET_TIMEOUT = 10000;
+    private static final String DEFAULT_USER_AGENT = System.getProperty("http.agent");
     private static String sWebViewUserAgent;
 
     public static AndroidHttpClient getHttpClient() {
-
-        String defaultUserAgent = DeviceUtils.getUserAgent();
-        String userAgent = getWebViewUserAgent(defaultUserAgent);
+        final String userAgent = getWebViewUserAgent(DEFAULT_USER_AGENT);
 
         AndroidHttpClient httpClient = AndroidHttpClient.newInstance(userAgent);
 
@@ -42,8 +41,22 @@ public class HttpClient {
         return httpClient;
     }
 
-    public static HttpGet initializeHttpGet(final String url, final Context context) {
-        final HttpGet httpGet = new HttpGet(url);
+    public static HttpGet initializeHttpGet(@NonNull final String url) {
+        return initializeHttpGet(url, null);
+    }
+
+    public static HttpGet initializeHttpGet(@NonNull String url, @Nullable final Context context) {
+        Preconditions.checkNotNull(url);
+
+        // Try to encode url. If this fails, then fallback on the original url
+        String getUrl;
+        try {
+            getUrl = urlEncode(url);
+        } catch (Exception e) {
+            getUrl = url;
+        }
+
+        final HttpGet httpGet = new HttpGet(getUrl);
 
         if (getWebViewUserAgent() == null && context != null) {
             // Memoize the user agent since creating WebViews is expensive
@@ -59,65 +72,70 @@ public class HttpClient {
         return httpGet;
     }
 
-    public static void makeTrackingHttpRequest(final Iterable<String> urls, final Context context) {
-        makeTrackingHttpRequest(urls, context, null);
-    }
+    /**
+     * This method constructs a properly encoded and valid URI adhering to legal characters for
+     * each component. See Android docs on these classes for reference.
+     */
+    public static String urlEncode(@NonNull final String url) throws Exception {
+        Preconditions.checkNotNull(url);
 
-    public static void makeTrackingHttpRequest(final Iterable<String> urls,
-            final Context context,
-            final MoPubEvents.Type type) {
-        if (urls == null || context == null) {
-            return;
+        // If the URL is improperly encoded, then fail
+        if (isUrlImproperlyEncoded(url)) {
+            throw new UnsupportedEncodingException("URL is improperly encoded: " + url);
         }
 
-        final DownloadTask.DownloadTaskListener downloadTaskListener = new DownloadTask.DownloadTaskListener() {
-            @Override
-            public void onComplete(final String url, final DownloadResponse downloadResponse) {
-                if (downloadResponse == null || downloadResponse.getStatusCode() != HttpStatus.SC_OK) {
-                    MoPubLog.d("Failed to hit tracking endpoint: " + url);
-                    return;
-                }
+        // If the url is unencoded, then encode it. Otherwise it is already properly encoded
+        // and leave it as is.
+        URI uri;
+        if (isUrlUnencoded(url)) {
+            uri = encodeUrl(url);
+        } else {
+            uri = new URI(url);
+        }
 
-                final String result = HttpResponses.asResponseString(downloadResponse);
-                if (result != null) {
-                    MoPubLog.d("Successfully hit tracking endpoint: " + url);
-                } else {
-                    MoPubLog.d("Failed to hit tracking endpoint: " + url);
-                }
-            }
-        };
-
-        // Hold onto the application context in closure instead of activity context
-        final Context appContext = context.getApplicationContext();
-        final Runnable trackingHttpRequestRunnable = new Runnable() {
-            @Override
-            public void run() {
-                for (final String url : urls) {
-                    try {
-                        final HttpGet httpGet = initializeHttpGet(url, appContext);
-                        AsyncTasks.safeExecuteOnExecutor(
-                                new DownloadTask(downloadTaskListener, type),
-                                httpGet
-                        );
-                    } catch (Exception e) {
-                        MoPubLog.d("Failed to hit tracking endpoint: " + url);
-                    }
-                }
-            }
-        };
-
-        new Handler(Looper.getMainLooper()).post(trackingHttpRequestRunnable);
+        return uri.toURL().toString();
     }
 
-    public static void makeTrackingHttpRequest(final String url,
-            final Context context) {
-        makeTrackingHttpRequest(url, context, null);
+    /**
+     * This method tries to decode the URL and returns false if it can't due to improper encoding.
+     */
+    static boolean isUrlImproperlyEncoded(@NonNull String url) {
+        try {
+            URLDecoder.decode(url, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            MoPubLog.w("Url is improperly encoded: " + url);
+            return true;
+        }
+        return false;
     }
 
-    public static void makeTrackingHttpRequest(final String url,
-            final Context context,
-            final MoPubEvents.Type type) {
-        makeTrackingHttpRequest(Arrays.asList(url), context, type);
+    /**
+     * This method tries to construct a URI and returns true if it can't due to illegal characters
+     * in the url.
+     */
+    static boolean isUrlUnencoded(@NonNull String url) {
+        try {
+            new URI(url);
+        } catch (URISyntaxException e) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * This method encodes each component of the URL into a valid URI.
+     */
+    static URI encodeUrl(@NonNull String urlString) throws Exception {
+        URI uri;
+        try {
+            URL url = new URL(urlString);
+            uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(),
+                    url.getPath(), url.getQuery(), url.getRef());
+        } catch (Exception e) {
+            MoPubLog.w("Failed to encode url: " + urlString);
+            throw e;
+        }
+        return uri;
     }
 
     /**
@@ -132,7 +150,7 @@ public class HttpClient {
     }
 
     /**
-     * @return the user agent of an Androd WebView or {@code null}
+     * @return the user agent of an Android WebView or {@code null}
      */
     public synchronized static String getWebViewUserAgent() {
         return getWebViewUserAgent(null);

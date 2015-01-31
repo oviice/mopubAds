@@ -1,13 +1,11 @@
 package com.mopub.mobileads;
 
-import android.net.Uri;
-
 import java.util.Map;
 
-import static com.mopub.mobileads.AdFetcher.CLICKTHROUGH_URL_KEY;
-import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
-import static com.mopub.mobileads.AdFetcher.REDIRECT_URL_KEY;
-import static com.mopub.mobileads.AdFetcher.SCROLLABLE_KEY;
+import static com.mopub.common.DataKeys.CLICKTHROUGH_URL_KEY;
+import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
+import static com.mopub.common.DataKeys.REDIRECT_URL_KEY;
+import static com.mopub.common.DataKeys.SCROLLABLE_KEY;
 
 public class HtmlInterstitial extends ResponseBodyInterstitial {
     private String mHtmlData;
@@ -17,7 +15,7 @@ public class HtmlInterstitial extends ResponseBodyInterstitial {
 
     @Override
     protected void extractExtras(Map<String, String> serverExtras) {
-        mHtmlData = Uri.decode(serverExtras.get(HTML_RESPONSE_BODY_KEY));
+        mHtmlData = serverExtras.get(HTML_RESPONSE_BODY_KEY);
         mIsScrollable = Boolean.valueOf(serverExtras.get(SCROLLABLE_KEY));
         mRedirectUrl = serverExtras.get(REDIRECT_URL_KEY);
         mClickthroughUrl = serverExtras.get(CLICKTHROUGH_URL_KEY);
@@ -25,11 +23,11 @@ public class HtmlInterstitial extends ResponseBodyInterstitial {
 
     @Override
     protected void preRenderHtml(CustomEventInterstitialListener customEventInterstitialListener) {
-        MoPubActivity.preRenderHtml(mContext, customEventInterstitialListener, mHtmlData);
+        MoPubActivity.preRenderHtml(mContext, mAdReport, customEventInterstitialListener, mHtmlData);
     }
 
     @Override
     public void showInterstitial() {
-        MoPubActivity.start(mContext, mHtmlData, mIsScrollable, mRedirectUrl, mClickthroughUrl, mAdConfiguration);
+        MoPubActivity.start(mContext, mHtmlData, mAdReport, mIsScrollable, mRedirectUrl, mClickthroughUrl, mBroadcastIdentifier);
     }
 }

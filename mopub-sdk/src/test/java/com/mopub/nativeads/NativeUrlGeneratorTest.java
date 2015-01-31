@@ -7,11 +7,9 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
-
 import com.mopub.common.MoPub;
-import com.mopub.mobileads.test.support.MoPubShadowTelephonyManager;
 import com.mopub.common.test.support.SdkTestRunner;
-
+import com.mopub.mobileads.test.support.MoPubShadowTelephonyManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,10 +17,7 @@ import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLocationManager;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.List;
+import java.util.*;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
 import static org.fest.assertions.api.Assertions.assertThat;

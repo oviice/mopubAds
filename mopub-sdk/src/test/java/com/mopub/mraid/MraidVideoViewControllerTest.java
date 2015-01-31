@@ -2,7 +2,6 @@ package com.mopub.mraid;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ImageButton;
 
@@ -25,12 +24,8 @@ import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 import static com.mopub.mobileads.BaseVideoPlayerActivity.VIDEO_URL;
 import static com.mopub.mobileads.BaseVideoViewController.BaseVideoViewControllerListener;
-import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_FAIL;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.getHtmlInterstitialIntentFilter;
-import static com.mopub.mobileads.EventForwardingBroadcastReceiverTest.getIntentForActionAndIdentifier;
 import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -40,7 +35,6 @@ import static org.robolectric.Robolectric.shadowOf;
 public class MraidVideoViewControllerTest {
     private Context context;
     private Bundle bundle;
-    private long testBroadcastIdentifier;
     private MraidVideoViewController subject;
     private BaseVideoViewControllerListener baseVideoViewControllerListener;
     private EventForwardingBroadcastReceiver broadcastReceiver;
@@ -49,8 +43,6 @@ public class MraidVideoViewControllerTest {
     public void setUp() throws Exception {
         context = new Activity();
         bundle = new Bundle();
-        testBroadcastIdentifier = 1111;
-        broadcastReceiver = mock(EventForwardingBroadcastReceiver.class);
         baseVideoViewControllerListener = mock(BaseVideoViewControllerListener.class);
 
         bundle.putString(VIDEO_URL, "http://video_url");
@@ -163,21 +155,8 @@ public class MraidVideoViewControllerTest {
         assertThat(getCloseButton().getVisibility()).isEqualTo(VISIBLE);
     }
 
-    @Test
-    public void onErrorListener_shouldBroadcastInterstitialError() throws Exception {
-        Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_FAIL, testBroadcastIdentifier);
-
-        initializeSubject();
-        subject.onCreate();
-
-        assertThat(getShadowVideoView().getOnErrorListener().onError(null, 0, 0)).isEqualTo(false);
-        Robolectric.getUiThreadScheduler().unPause();
-
-        verify(broadcastReceiver).onReceive(any(Context.class), eq(expectedIntent));
-    }
-
     private void initializeSubject() {
-        subject = new MraidVideoViewController(context, bundle, testBroadcastIdentifier, baseVideoViewControllerListener);
+        subject = new MraidVideoViewController(context, bundle, baseVideoViewControllerListener);
     }
 
     private ShadowVideoView getShadowVideoView() {

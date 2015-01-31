@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -11,21 +12,25 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.mopub.common.CacheService;
-import com.mopub.common.DownloadResponse;
-import com.mopub.common.util.Utils;
-import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
-import com.mopub.nativeads.test.support.MoPubShadowBitmap;
 import com.mopub.common.test.support.SdkTestRunner;
+import com.mopub.common.util.Utils;
+import com.mopub.network.MaxWidthImageLoader;
+import com.mopub.network.Networking;
+import com.mopub.volley.RequestQueue;
+import com.mopub.volley.toolbox.ImageLoader;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.annotation.Config;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.robolectric.Robolectric.shadowOf;
+import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.verify;
 
 @RunWith(SdkTestRunner.class)
 public class NativeViewHolderTest {
@@ -54,8 +59,30 @@ public class NativeViewHolderTest {
     private Bitmap extrasImage2;
     private Bitmap extrasImage;
 
+    private static final String IMPRESSION_URL = "http://example.com";
+    private static final String CLICK_URL = "http://test.com";
+    private static final String AD_UNIT_ID = "http://blah.org";
+
+    @Mock
+    private RequestQueue mockRequestQueue;
+    @Mock
+    private MaxWidthImageLoader mockImageLoader;
+    @Mock
+    private ImageLoader.ImageContainer mockImageContainer;
+    @Mock
+    private Bitmap mockBitmap;
+
+    @Captor
+    private ArgumentCaptor<ImageLoader.ImageListener> mainImageCaptor;
+    @Captor
+    private ArgumentCaptor<ImageLoader.ImageListener> iconImageCaptor;
+
+
     @Before
     public void setUp() throws Exception {
+
+        Networking.setRequestQueueForTesting(mockRequestQueue);
+        Networking.setImageLoaderForTesting(mockImageLoader);
         context = new Activity();
         relativeLayout = new RelativeLayout(context);
         relativeLayout.setId((int) Utils.generateUniqueId());
@@ -162,9 +189,6 @@ public class NativeViewHolderTest {
     @Test
     public void update_shouldAddValuesToViews() throws Exception {
         // Setup for cache state for image gets
-        CacheService.initialize(context);
-        CacheService.putToBitmapCache(mainImageUrl, mainImage);
-        CacheService.putToBitmapCache(iconImageUrl, iconImage);
 
         BaseForwardingNativeAd nativeAd = new BaseForwardingNativeAd() {};
         nativeAd.setTitle("titletext");
@@ -173,8 +197,8 @@ public class NativeViewHolderTest {
         nativeAd.setIconImageUrl("iconimageurl");
         nativeAd.setCallToAction("cta");
 
-        final DownloadResponse downloadResponse = new DownloadResponse(new TestHttpResponseWithHeaders(200, ""));
-        nativeResponse = new NativeResponse(context, downloadResponse, "adunit_id", nativeAd, null);
+        nativeResponse = new NativeResponse(context,
+                IMPRESSION_URL, CLICK_URL, AD_UNIT_ID, nativeAd, null);
 
         viewBinder = new ViewBinder.Builder(relativeLayout.getId())
                 .titleId(titleView.getId())
@@ -192,10 +216,15 @@ public class NativeViewHolderTest {
         assertThat(titleView.getText()).isEqualTo("titletext");
         assertThat(textView.getText()).isEqualTo("texttext");
         assertThat(callToActionView.getText()).isEqualTo("cta");
-        assertThat(shadowOf(ImageViewServiceTest.getBitmapFromImageView(mainImageView))
-                .getCreatedFromBytes()).isEqualTo(mainImageData.getBytes());
-        assertThat(shadowOf(ImageViewServiceTest.getBitmapFromImageView(iconImageView))
-                .getCreatedFromBytes()).isEqualTo(iconImageData.getBytes());
+        verify(mockImageLoader).get(eq("mainimageurl"), mainImageCaptor.capture());
+        verify(mockImageLoader).get(eq("iconimageurl"), iconImageCaptor.capture());
+
+        stub(mockImageContainer.getBitmap()).toReturn(mockBitmap);
+        mainImageCaptor.getValue().onResponse(mockImageContainer, true);
+        iconImageCaptor.getValue().onResponse(mockImageContainer, true);
+
+        assertThat(((BitmapDrawable) mainImageView.getDrawable()).getBitmap()).isEqualTo(mockBitmap);
+        assertThat(((BitmapDrawable) iconImageView.getDrawable()).getBitmap()).isEqualTo(mockBitmap);
     }
 
     @Test
@@ -208,8 +237,8 @@ public class NativeViewHolderTest {
         iconImageView.setImageBitmap(BitmapFactory.decodeByteArray("previousiconimagedata".getBytes(), 0, "previousiconimagedata".getBytes().length));
 
         // Only required fields in native response
-        final DownloadResponse downloadResponse = new DownloadResponse(new TestHttpResponseWithHeaders(200, ""));
-        nativeResponse = new NativeResponse(context, downloadResponse, "adunit_id", mock(BaseForwardingNativeAd.class), null);
+        nativeResponse = new NativeResponse(context,
+                IMPRESSION_URL, CLICK_URL, AD_UNIT_ID, mock(BaseForwardingNativeAd.class), null);
 
         viewBinder = new ViewBinder.Builder(relativeLayout.getId())
                 .titleId(titleView.getId())
@@ -239,8 +268,9 @@ public class NativeViewHolderTest {
 
         BaseForwardingNativeAd nativeAd = new BaseForwardingNativeAd() {};
         nativeAd.setCallToAction("cta");
-        final DownloadResponse downloadResponse = new DownloadResponse(new TestHttpResponseWithHeaders(200, ""));
-        nativeResponse = new NativeResponse(context, downloadResponse, "adunit_id", nativeAd, null);
+
+        nativeResponse = new NativeResponse(context,
+                IMPRESSION_URL, CLICK_URL, AD_UNIT_ID, nativeAd, null);
 
         viewBinder = new ViewBinder.Builder(relativeLayout.getId())
                 .callToActionId(callToActionView.getId())
@@ -259,16 +289,14 @@ public class NativeViewHolderTest {
     @Test
     public void updateExtras_shouldAddValuesToViews() throws Exception {
         // Setup for cache state for image gets
-        CacheService.initialize(context);
-        CacheService.putToBitmapCache("extrasimageurl", extrasImage);
-        CacheService.putToBitmapCache("extrasimageurl2", extrasImage2);
 
         BaseForwardingNativeAd nativeAd = new BaseForwardingNativeAd() {};
         nativeAd.addExtra("extrastext", "extrastexttext");
         nativeAd.addExtra("extrasimage", "extrasimageurl");
         nativeAd.addExtra("extrasimage2", "extrasimageurl2");
-        final DownloadResponse downloadResponse = new DownloadResponse(new TestHttpResponseWithHeaders(200, ""));
-        nativeResponse = new NativeResponse(context, downloadResponse, "adunit_id", nativeAd, null);
+
+        nativeResponse = new NativeResponse(context,
+                IMPRESSION_URL, CLICK_URL, AD_UNIT_ID, nativeAd, null);
 
         viewBinder = new ViewBinder.Builder(relativeLayout.getId())
                 .addExtra("extrastext", extrasTextView.getId())
@@ -282,10 +310,16 @@ public class NativeViewHolderTest {
         nativeViewHolder.updateExtras(relativeLayout, nativeResponse, viewBinder);
 
         assertThat(extrasTextView.getText()).isEqualTo("extrastexttext");
-        assertThat(shadowOf(ImageViewServiceTest.getBitmapFromImageView(extrasImageView))
-                .getCreatedFromBytes()).isEqualTo("extrasimagedata".getBytes());
-        assertThat(shadowOf(ImageViewServiceTest.getBitmapFromImageView(extrasImageView2))
-                .getCreatedFromBytes()).isEqualTo("extrasimagedata2".getBytes());
+
+        verify(mockImageLoader).get(eq("extrasimageurl"), mainImageCaptor.capture());
+        verify(mockImageLoader).get(eq("extrasimageurl2"), iconImageCaptor.capture());
+
+        stub(mockImageContainer.getBitmap()).toReturn(mockBitmap);
+        mainImageCaptor.getValue().onResponse(mockImageContainer, true);
+        iconImageCaptor.getValue().onResponse(mockImageContainer, true);
+
+        assertThat(((BitmapDrawable) extrasImageView.getDrawable()).getBitmap()).isEqualTo(mockBitmap);
+        assertThat(((BitmapDrawable) extrasImageView2.getDrawable()).getBitmap()).isEqualTo(mockBitmap);
     }
 
     @Test
@@ -294,8 +328,8 @@ public class NativeViewHolderTest {
         extrasImageView.setImageBitmap(BitmapFactory.decodeByteArray("previousextrasimagedata".getBytes(), 0, "previousextrasimagedata".getBytes().length));
         extrasImageView2.setImageBitmap(BitmapFactory.decodeByteArray("previousextrasimagedata2".getBytes(), 0, "previousextrasimagedata2".getBytes().length));
 
-        final DownloadResponse downloadResponse = new DownloadResponse(new TestHttpResponseWithHeaders(200, ""));
-        nativeResponse = new NativeResponse(context, downloadResponse, "adunit_id", new BaseForwardingNativeAd(){}, null);
+        nativeResponse = new NativeResponse(context,
+                IMPRESSION_URL, CLICK_URL, AD_UNIT_ID, new BaseForwardingNativeAd(){}, null);
 
         viewBinder = new ViewBinder.Builder(relativeLayout.getId())
                 .addExtra("extrastext", extrasTextView.getId())
@@ -307,10 +341,6 @@ public class NativeViewHolderTest {
                 NativeViewHolder.fromViewBinder(relativeLayout, viewBinder);
 
         assertThat(extrasTextView.getText()).isEqualTo("previousextrastext");
-        assertThat(shadowOf(ImageViewServiceTest.getBitmapFromImageView(extrasImageView))
-                .getCreatedFromBytes()).isEqualTo("previousextrasimagedata".getBytes());
-        assertThat(shadowOf(ImageViewServiceTest.getBitmapFromImageView(extrasImageView2))
-                .getCreatedFromBytes()).isEqualTo("previousextrasimagedata2".getBytes());
 
         nativeViewHolder.updateExtras(relativeLayout, nativeResponse, viewBinder);
 
@@ -325,8 +355,8 @@ public class NativeViewHolderTest {
         nativeAd.addExtra("extrastext", "extrastexttext");
         nativeAd.addExtra("extrasimage", "extrasimageurl");
 
-        final DownloadResponse downloadResponse = new DownloadResponse(new TestHttpResponseWithHeaders(200, ""));
-        nativeResponse = new NativeResponse(context, downloadResponse, "adunit_id", nativeAd, null);
+        nativeResponse = new NativeResponse(context,
+                IMPRESSION_URL, CLICK_URL, AD_UNIT_ID, nativeAd, null);
 
         viewBinder = new ViewBinder.Builder(relativeLayout.getId())
                 .addExtra("extrastext", extrasImageView.getId())
@@ -341,6 +371,7 @@ public class NativeViewHolderTest {
 
         nativeViewHolder.updateExtras(relativeLayout, nativeResponse, viewBinder);
 
+        // Volley's imageloader will set this to a bitmapdrawable with no bitmap
         assertThat(extrasTextView.getText()).isEqualTo("extrasimageurl");
         assertThat(extrasImageView.getDrawable()).isNull();
     }

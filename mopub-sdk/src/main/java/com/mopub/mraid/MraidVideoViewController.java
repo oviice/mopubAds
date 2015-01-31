@@ -28,8 +28,9 @@ public class MraidVideoViewController extends BaseVideoViewController {
     private int mButtonPadding;
     private int mButtonSize;
 
-    public MraidVideoViewController(final Context context, final Bundle bundle, final long broadcastIdentifier, final BaseVideoViewControllerListener baseVideoViewControllerListener) {
-        super(context, broadcastIdentifier, baseVideoViewControllerListener);
+    public MraidVideoViewController(final Context context, final Bundle bundle, final BaseVideoViewControllerListener baseVideoViewControllerListener) {
+        // No broadcast identifiers are used by MraidVideoViews.
+        super(context, null, baseVideoViewControllerListener);
 
         mVideoView = new VideoView(context);
         mVideoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {

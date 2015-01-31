@@ -34,6 +34,12 @@
             <version>19.1.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.mopub.volley</groupId>
+            <artifactId>volley</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
         <!--test-->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>

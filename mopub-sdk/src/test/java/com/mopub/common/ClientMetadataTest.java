@@ -67,6 +67,6 @@ public class ClientMetadataTest {
         assertThat(clientMetadata.getIsoCountryCode()).isEqualTo("1");
 
         // Other cached data.
-        assertThat(clientMetadata.getAdvertisingId()).isNotNull().isNotEmpty();
+        assertThat(clientMetadata.getDeviceId()).isNotNull().isNotEmpty();
     }
 }

@@ -28,22 +28,19 @@ import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLocalBroadcastManager;
 
-import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
-import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_SHOW;
+import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.getHtmlInterstitialIntentFilter;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiverTest.getIntentForActionAndIdentifier;
+import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.stub;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.withSettings;
 import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(SdkTestRunner.class)
@@ -55,7 +52,6 @@ public class MraidActivityTest {
     @Mock MraidController mraidController;
     @Mock CustomEventInterstitial.CustomEventInterstitialListener
             customEventInterstitialListener;
-    @Mock AdConfiguration adConfiguration;
     @Mock BroadcastReceiver broadcastReceiver;
 
     long testBroadcastIdentifier = 2222;
@@ -320,9 +316,7 @@ public class MraidActivityTest {
         mraidActivityIntent.setComponent(new ComponentName("", ""));
         mraidActivityIntent.putExtra(HTML_RESPONSE_BODY_KEY, expectedSource);
 
-        adConfiguration = mock(AdConfiguration.class, withSettings().serializable());
-        stub(adConfiguration.getBroadcastIdentifier()).toReturn(testBroadcastIdentifier);
-        mraidActivityIntent.putExtra(AD_CONFIGURATION_KEY, adConfiguration);
+        mraidActivityIntent.putExtra(BROADCAST_IDENTIFIER_KEY, testBroadcastIdentifier);
 
         return mraidActivityIntent;
     }

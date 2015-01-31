@@ -21,9 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_DATA;
-import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_HTML_DATA;
-import static com.mopub.common.util.ResponseHeader.CUSTOM_EVENT_NAME;
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
@@ -176,21 +173,18 @@ public class MoPubViewTest {
 
     @Test
     public void loadCustomEvent_shouldInitializeCustomEventBannerAdapter() throws Exception {
-        paramsMap.put(CUSTOM_EVENT_NAME.getKey(), "name");
-        paramsMap.put(CUSTOM_EVENT_DATA.getKey(), "data");
-        paramsMap.put(CUSTOM_EVENT_HTML_DATA.getKey(), "html");
-        subject.loadCustomEvent(paramsMap);
+        subject.loadCustomEvent("name", paramsMap);
 
         assertThat(TestCustomEventBannerAdapterFactory.getLatestMoPubView()).isEqualTo(subject);
         assertThat(TestCustomEventBannerAdapterFactory.getLatestClassName()).isEqualTo("name");
-        assertThat(TestCustomEventBannerAdapterFactory.getLatestClassData()).isEqualTo("data");
+        assertThat(TestCustomEventBannerAdapterFactory.getLatestClassData()).isEqualTo(paramsMap);
 
         verify(customEventBannerAdapter).loadAd();
     }
 
     @Test
     public void loadCustomEvent_whenParamsMapIsNull_shouldCallLoadFailUrl() throws Exception {
-        subject.loadCustomEvent(null);
+        subject.loadCustomEvent(null, null);
 
         verify(adViewController).loadFailUrl(eq(ADAPTER_NOT_FOUND));
         verify(customEventBannerAdapter, never()).invalidate();

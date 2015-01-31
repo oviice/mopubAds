@@ -3,18 +3,22 @@ package com.mopub.mobileads;
 import android.content.Context;
 import android.location.Location;
 
+import com.mopub.common.AdReport;
+import com.mopub.common.DataKeys;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.factories.CustomEventInterstitialFactory;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.Robolectric;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
@@ -32,27 +36,35 @@ import static org.mockito.Mockito.verify;
 
 @RunWith(SdkTestRunner.class)
 public class CustomEventInterstitialAdapterTest {
+    private static long BROADCAST_IDENTIFER = 123;
     private CustomEventInterstitialAdapter subject;
-    private MoPubInterstitial moPubInterstitial;
+    @Mock
+    private MoPubInterstitial mockMoPubInterstitial;
     private CustomEventInterstitial interstitial;
     private Map<String, Object> expectedLocalExtras;
     private HashMap<String, String> expectedServerExtras;
-    private AdViewController adViewController;
+    @Mock
+    private AdViewController mockAdViewController;
+    @Mock
+    private AdReport mockAdReport;
     private MoPubInterstitial.MoPubInterstitialView moPubInterstitialView;
     private static final String CLASS_NAME = "arbitrary_interstitial_adapter_class_name";
-    private static final String JSON_PARAMS = "{\"key\":\"value\",\"a different key\":\"a different value\"}";
+    private Map<String, String> serverExtras;
     private CustomEventInterstitialAdapter.CustomEventInterstitialAdapterListener interstitialAdapterListener;
 
     @Before
     public void setUp() throws Exception {
-        moPubInterstitial = mock(MoPubInterstitial.class);
-        stub(moPubInterstitial.getAdTimeoutDelay()).toReturn(null);
-        moPubInterstitialView = mock(MoPubInterstitial.MoPubInterstitialView.class);
-        adViewController = mock(AdViewController.class);
-        stub(moPubInterstitialView.getAdViewController()).toReturn(adViewController);
-        stub(moPubInterstitial.getMoPubInterstitialView()).toReturn(moPubInterstitialView);
 
-        subject = new CustomEventInterstitialAdapter(moPubInterstitial, CLASS_NAME, JSON_PARAMS);
+        stub(mockMoPubInterstitial.getAdTimeoutDelay()).toReturn(null);
+        moPubInterstitialView = mock(MoPubInterstitial.MoPubInterstitialView.class);
+        stub(moPubInterstitialView.getAdViewController()).toReturn(mockAdViewController);
+        stub(mockAdViewController.getAdReport()).toReturn(mockAdReport);
+        stub(mockMoPubInterstitial.getMoPubInterstitialView()).toReturn(moPubInterstitialView);
+
+        serverExtras = new HashMap<String, String>();
+        serverExtras.put("key", "value");
+
+        subject = new CustomEventInterstitialAdapter(mockMoPubInterstitial, CLASS_NAME, serverExtras, BROADCAST_IDENTIFER, mockAdViewController.getAdReport());
 
         expectedLocalExtras = new HashMap<String, Object>();
         expectedServerExtras = new HashMap<String, String>();
@@ -68,8 +80,8 @@ public class CustomEventInterstitialAdapterTest {
         // Remove testing mock and use the real thing
         CustomEventInterstitialFactory.setInstance(new CustomEventInterstitialFactory());
 
-        new CustomEventInterstitialAdapter(moPubInterstitial, "bad_class_name_11i234jb", null);
-        verify(moPubInterstitial).onCustomEventInterstitialFailed(ADAPTER_NOT_FOUND);
+        new CustomEventInterstitialAdapter(mockMoPubInterstitial, "bad_class_name_11i234jb", new TreeMap<String, String>(), BROADCAST_IDENTIFER, mockAdViewController.getAdReport());
+        verify(mockMoPubInterstitial).onCustomEventInterstitialFailed(ADAPTER_NOT_FOUND);
     }
 
     @Test
@@ -86,7 +98,7 @@ public class CustomEventInterstitialAdapterTest {
 
     @Test
     public void timeout_withNegativeAdTimeoutDelay_shouldSignalFailureAndInvalidateWithDefaultDelay() throws Exception {
-        stub(moPubInterstitial.getAdTimeoutDelay()).toReturn(-1);
+        stub(mockMoPubInterstitial.getAdTimeoutDelay()).toReturn(-1);
 
         subject.loadInterstitial();
         Robolectric.idleMainLooper(CustomEventInterstitialAdapter.DEFAULT_INTERSTITIAL_TIMEOUT_DELAY - 1);
@@ -100,7 +112,7 @@ public class CustomEventInterstitialAdapterTest {
 
     @Test
     public void timeout_withNonNullAdTimeoutDelay_shouldSignalFailureAndInvalidateWithCustomDelay() throws Exception {
-        stub(moPubInterstitial.getAdTimeoutDelay()).toReturn(77);
+        stub(mockMoPubInterstitial.getAdTimeoutDelay()).toReturn(77);
 
         subject.loadInterstitial();
         Robolectric.idleMainLooper(77000 - 1);
@@ -113,30 +125,17 @@ public class CustomEventInterstitialAdapterTest {
     }
 
     @Test
-    public void loadInterstitial_shouldHaveEmptyServerExtrasOnInvalidJsonParams() throws Exception {
-        subject = new CustomEventInterstitialAdapter(moPubInterstitial, CLASS_NAME, "{this is terrible JSON");
-        subject.loadInterstitial();
-        expectedLocalExtras.put("Ad-Configuration", null);
-
-        verify(interstitial).loadInterstitial(
-                any(Context.class),
-                eq(subject),
-                eq(expectedLocalExtras),
-                eq(expectedServerExtras)
-        );
-    }
-
-    @Test
     public void loadInterstitial_shouldPropagateLocationInLocalExtras() throws Exception {
         Location expectedLocation = new Location("");
         expectedLocation.setLongitude(10.0);
         expectedLocation.setLongitude(20.1);
-        stub(moPubInterstitial.getLocation()).toReturn(expectedLocation);
-        subject = new CustomEventInterstitialAdapter(moPubInterstitial, CLASS_NAME, null);
+        stub(mockMoPubInterstitial.getLocation()).toReturn(expectedLocation);
+        subject = new CustomEventInterstitialAdapter(mockMoPubInterstitial, CLASS_NAME, new HashMap<String, String>(), BROADCAST_IDENTIFER, mockAdViewController.getAdReport());
         subject.loadInterstitial();
 
-        expectedLocalExtras.put("Ad-Configuration", null);
-        expectedLocalExtras.put("location", moPubInterstitial.getLocation());
+        expectedLocalExtras.put("broadcastIdentifier", BROADCAST_IDENTIFER);
+        expectedLocalExtras.put(DataKeys.AD_REPORT_KEY, mockAdReport);
+        expectedLocalExtras.put("location", mockMoPubInterstitial.getLocation());
 
         verify(interstitial).loadInterstitial(
                 any(Context.class),
@@ -147,11 +146,11 @@ public class CustomEventInterstitialAdapterTest {
     }
 
     @Test
-    public void loadInterstitial_shouldPropagateJsonParamsInServerExtras() throws Exception {
+    public void loadInterstitial_shouldPropagateServerExtrasToInterstitial() throws Exception {
         subject.loadInterstitial();
-        expectedLocalExtras.put("Ad-Configuration", null);
+        expectedLocalExtras.put("broadcastIdentifier", BROADCAST_IDENTIFER);
+        expectedLocalExtras.put(DataKeys.AD_REPORT_KEY, mockAdReport);
         expectedServerExtras.put("key", "value");
-        expectedServerExtras.put("a different key", "a different value");
 
         verify(interstitial).loadInterstitial(
                 any(Context.class),

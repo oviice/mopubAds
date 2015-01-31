@@ -9,15 +9,15 @@ import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.util.vast.VastVideoConfiguration;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
-import static com.mopub.mobileads.AdFetcher.AD_CONFIGURATION_KEY;
+import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
 import static com.mopub.mobileads.VastVideoViewController.VAST_VIDEO_CONFIGURATION;
 
 public class BaseVideoPlayerActivity extends Activity {
     static final String VIDEO_CLASS_EXTRAS_KEY = "video_view_class_name";
     public static final String VIDEO_URL = "video_url";
 
-    public static void startMraid(final Context context, final String videoUrl, final AdConfiguration adConfiguration) {
-        final Intent intentVideoPlayerActivity = createIntentMraid(context, videoUrl, adConfiguration);
+    public static void startMraid(final Context context, final String videoUrl) {
+        final Intent intentVideoPlayerActivity = createIntentMraid(context, videoUrl);
         try {
             context.startActivity(intentVideoPlayerActivity);
         } catch (ActivityNotFoundException e) {
@@ -26,20 +26,18 @@ public class BaseVideoPlayerActivity extends Activity {
     }
 
     static Intent createIntentMraid(final Context context,
-            final String videoUrl,
-            final AdConfiguration adConfiguration) {
+            final String videoUrl) {
         final Intent intentVideoPlayerActivity = new Intent(context, MraidVideoPlayerActivity.class);
         intentVideoPlayerActivity.setFlags(FLAG_ACTIVITY_NEW_TASK);
         intentVideoPlayerActivity.putExtra(VIDEO_CLASS_EXTRAS_KEY, "mraid");
         intentVideoPlayerActivity.putExtra(VIDEO_URL, videoUrl);
-        intentVideoPlayerActivity.putExtra(AD_CONFIGURATION_KEY, adConfiguration);
         return intentVideoPlayerActivity;
     }
 
     static void startVast(final Context context,
             final VastVideoConfiguration vastVideoConfiguration,
-            final AdConfiguration adConfiguration) {
-        final Intent intentVideoPlayerActivity = createIntentVast(context, vastVideoConfiguration, adConfiguration);
+            final long broadcastIdentifier) {
+        final Intent intentVideoPlayerActivity = createIntentVast(context, vastVideoConfiguration, broadcastIdentifier);
         try {
             context.startActivity(intentVideoPlayerActivity);
         } catch (ActivityNotFoundException e) {
@@ -49,12 +47,12 @@ public class BaseVideoPlayerActivity extends Activity {
 
     static Intent createIntentVast(final Context context,
             final VastVideoConfiguration vastVideoConfiguration,
-            final AdConfiguration adConfiguration) {
+            final long broadcastIdentifier) {
         final Intent intentVideoPlayerActivity = new Intent(context, MraidVideoPlayerActivity.class);
         intentVideoPlayerActivity.setFlags(FLAG_ACTIVITY_NEW_TASK);
         intentVideoPlayerActivity.putExtra(VIDEO_CLASS_EXTRAS_KEY, "vast");
         intentVideoPlayerActivity.putExtra(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
-        intentVideoPlayerActivity.putExtra(AD_CONFIGURATION_KEY, adConfiguration);
+        intentVideoPlayerActivity.putExtra(BROADCAST_IDENTIFIER_KEY, broadcastIdentifier);
         return intentVideoPlayerActivity;
     }
 }

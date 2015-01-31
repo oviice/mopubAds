@@ -79,7 +79,7 @@ public class VastXmlManagerAggregator extends AsyncTask<String, Void, List<VastX
         if (redirectUrl != null && mTimesFollowedVastRedirect < MAX_TIMES_TO_FOLLOW_VAST_REDIRECT) {
             mTimesFollowedVastRedirect++;
 
-            final HttpGet httpget = new HttpGet(redirectUrl);
+            final HttpGet httpget = HttpClient.initializeHttpGet(redirectUrl);
             final HttpResponse response = httpClient.execute(httpget);
             final HttpEntity entity = response.getEntity();
             return (entity != null) ? Strings.fromStream(entity.getContent()) : null;

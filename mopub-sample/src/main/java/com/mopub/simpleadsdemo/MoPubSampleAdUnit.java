@@ -1,6 +1,7 @@
 package com.mopub.simpleadsdemo;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 
 import java.util.Comparator;
@@ -158,7 +159,7 @@ class MoPubSampleAdUnit implements Comparable<MoPubSampleAdUnit> {
     }
 
     @Override
-    public int compareTo(MoPubSampleAdUnit that) {
+    public int compareTo(@NonNull MoPubSampleAdUnit that) {
         if (mAdType != that.mAdType) {
             return mAdType.ordinal() - that.mAdType.ordinal();
         }

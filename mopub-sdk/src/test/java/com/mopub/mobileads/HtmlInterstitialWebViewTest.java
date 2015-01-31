@@ -4,11 +4,13 @@ import android.app.Activity;
 import android.os.Build.VERSION_CODES;
 import android.webkit.WebViewClient;
 
+import com.mopub.common.AdReport;
 import com.mopub.common.test.support.SdkTestRunner;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
 
@@ -29,17 +31,17 @@ import static org.robolectric.Robolectric.shadowOf;
 @RunWith(SdkTestRunner.class)
 public class HtmlInterstitialWebViewTest {
 
+    @Mock AdReport mockAdReport;
     private HtmlInterstitialWebView subject;
     private CustomEventInterstitialListener customEventInterstitialListener;
     private String clickthroughUrl;
     private boolean isScrollable;
     private String redirectUrl;
-    private AdConfiguration adConfiguration;
 
     @Before
     public void setUp() throws Exception {
-        adConfiguration = mock(AdConfiguration.class);
-        subject = new HtmlInterstitialWebView(new Activity(), adConfiguration);
+        subject = new HtmlInterstitialWebView(Robolectric.buildActivity(Activity.class).create().get(),
+                mockAdReport);
         customEventInterstitialListener = mock(CustomEventInterstitialListener.class);
         isScrollable = false;
         clickthroughUrl = "clickthroughUrl";

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
 
+import com.mopub.common.DataKeys;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.factories.CustomEventInterstitialAdapterFactory;
 
@@ -15,10 +16,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.shadows.ShadowLocalBroadcastManager;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
-import static com.mopub.mobileads.AdFetcher.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
@@ -60,11 +62,14 @@ public class EventForwardingBroadcastReceiverTest {
         final InterstitialAdListener listenerB = mock(InterstitialAdListener.class);
         interstitialB.setInterstitialAdListener(listenerB);
 
+        Map<String, String> serverExtras = new HashMap<String, String>();
+        serverExtras.put(DataKeys.HTML_RESPONSE_BODY_KEY, "response");
         final CustomEventInterstitialAdapter customEventInterstitialAdapter =
                 CustomEventInterstitialAdapterFactory.create(
                         interstitialA,
                         "com.mopub.mobileads.HtmlInterstitial",
-                        "{" + HTML_RESPONSE_BODY_KEY + ":response}");
+                        serverExtras, broadcastIdentifier, null);
+
 
         customEventInterstitialAdapter.loadInterstitial();
         verify(listenerA).onInterstitialLoaded(interstitialA);
