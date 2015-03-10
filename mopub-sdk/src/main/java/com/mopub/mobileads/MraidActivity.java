@@ -166,7 +166,7 @@ public class MraidActivity extends BaseInterstitialActivity {
     @Override
     protected void onPause() {
         if (mMraidController != null) {
-            mMraidController.pause();
+            mMraidController.pause(isFinishing());
         }
         super.onPause();
     }

@@ -35,7 +35,7 @@ public class AdRequestTest {
 
     @Before
     public void setup() {
-        subject = new AdRequest("testUrl", AdFormat.NATIVE, mockListener);
+        subject = new AdRequest("testUrl", AdFormat.NATIVE, "testAdUnitId", mockListener);
         defaultHeaders = new HashMap<String, String>();
         defaultHeaders.put(ResponseHeader.SCROLLABLE.getKey(), "0");
         defaultHeaders.put(ResponseHeader.REDIRECT_URL.getKey(), "redirect");
@@ -124,7 +124,7 @@ public class AdRequestTest {
         NetworkResponse badNativeNetworkResponse = new NetworkResponse(200,
                 "{[abc}".getBytes(Charset.defaultCharset()),
                 defaultHeaders, false);
-        subject = new AdRequest("testUrl", AdFormat.NATIVE, mockListener);
+        subject = new AdRequest("testUrl", AdFormat.NATIVE, "testAdUnitId", mockListener);
 
         final Response<AdResponse> response = subject.parseNetworkResponse(badNativeNetworkResponse);
 

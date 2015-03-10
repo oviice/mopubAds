@@ -119,4 +119,22 @@ public class AdLoaderTest {
         verifyNoMoreInteractions(adViewController);
         verifyZeroInteractions(moPubView);
     }
+
+    @Test
+    public void load_withNullMoPubView_shouldDoNothing() throws Exception {
+        when(adViewController.getMoPubView()).thenReturn(null);
+
+        adResponse = adResponse.toBuilder()
+                .setAdType("custom")
+                .setCustomEventClassName("custom event name")
+                .setServerExtras(serverExtras)
+                .build();
+
+        AdLoader.CustomEventAdLoader customEventTask = (AdLoader.CustomEventAdLoader) AdLoader.fromAdResponse(adResponse, adViewController);
+
+        customEventTask.load();
+
+        verify(adViewController).getMoPubView();
+        verifyZeroInteractions(moPubView);
+    }
 }

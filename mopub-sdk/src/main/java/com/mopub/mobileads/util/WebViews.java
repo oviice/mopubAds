@@ -29,7 +29,17 @@ public class WebViews {
     }
 
     @TargetApi(VERSION_CODES.HONEYCOMB)
-    public static void onPause(@NonNull WebView webView) {
+    public static void onPause(@NonNull WebView webView, boolean isFinishing) {
+        // XXX
+        // We need to call WebView#stopLoading and WebView#loadUrl here due to an Android
+        // bug where the audio of an HTML5 video will continue to play after the activity has been
+        // destroyed. The web view must stop then load an invalid url during the onPause lifecycle
+        // event in order to stop the audio.
+        if (isFinishing) {
+            webView.stopLoading();
+            webView.loadUrl("");
+        }
+
         if (VERSION.SDK_INT >= VERSION_CODES.HONEYCOMB) {
             webView.onPause();
             return;

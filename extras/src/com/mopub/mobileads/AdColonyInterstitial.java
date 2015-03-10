@@ -50,7 +50,7 @@ public class AdColonyInterstitial extends CustomEventInterstitial implements AdC
     private boolean mIsLoading;
 
     public AdColonyInterstitial() {
-        mScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(10);
+        mScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
         mHandler = new Handler();
     }
 
@@ -60,7 +60,7 @@ public class AdColonyInterstitial extends CustomEventInterstitial implements AdC
                                     Map<String, Object> localExtras,
                                     Map<String, String> serverExtras) {
         if (!(context instanceof Activity)) {
-            customEventInterstitialListener.onInterstitialFailed(ADAPTER_CONFIGURATION_ERROR);
+            customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
             return;
         }
 

@@ -15,8 +15,6 @@ import static com.google.android.gms.ads.AdSize.BANNER;
 import static com.google.android.gms.ads.AdSize.FULL_BANNER;
 import static com.google.android.gms.ads.AdSize.LEADERBOARD;
 import static com.google.android.gms.ads.AdSize.MEDIUM_RECTANGLE;
-import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
-import static com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL;
 
 /*
  * Compatible with version 5.0.89 of the Google Play Services SDK.
@@ -52,7 +50,7 @@ class GooglePlayServicesBanner extends CustomEventBanner {
             adWidth = Integer.parseInt(serverExtras.get(AD_WIDTH_KEY));
             adHeight = Integer.parseInt(serverExtras.get(AD_HEIGHT_KEY));
         } else {
-            mBannerListener.onBannerFailed(ADAPTER_CONFIGURATION_ERROR);
+            mBannerListener.onBannerFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
             return;
         }
 
@@ -62,7 +60,7 @@ class GooglePlayServicesBanner extends CustomEventBanner {
 
         final AdSize adSize = calculateAdSize(adWidth, adHeight);
         if (adSize == null) {
-            mBannerListener.onBannerFailed(ADAPTER_CONFIGURATION_ERROR);
+            mBannerListener.onBannerFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
             return;
         }
 
@@ -74,7 +72,7 @@ class GooglePlayServicesBanner extends CustomEventBanner {
             mGoogleAdView.loadAd(adRequest);
         } catch (NoClassDefFoundError e) {
             // This can be thrown by Play Services on Honeycomb.
-            mBannerListener.onBannerFailed(NETWORK_NO_FILL);
+            mBannerListener.onBannerFailed(MoPubErrorCode.NETWORK_NO_FILL);
         }
     }
 
@@ -126,7 +124,7 @@ class GooglePlayServicesBanner extends CustomEventBanner {
         public void onAdFailedToLoad(int errorCode) {
             Log.d("MoPub", "Google Play Services banner ad failed to load.");
             if (mBannerListener != null) {
-                mBannerListener.onBannerFailed(NETWORK_NO_FILL);
+                mBannerListener.onBannerFailed(MoPubErrorCode.NETWORK_NO_FILL);
             }
         }
 

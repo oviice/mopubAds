@@ -211,7 +211,7 @@ public class MoPubNative {
             return;
         }
 
-        mNativeRequest = new AdRequest(endpointUrl, AdFormat.NATIVE, mVolleyListener);
+        mNativeRequest = new AdRequest(endpointUrl, AdFormat.NATIVE, mAdUnitId, mVolleyListener);
         RequestQueue requestQueue = Networking.getRequestQueue(context);
         requestQueue.add(mNativeRequest);
     }

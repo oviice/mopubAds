@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.mopub.common.AdReport;
+import com.mopub.common.Constants;
 import com.mopub.common.Preconditions;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
@@ -21,7 +22,7 @@ import static com.mopub.mobileads.MoPubErrorCode.NETWORK_TIMEOUT;
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
 
 public class CustomEventInterstitialAdapter implements CustomEventInterstitialListener {
-    public static final int DEFAULT_INTERSTITIAL_TIMEOUT_DELAY = 30000;
+    public static final int DEFAULT_INTERSTITIAL_TIMEOUT_DELAY = Constants.THIRTY_SECONDS_MILLIS;
 
     private final MoPubInterstitial mMoPubInterstitial;
     private boolean mInvalidated;

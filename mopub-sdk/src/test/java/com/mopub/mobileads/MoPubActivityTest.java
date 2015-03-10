@@ -32,7 +32,6 @@ import static com.mopub.common.DataKeys.CLICKTHROUGH_URL_KEY;
 import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.common.DataKeys.REDIRECT_URL_KEY;
 import static com.mopub.common.DataKeys.SCROLLABLE_KEY;
-import static com.mopub.mobileads.HtmlInterstitialWebView.MoPubUriJavascriptFireFinishLoadListener;
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -83,7 +82,6 @@ public class MoPubActivityTest {
         MoPubActivity.preRenderHtml(subject, mockAdReport, customEventInterstitialListener, htmlData);
 
         verify(htmlInterstitialWebView).enablePlugins(eq(false));
-        verify(htmlInterstitialWebView).addMoPubUriJavascriptInterface(any(MoPubUriJavascriptFireFinishLoadListener.class));
         verify(htmlInterstitialWebView).loadHtmlResponse(htmlData);
     }
 
@@ -113,19 +111,6 @@ public class MoPubActivityTest {
 
         verify(customEventInterstitialListener, never()).onInterstitialLoaded();
         verify(customEventInterstitialListener).onInterstitialFailed(any(MoPubErrorCode.class));
-    }
-
-    @Test
-    public void preRenderHtml_shouldHaveAMoPubUriInterfaceThatForwardsOnInterstitialLoaded() throws Exception {
-        MoPubActivity.preRenderHtml(subject, mockAdReport, customEventInterstitialListener, null);
-
-        ArgumentCaptor<MoPubUriJavascriptFireFinishLoadListener> moPubUriJavascriptFireFinishLoadListenerCaptor = ArgumentCaptor.forClass(MoPubUriJavascriptFireFinishLoadListener.class);
-        verify(htmlInterstitialWebView).addMoPubUriJavascriptInterface(moPubUriJavascriptFireFinishLoadListenerCaptor.capture());
-        MoPubUriJavascriptFireFinishLoadListener moPubUriJavascriptFireFinishLoadListener = moPubUriJavascriptFireFinishLoadListenerCaptor.getValue();
-
-        moPubUriJavascriptFireFinishLoadListener.onInterstitialLoaded();
-
-        verify(customEventInterstitialListener).onInterstitialLoaded();
     }
 
     @Test

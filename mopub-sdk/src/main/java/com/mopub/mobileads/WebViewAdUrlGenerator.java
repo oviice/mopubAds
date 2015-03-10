@@ -56,8 +56,6 @@ public class WebViewAdUrlGenerator extends AdUrlGenerator {
 
         setExternalStoragePermission(mIsStorePictureSupported);
 
-        setTwitterAppInstalledFlag();
-
         appendAdvertisingInfoTemplates();
 
         return getFinalUrlString();

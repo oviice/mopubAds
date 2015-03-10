@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.view.View;
 
 import com.mopub.common.AdReport;
+import com.mopub.common.Constants;
 import com.mopub.common.Preconditions;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;
@@ -22,7 +23,7 @@ import static com.mopub.mobileads.MoPubErrorCode.NETWORK_TIMEOUT;
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
 
 public class CustomEventBannerAdapter implements CustomEventBannerListener {
-    public static final int DEFAULT_BANNER_TIMEOUT_DELAY = 10000;
+    public static final int DEFAULT_BANNER_TIMEOUT_DELAY = Constants.TEN_SECONDS_MILLIS;
     private boolean mInvalidated;
     private MoPubView mMoPubView;
     private Context mContext;

@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Intents;
 import com.mopub.mraid.MraidVideoViewController;

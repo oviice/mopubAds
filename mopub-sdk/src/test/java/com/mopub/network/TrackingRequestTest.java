@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.common.util.test.support.CommonUtils;
 import com.mopub.volley.RequestQueue;
 
 import org.junit.Before;
@@ -45,7 +44,6 @@ public class TrackingRequestTest {
         TrackingRequest.makeTrackingHttpRequest((String) null, context);
 
         verify(mockRequestQueue, never()).add(any(TrackingRequest.class));
-        CommonUtils.assertHttpRequestsMade(null);
     }
 
     @Test
@@ -53,6 +51,5 @@ public class TrackingRequestTest {
         TrackingRequest.makeTrackingHttpRequest(url, null);
 
         verify(mockRequestQueue, never()).add(any(TrackingRequest.class));
-        CommonUtils.assertHttpRequestsMade(null);
     }
 }

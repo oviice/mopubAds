@@ -106,9 +106,27 @@ public class MraidBridgeTest {
     }
 
     @Test
-    public void handleShouldOverrideUrl_mopubUrl_shouldNeverLoadUrl_shouldReturnTrue() {
+    public void handleShouldOverrideUrl_mopubNonFailLoadUrl_shouldNeverLoadUrl_shouldReturnTrue() {
         boolean result = subjectBanner.handleShouldOverrideUrl("mopub://special-mopub-command");
 
+        verify(mockBannerWebView, never()).loadUrl(anyString());
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    public void handleShouldOverrideUrl_mopubFailLoadUrl_whenBanner_shouldNotifyListenerOfOnPageFailedToLoad_shouldReturnTrue() {
+        boolean result = subjectBanner.handleShouldOverrideUrl("mopub://failLoad");
+
+        verify(mockBridgeListener).onPageFailedToLoad();
+        verify(mockBannerWebView, never()).loadUrl(anyString());
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    public void handleShouldOverrideUrl_mopubFailLoadUrl_whenInterstitial_shouldNotNotifyListenerOfOnPageFailedToLoad_shouldReturnTrue() {
+        boolean result = subjectInterstitial.handleShouldOverrideUrl("mopub://failLoad");
+
+        verify(mockBridgeListener, never()).onPageFailedToLoad();
         verify(mockBannerWebView, never()).loadUrl(anyString());
         assertThat(result).isTrue();
     }

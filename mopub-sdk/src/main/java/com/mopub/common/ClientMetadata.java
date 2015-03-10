@@ -55,7 +55,6 @@ public class ClientMetadata {
         MOBILE(3);
 
         private final int mId;
-
         private MoPubNetworkType(int id) {
             mId = id;
         }
@@ -80,6 +79,10 @@ public class ClientMetadata {
                 default:
                     return UNKNOWN;
             }
+        }
+
+        public int getId() {
+            return mId;
         }
     }
 

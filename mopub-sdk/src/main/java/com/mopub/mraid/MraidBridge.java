@@ -17,6 +17,7 @@ import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
 import com.mopub.common.AdReport;
 import com.mopub.common.CloseableLayout.ClosePosition;
 import com.mopub.common.VisibleForTesting;
@@ -27,19 +28,23 @@ import com.mopub.mobileads.ViewGestureDetector.UserClickListener;
 import com.mopub.mobileads.resource.MraidJavascript;
 import com.mopub.mraid.MraidBridge.MraidWebView.OnVisibilityChangedListener;
 import com.mopub.mraid.MraidNativeCommandHandler.MraidCommandFailureListener;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.json.JSONObject;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MraidBridge {
     private final AdReport mAdReport;
 
     public interface MraidBridgeListener {
         void onPageLoaded();
+
+        void onPageFailedToLoad();
 
         void onVisibilityChanged(boolean isVisible);
 
@@ -290,13 +295,18 @@ public class MraidBridge {
 
         // Note that scheme will be null when we are passed a relative Uri
         String scheme = uri.getScheme();
+        String host = uri.getHost();
 
         if ("mopub".equals(scheme)) {
+            if ("failLoad".equals(host)) {
+                if (mPlacementType == PlacementType.INLINE && mMraidBridgeListener != null) {
+                    mMraidBridgeListener.onPageFailedToLoad();
+                }
+            }
             return true;
         }
 
         if ("mraid".equals(scheme)) {
-            String host = uri.getHost();
             Map<String, String> params = new HashMap<String, String>();
             for (NameValuePair pair : URLEncodedUtils.parse(uri, "UTF-8")) {
                 params.put(pair.getName(), pair.getValue());

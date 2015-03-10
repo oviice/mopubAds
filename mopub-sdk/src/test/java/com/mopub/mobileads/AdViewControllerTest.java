@@ -7,10 +7,12 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import com.mopub.common.AdFormat;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.Reflection;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
 import com.mopub.mobileads.test.support.ThreadUtils;
+import com.mopub.network.AdRequest;
 import com.mopub.network.AdResponse;
 import com.mopub.network.Networking;
 import com.mopub.volley.Request;
@@ -56,7 +58,7 @@ public class AdViewControllerTest {
         context = Robolectric.buildActivity(Activity.class).create().get();
         shadowOf(context).grantPermissions(android.Manifest.permission.ACCESS_NETWORK_STATE);
 
-
+        when(mockMoPubView.getAdFormat()).thenReturn(AdFormat.BANNER);
         when(mockMoPubView.getContext()).thenReturn(context);
         Networking.setRequestQueueForTesting(mockRequestQueue);
 
@@ -81,6 +83,42 @@ public class AdViewControllerTest {
     @After
     public void tearDown() throws Exception {
         reset(methodBuilder);
+    }
+
+    @Test
+    public void adDidFail_shouldScheduleRefreshTimer_shouldCallMoPubViewAdFailed() throws Exception {
+        Robolectric.pauseMainLooper();
+        assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(0);
+
+        subject.adDidFail(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
+
+        assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(1);
+        verify(mockMoPubView).adFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
+    }
+
+    @Test
+    public void adDidFail_withNullMoPubView_shouldNotScheduleRefreshTimer_shouldNotCallMoPubViewAdFailed() throws Exception {
+        Robolectric.pauseMainLooper();
+        assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(0);
+
+        // This sets the MoPubView to null
+        subject.cleanup();
+        subject.adDidFail(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
+
+        assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(0);
+        verify(mockMoPubView, never()).adFailed(any(MoPubErrorCode.class));
+    }
+
+    @Test
+    public void scheduleRefreshTimer_shouldNotScheduleIfRefreshTimeIsNull() throws Exception {
+        response = response.toBuilder().setRefreshTimeMilliseconds(null).build();
+        subject.onAdLoadSuccess(response);
+        Robolectric.pauseMainLooper();
+        assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(0);
+
+        subject.scheduleRefreshTimerIfEnabled();
+
+        assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(0);
     }
 
     @Test
@@ -239,6 +277,13 @@ public class AdViewControllerTest {
     public void registerClick_NoAdResponse_shouldNotAddToQueue() {
         subject.registerClick();
         verifyZeroInteractions(mockRequestQueue);
+    }
+
+    @Test
+    public void fetchAd_withNullMoPubView_shouldNotMakeRequest() throws Exception {
+        subject.cleanup();
+        subject.fetchAd("adUrl");
+        verify(mockRequestQueue, never()).add(any(AdRequest.class));
     }
 
     @Test

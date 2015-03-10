@@ -28,6 +28,7 @@ import android.webkit.ConsoleMessage;
 import android.webkit.JsResult;
 import android.widget.FrameLayout;
 import android.widget.FrameLayout.LayoutParams;
+
 import com.mopub.common.AdReport;
 import com.mopub.common.CloseableLayout;
 import com.mopub.common.CloseableLayout.ClosePosition;
@@ -178,6 +179,13 @@ public class MraidController {
         }
 
         @Override
+        public void onPageFailedToLoad() {
+            if (mMraidListener != null) {
+                mMraidListener.onFailedToLoad();
+            }
+        }
+
+        @Override
         public void onVisibilityChanged(final boolean isVisible) {
             // The bridge only receives visibility events if there is no 2 part covering it
             if (!mTwoPartBridge.isAttached()) {
@@ -239,6 +247,11 @@ public class MraidController {
         @Override
         public void onPageLoaded() {
             handleTwoPartPageLoad();
+        }
+
+        @Override
+        public void onPageFailedToLoad() {
+            // no-op for two-part expandables. An expandable failing to load should not trigger failover.
         }
 
         @Override
@@ -533,15 +546,15 @@ public class MraidController {
         updateScreenMetricsAsync(null);
     }
 
-    public void pause() {
+    public void pause(boolean isFinishing) {
         mIsPaused = true;
 
         // This causes an inline video to pause if there is one playing
         if (mMraidWebView != null) {
-            WebViews.onPause(mMraidWebView);
+            WebViews.onPause(mMraidWebView, isFinishing);
         }
         if (mTwoPartWebView != null) {
-            WebViews.onPause(mTwoPartWebView);
+            WebViews.onPause(mTwoPartWebView, isFinishing);
         }
     }
 
@@ -570,7 +583,7 @@ public class MraidController {
 
         // Pause the controller to make sure the video gets stopped.
         if (!mIsPaused) {
-            pause();
+            pause(true);
         }
 
         // Remove the closeable ad container from the view hierarchy, if necessary

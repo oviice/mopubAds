@@ -2,6 +2,7 @@ package com.mopub.nativeads;
 
 import android.app.Activity;
 import android.os.Build.VERSION_CODES;
+
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
@@ -10,6 +11,7 @@ import com.mopub.network.Networking;
 import com.mopub.volley.Request;
 import com.mopub.volley.RequestQueue;
 import com.mopub.volley.VolleyError;
+
 import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;

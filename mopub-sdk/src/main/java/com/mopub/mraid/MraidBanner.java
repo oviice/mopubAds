@@ -16,7 +16,6 @@ import com.mopub.mraid.MraidController.MraidListener;
 import java.util.Map;
 
 import static com.mopub.common.DataKeys.AD_REPORT_KEY;
-import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
 import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.mobileads.MoPubErrorCode.MRAID_LOAD_ERROR;
 

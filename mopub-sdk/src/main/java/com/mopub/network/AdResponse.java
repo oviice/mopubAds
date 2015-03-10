@@ -16,6 +16,10 @@ public class AdResponse implements Serializable {
 
     @Nullable
     private final String mAdType;
+
+    @Nullable
+    private final String mAdUnitId;
+
     @Nullable
     private final String mFullAdType;
     @Nullable
@@ -58,6 +62,7 @@ public class AdResponse implements Serializable {
     private AdResponse(@NonNull Builder builder) {
 
         mAdType = builder.adType;
+        mAdUnitId = builder.adUnitId;
         mFullAdType = builder.fullAdType;
         mNetworkType = builder.networkType;
         mRedirectUrl = builder.redirectUrl;
@@ -99,6 +104,11 @@ public class AdResponse implements Serializable {
     @Nullable
     public String getFullAdType() {
         return mFullAdType;
+    }
+
+    @Nullable
+    public String getAdUnitId() {
+        return mAdUnitId;
     }
 
     @Nullable
@@ -191,6 +201,7 @@ public class AdResponse implements Serializable {
 
     public static class Builder {
         private String adType;
+        private String adUnitId;
         private String fullAdType;
         private String networkType;
 
@@ -211,10 +222,15 @@ public class AdResponse implements Serializable {
         private JSONObject jsonBody;
 
         private String customEventClassName;
-        private Map<String, String> serverExtras;
+        private Map<String, String> serverExtras = new TreeMap<String, String>();
 
         public Builder setAdType(@Nullable final String adType) {
             this.adType = adType;
+            return this;
+        }
+
+        public Builder setAdUnitId(@Nullable final String adUnitId) {
+            this.adUnitId = adUnitId;
             return this;
         }
 

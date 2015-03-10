@@ -2,12 +2,13 @@ package com.mopub.mobileads;
 
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.network.AdResponse;
 
 import java.lang.ref.WeakReference;
-import java.util.*;
+import java.util.Map;
 
 abstract class AdLoader {
 
@@ -48,15 +49,19 @@ abstract class AdLoader {
         @Override
         void load() {
             AdViewController adViewController = mWeakAdViewController.get();
-
             if (adViewController == null
                     || adViewController.isDestroyed()
                     || TextUtils.isEmpty(mCustomEventClassName)) {
                 return;
             }
-
             adViewController.setNotLoading();
-            adViewController.getMoPubView().loadCustomEvent(mCustomEventClassName, mServerExtras);
+
+            final MoPubView moPubView = adViewController.getMoPubView();
+            if (moPubView == null) {
+                MoPubLog.d("Can't load an ad in this ad view because it was destroyed.");
+                return;
+            }
+            moPubView.loadCustomEvent(mCustomEventClassName, mServerExtras);
         }
 
         @VisibleForTesting

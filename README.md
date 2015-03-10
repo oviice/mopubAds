@@ -27,19 +27,18 @@ Integration instructions are available on the [wiki](https://github.com/mopub/mo
 
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for details.
 
-  - **Volley networking stack** MoPub for Android now uses Google's Volley library for HTTP requests. You will need to add our bundled Volley JAR (available at `mopub-sdk/libs/mopub-volley-1.0.0.jar`) as a compile-time dependency. See instructions in our [integration page](https://dev.twitter.com/mopub/android/getting-started).
-  - **Updated Vungle Support** Certified the `VungleInterstitial` custom event against Vungle SDK 3.2.2
-  - **VAST Video Bug Fixes**
-    - Fixed inability to parse VAST tags referencing URLs that contain 3rd party macros
-    - VAST videos no longer fire completion trackers upon video playback error
-  - Added support for the `mopubnativebrowser://` click-destination scheme for Native, MRAID, and VAST ads (it was already supported for HTML ads). Links of this type (e.g. `mopubnativebrowser://navigate?url=http%3A%2F%2Fwww.mopub.com`) will open the specified URL in the device's default browser, rather than in MoPub's in-app browser.
+- Dependency changes in Maven and Gradle. No new dependencies have been added, but your build script will need to change slightly to include JCenter. See our [Getting Started Guide](https://github.com/mopub/mopub-android-sdk/wiki/Getting-Started#adding-the-support-libraries-to-your-project) for complete instructions.
+- Security Improvement: removed the @JavascriptInterface annotation for WebViews.
+- Fixed a bug where video playback would sometimes fail to stop when an ad was dismissed.
+- Fixed a bug where it was not possible to disable ad refresh; Fixes [issue #148](https://github.com/mopub/mopub-android-sdk/issues/148)
+- Fixed a null pointer exception in AdViewController; Fixes [issue #150](https://github.com/mopub/mopub-android-sdk/issues/150)
 
 ## Requirements
 
 - Android 2.3.1 (API Version 9) and up
 - android-support-v4.jar
 - android-support-annotations.jar (**New in 3.3.0**)
-- Bundled Volley MoPub JAR (mopub-volley-1.0.0.jar) (**New in 3.4.0**)
+- MoPub Volley Library (mopub-volley-1.0.0.jar - available on JCenter) (**Updated in 3.5.0**)
 - **Recommended** Google Play Services 5.0.89 & up.
 
 ## Upgrading from 3.2.0 and Prior

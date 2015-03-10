@@ -65,6 +65,7 @@ public class MraidControllerTest {
     @Mock private UseCustomCloseListener mockUseCustomCloseListener;
     @Mock private OrientationBroadcastReceiver mockOrientationBroadcastReceiver;
     @Captor private ArgumentCaptor<MraidBridgeListener> bridgeListenerCaptor;
+    @Captor private ArgumentCaptor<MraidBridgeListener> twoPartBridgeListenerCaptor;
 
     private Activity activity;
     private FrameLayout rootView;
@@ -103,6 +104,7 @@ public class MraidControllerTest {
         subject.loadContent("fake_html_data");
 
         verify(mockBridge).setMraidBridgeListener(bridgeListenerCaptor.capture());
+        verify(mockTwoPartBridge).setMraidBridgeListener(twoPartBridgeListenerCaptor.capture());
     }
 
     @Test
@@ -149,6 +151,20 @@ public class MraidControllerTest {
         subject.destroy();
 
         verify(mockScreenMetricsWaiter, times(2)).cancelLastRequest();
+    }
+
+    @Test
+    public void onPageFailedToLoad_shouldNotifyListener() {
+        bridgeListenerCaptor.getValue().onPageFailedToLoad();
+
+        verify(mockMraidListener).onFailedToLoad();
+    }
+
+    @Test
+    public void onPageFailedToLoad_withTwoPartBridge_shouldNotNotifyListener() {
+        twoPartBridgeListenerCaptor.getValue().onPageFailedToLoad();
+
+        verify(mockMraidListener, never()).onFailedToLoad();
     }
 
     @Test

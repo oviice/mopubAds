@@ -10,11 +10,6 @@ import com.facebook.ads.InterstitialAdListener;
 
 import java.util.Map;
 
-import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
-import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
-import static com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL;
-import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
-
 /**
  * Tested with Facebook SDK 3.18.1.
  */
@@ -39,7 +34,7 @@ public class FacebookInterstitial extends CustomEventInterstitial implements Int
         if (extrasAreValid(serverExtras)) {
             placementId = serverExtras.get(PLACEMENT_ID_KEY);
         } else {
-            mInterstitialListener.onInterstitialFailed(ADAPTER_CONFIGURATION_ERROR);
+            mInterstitialListener.onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
             return;
         }
 
@@ -79,11 +74,11 @@ public class FacebookInterstitial extends CustomEventInterstitial implements Int
     public void onError(final Ad ad, final AdError error) {
         Log.d("MoPub", "Facebook interstitial ad failed to load.");
         if (error == AdError.NO_FILL) {
-            mInterstitialListener.onInterstitialFailed(NETWORK_NO_FILL);
+            mInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_NO_FILL);
         } else if (error == AdError.INTERNAL_ERROR) {
-            mInterstitialListener.onInterstitialFailed(NETWORK_INVALID_STATE);
+            mInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_INVALID_STATE);
         } else {
-            mInterstitialListener.onInterstitialFailed(UNSPECIFIED);
+            mInterstitialListener.onInterstitialFailed(MoPubErrorCode.UNSPECIFIED);
         }
     }
 

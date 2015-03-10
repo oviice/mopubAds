@@ -1,5 +1,7 @@
 package com.mopub.common.event;
 
+import android.support.annotation.Nullable;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -7,13 +9,13 @@ import java.io.StringWriter;
  * Immutable data class with error event data.
  */
 public class ErrorEvent extends BaseEvent {
-    private final String mErrorExceptionClassName;
-    private final String mErrorMessage;
-    private final String mErrorStackTrace;
-    private final String mErrorFileName;
-    private final String mErrorClassName;
-    private final String mErrorMethodName;
-    private final Integer mErrorLineNumber;
+    @Nullable private final String mErrorExceptionClassName;
+    @Nullable private final String mErrorMessage;
+    @Nullable private final String mErrorStackTrace;
+    @Nullable private final String mErrorFileName;
+    @Nullable private final String mErrorClassName;
+    @Nullable private final String mErrorMethodName;
+    @Nullable private final Integer mErrorLineNumber;
 
     private ErrorEvent(Builder builder) {
         super(builder);
@@ -69,16 +71,16 @@ public class ErrorEvent extends BaseEvent {
     }
 
     public static class Builder extends BaseEvent.Builder {
-        private String mErrorExceptionClassName;
-        private String mErrorMessage;
-        private String mErrorStackTrace;
-        private String mErrorFileName;
-        private String mErrorClassName;
-        private String mErrorMethodName;
-        private Integer mErrorLineNumber;
+        @Nullable private String mErrorExceptionClassName;
+        @Nullable private String mErrorMessage;
+        @Nullable private String mErrorStackTrace;
+        @Nullable private String mErrorFileName;
+        @Nullable private String mErrorClassName;
+        @Nullable private String mErrorMethodName;
+        @Nullable private Integer mErrorLineNumber;
 
         public Builder(String eventName, String eventCategory) {
-            super(eventName, eventCategory);
+            super(ScribeCategory.EXCHANGE_CLIENT_ERROR, eventName, eventCategory);
         }
 
         public Builder withErrorExceptionClassName(String errorExceptionClassName) {

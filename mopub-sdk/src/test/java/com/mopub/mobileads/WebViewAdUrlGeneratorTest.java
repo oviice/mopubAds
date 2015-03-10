@@ -12,6 +12,7 @@ import android.os.Build;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+
 import com.mopub.common.AdUrlGenerator;
 import com.mopub.common.ClientMetadata;
 import com.mopub.common.GpsHelper;
@@ -24,6 +25,7 @@ import com.mopub.common.util.test.support.TestMethodBuilderFactory;
 import com.mopub.mobileads.test.support.MoPubShadowTelephonyManager;
 import com.mopub.mraid.MraidNativeCommandHandler;
 import com.mopub.network.PlayServicesUrlRewriter;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +47,6 @@ import static android.net.ConnectivityManager.TYPE_MOBILE_MMS;
 import static android.net.ConnectivityManager.TYPE_MOBILE_SUPL;
 import static android.net.ConnectivityManager.TYPE_WIFI;
 import static android.telephony.TelephonyManager.NETWORK_TYPE_UNKNOWN;
-import static com.mopub.common.AdUrlGenerator.TwitterAppInstalledStatus;
 import static com.mopub.common.ClientMetadata.MoPubNetworkType;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -84,7 +85,6 @@ public class WebViewAdUrlGeneratorTest {
 
     @After
     public void tearDown() throws Exception {
-        AdUrlGenerator.setTwitterAppInstalledStatus(TwitterAppInstalledStatus.UNKNOWN);
         reset(methodBuilder);
     }
 
@@ -286,45 +286,6 @@ public class WebViewAdUrlGeneratorTest {
     }
 
     @Test
-    public void generateAdUrl_whenTwitterIsNotInstalled_shouldProcessAndNotSetTwitterInstallStatusOnFirstRequest() throws Exception {
-        AdUrlBuilder urlBuilder = new AdUrlBuilder(expectedUdid);
-
-        WebViewAdUrlGenerator spySubject = Mockito.spy(subject);
-        AdUrlGenerator.setTwitterAppInstalledStatus(TwitterAppInstalledStatus.UNKNOWN);
-        doReturn(TwitterAppInstalledStatus.NOT_INSTALLED).when(spySubject).getTwitterAppInstallStatus();
-
-        String adUrl = spySubject.generateUrlString("ads.mopub.com");
-
-        assertThat(adUrl).isEqualTo(urlBuilder.withTwitterAppInstalledStatus(TwitterAppInstalledStatus.NOT_INSTALLED).build());
-    }
-
-    @Test
-    public void generateAdUrl_whenTwitterIsInstalled_shouldProcessAndSetTwitterInstallStatusOnFirstRequest() throws Exception {
-        AdUrlBuilder urlBuilder = new AdUrlBuilder(expectedUdid);
-
-        WebViewAdUrlGenerator spySubject = Mockito.spy(subject);
-        AdUrlGenerator.setTwitterAppInstalledStatus(TwitterAppInstalledStatus.UNKNOWN);
-        doReturn(TwitterAppInstalledStatus.INSTALLED).when(spySubject).getTwitterAppInstallStatus();
-
-        String adUrl = spySubject.generateUrlString("ads.mopub.com");
-
-        assertThat(adUrl).isEqualTo(urlBuilder.withTwitterAppInstalledStatus(TwitterAppInstalledStatus.INSTALLED).build());
-    }
-
-    @Test
-    public void generateAdUrl_shouldNotProcessTwitterInstallStatusIfStatusIsAlreadySet() throws Exception {
-        AdUrlBuilder urlBuilder = new AdUrlBuilder(expectedUdid);
-
-        WebViewAdUrlGenerator spySubject = Mockito.spy(subject);
-        AdUrlGenerator.setTwitterAppInstalledStatus(TwitterAppInstalledStatus.NOT_INSTALLED);
-        doReturn(TwitterAppInstalledStatus.INSTALLED).when(spySubject).getTwitterAppInstallStatus();
-
-        String adUrl = spySubject.generateUrlString("ads.mopub.com");
-
-        assertThat(adUrl).isEqualTo(urlBuilder.withTwitterAppInstalledStatus(TwitterAppInstalledStatus.NOT_INSTALLED).build());
-    }
-
-    @Test
     public void generateAdUrl_shouldTolerateNullActiveNetwork() throws Exception {
         AdUrlBuilder urlBuilder = new AdUrlBuilder(expectedUdid);
         shadowConnectivityManager.setActiveNetworkInfo(null);
@@ -497,7 +458,6 @@ public class WebViewAdUrlGeneratorTest {
         private String carrierName = "";
         private String dnt = "";
         private MoPubNetworkType networkType = MoPubNetworkType.MOBILE;
-        private TwitterAppInstalledStatus twitterAppInstalledStatus = TwitterAppInstalledStatus.UNKNOWN;
         private int externalStoragePermission;
 
         public AdUrlBuilder(String expectedUdid) {
@@ -526,7 +486,6 @@ public class WebViewAdUrlGeneratorTest {
                     "&ct=" + networkType +
                     "&av=1.0" +
                     "&android_perms_ext_storage=" + externalStoragePermission +
-                    ((twitterAppInstalledStatus == TwitterAppInstalledStatus.INSTALLED) ? "&ts=1" : "") +
                     "&udid=" + PlayServicesUrlRewriter.UDID_TEMPLATE +
                     "&dnt=" + PlayServicesUrlRewriter.DO_NOT_TRACK_TEMPLATE;
 
@@ -575,11 +534,6 @@ public class WebViewAdUrlGeneratorTest {
 
         public AdUrlBuilder withExternalStoragePermission(boolean enabled) {
             this.externalStoragePermission = enabled ? 1 : 0;
-            return this;
-        }
-
-        public AdUrlBuilder withTwitterAppInstalledStatus(TwitterAppInstalledStatus status) {
-            this.twitterAppInstalledStatus = status;
             return this;
         }
 

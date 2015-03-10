@@ -10,7 +10,7 @@ public class Event extends BaseEvent {
 
     public static class Builder extends BaseEvent.Builder {
         public Builder(String eventName, String eventCategory) {
-            super(eventName, eventCategory);
+            super(ScribeCategory.EXCHANGE_CLIENT_EVENT, eventName, eventCategory);
         }
 
         @Override

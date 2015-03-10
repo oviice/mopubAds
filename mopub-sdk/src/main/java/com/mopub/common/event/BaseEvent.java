@@ -1,21 +1,44 @@
 package com.mopub.common.event;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.mopub.common.ClientMetadata;
+import com.mopub.common.VisibleForTesting;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import static com.mopub.common.ClientMetadata.MoPubNetworkType;
 
-abstract class BaseEvent {
+public abstract class BaseEvent {
+
+    public static enum ScribeCategory {
+        EXCHANGE_CLIENT_EVENT("exchange_client_event"),
+        EXCHANGE_CLIENT_ERROR("exchange_client_error");
+
+        private final String mScribeCategory;
+        ScribeCategory(String scribeCategory) {
+            mScribeCategory = scribeCategory;
+        }
+
+        public String getCategory() {
+            return mScribeCategory;
+        }
+    }
+
     public static enum SdkProduct {
         NONE(0),
         WEB_VIEW(1),
         NATIVE(2);
 
-        public final int mType;
+        private final int mType;
         SdkProduct(int type) {
             mType = type;
+        }
+
+        public int getType() {
+            return mType;
         }
     }
 
@@ -24,32 +47,39 @@ abstract class BaseEvent {
         ANDROID(1),
         MOBILE_WEB(2);
 
-        public final int mType;
+        private final int mType;
         AppPlatform(int type) {
             mType = type;
         }
+
+        public int getType() {
+            return mType;
+        }
     }
 
-    private final String mEventName;
-    private final String mEventCategory;
-    private final SdkProduct mSdkProduct;
-    private final String mAdUnitId;
-    private final String mAdCreativeId;
-    private final String mAdType;
-    private final String mAdNetworkType;
-    private final Double mAdWidthPx;
-    private final Double mAdHeightPx;
-    private final Double mGeoLat;
-    private final Double mGeoLon;
-    private final Double mGeoAccuracy;
-    private final Double mPerformanceDurationMs;
-    private final String mRequestId;
-    private final Integer mRequestStatusCode;
-    private final String mRequestUri;
-    private final Integer mRequestRetries;
-    private final long mTimestampUtcMs;
+    @Nullable private ScribeCategory mScribeCategory;
+    @Nullable private final String mEventName;
+    @Nullable private final String mEventCategory;
+    @Nullable private final SdkProduct mSdkProduct;
+    @Nullable private final String mAdUnitId;
+    @Nullable private final String mAdCreativeId;
+    @Nullable private final String mAdType;
+    @Nullable private final String mAdNetworkType;
+    @Nullable private final Double mAdWidthPx;
+    @Nullable private final Double mAdHeightPx;
+    @Nullable private final Double mGeoLat;
+    @Nullable private final Double mGeoLon;
+    @Nullable private final Double mGeoAccuracy;
+    @Nullable private final Double mPerformanceDurationMs;
+    @Nullable private final String mRequestId;
+    @Nullable private final Integer mRequestStatusCode;
+    @Nullable private final String mRequestUri;
+    @Nullable private final Integer mRequestRetries;
+    @Nullable private final Long mTimestampUtcMs;
+    @Nullable private ClientMetadata mClientMetaData;
 
-    BaseEvent(final Builder builder) {
+    public BaseEvent(@NonNull final Builder builder) {
+        mScribeCategory = builder.mScribeCategory;
         mEventName = builder.mEventName;
         mEventCategory = builder.mEventCategory;
         mSdkProduct = builder.mSdkProduct;
@@ -68,6 +98,11 @@ abstract class BaseEvent {
         mRequestUri = builder.mRequestUri;
         mRequestRetries = builder.mRequestRetries;
         mTimestampUtcMs = System.currentTimeMillis();
+        mClientMetaData = ClientMetadata.getInstance();
+    }
+
+    public ScribeCategory getScribeCategory() {
+        return mScribeCategory;
     }
 
     public String getEventName() {
@@ -83,7 +118,7 @@ abstract class BaseEvent {
     }
 
     public String getSdkVersion() {
-        return ClientMetadata.getInstance().getSdkVersion();
+        return mClientMetaData == null ? null : mClientMetaData.getSdkVersion();
     }
 
     public String getAdUnitId() {
@@ -115,39 +150,47 @@ abstract class BaseEvent {
     }
 
     public String getAppName() {
-        return ClientMetadata.getInstance().getAppName();
+        return mClientMetaData == null ? null : mClientMetaData.getAppName();
     }
 
     public String getAppPackageName() {
-        return ClientMetadata.getInstance().getAppPackageName();
+        return mClientMetaData == null ? null : mClientMetaData.getAppPackageName();
     }
 
     public String getAppVersion() {
-        return ClientMetadata.getInstance().getAppVersion();
+        return mClientMetaData == null ? null : mClientMetaData.getAppVersion();
+    }
+
+    public String getClientAdvertisingId() {
+        return mClientMetaData == null ? null : mClientMetaData.getDeviceId();
+    }
+
+    public Boolean getClientDoNotTrack() {
+        return mClientMetaData == null ? null : mClientMetaData.isDoNotTrackSet();
     }
 
     public String getDeviceManufacturer() {
-        return ClientMetadata.getInstance().getDeviceManufacturer();
+        return mClientMetaData == null ? null : mClientMetaData.getDeviceManufacturer();
     }
 
     public String getDeviceModel() {
-        return ClientMetadata.getInstance().getDeviceModel();
+        return mClientMetaData == null ? null : mClientMetaData.getDeviceModel();
     }
 
     public String getDeviceProduct() {
-        return ClientMetadata.getInstance().getDeviceProduct();
+        return mClientMetaData == null ? null : mClientMetaData.getDeviceProduct();
     }
 
     public String getDeviceOsVersion() {
-        return ClientMetadata.getInstance().getDeviceOsVersion();
+        return mClientMetaData == null ? null : mClientMetaData.getDeviceOsVersion();
     }
 
     public Integer getDeviceScreenWidthPx() {
-        return ClientMetadata.getInstance().getDeviceScreenWidthPx();
+        return mClientMetaData == null ? null : mClientMetaData.getDeviceScreenWidthPx();
     }
 
     public Integer getDeviceScreenHeightPx() {
-        return ClientMetadata.getInstance().getDeviceScreenHeightPx();
+        return mClientMetaData == null ? null : mClientMetaData.getDeviceScreenHeightPx();
     }
 
     public Double getGeoLat() {
@@ -167,31 +210,31 @@ abstract class BaseEvent {
     }
 
     public MoPubNetworkType getNetworkType() {
-        return ClientMetadata.getInstance().getActiveNetworkType();
+        return mClientMetaData == null ? null : mClientMetaData.getActiveNetworkType();
     }
 
     public String getNetworkOperatorCode() {
-        return ClientMetadata.getInstance().getNetworkOperator();
+        return mClientMetaData == null ? null : mClientMetaData.getNetworkOperator();
     }
 
     public String getNetworkOperatorName() {
-        return ClientMetadata.getInstance().getNetworkOperatorName();
+        return mClientMetaData == null ? null : mClientMetaData.getNetworkOperatorName();
     }
 
     public String getNetworkIsoCountryCode() {
-        return ClientMetadata.getInstance().getIsoCountryCode();
+        return mClientMetaData == null ? null : mClientMetaData.getIsoCountryCode();
     }
 
     public String getNetworkSimCode() {
-        return ClientMetadata.getInstance().getSimOperator();
+        return mClientMetaData == null ? null : mClientMetaData.getSimOperator();
     }
 
     public String getNetworkSimOperatorName() {
-        return ClientMetadata.getInstance().getSimOperatorName();
+        return mClientMetaData == null ? null : mClientMetaData.getSimOperatorName();
     }
 
     public String getNetworkSimIsoCountryCode() {
-        return ClientMetadata.getInstance().getSimIsoCountryCode();
+        return mClientMetaData == null ? null : mClientMetaData.getSimIsoCountryCode();
     }
 
     public String getRequestId() {
@@ -210,13 +253,14 @@ abstract class BaseEvent {
         return mRequestRetries;
     }
 
-    public long getTimestampUtcMs() {
+    public Long getTimestampUtcMs() {
         return mTimestampUtcMs;
     }
 
     @Override
     public String toString() {
         return  "BaseEvent\n" +
+                "ScribeCategory: " + getScribeCategory() + "\n" +
                 "EventName: " + getEventName() + "\n" +
                 "EventCategory: " + getEventCategory() + "\n" +
                 "SdkProduct: " + getSdkProduct() + "\n" +
@@ -255,26 +299,33 @@ abstract class BaseEvent {
                 "TimestampUtcMs: " + new SimpleDateFormat().format(new Date(getTimestampUtcMs())) + "\n";
     }
 
-    static abstract class Builder {
-        private String mEventName;
-        private String mEventCategory;
-        private SdkProduct mSdkProduct;
-        private String mAdUnitId;
-        private String mAdCreativeId;
-        private String mAdType;
-        private String mAdNetworkType;
-        private Double mAdWidthPx;
-        private Double mAdHeightPx;
-        private Double mGeoLat;
-        private Double mGeoLon;
-        private Double mGeoAccuracy;
-        private Double mPerformanceDurationMs;
-        private String mRequestId;
-        private Integer mRequestStatusCode;
-        private String mRequestUri;
-        private Integer mRequestRetries;
+    @VisibleForTesting
+    void setClientMetaData(ClientMetadata clientMetaData) {
+        mClientMetaData = clientMetaData;
+    }
 
-        public Builder(String eventName, String eventCategory) {
+    static abstract class Builder {
+        @Nullable private ScribeCategory mScribeCategory;
+        @Nullable private String mEventName;
+        @Nullable private String mEventCategory;
+        @Nullable private SdkProduct mSdkProduct;
+        @Nullable private String mAdUnitId;
+        @Nullable private String mAdCreativeId;
+        @Nullable private String mAdType;
+        @Nullable private String mAdNetworkType;
+        @Nullable private Double mAdWidthPx;
+        @Nullable private Double mAdHeightPx;
+        @Nullable private Double mGeoLat;
+        @Nullable private Double mGeoLon;
+        @Nullable private Double mGeoAccuracy;
+        @Nullable private Double mPerformanceDurationMs;
+        @Nullable private String mRequestId;
+        @Nullable private Integer mRequestStatusCode;
+        @Nullable private String mRequestUri;
+        @Nullable private Integer mRequestRetries;
+
+        public Builder(ScribeCategory scribeCategory, String eventName, String eventCategory) {
+            mScribeCategory = scribeCategory;
             mEventName = eventName;
             mEventCategory = eventCategory;
         }

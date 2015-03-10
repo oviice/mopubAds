@@ -15,6 +15,9 @@ public enum MoPubErrorCode {
     VIDEO_CACHE_ERROR("Error creating a cache to store downloaded videos."),
     VIDEO_DOWNLOAD_ERROR("Error downloading video."),
 
+    VIDEO_NOT_AVAILABLE("No video loaded for ad unit"),
+    VIDEO_PLAYBACK_ERROR("Error playing a video."),
+
     UNSPECIFIED("Unspecified error.");
     
     private final String message;

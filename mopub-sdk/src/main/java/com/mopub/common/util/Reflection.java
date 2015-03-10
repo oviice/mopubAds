@@ -1,5 +1,11 @@
 package com.mopub.common.util;
 
+import android.support.annotation.NonNull;
+
+import com.mopub.common.Preconditions;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -87,5 +93,18 @@ public class Reflection {
         } catch (ClassNotFoundException e) {
             return false;
         }
+    }
+
+    public static <T> T instantiateClassWithEmptyConstructor(@NonNull final String className,
+            @NonNull final Class<? extends T> superclass)
+            throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException,
+            InvocationTargetException, InstantiationException, NullPointerException {
+        Preconditions.checkNotNull(className);
+
+        final Class<? extends T> clazz = Class.forName(className).asSubclass(superclass);
+        final Constructor<? extends T> constructor = clazz.getDeclaredConstructor((Class[]) null);
+        constructor.setAccessible(true);
+
+        return constructor.newInstance();
     }
 }

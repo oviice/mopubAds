@@ -1,12 +1,16 @@
 package com.mopub.nativeads;
 
 import android.content.Context;
+import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+
 import com.mopub.common.AdUrlGenerator;
 import com.mopub.common.ClientMetadata;
 import com.mopub.common.Constants;
+import com.mopub.common.LocationService;
+import com.mopub.common.MoPub;
 import com.mopub.common.util.DateAndTime;
 
 class NativeUrlGenerator extends AdUrlGenerator {
@@ -73,8 +77,6 @@ class NativeUrlGenerator extends AdUrlGenerator {
         setNetworkType(clientMetadata.getActiveNetworkType());
 
         setAppVersion(clientMetadata.getAppVersion());
-
-        setTwitterAppInstalledFlag();
 
         setDesiredAssets();
 

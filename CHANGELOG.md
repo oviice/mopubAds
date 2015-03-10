@@ -1,5 +1,13 @@
+## Version 3.5.0 (March 10, 2015)
+
+ - Dependency changes in Maven and Gradle. No new dependencies have been added, but your build script will need to change slightly to include JCenter. See our [Getting Started Guide](https://github.com/mopub/mopub-android-sdk/wiki/Getting-Started#adding-the-support-libraries-to-your-project) for complete instructions.
+ - Security Improvement: removed the @JavascriptInterface annotation for WebViews.
+ - Fixed a bug where video playback would sometimes fail to stop when an ad was dismissed.
+ - Fixed a bug where it was not possible to disable ad refresh; Fixes [issue #148](https://github.com/mopub/mopub-android-sdk/issues/148)
+ - Fixed a null pointer exception in AdViewController; Fixes [issue #150](https://github.com/mopub/mopub-android-sdk/issues/150)
+
 ## Version 3.4.0 (January 30, 2015)
-  
+
   - **Volley networking stack** MoPub for Android now uses Google's Volley library for HTTP requests. You will need to add our bundled Volley JAR (available at `mopub-sdk/libs/mopub-volley-1.0.0.jar`) as a compile-time dependency. See instructions in our [integration page](https://dev.twitter.com/mopub/android/getting-started).
   - **Updated Vungle Support** Certified the `VungleInterstitial` custom event against Vungle SDK 3.2.2
   - **VAST Video Bug Fixes**
@@ -11,14 +19,14 @@
 
   - **MRAID 2.0 Support** - The MoPub SDK is now compliant with the MRAID 2.0 specification to enable rich media ads in banners and interstitial ad units. Learn more about MRAID from the [IAB](http://www.iab.net/MRAID#MRAID).
   - **Location Polling Updates** - Changed the interaction between application- and device-provided location data: more recent location data is now always used (in the past, application-provided location data was always preferred).
-    
+
     As before, you may still disable MoPub SDK's location polling by calling `MoPub.setLocationAwareness(LocationAwareness.DISABLED)`.
   - **Updated Chartboost SDK** Updated the `ChartboostInterstitial` custom event to support Chartboost SDK 5.0.4
   - **Android Support Annotations** Introduced a dependency on android-support-annotations.jar to support code analysis of `@Nullable` and `@NonNull` annotations.
-  
+
 #### Version 3.2.2 (October 29, 2014)
-  - **Bug Fix** Fixes a bug in fetching the Google Advertising ID from Google Play Services. 
-  
+  - **Bug Fix** Fixes a bug in fetching the Google Advertising ID from Google Play Services.
+
 #### Version 3.2.1 (October 21, 2014)
   - **Bug Fix** Fixes a bug in processing certain HTTP headers for Native Ads.
 
@@ -104,8 +112,8 @@
   - Added support for Google Play Services advertising identifier
   - Renamed the `com.mopub.mobileads.MraidBrowser` Activity to `com.mopub.common.MoPubBrowser`.
       - **Important Note:** This change requires a modification to the `AndroidManifest`. The updated set of requisite activity permissions are as follows:
-      
-      	```      	      	
+
+      	```
     <activity android:name="com.mopub.common.MoPubBrowser"
 				android:configChanges="keyboardHidden|orientation"/>
     <activity android:name="com.mopub.mobileads.MoPubActivity"
@@ -114,7 +122,7 @@
                 android:configChanges="keyboardHidden|orientation"/>
 	<activity android:name="com.mopub.mobileads.MraidVideoPlayerActivity"
                 android:configChanges="keyboardHidden|orientation"/>
-		```  
+		```
   - Upgraded the bundled `android-support-v4` library to r19.1.
       - **Note for Maven users:** Newer versions of the `android-support-v4` artifact are unavailable on Maven central, so we have included a small script to update the version in your local artifact repository. Please navigate to the `mopub-sdk` directory, and run `scripts/mavenize_support_library`.
 
@@ -160,7 +168,7 @@
   - Enabled deeplinking via custom URIs in ad creatives
   - All `WebView`s are removed from their parents before `destroy()`; fixes [GitHub issue #38](https://github.com/mopub/mopub-android-sdk/issues/38)
   - Removed previously-deprecated `HTML5AdView`
-  
+
 ## Version 1.16 (October 16, 2013)
 
   - Improved creative controls
@@ -174,79 +182,79 @@
   - Improved responsiveness of `showInterstitial()` for `HtmlInterstitial`s and `MraidInterstitial`s by pre-rendering HTML content
   - Simplified internal construction and handling of `WebView`s by removing `WebViewPool` and its subclasses
   - Updated mraid.getVersion() to return 2.0
- 
+
 #### Version 1.15.2.2 (September 20, 2013)
   - Removed `WebSettings.setPluginsEnabled()` so the SDK builds against Android API 18; fixes [GitHub issue #28](https://github.com/mopub/mopub-android-sdk/issues/28)
   - AdMob banners are now removed from the view hierarchy before they are destroyed; fixes the reopened [GitHub issue #23](https://github.com/mopub/mopub-android-sdk/issues/23)
   - Prevent ads from launching system features, such as a browser view, until the user has interacted with the ad.
- 
+
 #### Version 1.15.2.1 (September 13, 2013)
   - Made the SDK more resilient to creatives that improperly use the `mopubnativebrowser://` scheme; fixes [GitHub issue #36](https://github.com/mopub/mopub-android-sdk/issues/36)
- 
-## Version 1.15.2 (September 11, 2013) 
-  - Allowed Facebook Support to be disabled optionally with `setFacebookSupported(false)`: 
-  	- Use `MoPubInterstitial.setFacebookSupported(false);` for interstitials 
-  	- Use `MoPubView.setFacebookSupported(false);` for banners 
-  	- Note: the `setFacebookSupported(false)` method call must come __before__ `loadAd()` 
-  	- Note: facebook support is on by default 
-  - Changed banner refresh default to be 60 seconds when requests timed out  
+
+## Version 1.15.2 (September 11, 2013)
+  - Allowed Facebook Support to be disabled optionally with `setFacebookSupported(false)`:
+  	- Use `MoPubInterstitial.setFacebookSupported(false);` for interstitials
+  	- Use `MoPubView.setFacebookSupported(false);` for banners
+  	- Note: the `setFacebookSupported(false)` method call must come __before__ `loadAd()`
+  	- Note: facebook support is on by default
+  - Changed banner refresh default to be 60 seconds when requests timed out
   - Fixed edge case in Millennial Media ad fetch failure when there is no inventory; fixes [GitHub issue #18](https://github.com/mopub/mopub-android-sdk/issues/18)
-  - Fixed a bug where redirect URLs were malformed, causing the native browser to not render ads    
+  - Fixed a bug where redirect URLs were malformed, causing the native browser to not render ads
   - Updated Millennial Media jar to 5.1.0
   - Updated Greystripe custom event support to 2.3.0
-  - Fixed MRAID 2.0 `storePicture` command's messaging when a picture either fails to download or fails to save to device 
+  - Fixed MRAID 2.0 `storePicture` command's messaging when a picture either fails to download or fails to save to device
   - Expanded MRAID 2.0 `createCalendarEvent` command to support both minute- and second-level granularity
- 
+
 #### Version 1.15.1.1 (September 4, 2013)
   - Made the SDK more resilient to unexpected Flash creatives
- 
+
 ## Version 1.15.1 (August 27, 2013)
   - Updated documentation to remove the requirement for certain AndroidManifest permissions
   - Fixed minor bug with MRAID 2.0 `storePicture` command where the user sees a false download completed message
-  
+
 ## Version 1.15 (August 21, 2013)
 
 Includes support for ads in the MRAID 2.0 format. MRAID 2.0 allows advertisers to create ads with rich media functionality, including adding calendar events, storing pictures and playing videos in the native video player. To learn more about MRAID 2.0, read our [help article](http://j.mp/16MKSci).
 
   - Added the following MRAID 2.0 features: `createCalendarEvent` (Android 4.0 and above), `playVideo`, `storePicture`, and `supports`
-  - Hardware Acceleration is now enabled by default for `MraidInterstitial`s on Android 4.0 and above  
-  - Ensured that Cursors in `FacebookKeywordProvider` are always closed properly; fixes [GitHub issue #8](https://github.com/mopub/mopub-android-sdk/issues/8)  
-  - Added tracking parameter to InMobi ad requests; fixes [GitHub issue #15](https://github.com/mopub/mopub-android-sdk/issues/15)  
-  - Banner WebViews are now removed from the view hierarchy before they are destroyed; fixes [GitHub issue #23](https://github.com/mopub/mopub-android-sdk/issues/23)  
+  - Hardware Acceleration is now enabled by default for `MraidInterstitial`s on Android 4.0 and above
+  - Ensured that Cursors in `FacebookKeywordProvider` are always closed properly; fixes [GitHub issue #8](https://github.com/mopub/mopub-android-sdk/issues/8)
+  - Added tracking parameter to InMobi ad requests; fixes [GitHub issue #15](https://github.com/mopub/mopub-android-sdk/issues/15)
+  - Banner WebViews are now removed from the view hierarchy before they are destroyed; fixes [GitHub issue #23](https://github.com/mopub/mopub-android-sdk/issues/23)
 
-To correctly display ads that ask the user to save a picture (storePicture ads), you need to make the following change to AndroidManifest.xml:  
-* Add the`WRITE_EXTERNAL_STORAGE` permission. Note: **Adding the permission is optional**. If the permission is not added, we will not deliver any store picture ads to the users' devices. All other features will remain functional without the new permission. 
+To correctly display ads that ask the user to save a picture (storePicture ads), you need to make the following change to AndroidManifest.xml:
+* Add the`WRITE_EXTERNAL_STORAGE` permission. Note: **Adding the permission is optional**. If the permission is not added, we will not deliver any store picture ads to the users' devices. All other features will remain functional without the new permission.
 
-To allow users to play videos using the native video player:  
+To allow users to play videos using the native video player:
 * Declare activity `com.mopub.mobileads.MraidVideoPlayerActivity`. This activity is required to support playing videos in the native player and we strongly recommend adding it.
-  
+
 ## Version 1.14.1 (June 21, 2013)
   - Wait until after loaded interstitials are shown to report an impression
   - Remove phantom impression tracking from interstitials
   - Remove extra whitespace from Millennial banner ads
   - Added `onInterstitialClicked()` notification to `InterstitialAdListener`
   - Provide default implementations for `BannerAdListener` and `InterstitialAdListener`
-  
+
 ## Version 1.14 (May 28, 2013)
 
   - Provided improved support for Android Unity by moving all project resources (including layouts, javascript, images, and values) into source
   - Removed reference to TYPE_DUMMY in AdUrlGenerator because it is not available in earlier versions of Android; fixes [GitHub issue #3](https://github.com/mopub/mopub-android-sdk/issues/3)
   - Fixed NPE in AdUrlGenerator when WiFi is off and Airplane mode is on; fixes [GitHub issue #5](https://github.com/mopub/mopub-android-sdk/issues/5)
   - `MraidInterstitial`s now properly notify `InterstitialAdListener` when they are shown and dismissed
-  
+
 ## Version 1.13.1 (May 21, 2013)
   - Updated Millennial support to Millennial Media SDK version 5.0.1
-  
+
 #### Version 1.13.0.2 (May 17, 2013)
 
   - Relaxed access modifiers for `CustomEventBanner` and `CustomEventInterstitial`
-  
+
 #### Version 1.13.0.1 (May 15, 2013)
 
   - Removed extraneous display call in `MillennialInterstitial` custom event
   - Fixed potential NPE in `AdView`'s loadUrl()
   - Deprecated `HTML5AdView` after fixing some compilation issues
-  
+
 ## Version 1.13 (May 9, 2013)
   - Moved all Android code and documentation to its own repository: [mopub-android-sdk](https://github.com/mopub/mopub-android-sdk)
   - Updated Millennial support to Millennial Media SDK version 5.0
@@ -303,7 +311,7 @@ To allow users to play videos using the native video player:
 ## Version 1.5 (May 10, 2012)
   - Added support for Millennial Media SDK 4.5.5
   - Fixed ANR relating to synchronization in `LoadUrlTask`
-  - Fixed IllegalArgumentExceptions when creating HttpGet objects with malformed URLs 
+  - Fixed IllegalArgumentExceptions when creating HttpGet objects with malformed URLs
 
 ## Version 1.4 (March 28, 2012)
   - Fixed some NullPointerExceptions in the AdMob and Millennial native adapters

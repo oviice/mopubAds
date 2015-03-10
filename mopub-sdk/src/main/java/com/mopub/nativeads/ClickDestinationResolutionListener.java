@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+
 import com.mopub.common.MoPubBrowser;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Intents;
@@ -11,7 +12,7 @@ import com.mopub.exceptions.IntentNotResolvableException;
 import com.mopub.exceptions.UrlParseException;
 
 import java.lang.ref.WeakReference;
-import java.util.*;
+import java.util.Iterator;
 
 class ClickDestinationResolutionListener implements UrlResolutionTask.UrlResolutionListener {
     private final Context mContext;

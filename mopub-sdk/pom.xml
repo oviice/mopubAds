@@ -36,7 +36,7 @@
 
         <dependency>
             <groupId>com.mopub.volley</groupId>
-            <artifactId>volley</artifactId>
+            <artifactId>mopub-volley</artifactId>
             <version>1.0.0</version>
         </dependency>
 

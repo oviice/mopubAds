@@ -3,9 +3,11 @@ package com.mopub.network;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+
 import com.mopub.common.AdFormat;
 import com.mopub.common.AdType;
 import com.mopub.common.DataKeys;
+import com.mopub.common.Preconditions;
 import com.mopub.common.util.Json;
 import com.mopub.common.util.ResponseHeader;
 import com.mopub.mobileads.AdTypeTranslator;
@@ -14,11 +16,13 @@ import com.mopub.volley.NetworkResponse;
 import com.mopub.volley.Request;
 import com.mopub.volley.Response;
 import com.mopub.volley.toolbox.HttpHeaderParser;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.*;
-import java.util.*;
+import java.io.UnsupportedEncodingException;
+import java.util.Map;
+import java.util.TreeMap;
 
 import static com.mopub.network.HeaderUtils.extractBooleanHeader;
 import static com.mopub.network.HeaderUtils.extractHeader;
@@ -28,14 +32,18 @@ public class AdRequest extends Request<AdResponse> {
 
     @NonNull private final AdRequest.Listener mListener;
     @NonNull private final AdFormat mAdFormat;
+    @Nullable private final String mAdUnitId;
 
     public interface Listener extends Response.ErrorListener {
         public void onSuccess(AdResponse response);
     }
 
-    public AdRequest(@NonNull final String url, @NonNull final AdFormat adFormat,
+    public AdRequest(@NonNull final String url, @NonNull final AdFormat adFormat, @Nullable final String adUnitId,
             @NonNull final Listener listener) {
         super(Method.GET, url, listener);
+        Preconditions.checkNotNull(adFormat);
+        Preconditions.checkNotNull(listener);
+        mAdUnitId = adUnitId;
         mListener = listener;
         mAdFormat = adFormat;
         DefaultRetryPolicy retryPolicy = new DefaultRetryPolicy(
@@ -44,6 +52,11 @@ public class AdRequest extends Request<AdResponse> {
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
         setRetryPolicy(retryPolicy);
         setShouldCache(false);
+    }
+
+    @NonNull
+    public Listener getListener() {
+        return mListener;
     }
 
     @Override
@@ -59,6 +72,7 @@ public class AdRequest extends Request<AdResponse> {
 
 
         AdResponse.Builder builder = new AdResponse.Builder();
+        builder.setAdUnitId(mAdUnitId);
 
         String adTypeString = extractHeader(headers, ResponseHeader.AD_TYPE);
         String fullAdTypeString = extractHeader(headers, ResponseHeader.FULL_AD_TYPE);

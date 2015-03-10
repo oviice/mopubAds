@@ -1,3 +1,7 @@
+repositories {
+    jcenter()
+}
+
 apply plugin: 'com.android.application'
 
 group = 'com.mopub'
@@ -9,8 +13,8 @@ android {
     buildToolsVersion '21.1.1'
 
     defaultConfig {
-        versionCode 20
-        versionName "3.4.0"
+        versionCode 21
+        versionName "3.5.0"
         minSdkVersion 9
         targetSdkVersion 19
     }

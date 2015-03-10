@@ -13,9 +13,6 @@ import com.millennialmedia.android.RequestListener;
 
 import java.util.Map;
 
-import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
-import static com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL;
-
 /**
  * Compatible with version 5.3.0 of the Millennial Media SDK.
  */
@@ -96,21 +93,21 @@ class MillennialInterstitial extends CustomEventInterstitial {
                 mInterstitialListener.onInterstitialLoaded();
             } else {
                 Log.d("MoPub", "Millennial interstitial request completed, but no ad was available.");
-                mInterstitialListener.onInterstitialFailed(NETWORK_INVALID_STATE);
+                mInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_INVALID_STATE);
             }
         }
 
         @Override
         public void requestFailed(final MMAd mmAd, final MMException e) {
             if (mMillennialInterstitial == null || e == null) {
-                mInterstitialListener.onInterstitialFailed(NETWORK_INVALID_STATE);
+                mInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_INVALID_STATE);
             } else if (e.getCode() == MMException.CACHE_NOT_EMPTY && mMillennialInterstitial.isAdAvailable()) {
                 // requestFailed can be due to an ad already loaded or an ad failed to load.
                 Log.d("MoPub", "Millennial interstitial loaded successfully from cache.");
                 mInterstitialListener.onInterstitialLoaded();
             } else {
                 Log.d("MoPub", "Millennial interstitial ad failed to load.");
-                mInterstitialListener.onInterstitialFailed(NETWORK_NO_FILL);
+                mInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_NO_FILL);
             }
         }
 

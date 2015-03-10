@@ -21,7 +21,6 @@ import java.util.List;
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 public class Intents {
-    private static final String TWITTER_APPLICATION_DEEPLINK_URL = "twitter://timeline";
     private static final String PLAY_GOOGLE_COM = "play.google.com";
     private static final String MARKET_ANDROID_COM = "market.android.com";
     private static final String MARKET = "market";
@@ -107,10 +106,6 @@ public class Intents {
 
     public static boolean isDeepLink(final String url) {
         return isAppStoreUrl(url) || !isHttpUrl(url);
-    }
-
-    public static boolean canHandleTwitterUrl(final Context context) {
-        return canHandleApplicationUrl(context, TWITTER_APPLICATION_DEEPLINK_URL, false);
     }
 
     public static boolean canHandleApplicationUrl(final Context context, final String url) {

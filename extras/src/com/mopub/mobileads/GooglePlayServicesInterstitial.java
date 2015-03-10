@@ -9,9 +9,6 @@ import com.google.android.gms.ads.InterstitialAd;
 
 import java.util.Map;
 
-import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
-import static com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL;
-
 /*
  * Compatible with version 5.0.89 of the Google Play Services SDK.
  */
@@ -40,7 +37,7 @@ public class GooglePlayServicesInterstitial extends CustomEventInterstitial {
         if (extrasAreValid(serverExtras)) {
             adUnitId = serverExtras.get(AD_UNIT_ID_KEY);
         } else {
-            mInterstitialListener.onInterstitialFailed(ADAPTER_CONFIGURATION_ERROR);
+            mInterstitialListener.onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
             return;
         }
 
@@ -54,7 +51,7 @@ public class GooglePlayServicesInterstitial extends CustomEventInterstitial {
             mGoogleInterstitialAd.loadAd(adRequest);
         } catch (NoClassDefFoundError e) {
             // This can be thrown by Play Services on Honeycomb.
-            mInterstitialListener.onInterstitialFailed(NETWORK_NO_FILL);
+            mInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_NO_FILL);
         }
     }
 
@@ -94,7 +91,7 @@ public class GooglePlayServicesInterstitial extends CustomEventInterstitial {
         public void onAdFailedToLoad(int errorCode) {
             Log.d("MoPub", "Google Play Services interstitial ad failed to load.");
             if (mInterstitialListener != null) {
-                mInterstitialListener.onInterstitialFailed(NETWORK_NO_FILL);
+                mInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_NO_FILL);
             }
         }
 

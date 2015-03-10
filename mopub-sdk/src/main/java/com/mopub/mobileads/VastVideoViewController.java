@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.VideoView;
+
 import com.mopub.common.DownloadResponse;
 import com.mopub.common.DownloadTask;
 import com.mopub.common.HttpResponses;
@@ -34,11 +35,14 @@ import com.mopub.exceptions.IntentNotResolvableException;
 import com.mopub.exceptions.UrlParseException;
 import com.mopub.mobileads.util.vast.VastCompanionAd;
 import com.mopub.mobileads.util.vast.VastVideoConfiguration;
+
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.Serializable;
+import java.util.List;
 
 import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
 import static com.mopub.common.HttpClient.initializeHttpGet;

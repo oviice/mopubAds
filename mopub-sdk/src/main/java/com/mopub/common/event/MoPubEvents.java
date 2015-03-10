@@ -10,6 +10,7 @@ import java.util.ArrayList;
  * Public interface used to record client events.
  */
 public class MoPubEvents {
+
     public enum Type {
         // Networking
         AD_REQUEST("ad_request"),
@@ -48,7 +49,8 @@ public class MoPubEvents {
         sEventDispatcher = dispatcher;
     }
 
-    private static EventDispatcher getDispatcher() {
+    @VisibleForTesting
+    static EventDispatcher getDispatcher() {
         EventDispatcher result = sEventDispatcher;
         if (result == null) {
             synchronized (MoPubEvents.class) {

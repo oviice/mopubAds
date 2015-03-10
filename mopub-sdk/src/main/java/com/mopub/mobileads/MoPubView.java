@@ -12,6 +12,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.webkit.WebViewDatabase;
 import android.widget.FrameLayout;
+
 import com.mopub.common.AdFormat;
 import com.mopub.common.MoPub;
 import com.mopub.common.logging.MoPubLog;
@@ -20,7 +21,8 @@ import com.mopub.common.util.Visibility;
 import com.mopub.mobileads.factories.AdViewControllerFactory;
 import com.mopub.mobileads.factories.CustomEventBannerAdapterFactory;
 
-import java.util.*;
+import java.util.Map;
+import java.util.TreeMap;
 
 import static com.mopub.common.LocationService.LocationAwareness;
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;

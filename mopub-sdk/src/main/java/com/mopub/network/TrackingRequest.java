@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+
 import com.mopub.common.event.MoPubEvents;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.volley.DefaultRetryPolicy;
@@ -14,7 +15,7 @@ import com.mopub.volley.Response;
 import com.mopub.volley.VolleyError;
 import com.mopub.volley.toolbox.HttpHeaderParser;
 
-import java.util.*;
+import java.util.Arrays;
 
 public class TrackingRequest extends Request<Void> {
 
@@ -121,6 +122,8 @@ public class TrackingRequest extends Request<Void> {
             final Context context,
             @Nullable Listener listener,
             final MoPubEvents.Type type) {
-        makeTrackingHttpRequest(Arrays.asList(url), context, listener, type);
+        if (url != null) {
+            makeTrackingHttpRequest(Arrays.asList(url), context, listener, type);
+        }
     }
 }

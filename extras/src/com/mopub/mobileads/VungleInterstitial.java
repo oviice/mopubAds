@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
-
 /*
  * Tested with Vungle SDK 3.2.2.
  */
@@ -45,7 +43,7 @@ public class VungleInterstitial extends CustomEventInterstitial implements Event
         mCustomEventInterstitialListener = customEventInterstitialListener;
 
         if (context == null) {
-            mCustomEventInterstitialListener.onInterstitialFailed(NETWORK_INVALID_STATE);
+            mCustomEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_INVALID_STATE);
             return;
         }
 
