@@ -1,3 +1,10 @@
+## Version 3.6.0 (April 3, 2015)
+
+ - **Facebook Update** Updated supported Facebook Audience Network version to 3.23.1
+ - **Bug fix** Fixed a bug where interstitials could leak memory; Fixes [issue #153](https://github.com/mopub/mopub-android-sdk/issues/153)
+ - **VAST Video** Updated the VAST video player to support Progress events.
+ - Updated **Volley** version to 1.1.0.
+
 ## Version 3.5.0 (March 10, 2015)
 
  - Dependency changes in Maven and Gradle. No new dependencies have been added, but your build script will need to change slightly to include JCenter. See our [Getting Started Guide](https://github.com/mopub/mopub-android-sdk/wiki/Getting-Started#adding-the-support-libraries-to-your-project) for complete instructions.

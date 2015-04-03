@@ -33,6 +33,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+/**
+ */
 public class MoPubRewardedVideoManager {
     private static MoPubRewardedVideoManager sInstance;
     private static final int DEFAULT_LOAD_TIMEOUT = Constants.THIRTY_SECONDS_MILLIS;
@@ -222,6 +224,7 @@ public class MoPubRewardedVideoManager {
                 adUrlString,
                 AdFormat.REWARDED_VIDEO,
                 adUnitId,
+                sInstance.mContext,
                 new RewardedVideoRequestListener(sInstance, adUnitId)
         );
         final RequestQueue requestQueue = Networking.getRequestQueue(sInstance.mContext);

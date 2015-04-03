@@ -3,11 +3,10 @@ package com.mopub.common;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import com.mopub.network.Networking;
 import com.mopub.network.PlayServicesUrlRewriter;
 
 public abstract class BaseUrlGenerator {
-
-
 
     private StringBuilder mStringBuilder;
     private boolean mFirstParam;
@@ -15,7 +14,8 @@ public abstract class BaseUrlGenerator {
     public abstract String generateUrlString(String serverHostname);
 
     protected void initUrlString(String serverHostname, String handlerType) {
-        mStringBuilder = new StringBuilder("http://" + serverHostname + handlerType);
+        String scheme = Networking.useHttps() ? Constants.HTTPS : Constants.HTTP;
+        mStringBuilder = new StringBuilder(scheme).append("://").append(serverHostname).append(handlerType);
         mFirstParam = true;
     }
 

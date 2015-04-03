@@ -23,9 +23,8 @@ import com.mopub.common.util.Drawables;
 import com.mopub.mobileads.test.support.GestureUtils;
 import com.mopub.mobileads.util.vast.VastCompanionAd;
 import com.mopub.mobileads.util.vast.VastVideoConfiguration;
+import com.mopub.network.MoPubRequestQueue;
 import com.mopub.network.Networking;
-import com.mopub.volley.Request;
-import com.mopub.volley.RequestQueue;
 
 import org.apache.http.HttpRequest;
 import org.apache.maven.artifact.ant.shaded.ReflectionUtils;
@@ -75,9 +74,10 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.robolectric.Robolectric.shadowOf;
 
+@Config(manifest = Config.NONE)
 @RunWith(SdkTestRunner.class)
 public class VastVideoViewControllerTest {
-    public static final int NETWORK_DELAY = 500;
+    public static final int NETWORK_DELAY = 100;
 
     private Context context;
     private Bundle bundle;
@@ -89,7 +89,7 @@ public class VastVideoViewControllerTest {
     private String expectedUserAgent;
 
     @Mock
-    RequestQueue mockRequestQueue;
+    MoPubRequestQueue mockRequestQueue;
     @Mock
     private MediaPlayer mockMediaPlayer;
 
@@ -105,11 +105,11 @@ public class VastVideoViewControllerTest {
         VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
         vastVideoConfiguration.setNetworkMediaFileUrl("video_url");
         vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
-        vastVideoConfiguration.addStartTrackers(Arrays.asList("start"));
-        vastVideoConfiguration.addFirstQuartileTrackers(Arrays.asList("first"));
-        vastVideoConfiguration.addMidpointTrackers(Arrays.asList("mid"));
-        vastVideoConfiguration.addThirdQuartileTrackers(Arrays.asList("third"));
+        vastVideoConfiguration.addAbsoluteTrackers(Arrays.asList(new VastAbsoluteProgressTracker("start", 2000)));
+        vastVideoConfiguration.addFractionalTrackers(Arrays.asList(new VastFractionalProgressTracker("first", 0.25f),
+                new VastFractionalProgressTracker("mid", 0.5f), new VastFractionalProgressTracker("third", 0.75f)));
         vastVideoConfiguration.addCompleteTrackers(Arrays.asList("complete"));
+        vastVideoConfiguration.addCloseTrackers(Arrays.asList("close"));
         vastVideoConfiguration.addImpressionTrackers(Arrays.asList("imp"));
         vastVideoConfiguration.setClickThroughUrl("clickThrough");
         vastVideoConfiguration.addClickTrackers(Arrays.asList("click_1", "click_2"));
@@ -200,7 +200,7 @@ public class VastVideoViewControllerTest {
                         new int[]{Color.argb(0, 0, 0, 0), Color.argb(255, 0, 0, 0)})
         );
     }
-    
+
     @Test
     public void constructor_withMissingVastVideoConfiguration_shouldThrowIllegalStateException() throws Exception {
         bundle.clear();
@@ -365,7 +365,7 @@ public class VastVideoViewControllerTest {
     @Test
     public void onTouch_withTouchUp_whenVideoLessThan16Seconds_andClickAfterEnd_shouldStartMoPubBrowser() throws Exception {
         stub(mockMediaPlayer.getDuration()).toReturn(15999);
-        stub(mockMediaPlayer.getCurrentPosition()).toReturn(16000);
+        stub(mockMediaPlayer.getCurrentPosition()).toReturn(15999);
 
         initializeSubject();
         subject.onResume();
@@ -516,14 +516,16 @@ public class VastVideoViewControllerTest {
     }
 
     @Test
-    public void onCompletion_whenFinalMarkHit_whenNoPlaybackErrors_shouldPingCompletionTrackersOnlyOnce() throws Exception {
+    public void onCompletion_whenAllTrackersTracked_whenNoPlaybackErrors_shouldPingCompletionTrackersOnlyOnce() throws Exception {
         VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
         vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        VastAbsoluteProgressTracker testTracker = new VastAbsoluteProgressTracker("testUrl", 123);
+        vastVideoConfiguration.addAbsoluteTrackers(Arrays.asList(testTracker));
         vastVideoConfiguration.addCompleteTrackers(Arrays.asList("complete_1", "complete_2"));
         bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
 
         initializeSubject();
-        subject.setFinalMarkHit();
+        testTracker.setTracked();
 
         getShadowVideoView().getOnCompletionListener().onCompletion(null);
         verify(mockRequestQueue).add(argThat(isUrl("complete_1")));
@@ -536,14 +538,16 @@ public class VastVideoViewControllerTest {
     }
 
     @Test
-    public void onCompletion_whenFinalMarkNotHit_shouldNotPingCompletionTrackers() throws Exception {
+    public void onCompletion_whenSomeTrackersRemain_shouldNotPingCompletionTrackers() throws Exception {
         VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
         vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
         vastVideoConfiguration.addCompleteTrackers(Arrays.asList("complete_1", "complete_2"));
+        VastAbsoluteProgressTracker testTracker = new VastAbsoluteProgressTracker("testUrl", 123);
+        // Never track the testTracker, so completion trackers should not be fired.
+        vastVideoConfiguration.addAbsoluteTrackers(Arrays.asList(testTracker));
         bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
 
         initializeSubject();
-        // explicitly do not call subject.setFinalMarkHit();
 
         getShadowVideoView().getOnCompletionListener().onCompletion(null);
         verify(mockRequestQueue, never()).add(argThat(isUrl("complete_1")));
@@ -801,14 +805,15 @@ public class VastVideoViewControllerTest {
 
     @Test
     public void videoProgressCheckerRunnableRun_shouldFireOffAllProgressTrackers() throws Exception {
-        stub(mockMediaPlayer.getDuration()).toReturn(9001);
+        stub(mockMediaPlayer.getDuration()).toReturn(9002);
         stub(mockMediaPlayer.getCurrentPosition()).toReturn(9002);
 
         VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
         vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
-        vastVideoConfiguration.addFirstQuartileTrackers(Arrays.asList("first"));
-        vastVideoConfiguration.addMidpointTrackers(Arrays.asList("second"));
-        vastVideoConfiguration.addThirdQuartileTrackers(Arrays.asList("third"));
+        vastVideoConfiguration.addFractionalTrackers(Arrays.asList(new VastFractionalProgressTracker("first", 0.25f),
+                new VastFractionalProgressTracker("second", 0.5f),
+                new VastFractionalProgressTracker("third", 0.75f)));
+
         bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
 
         initializeSubject();
@@ -847,7 +852,7 @@ public class VastVideoViewControllerTest {
     public void videoProgressCheckerRunnableRun_whenCurrentTimeLessThanTwoSeconds_shouldNotFireStartTracker() throws Exception {
         VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
         vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
-        vastVideoConfiguration.addStartTrackers(Arrays.asList("start"));
+        vastVideoConfiguration.addAbsoluteTrackers(Arrays.asList(new VastAbsoluteProgressTracker("start", 2000)));
         bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
 
         stub(mockMediaPlayer.getDuration()).toReturn(100000);
@@ -876,7 +881,8 @@ public class VastVideoViewControllerTest {
     public void videoProgressCheckerRunnableRun_whenCurrentTimeGreaterThanTwoSeconds_shouldFireStartTracker() throws Exception {
         VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
         vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
-        vastVideoConfiguration.addStartTrackers(Arrays.asList("start"));
+        vastVideoConfiguration.addAbsoluteTrackers(Arrays.asList(new VastAbsoluteProgressTracker("start", 2000)));
+        vastVideoConfiguration.addAbsoluteTrackers(Arrays.asList(new VastAbsoluteProgressTracker("later", 3000)));
         bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
 
         stub(mockMediaPlayer.getDuration()).toReturn(100000);
@@ -905,7 +911,8 @@ public class VastVideoViewControllerTest {
 
         VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
         vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
-        vastVideoConfiguration.addFirstQuartileTrackers(Arrays.asList("first"));
+        vastVideoConfiguration.addFractionalTrackers(Arrays.asList(new VastFractionalProgressTracker("first", 0.25f)));
+        vastVideoConfiguration.addFractionalTrackers(Arrays.asList(new VastFractionalProgressTracker("don't call", 0.28f)));
         bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
 
         initializeSubject();
@@ -930,8 +937,8 @@ public class VastVideoViewControllerTest {
 
         VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
         vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
-        vastVideoConfiguration.addFirstQuartileTrackers(Arrays.asList("first"));
-        vastVideoConfiguration.addMidpointTrackers(Arrays.asList("second"));
+        vastVideoConfiguration.addFractionalTrackers(Arrays.asList(new VastFractionalProgressTracker("first", 0.25f)));
+        vastVideoConfiguration.addFractionalTrackers(Arrays.asList(new VastFractionalProgressTracker("second", 0.5f)));
         bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
 
         initializeSubject();
@@ -956,9 +963,9 @@ public class VastVideoViewControllerTest {
 
         VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
         vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
-        vastVideoConfiguration.addFirstQuartileTrackers(Arrays.asList("first"));
-        vastVideoConfiguration.addMidpointTrackers(Arrays.asList("second"));
-        vastVideoConfiguration.addThirdQuartileTrackers(Arrays.asList("third"));
+        vastVideoConfiguration.addFractionalTrackers(Arrays.asList(new VastFractionalProgressTracker("first", 0.25f)));
+        vastVideoConfiguration.addFractionalTrackers(Arrays.asList(new VastFractionalProgressTracker("second", 0.5f)));
+        vastVideoConfiguration.addFractionalTrackers(Arrays.asList(new VastFractionalProgressTracker("third", 0.75f)));
         bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
 
         initializeSubject();
@@ -983,9 +990,9 @@ public class VastVideoViewControllerTest {
 
         VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
         vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
-        vastVideoConfiguration.addFirstQuartileTrackers(Arrays.asList("first"));
-        vastVideoConfiguration.addMidpointTrackers(Arrays.asList("second"));
-        vastVideoConfiguration.addThirdQuartileTrackers(Arrays.asList("third"));
+        vastVideoConfiguration.addFractionalTrackers(Arrays.asList(new VastFractionalProgressTracker("first", 0.25f)));
+        vastVideoConfiguration.addFractionalTrackers(Arrays.asList(new VastFractionalProgressTracker("second", 0.5f)));
+        vastVideoConfiguration.addFractionalTrackers(Arrays.asList(new VastFractionalProgressTracker("third", 0.75f)));
         bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
 
         initializeSubject();
@@ -1121,6 +1128,21 @@ public class VastVideoViewControllerTest {
         subject.setCloseButtonVisible(true);
 
         assertThat(subject.backButtonEnabled()).isTrue();
+    }
+
+    @Test
+    public void onClickCloseButton_whenCloseButtonIsVisible_shouldFireCloseTrackers() {
+        initializeSubject();
+
+        subject.setCloseButtonVisible(true);
+
+        // We don't have direct access to the CloseButtonWidget's close event, so we manually
+        // invoke its onTouchListener's onTouch callback with a fake MotionEvent.ACTION_UP action.
+        View.OnTouchListener closeButtonOnTouchListener =
+                shadowOf(getVastVideoToolbar().getCloseButtonWidget()).getOnTouchListener();
+        closeButtonOnTouchListener.onTouch(null, GestureUtils.createActionUp(0, 0));
+
+        verify(mockRequestQueue).add(argThat(isUrl("close")));
     }
 
     private void initializeSubject() {

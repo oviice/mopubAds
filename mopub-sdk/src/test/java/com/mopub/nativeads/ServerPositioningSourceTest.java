@@ -7,6 +7,7 @@ import com.mopub.common.DownloadResponse;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
 import com.mopub.nativeads.PositioningSource.PositioningListener;
+import com.mopub.network.MoPubRequestQueue;
 import com.mopub.network.Networking;
 import com.mopub.volley.Request;
 import com.mopub.volley.RequestQueue;
@@ -40,7 +41,7 @@ public class ServerPositioningSourceTest {
     @Mock DownloadResponse mockWarmingUpJsonResponse;
 
     @Mock
-    RequestQueue mockRequestQueue;
+    MoPubRequestQueue mockRequestQueue;
 
     @Captor ArgumentCaptor<MoPubClientPositioning> positioningCaptor;
 

@@ -19,13 +19,13 @@ import com.mopub.exceptions.UrlParseException;
 import java.util.List;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+import static com.mopub.common.Constants.HTTP;
+import static com.mopub.common.Constants.HTTPS;
 
 public class Intents {
     private static final String PLAY_GOOGLE_COM = "play.google.com";
     private static final String MARKET_ANDROID_COM = "market.android.com";
     private static final String MARKET = "market";
-    private static final String HTTP = "http";
-    private static final String HTTPS = "https";
 
     private Intents() {}
 

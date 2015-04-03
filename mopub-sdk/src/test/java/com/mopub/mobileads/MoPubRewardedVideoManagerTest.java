@@ -9,6 +9,7 @@ import com.mopub.common.LifecycleListener;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.network.AdRequest;
 import com.mopub.network.AdResponse;
+import com.mopub.network.MoPubRequestQueue;
 import com.mopub.network.Networking;
 import com.mopub.volley.RequestQueue;
 import com.mopub.volley.VolleyError;
@@ -35,7 +36,7 @@ import static org.mockito.Mockito.when;
 public class MoPubRewardedVideoManagerTest {
 
     @Mock
-    RequestQueue mockRequestQueue;
+    MoPubRequestQueue mockRequestQueue;
     @Mock
     MoPubRewardedVideoListener mockVideoListener;
 

@@ -48,6 +48,7 @@ import com.mopub.mobileads.util.WebViews;
 import com.mopub.mraid.MraidBridge.MraidBridgeListener;
 import com.mopub.mraid.MraidBridge.MraidWebView;
 
+import java.lang.ref.WeakReference;
 import java.net.URI;
 
 import static android.content.pm.ActivityInfo.CONFIG_ORIENTATION;
@@ -69,7 +70,12 @@ public class MraidController {
         public void useCustomCloseChanged(boolean useCustomClose);
     }
 
-    @Nullable private Activity mActivity;
+    /**
+     * Holds a weak reference to the activity if the context that is passed in is an activity.
+     * While this field is never null, the reference could become null. This reference starts out
+     * null if the passed-in context is not an activity.
+     */
+    @NonNull private final WeakReference<Activity> mWeakActivity;
     @NonNull private final Context mContext;
     @NonNull private final PlacementType mPlacementType;
 
@@ -131,10 +137,15 @@ public class MraidController {
             @NonNull PlacementType placementType,
             @NonNull MraidBridge bridge, @NonNull MraidBridge twoPartBridge,
             @NonNull ScreenMetricsWaiter screenMetricsWaiter) {
-        mContext = context;
+        mContext = context.getApplicationContext();
+        Preconditions.checkNotNull(mContext);
         mAdReport = adReport;
-        if (mContext instanceof Activity) {
-            mActivity = (Activity) mContext;
+        if (context instanceof Activity) {
+            mWeakActivity = new WeakReference<Activity>((Activity) context);
+        } else {
+            // Make sure mWeakActivity itself is never null, though the reference
+            // it's pointing to could be null.
+            mWeakActivity = new WeakReference<Activity>(null);
         }
 
         mPlacementType = placementType;
@@ -277,7 +288,7 @@ public class MraidController {
                 final boolean allowOffscreen) throws MraidCommandException {
             throw new MraidCommandException("Not allowed to resize from an expanded state");
         }
-        
+
         @Override
         public void onExpand(@Nullable final URI uri, final boolean shouldUseCustomClose) {
             // The MRAID spec dictates that this is ignored rather than firing an error
@@ -440,11 +451,12 @@ public class MraidController {
 
     private boolean isInlineVideoAvailable() {
         //noinspection SimplifiableIfStatement
-        if (mActivity == null || getCurrentWebView() == null) {
+        final Activity activity = mWeakActivity.get();
+        if (activity == null || getCurrentWebView() == null) {
             return false;
         }
 
-        return mMraidNativeCommandHandler.isInlineVideoAvailable(mActivity, getCurrentWebView());
+        return mMraidNativeCommandHandler.isInlineVideoAvailable(activity, getCurrentWebView());
     }
 
     @VisibleForTesting
@@ -844,16 +856,17 @@ public class MraidController {
 
     @VisibleForTesting
     void lockOrientation(final int screenOrientation) throws MraidCommandException {
-        if (mActivity == null || !shouldAllowForceOrientation(mForceOrientation)) {
+        final Activity activity = mWeakActivity.get();
+        if (activity == null || !shouldAllowForceOrientation(mForceOrientation)) {
             throw new MraidCommandException("Attempted to lock orientation to unsupported value: " +
                     mForceOrientation.name());
         }
 
         if (mOriginalActivityOrientation == null) {
-            mOriginalActivityOrientation = mActivity.getRequestedOrientation();
+            mOriginalActivityOrientation = activity.getRequestedOrientation();
         }
 
-        mActivity.setRequestedOrientation(screenOrientation);
+        activity.setRequestedOrientation(screenOrientation);
     }
 
     @VisibleForTesting
@@ -864,14 +877,15 @@ public class MraidController {
                 // orientation lock should be removed
                 unApplyOrientation();
             } else {
-                if (mActivity == null) {
+                final Activity activity = mWeakActivity.get();
+                if (activity == null) {
                     throw new MraidCommandException("Unable to set MRAID expand orientation to " +
                             "'none'; expected passed in Activity Context.");
                 }
 
                 // If screen orientation cannot be changed and we can obtain the current
                 // screen orientation, locking it to the current orientation is a best effort
-                lockOrientation(DeviceUtils.getScreenOrientation(mActivity));
+                lockOrientation(DeviceUtils.getScreenOrientation(activity));
             }
         } else {
             // Otherwise, we have a valid, non-NONE orientation. Lock the screen based on this value
@@ -881,8 +895,9 @@ public class MraidController {
 
     @VisibleForTesting
     void unApplyOrientation() {
-        if (mActivity != null && mOriginalActivityOrientation != null) {
-            mActivity.setRequestedOrientation(mOriginalActivityOrientation);
+        final Activity activity = mWeakActivity.get();
+        if (activity != null && mOriginalActivityOrientation != null) {
+            activity.setRequestedOrientation(mOriginalActivityOrientation);
         }
         mOriginalActivityOrientation = null;
     }
@@ -895,15 +910,16 @@ public class MraidController {
             return true;
         }
 
-        // If we can't obtain an Activity context, return false
-        if (mActivity == null) {
+        final Activity activity = mWeakActivity.get();
+        // If we can't obtain an Activity, return false
+        if (activity == null) {
             return false;
         }
 
         final ActivityInfo activityInfo;
         try {
-            activityInfo = mActivity.getPackageManager().getActivityInfo(
-                    new ComponentName(mActivity, mActivity.getClass()), 0);
+            activityInfo = activity.getPackageManager().getActivityInfo(
+                    new ComponentName(activity, activity.getClass()), 0);
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }
@@ -960,6 +976,7 @@ public class MraidController {
         // -1 until this gets set at least once
         private int mLastRotation = -1;
 
+        @Override
         public void onReceive(Context context, Intent intent) {
             if (mContext == null) {
                 return;
@@ -976,9 +993,12 @@ public class MraidController {
         }
 
         public void register(@NonNull final Context context) {
-            mContext = context;
-            mContext.registerReceiver(this,
-                    new IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED));
+            Preconditions.checkNotNull(context);
+            mContext = context.getApplicationContext();
+            if (mContext != null) {
+                mContext.registerReceiver(this,
+                        new IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED));
+            }
         }
 
         public void unregister() {

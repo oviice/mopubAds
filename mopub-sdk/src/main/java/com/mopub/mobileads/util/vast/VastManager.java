@@ -130,12 +130,10 @@ public class VastManager implements VastXmlManagerAggregatorListener {
         final List<VastXmlManager.ImageCompanionAdXmlManager> companionXmlManagers = new ArrayList<VastXmlManager.ImageCompanionAdXmlManager>();
         for (VastXmlManager xmlManager : xmlManagers) {
             vastVideoConfiguration.addImpressionTrackers(xmlManager.getImpressionTrackers());
-
-            vastVideoConfiguration.addStartTrackers(xmlManager.getVideoStartTrackers());
-            vastVideoConfiguration.addFirstQuartileTrackers(xmlManager.getVideoFirstQuartileTrackers());
-            vastVideoConfiguration.addMidpointTrackers(xmlManager.getVideoMidpointTrackers());
-            vastVideoConfiguration.addThirdQuartileTrackers(xmlManager.getVideoThirdQuartileTrackers());
+            vastVideoConfiguration.addAbsoluteTrackers(xmlManager.getAbsoluteProgressTrackers());
+            vastVideoConfiguration.addFractionalTrackers(xmlManager.getFractionalProgressTrackers());
             vastVideoConfiguration.addCompleteTrackers(xmlManager.getVideoCompleteTrackers());
+            vastVideoConfiguration.addCloseTrackers(xmlManager.getVideoCloseTrackers());
 
             vastVideoConfiguration.addClickTrackers(xmlManager.getClickTrackers());
 

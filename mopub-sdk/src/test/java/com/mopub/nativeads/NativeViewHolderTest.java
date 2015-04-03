@@ -15,6 +15,7 @@ import android.widget.TextView;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.Utils;
 import com.mopub.network.MaxWidthImageLoader;
+import com.mopub.network.MoPubRequestQueue;
 import com.mopub.network.Networking;
 import com.mopub.volley.RequestQueue;
 import com.mopub.volley.toolbox.ImageLoader;
@@ -64,7 +65,7 @@ public class NativeViewHolderTest {
     private static final String AD_UNIT_ID = "http://blah.org";
 
     @Mock
-    private RequestQueue mockRequestQueue;
+    private MoPubRequestQueue mockRequestQueue;
     @Mock
     private MaxWidthImageLoader mockImageLoader;
     @Mock

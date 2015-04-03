@@ -1,19 +1,21 @@
 package com.mopub.mobileads.util.vast;
 
+import com.mopub.mobileads.VastAbsoluteProgressTracker;
+import com.mopub.mobileads.VastFractionalProgressTracker;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 public class VastVideoConfiguration implements Serializable {
-    private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 1L;
 
-    private ArrayList<String> mImpressionTrackers;
-    private ArrayList<String> mStartTrackers;
-    private ArrayList<String> mFirstQuartileTrackers;
-    private ArrayList<String> mMidpointTrackers;
-    private ArrayList<String> mThirdQuartileTrackers;
-    private ArrayList<String> mCompleteTrackers;
-    private ArrayList<String> mClickTrackers;
+    private final ArrayList<String> mImpressionTrackers;
+    private final ArrayList<VastFractionalProgressTracker> mFractionalTrackers;
+    private final ArrayList<VastAbsoluteProgressTracker> mAbsoluteTrackers;
+    private final ArrayList<String> mCompleteTrackers;
+    private final ArrayList<String> mCloseTrackers;
+    private final ArrayList<String> mClickTrackers;
     private String mClickThroughUrl;
     private String mNetworkMediaFileUrl;
     private String mDiskMediaFileUrl;
@@ -21,11 +23,10 @@ public class VastVideoConfiguration implements Serializable {
 
     public VastVideoConfiguration() {
         mImpressionTrackers = new ArrayList<String>();
-        mStartTrackers = new ArrayList<String>();
-        mFirstQuartileTrackers = new ArrayList<String>();
-        mMidpointTrackers = new ArrayList<String>();
-        mThirdQuartileTrackers = new ArrayList<String>();
+        mFractionalTrackers = new ArrayList<VastFractionalProgressTracker>();
+        mAbsoluteTrackers = new ArrayList<VastAbsoluteProgressTracker>();
         mCompleteTrackers = new ArrayList<String>();
+        mCloseTrackers = new ArrayList<String>();
         mClickTrackers = new ArrayList<String>();
     }
 
@@ -37,24 +38,27 @@ public class VastVideoConfiguration implements Serializable {
         mImpressionTrackers.addAll(impressionTrackers);
     }
 
-    public void addStartTrackers(final List<String> startTrackers) {
-        mStartTrackers.addAll(startTrackers);
+    /**
+     * Add trackers for percentage-based tracking. This includes all quartile trackers and any
+     * "progress" events with other percentages.
+     */
+    public void addFractionalTrackers(final List<VastFractionalProgressTracker> fractionalTrackers) {
+        mFractionalTrackers.addAll(fractionalTrackers);
     }
 
-    public void addFirstQuartileTrackers(final List<String> firstQuartileTrackers) {
-        mFirstQuartileTrackers.addAll(firstQuartileTrackers);
-    }
-
-    public void addMidpointTrackers(final List<String> midpointTrackers) {
-        mMidpointTrackers.addAll(midpointTrackers);
-    }
-
-    public void addThirdQuartileTrackers(final List<String> thirdQuartileTrackers) {
-        mThirdQuartileTrackers.addAll(thirdQuartileTrackers);
+    /**
+     * Add trackers for absolute tracking. This includes start trackers, which have an absolute threshold of 2 seconds.
+     */
+    public void addAbsoluteTrackers(final List<VastAbsoluteProgressTracker> absoluteTrackers) {
+        mAbsoluteTrackers.addAll(absoluteTrackers);
     }
 
     public void addCompleteTrackers(final List<String> completeTrackers) {
         mCompleteTrackers.addAll(completeTrackers);
+    }
+
+    public void addCloseTrackers(final List<String> closeTrackers) {
+        mCloseTrackers.addAll(closeTrackers);
     }
 
     public void addClickTrackers(final List<String> clickTrackers) {
@@ -85,24 +89,20 @@ public class VastVideoConfiguration implements Serializable {
         return mImpressionTrackers;
     }
 
-    public List<String> getStartTrackers() {
-        return mStartTrackers;
+    public ArrayList<VastAbsoluteProgressTracker> getAbsoluteTrackers() {
+        return mAbsoluteTrackers;
     }
 
-    public List<String> getFirstQuartileTrackers() {
-        return mFirstQuartileTrackers;
-    }
-
-    public List<String> getMidpointTrackers() {
-        return mMidpointTrackers;
-    }
-
-    public List<String> getThirdQuartileTrackers() {
-        return mThirdQuartileTrackers;
+    public ArrayList<VastFractionalProgressTracker> getFractionalTrackers() {
+        return mFractionalTrackers;
     }
 
     public List<String> getCompleteTrackers() {
         return mCompleteTrackers;
+    }
+
+    public List<String> getCloseTrackers() {
+        return mCloseTrackers;
     }
 
     public List<String> getClickTrackers() {

@@ -14,6 +14,7 @@ import android.view.Display;
 import android.view.WindowManager;
 
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.util.Dips;
 import com.mopub.common.util.Utils;
 
 import java.util.Locale;
@@ -136,7 +137,6 @@ public class ClientMetadata {
 
         return result;
     }
-
 
     // NEVER CALL THIS AS A USER. Get it from the Singletons class.
     public ClientMetadata(Context context) {
@@ -371,6 +371,20 @@ public class ClientMetadata {
     }
 
     /**
+     * @return the device screen width in dips according to current orientation.
+     */
+    public int getDeviceScreenWidthDip() {
+        return Dips.screenWidthAsIntDips(mContext);
+    }
+
+    /**
+     * @return the device screen height in dips according to current orientation.
+     */
+    public int getDeviceScreenHeightDip() {
+        return Dips.screenHeightAsIntDips(mContext);
+    }
+
+    /**
      * @return the MoPub SDK Version.
      */
     public String getSdkVersion() {
@@ -396,6 +410,14 @@ public class ClientMetadata {
      */
     public String getAppName() {
         return mAppName;
+    }
+
+    @Deprecated
+    @VisibleForTesting
+    public static void setInstance(ClientMetadata clientMetadata) {
+        synchronized (ClientMetadata.class) {
+            sInstance = clientMetadata;
+        }
     }
 
     @VisibleForTesting

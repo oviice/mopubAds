@@ -15,6 +15,7 @@ import com.mopub.common.AdReport;
 import com.mopub.common.CloseableLayout.ClosePosition;
 import com.mopub.common.MoPubBrowser;
 import com.mopub.common.test.support.SdkTestRunner;
+import com.mopub.common.util.Utils;
 import com.mopub.mobileads.BaseVideoPlayerActivityTest;
 import com.mopub.mobileads.MraidVideoPlayerActivity;
 import com.mopub.mraid.MraidBridge.MraidBridgeListener;
@@ -284,7 +285,8 @@ public class MraidControllerTest {
         subject.handlePageLoad();
         subject.setRootViewSize(100, 1000);
 
-        subject.handleResize(100, 100, 25, 25, ClosePosition.BOTTOM_LEFT, /* allowOffscreen */ true);
+        subject.handleResize(100, 100, 25, 25, ClosePosition.BOTTOM_LEFT, /* allowOffscreen */
+                true);
         assertThat(subject.getViewState()).isEqualTo(ViewState.RESIZED);
     }
 
@@ -292,14 +294,16 @@ public class MraidControllerTest {
     public void handleResize_heightSmallerThan50Dips_shouldFail() throws MraidCommandException {
         subject.handlePageLoad();
         subject.setRootViewSize(100, 100);
-        subject.handleResize(100, 49, 25, 25, ClosePosition.BOTTOM_LEFT, /* allowOffscreen */ false);
+        subject.handleResize(100, 49, 25, 25, ClosePosition.BOTTOM_LEFT, /* allowOffscreen */
+                false);
     }
 
     @Test(expected = MraidCommandException.class)
     public void handleResize_widthSmallerThan50Dips_shouldFail() throws MraidCommandException {
         subject.handlePageLoad();
         subject.setRootViewSize(100, 100);
-        subject.handleResize(49, 100, 25, 25, ClosePosition.BOTTOM_LEFT, /* allowOffscreen */ false);
+        subject.handleResize(49, 100, 25, 25, ClosePosition.BOTTOM_LEFT, /* allowOffscreen */
+                false);
     }
 
     @Test
@@ -503,8 +507,9 @@ public class MraidControllerTest {
 
         Intent startedIntent = Robolectric.getShadowApplication().getNextStartedActivity();
         assertThat(startedIntent).isNotNull();
-        // Since we are using an Activity context, we do not need FLAG_ACTIVITY_NEW_TASK
-        assertThat(startedIntent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isEqualTo(0);
+        // Since we are not using an Activity context, we should have FLAG_ACTIVITY_NEW_TASK
+        assertThat(Utils.bitMaskContainsFlag(startedIntent.getFlags(),
+                Intent.FLAG_ACTIVITY_NEW_TASK)).isTrue();
         assertThat(startedIntent.getComponent()).isNull();
 
         verify(mockMraidListener).onOpen();
@@ -518,8 +523,9 @@ public class MraidControllerTest {
 
         Intent startedIntent = Robolectric.getShadowApplication().getNextStartedActivity();
         assertThat(startedIntent).isNotNull();
-        // Since we are using an Activity context, we do not need FLAG_ACTIVITY_NEW_TASK
-        assertThat(startedIntent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isEqualTo(0);
+        // Since we are not using an Activity context, we should have FLAG_ACTIVITY_NEW_TASK
+        assertThat(Utils.bitMaskContainsFlag(startedIntent.getFlags(),
+                Intent.FLAG_ACTIVITY_NEW_TASK)).isTrue();
         assertThat(startedIntent.getComponent().getClassName())
                 .isEqualTo("com.mopub.common.MoPubBrowser");
 
@@ -535,8 +541,9 @@ public class MraidControllerTest {
 
         Intent startedIntent = Robolectric.getShadowApplication().getNextStartedActivity();
         assertThat(startedIntent).isNotNull();
-        // Since we are using an Activity context, we do not need FLAG_ACTIVITY_NEW_TASK
-        assertThat(startedIntent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isEqualTo(0);
+        // Since we are not using an Activity context, we should have FLAG_ACTIVITY_NEW_TASK
+        assertThat(Utils.bitMaskContainsFlag(startedIntent.getFlags(),
+                Intent.FLAG_ACTIVITY_NEW_TASK)).isTrue();
         assertThat(startedIntent.getComponent().getClassName())
                 .isEqualTo("com.mopub.common.MoPubBrowser");
         assertThat(startedIntent.getStringExtra(MoPubBrowser.DESTINATION_URL_KEY))
@@ -576,7 +583,7 @@ public class MraidControllerTest {
         assertThat(subject.getAllowOrientationChange()).isFalse();
         assertThat(subject.getForceOrientation()).isEqualTo(MraidOrientation.LANDSCAPE);
     }
-    
+
     @Test
     public void handleSetOrientationProperties_withOrientationNone_withApplicationContext_shouldUpdateProperties() throws MraidCommandException, PackageManager.NameNotFoundException {
         setMockActivityInfo(true, ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED,
@@ -591,7 +598,7 @@ public class MraidControllerTest {
         assertThat(subject.getAllowOrientationChange()).isFalse();
         assertThat(subject.getForceOrientation()).isEqualTo(MraidOrientation.NONE);
     }
-    
+
     @Test
     public void handleSetOrientationProperties_withForcedOrientation_withApplicationContext_shouldThrowMraidCommandExceptionAndNotUpdateProperties() throws PackageManager.NameNotFoundException {
         setMockActivityInfo(true, ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED,
@@ -674,7 +681,8 @@ public class MraidControllerTest {
     @Config(reportSdk = Build.VERSION_CODES.HONEYCOMB_MR1)
     @Test
     public void handleSetOrientationProperties_beforeHoneycombMr2_withMissingConfigChangeScreenSize_shouldUpdateProperties() throws Exception {
-        setMockActivityInfo(true, ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED, ActivityInfo.CONFIG_ORIENTATION);
+        setMockActivityInfo(true, ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED,
+                ActivityInfo.CONFIG_ORIENTATION);
 
         subject.handleSetOrientationProperties(false, MraidOrientation.LANDSCAPE);
 
@@ -685,7 +693,8 @@ public class MraidControllerTest {
     @Config(reportSdk = Build.VERSION_CODES.HONEYCOMB_MR2)
     @Test
     public void handleSetOrientationProperties_atLeastHoneycombMr2_withMissingConfigChangeScreenSize_shouldThrowMraidCommandException() throws Exception {
-        setMockActivityInfo(true, ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED, ActivityInfo.CONFIG_ORIENTATION);
+        setMockActivityInfo(true, ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED,
+                ActivityInfo.CONFIG_ORIENTATION);
 
         try {
             subject.handleSetOrientationProperties(false, MraidOrientation.LANDSCAPE);
@@ -830,7 +839,7 @@ public class MraidControllerTest {
         assertThat(subject.getOriginalActivityOrientation())
                 .isEqualTo(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
-    
+
     @Test
     public void applyOrientation_withLockedOrientation_withForceOrientationNone_withAllowOrientationChangeTrue_shouldResetOrientation() throws MraidCommandException, PackageManager.NameNotFoundException {
         setMockActivityInfo(true, ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED,

@@ -10,6 +10,7 @@ import android.widget.RelativeLayout;
 
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.Utils;
+import com.mopub.network.MoPubRequestQueue;
 import com.mopub.network.Networking;
 import com.mopub.volley.Request;
 import com.mopub.volley.RequestQueue;
@@ -47,7 +48,7 @@ public class NativeResponseTest {
     private boolean baseNativeAdRecordedImpression;
     private boolean baseNativeAdIsClicked;
     @Mock
-    private RequestQueue mockRequestQueue;
+    private MoPubRequestQueue mockRequestQueue;
 
 
     @Before

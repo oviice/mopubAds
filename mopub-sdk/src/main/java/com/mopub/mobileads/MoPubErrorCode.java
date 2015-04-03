@@ -2,6 +2,7 @@ package com.mopub.mobileads;
 
 public enum MoPubErrorCode {
     NO_FILL("No ads found."),
+    WARMUP("Ad unit is warming up. Try again in a few minutes."),
     SERVER_ERROR("Unable to connect to MoPub adserver."),
     INTERNAL_ERROR("Unable to serve ad due to invalid internal state."),
     CANCELLED("Ad request was cancelled."),

@@ -14,9 +14,11 @@ import com.mopub.common.util.test.support.TestMethodBuilderFactory;
 import com.mopub.mobileads.test.support.ThreadUtils;
 import com.mopub.network.AdRequest;
 import com.mopub.network.AdResponse;
+import com.mopub.network.MoPubNetworkError;
+import com.mopub.network.MoPubRequestQueue;
 import com.mopub.network.Networking;
 import com.mopub.volley.Request;
-import com.mopub.volley.RequestQueue;
+import com.mopub.volley.VolleyError;
 
 import org.junit.After;
 import org.junit.Before;
@@ -48,14 +50,14 @@ public class AdViewControllerTest {
     @Mock
     private MoPubView mockMoPubView;
     @Mock
-    private RequestQueue mockRequestQueue;
+    private MoPubRequestQueue mockRequestQueue;
     private Reflection.MethodBuilder methodBuilder;
-    private Activity context;
+    
     private AdResponse response;
 
     @Before
     public void setup() {
-        context = Robolectric.buildActivity(Activity.class).create().get();
+        Activity context = Robolectric.buildActivity(Activity.class).create().get();
         shadowOf(context).grantPermissions(android.Manifest.permission.ACCESS_NETWORK_STATE);
 
         when(mockMoPubView.getAdFormat()).thenReturn(AdFormat.BANNER);
@@ -76,7 +78,7 @@ public class AdViewControllerTest {
                 .setAdType("html")
                 .setFailoverUrl("failUrl")
                 .setResponseBody("testResponseBody")
-                .setServerExtras(Collections.emptyMap())
+                .setServerExtras(Collections.<String, String>emptyMap())
                 .build();
     }
 
@@ -85,6 +87,14 @@ public class AdViewControllerTest {
         reset(methodBuilder);
     }
 
+    @Test
+    public void cleanup_shouldNotHoldViewOrUrlGenerator() {
+        subject.cleanup();
+
+        assertThat(subject.getMoPubView()).isNull();
+        assertThat(subject.generateAdUrl()).isNull();
+    }
+    
     @Test
     public void adDidFail_shouldScheduleRefreshTimer_shouldCallMoPubViewAdFailed() throws Exception {
         Robolectric.pauseMainLooper();
@@ -108,6 +118,7 @@ public class AdViewControllerTest {
         assertThat(Robolectric.getUiThreadScheduler().enqueuedTaskCount()).isEqualTo(0);
         verify(mockMoPubView, never()).adFailed(any(MoPubErrorCode.class));
     }
+    
 
     @Test
     public void scheduleRefreshTimer_shouldNotScheduleIfRefreshTimeIsNull() throws Exception {
@@ -458,5 +469,14 @@ public class AdViewControllerTest {
         assertThat(layoutParams.width).isEqualTo(FrameLayout.LayoutParams.WRAP_CONTENT);
         assertThat(layoutParams.height).isEqualTo(FrameLayout.LayoutParams.WRAP_CONTENT);
         assertThat(layoutParams.gravity).isEqualTo(Gravity.CENTER);
+    }
+
+    @Test
+    public void onAdLoadError_withErrorReasonWarmingUp_shouldReturnErrorCodeWarmup_shouldCallMoPubViewAdFailed() {
+        final VolleyError expectedInternalError = new MoPubNetworkError(MoPubNetworkError.Reason.WARMING_UP);
+
+        subject.onAdLoadError(expectedInternalError);
+
+        verify(mockMoPubView).adFailed(MoPubErrorCode.WARMUP);
     }
 }

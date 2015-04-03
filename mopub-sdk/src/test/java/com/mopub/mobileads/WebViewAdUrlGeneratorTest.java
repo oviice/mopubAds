@@ -13,7 +13,6 @@ import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
-import com.mopub.common.AdUrlGenerator;
 import com.mopub.common.ClientMetadata;
 import com.mopub.common.GpsHelper;
 import com.mopub.common.GpsHelperTest;
@@ -24,13 +23,13 @@ import com.mopub.common.util.Utils;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
 import com.mopub.mobileads.test.support.MoPubShadowTelephonyManager;
 import com.mopub.mraid.MraidNativeCommandHandler;
+import com.mopub.network.Networking;
 import com.mopub.network.PlayServicesUrlRewriter;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowConnectivityManager;
@@ -50,7 +49,6 @@ import static android.telephony.TelephonyManager.NETWORK_TYPE_UNKNOWN;
 import static com.mopub.common.ClientMetadata.MoPubNetworkType;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.robolectric.Robolectric.application;
@@ -81,6 +79,7 @@ public class WebViewAdUrlGeneratorTest {
         shadowTelephonyManager = (MoPubShadowTelephonyManager) shadowOf((TelephonyManager) application.getSystemService(Context.TELEPHONY_SERVICE));
         shadowConnectivityManager = shadowOf((ConnectivityManager) application.getSystemService(Context.CONNECTIVITY_SERVICE));
         methodBuilder = TestMethodBuilderFactory.getSingletonMock();
+        Networking.useHttps(false);
     }
 
     @After
@@ -95,6 +94,13 @@ public class WebViewAdUrlGeneratorTest {
         String adUrl = generateMinimumUrlString();
 
         assertThat(adUrl).isEqualTo(expectedAdUrl);
+    }
+
+    @Test
+    public void generateAdUrl_withHttpsScheme() throws Exception {
+        Networking.useHttps(true);
+        String adUrl = generateMinimumUrlString();
+        assertThat(adUrl).startsWith("https://");
     }
 
     @Test
@@ -294,6 +300,8 @@ public class WebViewAdUrlGeneratorTest {
 
         assertThat(adUrl).isEqualTo(urlBuilder.withNetworkType(MoPubNetworkType.UNKNOWN).build());
     }
+
+
 
     @Test
     public void generateAdUrl_whenGooglePlayServicesIsLinkedAndAdInfoIsCached_shouldUseAdInfoParams() throws Exception {
