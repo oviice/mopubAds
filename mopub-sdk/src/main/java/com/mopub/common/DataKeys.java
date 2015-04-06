@@ -12,4 +12,6 @@ public class DataKeys {
     public static final String JSON_BODY_KEY = "com_mopub_native_json";
     public static final String BROADCAST_IDENTIFIER_KEY = "broadcastIdentifier";
     public static final String AD_UNIT_ID_KEY = "com_mopub_ad_unit_id";
+    public static final String AD_WIDTH = "com_mopub_ad_width";
+    public static final String AD_HEIGHT = "com_mopub_ad_height";
 }

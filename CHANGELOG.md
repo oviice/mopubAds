@@ -1,3 +1,7 @@
+## Version 3.6.1 (April 6, 2015)
+
+ - **Bug Fix** Fixed a compile error in FacebookBanner.java
+
 ## Version 3.6.0 (April 3, 2015)
 
  - **Facebook Update** Updated supported Facebook Audience Network version to 3.23.1

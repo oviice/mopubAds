@@ -26,7 +26,10 @@ Integration instructions are available on the [wiki](https://github.com/mopub/mo
 ## New in this Version
 
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for details.
+### 3.6.1
+- **Bug Fix** Fixed a compile error in FacebookBanner.java
 
+### 3.6.0
 - **Facebook Update** Updated supported Facebook Audience Network version to 3.23.1
 - **Bug fix** Fixed a bug where interstitials could leak memory; Fixes [issue #153](https://github.com/mopub/mopub-android-sdk/issues/153)
 - **VAST Video** Updated the VAST video player to support Progress events.
