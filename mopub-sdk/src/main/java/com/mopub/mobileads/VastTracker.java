@@ -12,7 +12,7 @@ import java.io.Serializable;
  */
 public class VastTracker implements Serializable {
     private static final long serialVersionUID = 0L;
-    private final String mTrackingUrl;
+    @NonNull protected final String mTrackingUrl;
     private boolean mCalled;
 
     public VastTracker(@NonNull String trackingUrl) {

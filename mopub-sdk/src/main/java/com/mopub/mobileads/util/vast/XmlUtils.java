@@ -174,6 +174,59 @@ class XmlUtils {
         return results;
     }
 
+    /**
+     * Get first matching data from a {@code Document]'s elements that match the {@code elementName},
+     * {@code attributeName}, and {@code attributeValue} filters. Nodes that match are processed by
+     * the {@code nodeProcessor} until the first non-null result returned by the processor is
+     * returned.
+     *
+     * @param vastDoc The {@link org.w3c.dom.Document} we wish to extract data from.
+     * @param elementName Only elements with this name are processed.
+     * @param attributeName Only elements with this attribute are processed.
+     * @param attributeValue Only elements whose attribute with attributeName matches this value are processed.
+     * @param nodeProcessor Takes matching nodes and produces output data for that node.
+     * @return node data of type {@code <T>} from first node that matches.
+     */
+    static <T> T getFirstMatchFromDocument(final Document vastDoc, final String elementName,
+            final String attributeName, final String attributeValue, NodeProcessor<T> nodeProcessor) {
+        if (vastDoc == null) {
+            return null;
+        }
+
+        final NodeList nodes = vastDoc.getElementsByTagName(elementName);
+        if (nodes == null) {
+            return null;
+        }
+
+        List<String> attributeValues = attributeValue == null ? null : Arrays.asList(attributeValue);
+
+        for (int i = 0; i < nodes.getLength(); i++) {
+            final Node node = nodes.item(i);
+
+            if (node != null && nodeMatchesAttributeFilter(node, attributeName, attributeValues)) {
+                T processed = nodeProcessor.process(node);
+                if (processed != null) {
+                    return processed;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    static String getFirstMatchingStringData(final Document vastDoc, final String elementName) {
+        return getFirstMatchingStringData(vastDoc, elementName, null, null);
+    }
+
+    static String getFirstMatchingStringData(final Document vastDoc, final String elementName, final String attributeName, final String attributeValue) {
+        return getFirstMatchFromDocument(vastDoc, elementName, attributeName, attributeValue, new NodeProcessor<String>() {
+            @Override
+            public String process(final Node node) {
+                return getNodeValue(node);
+            }
+        });
+    }
+
     static List<String> getStringDataAsList(final Document vastDoc, final String elementName) {
         return getStringDataAsList(vastDoc, elementName, null, null);
     }

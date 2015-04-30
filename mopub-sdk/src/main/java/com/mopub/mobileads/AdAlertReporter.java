@@ -5,13 +5,13 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+import android.util.Base64;
 import android.view.View;
 
 import com.mopub.common.AdReport;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.DateAndTime;
 import com.mopub.common.util.Streams;
-import com.mopub.mobileads.util.Base64;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

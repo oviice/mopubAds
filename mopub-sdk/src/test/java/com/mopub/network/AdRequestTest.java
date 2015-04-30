@@ -5,7 +5,6 @@ import android.location.Location;
 
 import com.mopub.common.AdFormat;
 import com.mopub.common.AdType;
-import com.mopub.common.AdUrlGenerator;
 import com.mopub.common.DataKeys;
 import com.mopub.common.event.BaseEvent;
 import com.mopub.common.event.EventDispatcher;
@@ -26,8 +25,11 @@ import org.mockito.stubbing.Answer;
 import org.robolectric.Robolectric;
 
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -159,7 +161,27 @@ public class AdRequestTest {
     }
 
     @Test
-    public void parseNetworkResponse_withClearAdType_shouldError() {
+    public void parseNetworkResponse_withRefreshTime_shouldIncludeRefreshTimeInResult() {
+        defaultHeaders.put(ResponseHeader.REFRESH_TIME.getKey(), "13");
+        NetworkResponse testResponse =
+                new NetworkResponse(200, "abc".getBytes(Charset.defaultCharset()), defaultHeaders, false);
+
+        final Response<AdResponse> response = subject.parseNetworkResponse(testResponse);
+        assertThat(response.result.getRefreshTimeMillis()).isEqualTo(13000);
+    }
+
+    @Test
+    public void parseNetworkResponse_withoutRefreshTime_shouldNotIncludeRefreshTime() {
+        defaultHeaders.remove(ResponseHeader.REFRESH_TIME.getKey());
+        NetworkResponse testResponse =
+                new NetworkResponse(200, "abc".getBytes(Charset.defaultCharset()), defaultHeaders, false);
+
+        final Response<AdResponse> response = subject.parseNetworkResponse(testResponse);
+        assertThat(response.result.getRefreshTimeMillis()).isNull();
+    }
+    
+    @Test
+    public void parseNetworkResponse_withClearAdType_withRefreshTimeHeader_shouldErrorAndIncludeRefreshTime() {
         defaultHeaders.put(ResponseHeader.AD_TYPE.getKey(), AdType.CLEAR);
 
         NetworkResponse testResponse =
@@ -168,7 +190,25 @@ public class AdRequestTest {
 
         assertThat(response.error).isNotNull();
         assertThat(response.error).isInstanceOf(MoPubNetworkError.class);
-        assertThat(((MoPubNetworkError) response.error).getReason()).isEqualTo(MoPubNetworkError.Reason.NO_FILL);
+        final MoPubNetworkError moPubNetworkError = (MoPubNetworkError) response.error;
+        assertThat(moPubNetworkError.getReason()).isEqualTo(MoPubNetworkError.Reason.NO_FILL);
+        assertThat(moPubNetworkError.getRefreshTimeMillis()).isEqualTo(30000);
+    }
+
+    @Test
+    public void parseNetworkResponse_withClearAdType_withNoRefreshTimeHeader_shouldErrorAndNotIncludeRefreshTime() {
+        defaultHeaders.remove(ResponseHeader.REFRESH_TIME.getKey());
+        defaultHeaders.put(ResponseHeader.AD_TYPE.getKey(), AdType.CLEAR);
+
+        NetworkResponse testResponse =
+                new NetworkResponse(200, "abc".getBytes(Charset.defaultCharset()), defaultHeaders, false);
+        final Response<AdResponse> response = subject.parseNetworkResponse(testResponse);
+
+        assertThat(response.error).isNotNull();
+        assertThat(response.error).isInstanceOf(MoPubNetworkError.class);
+        final MoPubNetworkError moPubNetworkError = (MoPubNetworkError) response.error;
+        assertThat(moPubNetworkError.getReason()).isEqualTo(MoPubNetworkError.Reason.NO_FILL);
+        assertThat(moPubNetworkError.getRefreshTimeMillis()).isNull();
     }
 
     @Test
@@ -217,6 +257,60 @@ public class AdRequestTest {
     @Test
     public void getRequestId_withUrlWithNoRequestIdParam_shouldReturnNull() throws Exception {
         assertThat(subject.getRequestId("http://ads.mopub.com/m/ad?id=8cf00598d3664adaaeccd800e46afaca")).isNull();
+    }
+
+    @Test
+    public void getHeaders_withDefaultLocale_shouldReturnDefaultLanguageCode() throws Exception {
+        Map<String, String> expectedHeaders = new TreeMap<String, String>();
+        expectedHeaders.put(ResponseHeader.ACCEPT_LANGUAGE.getKey(), "en");
+
+        assertThat(subject.getHeaders()).isEqualTo(expectedHeaders);
+    }
+
+    @Test
+    public void getHeaders_withUserPreferredLocale_shouldReturnUserPreferredLanguageCode() throws Exception {
+        Map<String, String> expectedHeaders = new TreeMap<String, String>();
+        expectedHeaders.put(ResponseHeader.ACCEPT_LANGUAGE.getKey(), "fr");
+
+        // Assume user-preferred locale is fr_CA
+        activity.getResources().getConfiguration().locale = Locale.CANADA_FRENCH;
+
+        assertThat(subject.getHeaders()).isEqualTo(expectedHeaders);
+    }
+
+    @Test
+    public void getHeaders_withUserPreferredLocaleAsNull_shouldReturnDefaultLanguageCode() throws Exception {
+        Map<String, String> expectedHeaders = new TreeMap<String, String>();
+        expectedHeaders.put(ResponseHeader.ACCEPT_LANGUAGE.getKey(), "en");
+
+        // Assume user-preferred locale is null
+        activity.getResources().getConfiguration().locale = null;
+
+        assertThat(subject.getHeaders()).isEqualTo(expectedHeaders);
+    }
+
+    @Test
+    public void getHeaders_withUserPreferredLanguageAsEmptyString_shouldReturnDefaultLanguageCode() throws Exception {
+        Map<String, String> expectedHeaders = new TreeMap<String, String>();
+        expectedHeaders.put(ResponseHeader.ACCEPT_LANGUAGE.getKey(), "en");
+
+        // Assume user-preferred locale's language code is empty string after trimming
+        activity.getResources().getConfiguration().locale = new Locale(" ");
+
+        assertThat(subject.getHeaders()).isEqualTo(expectedHeaders);
+    }
+
+    @Test
+    public void getHeaders_withLocaleLanguageAsEmptyString_shouldNotAddLanguageHeader() throws Exception {
+        Map<String, String> expectedHeaders = Collections.emptyMap();
+
+        // Assume default locale's language code is empty string
+        Locale.setDefault(new Locale(""));
+
+        // Assume user-preferred locale's language code is empty string after trimming
+        activity.getResources().getConfiguration().locale = new Locale(" ");
+
+        assertThat(subject.getHeaders()).isEqualTo(expectedHeaders);
     }
 
     @Test

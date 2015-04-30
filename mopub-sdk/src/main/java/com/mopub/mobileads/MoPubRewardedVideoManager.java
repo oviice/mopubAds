@@ -3,6 +3,7 @@ package com.mopub.mobileads;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -14,6 +15,7 @@ import com.mopub.common.LocationService;
 import com.mopub.common.MediationSettings;
 import com.mopub.common.MoPub;
 import com.mopub.common.MoPubReward;
+import com.mopub.common.Preconditions;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.MoPubCollections;
 import com.mopub.common.util.Reflection;
@@ -37,11 +39,12 @@ public class MoPubRewardedVideoManager {
     private static MoPubRewardedVideoManager sInstance;
     private static final int DEFAULT_LOAD_TIMEOUT = Constants.THIRTY_SECONDS_MILLIS;
 
+    @NonNull private final Handler mCallbackHandler;
     @NonNull private WeakReference<Activity> mMainActivity;
     @NonNull private final Context mContext;
     @NonNull private final AdRequestStatusMapping mAdRequestStatus;
     @NonNull private final RewardedVideoData mRewardedVideoData;
-    private MoPubRewardedVideoListener mVideoListener;
+    @Nullable private MoPubRewardedVideoListener mVideoListener;
     
     @NonNull private final Set<MediationSettings> mGlobalMediationSettings;
     @NonNull private final Map<String, Set<MediationSettings>> mInstanceMediationSettings;
@@ -73,7 +76,7 @@ public class MoPubRewardedVideoManager {
         mMainActivity = new WeakReference<Activity>(mainActivity);
         mContext = mainActivity.getApplicationContext();
         mRewardedVideoData = new RewardedVideoData();
-
+        mCallbackHandler = new Handler(Looper.getMainLooper());
         mGlobalMediationSettings = new HashSet<MediationSettings>();
         MoPubCollections.addAllNonNull(mGlobalMediationSettings, mediationSettings);
         mInstanceMediationSettings = new HashMap<String, Set<MediationSettings>>();
@@ -341,7 +344,7 @@ public class MoPubRewardedVideoManager {
 
         if (failoverUrl != null) {
             loadVideo(adUnitId, failoverUrl);
-        } else {
+        } else if (mVideoListener != null) {
             mVideoListener.onRewardedVideoLoadFailure(adUnitId, errorCode);
         }
     }
@@ -365,80 +368,106 @@ public class MoPubRewardedVideoManager {
      *           custom events should use these methods.
      */
     public static <T extends CustomEventRewardedVideo>
-    void onRewardedVideoLoadSuccess(@NonNull Class<T> customEventClass, @NonNull String thirdPartyId) {
-        if (sInstance != null) {
-            final Set<String> moPubIds = sInstance.mRewardedVideoData.getMoPubIdsForAdNetwork(customEventClass, thirdPartyId);
-            for (String moPubId : moPubIds) {
+    void onRewardedVideoLoadSuccess(@NonNull final Class<T> customEventClass, @NonNull final String thirdPartyId) {
+        postToInstance(new ForEachMoPubIdRunnable(customEventClass, thirdPartyId) {
+            @Override
+            protected void forEach(@NonNull final String moPubId) {
                 sInstance.cancelTimeouts(moPubId);
-                sInstance.mVideoListener.onRewardedVideoLoadSuccess(moPubId);
+                if (sInstance.mVideoListener != null) {
+                    sInstance.mVideoListener.onRewardedVideoLoadSuccess(moPubId);
+                }
             }
-        }
+        });
     }
 
     public static <T extends CustomEventRewardedVideo>
-    void onRewardedVideoLoadFailure(@NonNull Class<T> customEventClass, String thirdPartyId, MoPubErrorCode errorCode) {
-        if (sInstance != null) {
-            final Set<String> moPubIds = sInstance.mRewardedVideoData.getMoPubIdsForAdNetwork(customEventClass, thirdPartyId);
-            for (final String moPubId : moPubIds) {
-                sInstance.cancelTimeouts(moPubId);
-                sInstance.failover(moPubId, errorCode);
+    void onRewardedVideoLoadFailure(@NonNull final Class<T> customEventClass, final String thirdPartyId, final MoPubErrorCode errorCode) {
+        postToInstance(new ForEachMoPubIdRunnable(customEventClass, thirdPartyId) {
+            @Override
+            protected void forEach(@NonNull final String moPubId) {
+                   sInstance.cancelTimeouts(moPubId);
+                   sInstance.failover(moPubId, errorCode);
             }
-        }
+        });
     }
 
     public static <T extends CustomEventRewardedVideo>
-    void onRewardedVideoStarted(@NonNull Class<T> customEventClass, String thirdPartyId) {
-        if (sInstance != null) {
-            final Set<String> moPubIds = sInstance.mRewardedVideoData.getMoPubIdsForAdNetwork(customEventClass, thirdPartyId);
-            for (final String moPubId : moPubIds) {
-                sInstance.mVideoListener.onRewardedVideoStarted(moPubId);
+    void onRewardedVideoStarted(@NonNull final Class<T> customEventClass, final String thirdPartyId) {
+        postToInstance(new ForEachMoPubIdRunnable(customEventClass, thirdPartyId) {
+            @Override
+            protected void forEach(@NonNull final String moPubId) {
+                if (sInstance.mVideoListener != null) {
+                    sInstance.mVideoListener.onRewardedVideoStarted(moPubId);
+                }
                 TrackingRequest.makeTrackingHttpRequest(
                         sInstance.mAdRequestStatus.getImpressionTrackerUrlString(moPubId),
                         sInstance.mContext);
                 sInstance.mAdRequestStatus.clearImpressionUrl(moPubId);
             }
-        }
+        });
     }
 
     public static <T extends CustomEventRewardedVideo>
-    void onRewardedVideoPlaybackError(@NonNull Class<T> customEventClass, String thirdPartyId, MoPubErrorCode errorCode) {
-        if (sInstance != null) {
-            final Iterable<String> moPubIds = sInstance.mRewardedVideoData.getMoPubIdsForAdNetwork(customEventClass, thirdPartyId);
-            for (final String moPubId : moPubIds) {
-                sInstance.mVideoListener.onRewardedVideoPlaybackError(moPubId, errorCode);
+    void onRewardedVideoPlaybackError(@NonNull final Class<T> customEventClass, final String thirdPartyId, final MoPubErrorCode errorCode) {
+        postToInstance(new ForEachMoPubIdRunnable(customEventClass, thirdPartyId) {
+            @Override
+            protected void forEach(@NonNull final String moPubId) {
+                if (sInstance.mVideoListener != null) {
+                    sInstance.mVideoListener.onRewardedVideoPlaybackError(moPubId, errorCode);
+                }
             }
-        }
+        });
+
     }
 
     public static <T extends CustomEventRewardedVideo>
-    void onRewardedVideoClicked(@NonNull Class<T> customEventClass, String thirdPartyId) {
-        if (sInstance != null) {
-            final Set<String> moPubIds = sInstance.mRewardedVideoData.getMoPubIdsForAdNetwork(customEventClass, thirdPartyId);
-            for (final String moPubId : moPubIds) {
+    void onRewardedVideoClicked(@NonNull final Class<T> customEventClass, final String thirdPartyId) {
+        postToInstance(new ForEachMoPubIdRunnable(customEventClass, thirdPartyId) {
+            @Override
+            protected void forEach(@NonNull final String moPubId) {
                 TrackingRequest.makeTrackingHttpRequest(
                         sInstance.mAdRequestStatus.getClickTrackerUrlString(moPubId),
                         sInstance.mContext);
                 sInstance.mAdRequestStatus.clearClickUrl(moPubId);
             }
-        }
+        });
     }
 
     public static <T extends CustomEventRewardedVideo>
-    void onRewardedVideoClosed(@NonNull Class<T> customEventClass, String thirdPartyId) {
-        if (sInstance != null) {
-            final Set<String> moPubIds = sInstance.mRewardedVideoData.getMoPubIdsForAdNetwork(customEventClass, thirdPartyId);
-            for (final String moPubId : moPubIds) {
-                sInstance.mVideoListener.onRewardedVideoClosed(moPubId);
+    void onRewardedVideoClosed(@NonNull final Class<T> customEventClass, final String thirdPartyId) {
+        postToInstance(new ForEachMoPubIdRunnable(customEventClass, thirdPartyId) {
+            @Override
+            protected void forEach(@NonNull final String moPubId) {
+                if (sInstance.mVideoListener != null) {
+                    sInstance.mVideoListener.onRewardedVideoClosed(moPubId);
+                }
             }
-        }
+        });
     }
 
     public static <T extends CustomEventRewardedVideo>
-    void onRewardedVideoCompleted(@NonNull Class<T> customEventClass, String thirdPartyId, @NonNull MoPubReward moPubReward) {
+    void onRewardedVideoCompleted(@NonNull final Class<T> customEventClass, final String thirdPartyId, @NonNull final MoPubReward moPubReward) {
+        // Unlike other callbacks in this class, only call the listener once with all the MoPubIds in the matching set.
+        postToInstance(new Runnable() {
+            @Override
+            public void run() {
+                final Set<String> moPubIds = sInstance.mRewardedVideoData.getMoPubIdsForAdNetwork(customEventClass, thirdPartyId);
+                Set<String> rewarded = new HashSet<String>(moPubIds);
+                if (sInstance.mVideoListener != null) {
+                    sInstance.mVideoListener.onRewardedVideoCompleted(rewarded, moPubReward);
+                }
+            }
+        });
+    }
+
+    /**
+     * Posts the runnable to the static instance's handler. Does nothing if sInstance is null.
+     * Useful for ensuring that all event callbacks run on the main thread.
+     * The {@link Runnable} can assume that sInstance is non-null.
+     */
+    private static void postToInstance(@NonNull Runnable runnable) {
         if (sInstance != null) {
-            final Set<String> moPubIds = sInstance.mRewardedVideoData.getMoPubIdsForAdNetwork(customEventClass, thirdPartyId);
-            Set<String> rewarded = new HashSet<String>(moPubIds);
-            sInstance.mVideoListener.onRewardedVideoCompleted(rewarded, moPubReward);
+            sInstance.mCallbackHandler.post(runnable);
         }
     }
 
@@ -446,5 +475,33 @@ public class MoPubRewardedVideoManager {
         MoPubLog.e("MoPub rewarded video was not initialized. You must call " +
                 "MoPub.initializeRewardedVideo() before loading or attempting " +
                 "to play video ads.");
+    }
+
+    /**
+     * A runnable that calls forEach on each member of the rewarded video data passed to the runnable.
+     */
+    private static abstract class ForEachMoPubIdRunnable implements Runnable {
+
+        @NonNull private final Class<? extends CustomEventRewardedVideo> mCustomEventClass;
+        @NonNull private final String mThirdPartyId;
+
+        ForEachMoPubIdRunnable(@NonNull final Class<? extends CustomEventRewardedVideo> customEventClass,
+                @NonNull final String thirdPartyId) {
+            Preconditions.checkNotNull(customEventClass);
+            Preconditions.checkNotNull(thirdPartyId);
+            mCustomEventClass = customEventClass;
+            mThirdPartyId = thirdPartyId;
+        }
+
+        protected abstract void forEach(@NonNull final String moPubId);
+
+        @Override
+        public void run() {
+            final Set<String> moPubIds = sInstance.mRewardedVideoData
+                    .getMoPubIdsForAdNetwork(mCustomEventClass, mThirdPartyId);
+            for (String moPubId : moPubIds) {
+                forEach(moPubId);
+            }
+        }
     }
 }

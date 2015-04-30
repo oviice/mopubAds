@@ -1,4 +1,21 @@
-## Version 3.6.1 (April 6, 2015)
+## Version 3.7.0 (April 30, 2015)
+
+- Updated GooglePlayServices custom events to depend on the Google Play Services `play-services-ads 7.0.0` API.
+- Vungle support updated to SDK 3.3.3.
+- Updated InMobi and Greystripe custom events to accept application IDs from the MoPub UI.
+  - For InMobi: `{"app_id" : "YOUR_INMOBI_APP_ID"}`
+  - For Greystripe: `{"GUID" : "YOUR GREYSTRIPE_GUID"}`
+
+- Added toasts to the MoPub Sample App for ad load failures due to no connection.
+- Fixed a bug in processing VAST progress trackers in a VAST wrapper tag.
+- Fixed a bug where ad refresh times could be incorrect when an ad request was not filled.
+
+- Updated the following dependencies:
+	- support-v4 AAR to 22.0.0
+	- support-annotations JAR to 22.0.0
+	- Android Maven Plugin to 4.2.0
+
+#### Version 3.6.1 (April 6, 2015)
 
  - **Bug Fix** Fixed a compile error in FacebookBanner.java
 

@@ -68,9 +68,16 @@ public class LoggingUtils {
 
         @Override
         public void publish(final LogRecord logRecord) {
+            if (logRecord == null) {
+                return;
+            }
             // Toasts the warmup message if X-Warmup flag is set to 1
-            if (logRecord != null && MoPubErrorCode.WARMUP.toString().equals(logRecord.getMessage())) {
+            if (MoPubErrorCode.WARMUP.toString().equals(logRecord.getMessage())) {
                 Utils.logToast(mContext, MoPubErrorCode.WARMUP.toString());
+            }
+            // Toasts the no connection message if a native response failed due to no internet
+            if (MoPubErrorCode.NO_CONNECTION.toString().equals(logRecord.getMessage())) {
+                Utils.logToast(mContext, MoPubErrorCode.NO_CONNECTION.toString());
             }
         }
 

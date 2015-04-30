@@ -132,4 +132,14 @@ public class ClickDestinationResolutionListenerTest {
         assertThat(intent.getStringExtra(MoPubBrowser.DESTINATION_URL_KEY)).isEqualTo(httpsUrl);
         verify(mockSpinningProgressView).removeFromRoot();
     }
+
+    @Test
+    public void onSuccess_withAboutBlankUrl_shouldFailSilently_shouldRemoveSpinningProgressView() {
+        String url = "about:blank";
+
+        subject.onSuccess(url);
+
+        assertThat(Robolectric.getShadowApplication().getNextStartedActivity()).isNull();
+        verify(mockSpinningProgressView).removeFromRoot();
+    }
 }

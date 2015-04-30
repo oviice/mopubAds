@@ -19,7 +19,7 @@ import java.util.Map;
  * Tested with Facebook SDK 3.23.1.
  */
 public class FacebookBanner extends CustomEventBanner implements AdListener {
-    private static final String PLACEMENT_ID_KEY = "placement_id";
+    public static final String PLACEMENT_ID_KEY = "placement_id";
 
     private AdView mFacebookBanner;
     private CustomEventBannerListener mBannerListener;

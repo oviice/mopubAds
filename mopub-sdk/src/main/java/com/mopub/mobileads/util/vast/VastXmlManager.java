@@ -1,9 +1,11 @@
 package com.mopub.mobileads.util.vast;
 
 import android.support.annotation.NonNull;
-import android.text.TextUtils;
+import android.support.annotation.Nullable;
 
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.util.DeviceUtils.ForceOrientation;
+import com.mopub.common.util.Strings;
 import com.mopub.mobileads.VastAbsoluteProgressTracker;
 import com.mopub.mobileads.VastFractionalProgressTracker;
 
@@ -19,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -39,14 +40,22 @@ class VastXmlManager {
     private static final String VAST_AD_TAG = "VASTAdTagURI";
     private static final String MP_IMPRESSION_TRACKER = "MP_TRACKING_URL";
     private static final String COMPANION = "Companion";
+    private static final String LINEAR = "Linear";
+
+    // Custom element names for VAST 3.0 extensions
+    private static final String CUSTOM_CTA_TEXT = "MoPubCtaText";
+    private static final String CUSTOM_SKIP_TEXT = "MoPubSkipText";
+    private static final String CUSTOM_CLOSE_ICON = "MoPubCloseIcon";
+    private static final String CUSTOM_FORCE_ORIENTATION = "MoPubForceOrientation";
 
     // Attribute names
     private static final String EVENT = "event";
     private static final String WIDTH = "width";
     private static final String HEIGHT = "height";
     private static final String OFFSET = "offset";
+    private static final String SKIP_OFFSET = "skipoffset";
 
-    // Event Attibute values
+    // Event Attribute values
     private static final String START = "start";
     private static final String FIRST_QUARTILE = "firstQuartile";
     private static final String MIDPOINT = "midpoint";
@@ -54,14 +63,16 @@ class VastXmlManager {
     private static final String COMPLETE = "complete";
     private static final String CLOSE = "close";
     private static final String PROGRESS = "progress";
+    private static final String SKIP = "skip";
 
     private static final int START_TRACKER_THRESHOLD = 2000;
     private static final float FIRST_QUARTER_MARKER = 0.25f;
     private static final float MID_POINT_MARKER = 0.50f;
     private static final float THIRD_QUARTER_MARKER = 0.75f;
 
-    private static Pattern percentagePattern = Pattern.compile("((\\d{1,2})|(100))%");
-    private static Pattern absolutePattern = Pattern.compile("\\d{2}:\\d{2}:\\d{2}(.\\d{3})?");
+    // constants for custom extensions
+    private static final int MAX_CTA_TEXT_LENGTH = 15;
+    private static final int MAX_SKIP_TEXT_LENGTH = 8;
 
 
     // This class currently assumes an image type companion ad since that is what we are supporting
@@ -236,7 +247,7 @@ class VastXmlManager {
         final List<Node> progressNodes = XmlUtils.getNodesWithElementAndAttribute(mVastDoc, VIDEO_TRACKER, EVENT, PROGRESS);
         for (Node progressNode : progressNodes) {
             final String offsetString = XmlUtils.getAttributeValue(progressNode, OFFSET).trim();
-            if (isPercentageTracker(offsetString)) {
+            if (Strings.isPercentageTracker(offsetString)) {
                 String trackingUrl = XmlUtils.getNodeValue(progressNode).trim();
                 try {
                     float trackingFraction = Float.parseFloat(offsetString.replace("%", "")) / 100f;
@@ -282,10 +293,10 @@ class VastXmlManager {
         final List<Node> progressNodes = XmlUtils.getNodesWithElementAndAttribute(mVastDoc, VIDEO_TRACKER, EVENT, PROGRESS);
         for (Node progressNode : progressNodes) {
             final String offSetString = XmlUtils.getAttributeValue(progressNode, OFFSET).trim();
-            if (isAbsoluteTracker(offSetString)) {
+            if (Strings.isAbsoluteTracker(offSetString)) {
                 String trackingUrl = XmlUtils.getNodeValue(progressNode).trim();
                 try {
-                    Integer trackingMilliseconds = parseAbsoluteOffset(offSetString);
+                    Integer trackingMilliseconds = Strings.parseAbsoluteOffset(offSetString);
                     if (trackingMilliseconds != null) {
                         trackers.add(new VastAbsoluteProgressTracker(trackingUrl, trackingMilliseconds));
                     }
@@ -300,7 +311,6 @@ class VastXmlManager {
         return trackers;
     }
 
-
     List<String> getVideoCompleteTrackers() {
         return getVideoTrackerByAttribute(COMPLETE);
     }
@@ -309,9 +319,12 @@ class VastXmlManager {
         return getVideoTrackerByAttribute(CLOSE);
     }
 
+    List<String> getVideoSkipTrackers() {
+        return getVideoTrackerByAttribute(SKIP);
+    }
+
     String getClickThroughUrl() {
-        List<String> clickUrlWrapper = XmlUtils.getStringDataAsList(mVastDoc, CLICK_THROUGH);
-        return (clickUrlWrapper.size() > 0) ? clickUrlWrapper.get(0) : null;
+        return XmlUtils.getFirstMatchingStringData(mVastDoc, CLICK_THROUGH);
     }
 
     List<String> getClickTrackers() {
@@ -319,8 +332,58 @@ class VastXmlManager {
     }
 
     String getMediaFileUrl() {
-        List<String> urlWrapper = XmlUtils.getStringDataAsList(mVastDoc, MEDIA_FILE);
-        return (urlWrapper.size() > 0) ? urlWrapper.get(0) : null;
+        return XmlUtils.getFirstMatchingStringData(mVastDoc, MEDIA_FILE);
+    }
+
+    @Nullable
+    String getCustomCtaText() {
+        String customCtaText = XmlUtils.getFirstMatchingStringData(mVastDoc, CUSTOM_CTA_TEXT);
+        if (customCtaText != null && customCtaText.length() <= MAX_CTA_TEXT_LENGTH) {
+            return customCtaText;
+        }
+
+        return null;
+    }
+
+    @Nullable
+    String getCustomSkipText() {
+        String customSkipText = XmlUtils.getFirstMatchingStringData(mVastDoc, CUSTOM_SKIP_TEXT);
+        if (customSkipText != null && customSkipText.length() <= MAX_SKIP_TEXT_LENGTH) {
+            return customSkipText;
+        }
+
+        return null;
+    }
+
+    @Nullable
+    String getCustomCloseIconUrl() {
+        return XmlUtils.getFirstMatchingStringData(mVastDoc, CUSTOM_CLOSE_ICON);
+    }
+
+    @NonNull
+    ForceOrientation getCustomForceOrientation() {
+        return ForceOrientation.getForceOrientation(
+                XmlUtils.getFirstMatchingStringData(mVastDoc, CUSTOM_FORCE_ORIENTATION));
+    }
+
+    @Nullable
+    String getSkipOffset() {
+        List<Node> linearNodeWrapper = XmlUtils.getNodesWithElementAndAttribute(mVastDoc, LINEAR, SKIP_OFFSET, null);
+        Node linearNode = (linearNodeWrapper.isEmpty()) ? null : linearNodeWrapper.get(0);
+        if (linearNode == null) {
+            return null;
+        }
+
+        final String skipOffsetString = XmlUtils.getAttributeValue(linearNode, SKIP_OFFSET);
+        if (skipOffsetString == null) {
+            return null;
+        }
+
+        if (skipOffsetString.trim().isEmpty()) {
+            return null;
+        }
+
+        return skipOffsetString.trim();
     }
 
     List<MediaXmlManager> getMediaXmlManagers() {
@@ -345,27 +408,6 @@ class VastXmlManager {
 
     private List<String> getVideoTrackerByAttribute(final String attributeValue) {
         return XmlUtils.getStringDataAsList(mVastDoc, VIDEO_TRACKER, EVENT, attributeValue);
-    }
-
-    private boolean isPercentageTracker(String progressValue) {
-        return !TextUtils.isEmpty(progressValue)
-                && percentagePattern.matcher(progressValue).matches();
-    }
-
-    private boolean isAbsoluteTracker(String progressValue) {
-        return !TextUtils.isEmpty(progressValue)
-                && absolutePattern.matcher(progressValue).matches();
-    }
-
-    private Integer parseAbsoluteOffset(String progressValue) {
-        final String[] split = progressValue.split(":");
-        if (split.length != 3) {
-            return null;
-        }
-
-        return Integer.parseInt(split[0]) * 60 * 60 * 1000 // Hours
-                + Integer.parseInt(split[1]) * 60 * 1000 // Minutes
-                + (int)(Float.parseFloat(split[2]) * 1000);
     }
 
     private void addQuartileTrackerWithFraction(List<VastFractionalProgressTracker> trackers, List<String> urls, float fraction) {

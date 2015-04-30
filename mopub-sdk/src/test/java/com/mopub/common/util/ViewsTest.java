@@ -2,6 +2,7 @@ package com.mopub.common.util;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -18,12 +19,15 @@ public class ViewsTest {
     private Context context;
     private View subject;
     private RelativeLayout parent;
+    private Activity testActivity;
+    private Resources testResources;
 
     @Before
     public void setup() {
         context = new Activity();
         subject = new View(context);
         parent = new RelativeLayout(context);
+
     }
 
     @Test

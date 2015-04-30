@@ -12,6 +12,7 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -32,6 +33,7 @@ import com.mopub.common.util.Dips;
 import com.mopub.common.util.Drawables;
 import com.mopub.common.util.Intents;
 import com.mopub.common.util.Streams;
+import com.mopub.common.util.Strings;
 import com.mopub.common.util.VersionCode;
 import com.mopub.exceptions.IntentNotResolvableException;
 import com.mopub.exceptions.UrlParseException;
@@ -50,6 +52,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
 import static com.mopub.common.HttpClient.initializeHttpGet;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
@@ -87,6 +90,8 @@ public class VastVideoViewController extends BaseVideoViewController implements 
 
     private boolean mVideoError;
     private boolean mCompletionTrackerFired;
+
+    private boolean mHasSkipOffset = false;
 
     VastVideoViewController(final Context context,
             final Bundle bundle,
@@ -145,7 +150,22 @@ public class VastVideoViewController extends BaseVideoViewController implements 
     @Override
     protected void onCreate() {
         super.onCreate();
-        getBaseVideoViewControllerListener().onSetRequestedOrientation(SCREEN_ORIENTATION_LANDSCAPE);
+
+        switch (mVastVideoConfiguration.getCustomForceOrientation()) {
+            case FORCE_PORTRAIT:
+                getBaseVideoViewControllerListener().onSetRequestedOrientation(SCREEN_ORIENTATION_PORTRAIT);
+                break;
+            case FORCE_LANDSCAPE:
+                getBaseVideoViewControllerListener().onSetRequestedOrientation(SCREEN_ORIENTATION_LANDSCAPE);
+                break;
+            case DEVICE_ORIENTATION:
+                break;  // don't do anything
+            case UNDEFINED:
+                break;  // don't do anything
+            default:
+                break;
+        }
+
         downloadCompanionAd();
 
         makeTrackingHttpRequest(
@@ -238,6 +258,40 @@ public class VastVideoViewController extends BaseVideoViewController implements 
         }
     }
 
+    private void adjustSkipOffset() {
+        int videoDuration = mVideoView.getDuration();
+
+        // Default behavior: video is non-skippable if duration < 16 seconds
+        if (videoDuration < MAX_VIDEO_DURATION_FOR_CLOSE_BUTTON) {
+            mShowCloseButtonDelay = videoDuration;
+        }
+
+        // Override if skipoffset attribute is specified in VAST
+        String skipOffsetString = mVastVideoConfiguration.getSkipOffset();
+        if (skipOffsetString != null) {
+            try {
+                if (Strings.isAbsoluteTracker(skipOffsetString)) {
+                    Integer skipOffsetMilliseconds = Strings.parseAbsoluteOffset(skipOffsetString);
+                    if (skipOffsetMilliseconds != null && skipOffsetMilliseconds < videoDuration) {
+                        mShowCloseButtonDelay = skipOffsetMilliseconds;
+                        mHasSkipOffset = true;
+                    }
+                } else if (Strings.isPercentageTracker(skipOffsetString)) {
+                    float percentage = Float.parseFloat(skipOffsetString.replace("%", "")) / 100f;
+                    int skipOffsetMillisecondsRounded = Math.round(videoDuration * percentage);
+                    if (skipOffsetMillisecondsRounded < videoDuration) {
+                        mShowCloseButtonDelay = skipOffsetMillisecondsRounded;
+                        mHasSkipOffset = true;
+                    }
+                } else {
+                    MoPubLog.d(String.format("Invalid VAST skipoffset format: %s", skipOffsetString));
+                }
+            } catch (NumberFormatException e) {
+                MoPubLog.d(String.format("Failed to parse skipoffset %s", skipOffsetString));
+            }
+        }
+    }
+
     @NonNull
     private Runnable createVideoProgressCheckerRunnable() {
         // This Runnable must only be run from the main thread due to accessing
@@ -260,7 +314,11 @@ public class VastVideoViewController extends BaseVideoViewController implements 
                         TrackingRequest.makeTrackingHttpRequest(trackUrls, getContext());
                     }
 
-                    if (isLongVideo(mVideoView.getDuration()) ) {
+                    // show countdown if any of the following conditions is satisfied:
+                    // 1) long video
+                    // 2) skipoffset is specified in VAST and is less than video duration
+                    if (isLongVideo(mVideoView.getDuration()) ||
+                            (mHasSkipOffset && mShowCloseButtonDelay < mVideoView.getDuration())) {
                         mVastVideoToolbar.updateCountdownWidget(mShowCloseButtonDelay - mVideoView.getCurrentPosition());
                     }
 
@@ -346,12 +404,33 @@ public class VastVideoViewController extends BaseVideoViewController implements 
                 if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
                     TrackingRequest.makeTrackingHttpRequest(
                             mVastVideoConfiguration.getCloseTrackers(), context);
+                    TrackingRequest.makeTrackingHttpRequest(
+                            mVastVideoConfiguration.getSkipTrackers(), context);
                     getBaseVideoViewControllerListener().onFinish();
                 }
                 return true;
             }
         });
         vastVideoToolbar.setLearnMoreButtonOnTouchListener(mClickThroughListener);
+
+        // update custom CTA text if specified in VAST extension
+        String customCtaText = mVastVideoConfiguration.getCustomCtaText();
+        if (customCtaText != null) {
+            vastVideoToolbar.updateLearnMoreButtonText(customCtaText);
+        }
+
+        // update custom skip text if specified in VAST extensions
+        String customSkipText = mVastVideoConfiguration.getCustomSkipText();
+        if (customSkipText != null) {
+            vastVideoToolbar.updateCloseButtonText(customSkipText);
+        }
+
+        // update custom close icon if specified in VAST extensions
+        String customCloseIconUrl = mVastVideoConfiguration.getCustomCloseIconUrl();
+        if (customCloseIconUrl != null) {
+            vastVideoToolbar.updateCloseButtonIcon(customCloseIconUrl);
+        }
+
         return vastVideoToolbar;
     }
 
@@ -361,9 +440,7 @@ public class VastVideoViewController extends BaseVideoViewController implements 
             @Override
             public void onPrepared(MediaPlayer mp) {
                 // Called when media source is ready for playback
-                if (mVideoView.getDuration() < MAX_VIDEO_DURATION_FOR_CLOSE_BUTTON) {
-                    mShowCloseButtonDelay = mVideoView.getDuration();
-                }
+                adjustSkipOffset();
             }
         });
         videoView.setOnTouchListener(mClickThroughListener);
@@ -457,11 +534,16 @@ public class VastVideoViewController extends BaseVideoViewController implements 
     void handleClick(final List<String> clickThroughTrackers, final String clickThroughUrl) {
         makeTrackingHttpRequest(clickThroughTrackers, getContext(), BaseEvent.Name.CLICK_REQUEST);
 
-        if (clickThroughUrl == null) {
+        if (TextUtils.isEmpty(clickThroughUrl)) {
             return;
         }
 
         broadcastAction(ACTION_INTERSTITIAL_CLICK);
+
+        if (Intents.isAboutScheme(clickThroughUrl)) {
+            MoPubLog.d("Link to about page ignored.");
+            return;
+        }
 
         if (Intents.isNativeBrowserScheme(clickThroughUrl)) {
             try {
@@ -478,11 +560,16 @@ public class VastVideoViewController extends BaseVideoViewController implements 
             return;
         }
 
-        Bundle bundle = new Bundle();
-        bundle.putString(MoPubBrowser.DESTINATION_URL_KEY, clickThroughUrl);
+        if (Intents.isHttpUrl(clickThroughUrl)) {
+            Bundle bundle = new Bundle();
+            bundle.putString(MoPubBrowser.DESTINATION_URL_KEY, clickThroughUrl);
 
-        getBaseVideoViewControllerListener().onStartActivityForResult(MoPubBrowser.class,
-                MOPUB_BROWSER_REQUEST_CODE, bundle);
+            getBaseVideoViewControllerListener().onStartActivityForResult(MoPubBrowser.class,
+                    MOPUB_BROWSER_REQUEST_CODE, bundle);
+            return;
+        }
+
+        MoPubLog.d("Link ignored. Unable to handle url: " + clickThroughUrl);
     }
 
     private ImageView createCompanionAdImageView(final Context context) {
@@ -551,6 +638,13 @@ public class VastVideoViewController extends BaseVideoViewController implements 
     @VisibleForTesting
     int getVideoRetries() {
         return mVideoRetries;
+    }
+
+    // for testing
+    @Deprecated
+    @VisibleForTesting
+    boolean getHasSkipOffset() {
+        return mHasSkipOffset;
     }
 
     // for testing

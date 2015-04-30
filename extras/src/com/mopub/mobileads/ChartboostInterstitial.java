@@ -24,6 +24,7 @@ class ChartboostInterstitial extends CustomEventInterstitial {
     public static final String APP_SIGNATURE_KEY = "appSignature";
     public static final String LOCATION_KEY = "location";
     public static final String LOCATION_DEFAULT = "Default";
+
     private String appId;
     private String appSignature;
     private String location;

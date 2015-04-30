@@ -11,6 +11,7 @@ import com.mopub.nativeads.MoPubNative.MoPubNativeNetworkListener;
 import com.mopub.network.MoPubNetworkError;
 import com.mopub.network.MoPubRequestQueue;
 import com.mopub.network.Networking;
+import com.mopub.volley.NoConnectionError;
 import com.mopub.volley.Request;
 import com.mopub.volley.VolleyError;
 
@@ -173,5 +174,20 @@ public class MoPubNativeTest {
         // All log messages end with a newline character.
         assertThat(latestLogMessage.msg.trim()).isEqualTo(MoPubErrorCode.WARMUP.toString());
         verify(mockNetworkListener).onNativeFail(eq(NativeErrorCode.EMPTY_AD_RESPONSE));
+    }
+
+    @Test
+    public void onAdError_withNoConnection_shouldLogMoPubErrorCodeNoConnection_shouldNotifyListener() {
+        LogManager.getLogManager().getLogger("com.mopub").setLevel(Level.ALL);
+        shadowOf(context).denyPermissions(INTERNET);
+
+        subject.onAdError(new NoConnectionError());
+
+        final List<ShadowLog.LogItem> allLogMessages = ShadowLog.getLogs();
+        final ShadowLog.LogItem latestLogMessage = allLogMessages.get(allLogMessages.size() - 1);
+
+        // All log messages end with a newline character.
+        assertThat(latestLogMessage.msg.trim()).isEqualTo(MoPubErrorCode.NO_CONNECTION.toString());
+        verify(mockNetworkListener).onNativeFail(eq(NativeErrorCode.CONNECTION_ERROR));
     }
 }

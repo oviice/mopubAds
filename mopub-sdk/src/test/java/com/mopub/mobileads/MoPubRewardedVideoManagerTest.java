@@ -6,14 +6,15 @@ import android.support.annotation.Nullable;
 
 import com.mopub.common.AdType;
 import com.mopub.common.LifecycleListener;
+import com.mopub.common.MoPubReward;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.network.AdRequest;
 import com.mopub.network.AdResponse;
 import com.mopub.network.MoPubRequestQueue;
 import com.mopub.network.Networking;
-import com.mopub.volley.RequestQueue;
 import com.mopub.volley.VolleyError;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,6 +62,40 @@ public class MoPubRewardedVideoManagerTest {
         Networking.setRequestQueueForTesting(mockRequestQueue);
     }
 
+    @After
+    public void tearDown() {
+        // Unpause the main looper in case a test terminated while the looper was paused.
+        Robolectric.unPauseMainLooper();
+    }
+
+    @Test
+    public void callbackMethods_withNullListener_shouldNotError() {
+        // Clients can set RVM null.
+        MoPubRewardedVideoManager.setVideoListener(null);
+
+        AdResponse testResponse = new AdResponse.Builder()
+                .setCustomEventClassName("com.mopub.mobileads.MoPubRewardedVideoManagerTest$TestCustomEvent")
+                .setAdType(AdType.CUSTOM)
+                .build();
+
+        // Robolectric executes its handlers immediately, so if we want the async behavior we see
+        // in an actual app we have to pause the main looper until we're done successfully loading the ad.
+        Robolectric.pauseMainLooper();
+
+        MoPubRewardedVideoManager.loadVideo("testAdUnit");
+        // Triggers a call to MoPubRewardedVideoManager.onRewardedVideoLoadSuccess
+        requestListener.onSuccess(testResponse);
+
+        Robolectric.unPauseMainLooper();
+
+        MoPubRewardedVideoManager.onRewardedVideoClicked(TestCustomEvent.class, "id!");
+        MoPubRewardedVideoManager.onRewardedVideoStarted(TestCustomEvent.class, "id!");
+        MoPubRewardedVideoManager.onRewardedVideoClosed(TestCustomEvent.class, "id!");
+        MoPubRewardedVideoManager.onRewardedVideoCompleted(TestCustomEvent.class, "id!", MoPubReward.success("test", 111));
+
+        // The test passed because none of the above calls thew an exception even though the listener is null.
+    }
+
     @Test
     public void onAdSuccess_noCEFound_shouldCallFailCallback() throws Exception {
         AdResponse testResponse = new AdResponse.Builder()
@@ -84,8 +119,6 @@ public class MoPubRewardedVideoManagerTest {
                 .setFailoverUrl("fail.url")
                 .build();
 
-
-
         MoPubRewardedVideoManager.loadVideo("testAdUnit");
 
         assertThat(request.getUrl()).contains("testAdUnit");
@@ -102,10 +135,18 @@ public class MoPubRewardedVideoManagerTest {
                 .setAdType(AdType.CUSTOM)
                 .build();
 
-        MoPubRewardedVideoManager.loadVideo("testAdUnit");
+        // Robolectric executes its handlers immediately, so if we want the async behavior we see
+        // in an actual app we have to pause the main looper until we're done successfully loading the ad.
+        Robolectric.pauseMainLooper();
 
+        MoPubRewardedVideoManager.loadVideo("testAdUnit");
         requestListener.onSuccess(testResponse);
+
+        Robolectric.unPauseMainLooper();
+
         assertThat(MoPubRewardedVideoManager.hasVideo("testAdUnit")).isTrue();
+        verify(mockVideoListener).onRewardedVideoLoadSuccess(eq("testAdUnit"));
+        verifyNoMoreInteractions(mockVideoListener);
     }
 
     @Test
@@ -115,12 +156,20 @@ public class MoPubRewardedVideoManagerTest {
                 .setAdType(AdType.CUSTOM)
                 .build();
 
-        MoPubRewardedVideoManager.loadVideo("testAdUnit");
+        // Robolectric executes its handlers immediately, so if we want the async behavior we see
+        // in an actual app we have to pause the main looper until we're done successfully loading the ad.
+        Robolectric.pauseMainLooper();
 
+        MoPubRewardedVideoManager.loadVideo("testAdUnit");
         requestListener.onSuccess(testResponse);
+
+        Robolectric.unPauseMainLooper();
+
         assertThat(MoPubRewardedVideoManager.hasVideo("testAdUnit")).isTrue();
         MoPubRewardedVideoManager.showVideo("testAdUnit");
+        verify(mockVideoListener).onRewardedVideoLoadSuccess(eq("testAdUnit"));
         assertThat(MoPubRewardedVideoManager.hasVideo("testAdUnit")).isFalse();
+        verify(mockVideoListener).onRewardedVideoStarted(eq("testAdUnit"));
     }
     
     @Test
@@ -130,9 +179,17 @@ public class MoPubRewardedVideoManagerTest {
                 .setAdType(AdType.CUSTOM)
                 .build();
 
-        MoPubRewardedVideoManager.loadVideo("testAdUnit");
+        // Robolectric executes its handlers immediately, so if we want the async behavior we see
+        // in an actual app we have to pause the main looper until we're done successfully loading the ad.
+        Robolectric.pauseMainLooper();
 
+        MoPubRewardedVideoManager.loadVideo("testAdUnit");
         requestListener.onSuccess(testResponse);
+
+        Robolectric.unPauseMainLooper();
+
+        verify(mockVideoListener).onRewardedVideoLoadFailure(eq("testAdUnit"), eq(MoPubErrorCode.NETWORK_NO_FILL));
+
         assertThat(MoPubRewardedVideoManager.hasVideo("testAdUnit")).isFalse();
         MoPubRewardedVideoManager.showVideo("testAdUnit");
         verify(mockVideoListener).onRewardedVideoLoadFailure(eq("testAdUnit"), eq(MoPubErrorCode.VIDEO_NOT_AVAILABLE));
@@ -189,6 +246,7 @@ public class MoPubRewardedVideoManagerTest {
                 @NonNull final Map<String, String> serverExtras) throws Exception {
             // Do nothing because robolectric handlers execute immediately.
             mPlayable = true;
+            MoPubRewardedVideoManager.onRewardedVideoLoadSuccess(TestCustomEvent.class, "id!");
         }
 
         @Override
@@ -208,6 +266,7 @@ public class MoPubRewardedVideoManagerTest {
                 @NonNull final Map<String, Object> localExtras,
                 @NonNull final Map<String, String> serverExtras) throws Exception {
             mPlayable = false;
+            MoPubRewardedVideoManager.onRewardedVideoLoadFailure(NoVideoCustomEvent.class, "id!", MoPubErrorCode.NETWORK_NO_FILL);
         }
     }
 }

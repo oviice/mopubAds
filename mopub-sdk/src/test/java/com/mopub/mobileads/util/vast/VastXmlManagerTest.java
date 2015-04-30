@@ -1,6 +1,7 @@
 package com.mopub.mobileads.util.vast;
 
 import com.mopub.common.test.support.SdkTestRunner;
+import com.mopub.common.util.DeviceUtils.ForceOrientation;
 import com.mopub.mobileads.VastAbsoluteProgressTracker;
 import com.mopub.mobileads.VastFractionalProgressTracker;
 
@@ -39,7 +40,7 @@ public class VastXmlManagerTest {
             "                    <VASTAdTagURI><![CDATA[ http://0.dsp.dev1.mopub.com/xml ]]></VASTAdTagURI>" +
             "                    <Creatives>" +
             "                        <Creative sequence=\"1\" AdID=\"\">" +
-            "                            <Linear>" +
+            "                            <Linear skipoffset=\"25%\">" +
             "                                <Duration>00:00:58</Duration>" +
             "                                <TrackingEvents>" +
             "                                    <Tracking event=\"start\">" +
@@ -123,12 +124,22 @@ public class VastXmlManagerTest {
             "                                    </Tracking>" +
             "                                    <Tracking event=\"close\">" +
             "                                        <![CDATA[" +
-            "                                        http://www.mopub.com/search?q=ignatius" +
+            "                                        http://www.mopub.com/close?q=ignatius" +
             "                                        ]]>" +
             "                                    </Tracking>" +
             "                                    <Tracking event=\"close\">" +
             "                                        <![CDATA[" +
-            "                                        http://www.mopub.com/search?q=j3" +
+            "                                        http://www.mopub.com/close?q=j3" +
+            "                                        ]]>" +
+            "                                    </Tracking>" +
+            "                                    <Tracking event=\"skip\">" +
+            "                                        <![CDATA[" +
+            "                                        http://www.mopub.com/skip?q=ignatius" +
+            "                                        ]]>" +
+            "                                    </Tracking>" +
+            "                                    <Tracking event=\"skip\">" +
+            "                                        <![CDATA[" +
+            "                                        http://www.mopub.com/skip?q=j3" +
             "                                        ]]>" +
             "                                    </Tracking>" +
             "                                    <Tracking event=\"mute\">" +
@@ -282,6 +293,12 @@ public class VastXmlManagerTest {
             "                                </DeliveryData>" +
             "                            </AdServingData>" +
             "                        </Extension>" +
+            "                        <Extension type=\"MoPub\">" +
+            "                           <MoPubCtaText>custom CTA text</MoPubCtaText>" +
+            "                           <MoPubSkipText>skip</MoPubSkipText>" +
+            "                           <MoPubCloseIcon>http://ton.twitter.com/exchange-media/images/v4/star_icon_3x.png</MoPubCloseIcon>" +
+            "                           <MoPubForceOrientation>device</MoPubForceOrientation>" +
+            "                        </Extension>" +
             "                    </Extensions>" +
             "                </InLine>" +
             "            </Ad>" +
@@ -410,13 +427,14 @@ public class VastXmlManagerTest {
     public void getVideoCloseTrackers_shouldReturnTheCorrectValue() {
         List<String> trackers = mXmlManager.getVideoCloseTrackers();
 
-        assertThat(trackers.size()).isEqualTo(2);
+        assertThat(trackers).containsExactly("http://www.mopub.com/close?q=ignatius", "http://www.mopub.com/close?q=j3");
+    }
 
-        String tracker1 = trackers.get(0);
-        String tracker2 = trackers.get(1);
+    @Test
+    public void getVideoSkipTrackers_shouldReturnTheCorrectValue() {
+        List<String> trackers = mXmlManager.getVideoSkipTrackers();
 
-        assertThat(tracker1).isEqualTo("http://www.mopub.com/search?q=ignatius");
-        assertThat(tracker2).isEqualTo("http://www.mopub.com/search?q=j3");
+        assertThat(trackers).containsExactly("http://www.mopub.com/skip?q=ignatius", "http://www.mopub.com/skip?q=j3");
     }
 
     @Test
@@ -501,6 +519,41 @@ public class VastXmlManagerTest {
         String url = mXmlManager.getMediaFileUrl();
 
         assertThat(url).isEqualTo("http://s3.amazonaws.com/uploads.hipchat.com/10627/429509/t8hqeqf98nvtir7/big_buck_bunny.mp4");
+    }
+
+    @Test
+    public void getCustomCtaText_shouldReturnTheCorrectValue() {
+        String customCtaText = mXmlManager.getCustomCtaText();
+
+        assertThat(customCtaText).isEqualTo("custom CTA text");
+    }
+
+    @Test
+    public void getCustomSkipText_shouldReturnTheCorrectValue() {
+        String customSkipText = mXmlManager.getCustomSkipText();
+
+        assertThat(customSkipText).isEqualTo("skip");
+    }
+
+    @Test
+    public void getCustomCloseIconUrl_shouldReturnTheCorrectValue() {
+        String customCloseIconUrl = mXmlManager.getCustomCloseIconUrl();
+
+        assertThat(customCloseIconUrl).isEqualTo("http://ton.twitter.com/exchange-media/images/v4/star_icon_3x.png");
+    }
+
+    @Test
+    public void getCustomForceOrientation_shouldReturnTheCorrectValue() {
+        ForceOrientation customForceOrientation = mXmlManager.getCustomForceOrientation();
+
+        assertThat(customForceOrientation).isEqualTo(ForceOrientation.DEVICE_ORIENTATION);
+    }
+
+    @Test
+    public void getSkipOffset_shouldReturnTheCorrectValue() {
+        String skipOffset = mXmlManager.getSkipOffset();
+
+        assertThat(skipOffset).isEqualTo("25%");
     }
 
     @Test

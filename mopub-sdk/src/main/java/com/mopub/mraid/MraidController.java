@@ -707,9 +707,9 @@ public class MraidController {
 
         if (!resizeRect.contains(closeRect)) {
             throw new MraidCommandException("resizeProperties specified a size ("
-            + widthDips + ", " + height +") and offset ("
-            + offsetXDips + ", " + offsetYDips + ") that don't allow the close region to appear "
-            + "within the resized ad.");
+                    + widthDips + ", " + height + ") and offset ("
+                    + offsetXDips + ", " + offsetYDips + ") that don't allow the close region to appear "
+                    + "within the resized ad.");
         }
 
         // Resized ads always rely on the creative's close button (as if useCustomClose were true)
@@ -1035,11 +1035,16 @@ public class MraidController {
      * corresponding application, and all other links in the MoPub in-app browser.
      */
     @VisibleForTesting
-    void handleOpen(@NonNull String url) {
+    void handleOpen(@NonNull final String url) {
         MoPubLog.d("Opening url: " + url);
 
         if (mMraidListener != null) {
             mMraidListener.onOpen();
+        }
+
+        if (Intents.isAboutScheme(url)) {
+            MoPubLog.d("Link to about page ignored.");
+            return;
         }
 
         // MoPubNativeBrowser URLs
@@ -1058,28 +1063,33 @@ public class MraidController {
             return;
         }
 
-        // Non-http(s) URLs
-        if (!Intents.isHttpUrl(url) && Intents.canHandleApplicationUrl(mContext, url)) {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        if (Intents.isHttpUrl(url)) {
+            final Bundle extras = new Bundle();
+            extras.putString(MoPubBrowser.DESTINATION_URL_KEY, url);
+
+            final Intent intent = Intents.getStartActivityIntent(mContext, MoPubBrowser.class,
+                    extras);
+            try {
+                Intents.startActivity(mContext, intent);
+            } catch (IntentNotResolvableException e) {
+                MoPubLog.d("Unable to launch intent for URL: " + url + ".");
+            }
+            return;
+        }
+
+        // Non-http(s) URLs like app deep links
+        if (Intents.canHandleApplicationUrl(mContext, url)) {
+            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
 
             try {
                 Intents.startActivity(mContext, intent);
             } catch (IntentNotResolvableException e) {
                 MoPubLog.d("Unable to resolve application url: " + url);
             }
-
             return;
         }
 
-        final Bundle extras = new Bundle();
-        extras.putString(MoPubBrowser.DESTINATION_URL_KEY, url);
-
-        final Intent intent = Intents.getStartActivityIntent(mContext, MoPubBrowser.class, extras);
-        try {
-            Intents.startActivity(mContext, intent);
-        } catch (IntentNotResolvableException e) {
-            MoPubLog.d("Unable to launch intent for URL: " + url +  ".");
-        }
+        MoPubLog.d("Link ignored. Unable to handle url: " + url);
     }
 
     @VisibleForTesting

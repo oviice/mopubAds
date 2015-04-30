@@ -31,8 +31,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URL;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -77,6 +76,29 @@ public class AdRequest extends Request<AdResponse> {
     }
 
     @Override
+    public Map<String, String> getHeaders() {
+        TreeMap<String, String> headers = new TreeMap<String, String>();
+
+        // Use default locale first for language code
+        String languageCode = Locale.getDefault().getLanguage();
+
+        // If user's preferred locale is different from default locale, override language code
+        Locale userLocale = mContext.getResources().getConfiguration().locale;
+        if (userLocale != null) {
+            if (! userLocale.getLanguage().trim().isEmpty()) {
+                languageCode = userLocale.getLanguage().trim();
+            }
+        }
+
+        // Do not add header if language is empty
+        if (! languageCode.isEmpty()) {
+            headers.put(ResponseHeader.ACCEPT_LANGUAGE.getKey(), languageCode);
+        }
+
+        return headers;
+    }
+
+    @Override
     protected Response<AdResponse> parseNetworkResponse(final NetworkResponse networkResponse) {
         // NOTE: We never get status codes outside of {[200, 299], 304}. Those errors are sent to the
         // error listener.
@@ -96,13 +118,27 @@ public class AdRequest extends Request<AdResponse> {
 
         String adTypeString = extractHeader(headers, ResponseHeader.AD_TYPE);
         String fullAdTypeString = extractHeader(headers, ResponseHeader.FULL_AD_TYPE);
-
         builder.setAdType(adTypeString);
         builder.setFullAdType(fullAdTypeString);
+
+        // In the case of a CLEAR response, the REFRESH_TIME header must still be respected. Ensure
+        // that it is parsed and passed along to the MoPubNetworkError.
+        final Integer refreshTimeSeconds = extractIntegerHeader(headers, ResponseHeader.REFRESH_TIME);
+        final Integer refreshTimeMilliseconds = refreshTimeSeconds == null
+                ? null
+                : refreshTimeSeconds * 1000;
+        builder.setRefreshTimeMilliseconds(refreshTimeMilliseconds);
+
         if (AdType.CLEAR.equals(adTypeString)) {
-            AdResponse adResponse = builder.build();
+            final AdResponse adResponse = builder.build();
             logScribeEvent(adResponse, networkResponse, location);
-            return Response.error(new MoPubNetworkError("No ads found for ad unit.", MoPubNetworkError.Reason.NO_FILL));
+            return Response.error(
+                    new MoPubNetworkError(
+                            "No ads found for ad unit.",
+                            MoPubNetworkError.Reason.NO_FILL,
+                            refreshTimeMilliseconds
+                    )
+            );
         }
 
         builder.setNetworkType(extractHeader(headers, ResponseHeader.NETWORK_TYPE));
@@ -129,11 +165,9 @@ public class AdRequest extends Request<AdResponse> {
 
         Integer adTimeoutDelaySeconds = extractIntegerHeader(headers, ResponseHeader.AD_TIMEOUT);
         builder.setAdTimeoutDelayMilliseconds(
-                adTimeoutDelaySeconds == null ? null : adTimeoutDelaySeconds * 1000);
-
-        Integer refreshTimeSeconds = extractIntegerHeader(headers, ResponseHeader.REFRESH_TIME);
-        builder.setRefreshTimeMilliseconds(
-                refreshTimeSeconds == null ? null : refreshTimeSeconds * 1000);
+                adTimeoutDelaySeconds == null
+                        ? null
+                        : adTimeoutDelaySeconds * 1000);
 
         // Response Body encoding / decoding
         String responseBody = parseStringBody(networkResponse);
@@ -173,6 +207,7 @@ public class AdRequest extends Request<AdResponse> {
             Map<String, String> eventDataMap = new TreeMap<String, String>();
             eventDataMap.put(DataKeys.HTML_RESPONSE_BODY_KEY, responseBody);
             eventDataMap.put(DataKeys.SCROLLABLE_KEY, Boolean.toString(isScrollable));
+            eventDataMap.put(DataKeys.CREATIVE_ORIENTATION_KEY, extractHeader(headers, ResponseHeader.ORIENTATION));
             if (redirectUrl != null) {
                 eventDataMap.put(DataKeys.REDIRECT_URL_KEY, redirectUrl);
             }

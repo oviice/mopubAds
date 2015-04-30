@@ -43,10 +43,19 @@ class HtmlWebViewClient extends WebViewClient {
      * in the corresponding application, and all other links in the MoPub in-app browser.
      */
     @Override
-    public boolean shouldOverrideUrlLoading(WebView view, String url) {
-        MoPubLog.d("Ad clicked. Click URL: " + url);
+    public boolean shouldOverrideUrlLoading(final WebView view, final String url) {
+        MoPubLog.d("Ad event URL: " + url);
 
-        if (handleSpecialMoPubScheme(url) || handlePhoneScheme(url)) {
+        if (handleSpecialMoPubScheme(url)) {
+            return true;
+        }
+
+        if (Intents.isAboutScheme(url)) {
+            MoPubLog.d("Link to about page ignored.");
+            return true;
+        }
+
+        if (handlePhoneScheme(url)) {
             return true;
         }
 
@@ -63,13 +72,18 @@ class HtmlWebViewClient extends WebViewClient {
             return true;
         }
 
-        // Non-http(s) URLs
-        if (!Intents.isHttpUrl(url) && Intents.canHandleApplicationUrl(mContext, url)) {
+        if (Intents.isHttpUrl(url)) {
+            showMoPubBrowserForUrl(url);
+            return true;
+        }
+
+        // Non-http(s) URLs like app deep links
+        if (Intents.canHandleApplicationUrl(mContext, url)) {
             launchApplicationUrl(url);
             return true;
         }
 
-        showMoPubBrowserForUrl(url);
+        MoPubLog.d("Link ignored. Unable to handle url: " + url);
         return true;
     }
 
@@ -150,13 +164,7 @@ class HtmlWebViewClient extends WebViewClient {
                 + ". Perhaps you forgot to declare com.mopub.common.MoPubBrowser"
                 + " in your Android manifest file.";
 
-        boolean handledByMoPubBrowser = launchIntentForUserClick(mContext, intent, errorMessage);
-
-        if (!handledByMoPubBrowser) {
-            intent = new Intent(Intent.ACTION_VIEW, Uri.parse("about:blank"));
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            launchIntentForUserClick(mContext, intent, null);
-        }
+        launchIntentForUserClick(mContext, intent, errorMessage);
     }
 
     private void handleCustomIntentFromUri(Uri uri) {

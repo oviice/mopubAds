@@ -13,7 +13,6 @@ import android.widget.FrameLayout;
 
 import com.mopub.common.AdReport;
 import com.mopub.common.CloseableLayout.ClosePosition;
-import com.mopub.common.MoPubBrowser;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.Utils;
 import com.mopub.mobileads.BaseVideoPlayerActivityTest;
@@ -540,16 +539,18 @@ public class MraidControllerTest {
         subject.handleOpen(applicationUrl);
 
         Intent startedIntent = Robolectric.getShadowApplication().getNextStartedActivity();
-        assertThat(startedIntent).isNotNull();
-        // Since we are not using an Activity context, we should have FLAG_ACTIVITY_NEW_TASK
-        assertThat(Utils.bitMaskContainsFlag(startedIntent.getFlags(),
-                Intent.FLAG_ACTIVITY_NEW_TASK)).isTrue();
-        assertThat(startedIntent.getComponent().getClassName())
-                .isEqualTo("com.mopub.common.MoPubBrowser");
-        assertThat(startedIntent.getStringExtra(MoPubBrowser.DESTINATION_URL_KEY))
-                .isEqualTo(applicationUrl);
+        assertThat(startedIntent).isNull();
 
         verify(mockMraidListener).onOpen();
+    }
+
+    @Test
+    public void handleOpen_withAboutBlankUrl_shouldFailSilently() {
+        final String url = "about:blank";
+
+        subject.handleOpen(url);
+
+        assertThat(Robolectric.getShadowApplication().getNextStartedActivity()).isNull();
     }
 
     @Test

@@ -36,6 +36,13 @@ class ClickDestinationResolutionListener implements UrlResolutionTask.UrlResolut
      */
     @Override
     public void onSuccess(@NonNull final String resolvedUrl) {
+
+        if (Intents.isAboutScheme(resolvedUrl)) {
+            MoPubLog.d("Link to about page ignored.");
+            removeSpinningProgressView();
+            return;
+        }
+
         // Handle MoPubNativeBrowser schemes
         if (Intents.isNativeBrowserScheme(resolvedUrl)) {
             try {
@@ -82,7 +89,12 @@ class ClickDestinationResolutionListener implements UrlResolutionTask.UrlResolut
         }
 
         removeSpinningProgressView();
-        MoPubBrowser.open(mContext, resolvedUrl);
+        if (Intents.isHttpUrl(resolvedUrl)) {
+            MoPubBrowser.open(mContext, resolvedUrl);
+            return;
+        }
+
+        MoPubLog.d("Link ignored. Unable to handle url: " + resolvedUrl);
     }
 
     @Override

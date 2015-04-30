@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import com.mopub.common.Preconditions;
 
 import java.io.Serializable;
+import java.util.Locale;
 
 /**
  * A Vast tracking URL with an "absolute" trigger threshold. The tracker should be triggered
@@ -30,5 +31,10 @@ public class VastAbsoluteProgressTracker extends VastTracker implements Comparab
         int me = getTrackingMilliseconds();
 
         return me - you;
+    }
+
+    @Override
+    public String toString() {
+        return String.format(Locale.US, "%dms: %s", mTrackingMilliseconds, mTrackingUrl);
     }
 }

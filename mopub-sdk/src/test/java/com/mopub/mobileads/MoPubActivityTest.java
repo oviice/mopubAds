@@ -4,12 +4,14 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
 import com.mopub.common.AdReport;
+import com.mopub.common.CreativeOrientation;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestHtmlInterstitialWebViewFactory;
 
@@ -21,6 +23,11 @@ import org.mockito.Mock;
 import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowLocalBroadcastManager;
 
+import static com.mopub.common.DataKeys.CLICKTHROUGH_URL_KEY;
+import static com.mopub.common.DataKeys.CREATIVE_ORIENTATION_KEY;
+import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
+import static com.mopub.common.DataKeys.REDIRECT_URL_KEY;
+import static com.mopub.common.DataKeys.SCROLLABLE_KEY;
 import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_CLICK;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_DISMISS;
@@ -28,10 +35,6 @@ import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERS
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.ACTION_INTERSTITIAL_SHOW;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.getHtmlInterstitialIntentFilter;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiverTest.getIntentForActionAndIdentifier;
-import static com.mopub.common.DataKeys.CLICKTHROUGH_URL_KEY;
-import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
-import static com.mopub.common.DataKeys.REDIRECT_URL_KEY;
-import static com.mopub.common.DataKeys.SCROLLABLE_KEY;
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -50,6 +53,7 @@ public class MoPubActivityTest {
     @Mock private AdReport mockAdReport;
     private static final String EXPECTED_REDIRECT_URL = "redirectUrl";
     private static final String EXPECTED_CLICKTHROUGH_URL = "http://expected_url";
+    private static final CreativeOrientation EXPECTED_ORIENTATION = CreativeOrientation.PORTRAIT;
 
     @Mock private BroadcastReceiver broadcastReceiver;
     private long testBroadcastIdentifier = 2222;
@@ -68,12 +72,19 @@ public class MoPubActivityTest {
         Intent moPubActivityIntent = MoPubActivity.createIntent(context,
                 EXPECTED_HTML_DATA, mockAdReport, EXPECTED_IS_SCROLLABLE,
                 EXPECTED_REDIRECT_URL,
-                EXPECTED_CLICKTHROUGH_URL, testBroadcastIdentifier);
+                EXPECTED_CLICKTHROUGH_URL, EXPECTED_ORIENTATION, testBroadcastIdentifier);
 
         subject = Robolectric.buildActivity(MoPubActivity.class).withIntent(moPubActivityIntent).create().get();
         customEventInterstitialListener = mock(CustomEventInterstitialListener.class);
 
         resetMockedView(htmlInterstitialWebView);
+    }
+
+    @Test
+    public void onCreate_shouldHaveLockedOrientation() {
+        // Since robolectric doesn't set a requested orientation, verifying that we have a value tells us that one was set.
+        assertThat(subject.getRequestedOrientation()).isIn(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT,
+                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 
     @Test
@@ -163,13 +174,14 @@ public class MoPubActivityTest {
 
     @Test
     public void start_shouldStartMoPubActivityWithCorrectParameters() throws Exception {
-        MoPubActivity.start(subject, "expectedResponse", mockAdReport, true, "redirectUrl", "clickthroughUrl", testBroadcastIdentifier);
+        MoPubActivity.start(subject, "expectedResponse", mockAdReport, true, "redirectUrl", "clickthroughUrl", CreativeOrientation.PORTRAIT, testBroadcastIdentifier);
 
         Intent nextStartedActivity = Robolectric.getShadowApplication().getNextStartedActivity();
         assertThat(nextStartedActivity.getStringExtra(HTML_RESPONSE_BODY_KEY)).isEqualTo("expectedResponse");
         assertThat(nextStartedActivity.getBooleanExtra(SCROLLABLE_KEY, false)).isTrue();
         assertThat(nextStartedActivity.getStringExtra(REDIRECT_URL_KEY)).isEqualTo("redirectUrl");
         assertThat(nextStartedActivity.getStringExtra(CLICKTHROUGH_URL_KEY)).isEqualTo("clickthroughUrl");
+        assertThat(nextStartedActivity.getSerializableExtra(CREATIVE_ORIENTATION_KEY)).isEqualTo(CreativeOrientation.PORTRAIT);
         assertThat(nextStartedActivity.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isNotEqualTo(0);
         assertThat(nextStartedActivity.getComponent().getClassName()).isEqualTo("com.mopub.mobileads.MoPubActivity");
     }

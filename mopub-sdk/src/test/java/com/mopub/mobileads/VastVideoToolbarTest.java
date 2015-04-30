@@ -2,6 +2,7 @@ package com.mopub.mobileads;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.TextView;
 
@@ -119,8 +120,8 @@ public class VastVideoToolbarTest {
 
     @Test
     public void updateCountdownWidget_shouldUpdateTextDrawablesDisplayNumber() throws Exception {
-        final TextDrawable countdownImageSpy = spy(subject.getCountdownWidget().getImageViewDrawable());
-        subject.getCountdownWidget().setImageViewDrawable(countdownImageSpy);
+        final TextDrawable countdownImageSpy = spy((TextDrawable) subject.getCountdownWidget().getImageViewDrawable());
+        subject.getCountdownWidget().setImageViewDrawable((Drawable) countdownImageSpy);
 
         subject.updateCountdownWidget(1002);
 

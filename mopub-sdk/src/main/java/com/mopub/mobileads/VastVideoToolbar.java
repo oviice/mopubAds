@@ -104,6 +104,18 @@ class VastVideoToolbar extends LinearLayout {
                 remainingTime)));
     }
 
+    void updateLearnMoreButtonText(final String customCtaText) {
+        mLearnMoreWidget.updateText(customCtaText);
+    }
+
+    void updateCloseButtonText(final String customSkipText) {
+        mCloseButtonWidget.updateText(customSkipText);
+    }
+
+    void updateCloseButtonIcon(final String customCloseIconUrl) {
+        mCloseButtonWidget.updateImage(customCloseIconUrl);
+    }
+
     void makeInteractable() {
         // The countdown timer has ended and user can interact with close and learn more button
         mCountdownWidget.setVisibility(View.GONE);

@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import com.mopub.common.Preconditions;
 
 import java.io.Serializable;
+import java.util.Locale;
 
 /**
  * A Vast tracking URL with a "fractional" tracking threshold on the interval [0.0, 1.0].
@@ -30,5 +31,10 @@ public class VastFractionalProgressTracker extends VastTracker implements Compar
         float me = trackingFraction();
 
         return Double.compare(me, you);
+    }
+
+    @Override
+    public String toString() {
+        return String.format(Locale.US, "%2f: %s", mFraction, mTrackingUrl);
     }
 }

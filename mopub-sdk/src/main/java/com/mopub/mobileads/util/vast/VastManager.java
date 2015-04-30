@@ -134,6 +134,7 @@ public class VastManager implements VastXmlManagerAggregatorListener {
             vastVideoConfiguration.addFractionalTrackers(xmlManager.getFractionalProgressTrackers());
             vastVideoConfiguration.addCompleteTrackers(xmlManager.getVideoCompleteTrackers());
             vastVideoConfiguration.addCloseTrackers(xmlManager.getVideoCloseTrackers());
+            vastVideoConfiguration.addSkipTrackers(xmlManager.getVideoSkipTrackers());
 
             vastVideoConfiguration.addClickTrackers(xmlManager.getClickTrackers());
 
@@ -143,6 +144,13 @@ public class VastManager implements VastXmlManagerAggregatorListener {
 
             mediaXmlManagers.addAll(xmlManager.getMediaXmlManagers());
             companionXmlManagers.addAll(xmlManager.getCompanionAdXmlManagers());
+
+            // Load custom extensions
+            vastVideoConfiguration.setCustomCtaText(xmlManager.getCustomCtaText());
+            vastVideoConfiguration.setCustomSkipText(xmlManager.getCustomSkipText());
+            vastVideoConfiguration.setCustomCloseIconUrl(xmlManager.getCustomCloseIconUrl());
+            vastVideoConfiguration.setCustomForceOrientation(xmlManager.getCustomForceOrientation());
+            vastVideoConfiguration.setSkipOffset(xmlManager.getSkipOffset());
         }
 
         vastVideoConfiguration.setNetworkMediaFileUrl(getBestMediaFileUrl(mediaXmlManagers));

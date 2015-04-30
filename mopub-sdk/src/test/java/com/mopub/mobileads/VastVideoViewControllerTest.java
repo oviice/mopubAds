@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.media.MediaPlayer;
@@ -18,11 +19,14 @@ import android.widget.VideoView;
 
 import com.mopub.common.MoPubBrowser;
 import com.mopub.common.test.support.SdkTestRunner;
+import com.mopub.common.util.DeviceUtils.ForceOrientation;
 import com.mopub.common.util.Dips;
 import com.mopub.common.util.Drawables;
+import com.mopub.mobileads.resource.CloseButtonDrawable;
 import com.mopub.mobileads.test.support.GestureUtils;
 import com.mopub.mobileads.util.vast.VastCompanionAd;
 import com.mopub.mobileads.util.vast.VastVideoConfiguration;
+import com.mopub.network.MaxWidthImageLoader;
 import com.mopub.network.MoPubRequestQueue;
 import com.mopub.network.Networking;
 
@@ -46,6 +50,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static com.mopub.common.MoPubBrowser.DESTINATION_URL_KEY;
 import static com.mopub.common.VolleyRequestMatcher.isUrl;
@@ -60,9 +66,11 @@ import static com.mopub.mobileads.EventForwardingBroadcastReceiverTest.getIntent
 import static com.mopub.mobileads.VastVideoViewController.DEFAULT_VIDEO_DURATION_FOR_CLOSE_BUTTON;
 import static com.mopub.mobileads.VastVideoViewController.MAX_VIDEO_DURATION_FOR_CLOSE_BUTTON;
 import static com.mopub.mobileads.VastVideoViewController.VAST_VIDEO_CONFIGURATION;
+import static com.mopub.volley.toolbox.ImageLoader.ImageListener;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -79,6 +87,12 @@ import static org.robolectric.Robolectric.shadowOf;
 public class VastVideoViewControllerTest {
     public static final int NETWORK_DELAY = 100;
 
+    private static final String COMPANION_IMAGE_URL = "companion_image_url";
+    private static final String COMPANION_CLICK_TRACKING_URL_1 = "companion_click_tracking_url_1";
+    private static final String COMPANION_CLICK_TRACKING_URL_2 = "companion_click_tracking_url_2";
+    private static final String COMPANION_CLICK_DESTINATION_URL = "http://companion_click_destination_url";
+    private static final String CLICKTHROUGH_URL = "http://clickthrough_url";
+
     private Context context;
     private Bundle bundle;
     private long testBroadcastIdentifier;
@@ -91,11 +105,14 @@ public class VastVideoViewControllerTest {
     @Mock
     MoPubRequestQueue mockRequestQueue;
     @Mock
+    MaxWidthImageLoader mockImageLoader;
+    @Mock
     private MediaPlayer mockMediaPlayer;
 
     @Before
     public void setUp() throws Exception {
         Networking.setRequestQueueForTesting(mockRequestQueue);
+        Networking.setImageLoaderForTesting(mockImageLoader);
         context = new Activity();
         bundle = new Bundle();
         testBroadcastIdentifier = 1111;
@@ -110,16 +127,17 @@ public class VastVideoViewControllerTest {
                 new VastFractionalProgressTracker("mid", 0.5f), new VastFractionalProgressTracker("third", 0.75f)));
         vastVideoConfiguration.addCompleteTrackers(Arrays.asList("complete"));
         vastVideoConfiguration.addCloseTrackers(Arrays.asList("close"));
+        vastVideoConfiguration.addSkipTrackers(Arrays.asList("skip"));
         vastVideoConfiguration.addImpressionTrackers(Arrays.asList("imp"));
-        vastVideoConfiguration.setClickThroughUrl("clickThrough");
+        vastVideoConfiguration.setClickThroughUrl(CLICKTHROUGH_URL);
         vastVideoConfiguration.addClickTrackers(Arrays.asList("click_1", "click_2"));
 
         VastCompanionAd vastCompanionAd = new VastCompanionAd(
                 300,
                 250,
-                "companion_image_url",
-                "companion_click_destination_url",
-                new ArrayList<String>(Arrays.asList("companion_click_tracking_url_1", "companion_click_tracking_url_2"))
+                COMPANION_IMAGE_URL,
+                COMPANION_CLICK_DESTINATION_URL,
+                new ArrayList<String>(Arrays.asList(COMPANION_CLICK_TRACKING_URL_1, COMPANION_CLICK_TRACKING_URL_2))
         );
         vastVideoConfiguration.setVastCompanionAd(vastCompanionAd);
 
@@ -224,6 +242,78 @@ public class VastVideoViewControllerTest {
     }
 
     @Test
+    public void constructor_whenCustomCtaTextNotSpecified_shouldUseDefaultCtaText() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        assertThat(getVastVideoToolbar().getLearnMoreWidget().getTextViewText()).isEqualTo("Learn More");
+    }
+
+    @Test
+    public void constructor_whenCustomCtaTextSpecified_shouldUseCustomCtaText() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setCustomCtaText("custom CTA text");
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        assertThat(getVastVideoToolbar().getLearnMoreWidget().getTextViewText()).isEqualTo("custom CTA text");
+    }
+
+    @Test
+    public void constructor_whenCustomSkipTextNotSpecified_shouldUseDefaultSkipText() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        assertThat(getVastVideoToolbar().getCloseButtonWidget().getTextViewText()).isEqualTo("Close");
+    }
+
+    @Test
+    public void constructor_whenCustomSkipTextSpecified_shouldUseCustomSkipText() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setCustomSkipText("custom skip text");
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        assertThat(getVastVideoToolbar().getCloseButtonWidget().getTextViewText()).isEqualTo("custom skip text");
+    }
+
+    @Test
+    public void constructor_whenCustomCloseIconNotSpecified_shouldUseDefaultCloseIcon() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        Drawable imageViewDrawable = getVastVideoToolbar().getCloseButtonWidget().getImageViewDrawable();
+
+        // Default close icon is an instance of CloseButtonDrawable
+        assertThat(imageViewDrawable).isInstanceOf(CloseButtonDrawable.class);
+    }
+
+    @Test
+    public void constructor_whenCustomCloseIconSpecified_shouldUseCustomCloseIcon() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setCustomCloseIconUrl("http://ton.twitter.com/exchange-media/images/v4/star_icon_3x_1.png");
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        verify(mockImageLoader).get(eq("http://ton.twitter.com/exchange-media/images/v4/star_icon_3x_1.png"), any(ImageListener.class));
+    }
+
+    @Test
     public void onCreate_withCompanionAd_shouldDownloadCompanionAd() throws Exception {
         initializeSubject();
 
@@ -258,6 +348,57 @@ public class VastVideoViewControllerTest {
     }
 
     @Test
+    public void onCreate_whenCustomForceOrientationNotSpecified_shouldForceLandscapeOrientation() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+        subject.onCreate();
+
+        verify(baseVideoViewControllerListener).onSetRequestedOrientation(SCREEN_ORIENTATION_LANDSCAPE);
+    }
+
+    @Test
+    public void onCreate_whenCustomForceOrientationIsDeviceOrientation_shouldNotForceLandscapeOrientation() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setCustomForceOrientation(ForceOrientation.DEVICE_ORIENTATION);
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+        subject.onCreate();
+
+        verify(baseVideoViewControllerListener, never()).onSetRequestedOrientation(anyInt());
+    }
+
+    @Test
+    public void onCreate_whenCustomForceOrientationIsPortraitOrientation_shouldForcePortraitOrientation() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setCustomForceOrientation(ForceOrientation.FORCE_PORTRAIT);
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+        subject.onCreate();
+
+        verify(baseVideoViewControllerListener).onSetRequestedOrientation(SCREEN_ORIENTATION_PORTRAIT);
+    }
+
+    @Test
+    public void onCreate_whenCustomForceOrientationIsLandscapeOrientation_shouldForceLandscapeOrientation() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setCustomForceOrientation(ForceOrientation.FORCE_LANDSCAPE);
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+        subject.onCreate();
+
+        verify(baseVideoViewControllerListener).onSetRequestedOrientation(SCREEN_ORIENTATION_LANDSCAPE);
+    }
+
+    @Test
     public void onComplete_withNullDownloadResponse_shouldNotSetCompanionAdImageBitmap() throws Exception {
         initializeSubject();
 
@@ -284,10 +425,10 @@ public class VastVideoViewControllerTest {
         assertThat(imageView.performClick()).isTrue();
 
         // This request is still made by the older http stack.
-        assertHttpRequestsMade(expectedUserAgent, "companion_image_url");
+        assertHttpRequestsMade(expectedUserAgent, COMPANION_IMAGE_URL);
 
-        verify(mockRequestQueue).add(argThat(isUrl("companion_click_tracking_url_1")));
-        verify(mockRequestQueue).add(argThat(isUrl("companion_click_tracking_url_2")));
+        verify(mockRequestQueue).add(argThat(isUrl(COMPANION_CLICK_TRACKING_URL_1)));
+        verify(mockRequestQueue).add(argThat(isUrl(COMPANION_CLICK_TRACKING_URL_2)));
 
         ArgumentCaptor<Bundle> bundleCaptor = ArgumentCaptor.forClass(Bundle.class);
         verify(baseVideoViewControllerListener).onStartActivityForResult(
@@ -296,7 +437,7 @@ public class VastVideoViewControllerTest {
                 bundleCaptor.capture()
         );
 
-        assertThat(bundleCaptor.getValue().get(DESTINATION_URL_KEY)).isEqualTo("companion_click_destination_url");
+        assertThat(bundleCaptor.getValue().get(DESTINATION_URL_KEY)).isEqualTo(COMPANION_CLICK_DESTINATION_URL);
     }
 
     @Test
@@ -384,7 +525,7 @@ public class VastVideoViewControllerTest {
                 bundleCaptor.capture()
         );
 
-        assertThat(bundleCaptor.getValue().get(DESTINATION_URL_KEY)).isEqualTo("clickThrough");
+        assertThat(bundleCaptor.getValue().get(DESTINATION_URL_KEY)).isEqualTo(CLICKTHROUGH_URL);
     }
 
     @Test
@@ -428,7 +569,7 @@ public class VastVideoViewControllerTest {
                 bundleCaptor.capture()
         );
 
-        assertThat(bundleCaptor.getValue().get(DESTINATION_URL_KEY)).isEqualTo("clickThrough");
+        assertThat(bundleCaptor.getValue().get(DESTINATION_URL_KEY)).isEqualTo(CLICKTHROUGH_URL);
     }
 
     @Test
@@ -504,6 +645,204 @@ public class VastVideoViewControllerTest {
         getShadowVideoView().getOnPreparedListener().onPrepared(null);
 
         assertThat(subject.getShowCloseButtonDelay()).isEqualTo(DEFAULT_VIDEO_DURATION_FOR_CLOSE_BUTTON);
+    }
+
+    @Test
+    public void onPrepared_whenPercentSkipOffsetSpecified_shouldSetShowCloseButtonDelayToSkipOffset() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setSkipOffset("25%");
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        stub(mockMediaPlayer.getDuration()).toReturn(10 * 1000);
+        setMockMediaPlayer(mockMediaPlayer);
+
+        getShadowVideoView().getOnPreparedListener().onPrepared(null);
+
+        assertThat(subject.getShowCloseButtonDelay()).isEqualTo(2500);
+        assertThat(subject.getHasSkipOffset()).isTrue();
+    }
+
+    @Test
+    public void onPrepared_whenAbsoluteSkipOffsetSpecified_shouldSetShowCloseButtonDelayToSkipOffset() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setSkipOffset("00:00:03");
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        stub(mockMediaPlayer.getDuration()).toReturn(10 * 1000);
+        setMockMediaPlayer(mockMediaPlayer);
+
+        getShadowVideoView().getOnPreparedListener().onPrepared(null);
+
+        assertThat(subject.getShowCloseButtonDelay()).isEqualTo(3000);
+        assertThat(subject.getHasSkipOffset()).isTrue();
+    }
+
+    @Test
+    public void onPrepared_whenAbsoluteSkipOffsetWithMillisecondsSpecified_shouldSetShowCloseButtonDelayToSkipOffset() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setSkipOffset("00:00:03.141");
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        stub(mockMediaPlayer.getDuration()).toReturn(10 * 1000);
+        setMockMediaPlayer(mockMediaPlayer);
+
+        getShadowVideoView().getOnPreparedListener().onPrepared(null);
+
+        assertThat(subject.getShowCloseButtonDelay()).isEqualTo(3141);
+        assertThat(subject.getHasSkipOffset()).isTrue();
+    }
+
+    @Test
+    public void onPrepared_whenSkipOffsetIsNull_shouldNotSetShowCloseButtonDelay() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setSkipOffset(null);
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        stub(mockMediaPlayer.getDuration()).toReturn(MAX_VIDEO_DURATION_FOR_CLOSE_BUTTON + 1);
+        setMockMediaPlayer(mockMediaPlayer);
+
+        getShadowVideoView().getOnPreparedListener().onPrepared(null);
+
+        assertThat(subject.getShowCloseButtonDelay()).isEqualTo(DEFAULT_VIDEO_DURATION_FOR_CLOSE_BUTTON);
+        assertThat(subject.getHasSkipOffset()).isFalse();
+    }
+
+    @Test
+    public void onPrepared_whenSkipOffsetHasInvalidAbsoluteFormat_shouldNotSetShowCloseButtonDelay() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setSkipOffset("123:4:56.7");
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        stub(mockMediaPlayer.getDuration()).toReturn(MAX_VIDEO_DURATION_FOR_CLOSE_BUTTON + 1);
+        setMockMediaPlayer(mockMediaPlayer);
+
+        getShadowVideoView().getOnPreparedListener().onPrepared(null);
+
+        assertThat(subject.getShowCloseButtonDelay()).isEqualTo(DEFAULT_VIDEO_DURATION_FOR_CLOSE_BUTTON);
+        assertThat(subject.getHasSkipOffset()).isFalse();
+    }
+
+    @Test
+    public void onPrepared_whenSkipOffsetHasInvalidPercentFormat_shouldNotSetShowCloseButtonDelay() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setSkipOffset("101%");
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        stub(mockMediaPlayer.getDuration()).toReturn(MAX_VIDEO_DURATION_FOR_CLOSE_BUTTON + 1);
+        setMockMediaPlayer(mockMediaPlayer);
+
+        getShadowVideoView().getOnPreparedListener().onPrepared(null);
+
+        assertThat(subject.getShowCloseButtonDelay()).isEqualTo(DEFAULT_VIDEO_DURATION_FOR_CLOSE_BUTTON);
+        assertThat(subject.getHasSkipOffset()).isFalse();
+    }
+
+    @Test
+    public void onPrepared_whenSkipOffsetHasInvalidFractionalPercentFormat_shouldNotSetShowCloseButtonDelay() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setSkipOffset("3.14%");
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        stub(mockMediaPlayer.getDuration()).toReturn(MAX_VIDEO_DURATION_FOR_CLOSE_BUTTON + 1);
+        setMockMediaPlayer(mockMediaPlayer);
+
+        getShadowVideoView().getOnPreparedListener().onPrepared(null);
+
+        assertThat(subject.getShowCloseButtonDelay()).isEqualTo(DEFAULT_VIDEO_DURATION_FOR_CLOSE_BUTTON);
+        assertThat(subject.getHasSkipOffset()).isFalse();
+    }
+
+    @Test
+    public void onPrepared_whenSkipOffsetIsNegative_shouldNotSetShowCloseButtonDelay() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setSkipOffset("-00:00:03");
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        stub(mockMediaPlayer.getDuration()).toReturn(MAX_VIDEO_DURATION_FOR_CLOSE_BUTTON + 1);
+        setMockMediaPlayer(mockMediaPlayer);
+
+        getShadowVideoView().getOnPreparedListener().onPrepared(null);
+
+        assertThat(subject.getShowCloseButtonDelay()).isEqualTo(DEFAULT_VIDEO_DURATION_FOR_CLOSE_BUTTON);
+        assertThat(subject.getHasSkipOffset()).isFalse();
+    }
+
+    @Test
+    public void onPrepared_whenSkipOffsetIsZero_shouldSetShowCloseButtonDelayToZero() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setSkipOffset("00:00:00");
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        stub(mockMediaPlayer.getDuration()).toReturn(MAX_VIDEO_DURATION_FOR_CLOSE_BUTTON + 1);
+        setMockMediaPlayer(mockMediaPlayer);
+
+        getShadowVideoView().getOnPreparedListener().onPrepared(null);
+
+        assertThat(subject.getShowCloseButtonDelay()).isEqualTo(0);
+        assertThat(subject.getHasSkipOffset()).isTrue();
+    }
+
+    @Test
+    public void onPrepared_whenSkipOffsetIsLongerThanDurationForShortVideo_shouldNotSetShowCloseButtonDelay() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setSkipOffset("00:00:11");   // 11s
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        stub(mockMediaPlayer.getDuration()).toReturn(10 * 1000);    // 10s: short video
+        setMockMediaPlayer(mockMediaPlayer);
+
+        getShadowVideoView().getOnPreparedListener().onPrepared(null);
+
+        assertThat(subject.getShowCloseButtonDelay()).isEqualTo(10 * 1000);
+        assertThat(subject.getHasSkipOffset()).isFalse();
+    }
+
+    @Test
+    public void onPrepared_whenSkipOffsetIsLongerThanDurationForLongVideo_shouldNotSetShowCloseButtonDelay() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setSkipOffset("00:00:21");   // 21s
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        initializeSubject();
+
+        stub(mockMediaPlayer.getDuration()).toReturn(20 * 1000);    // 20s: long video
+        setMockMediaPlayer(mockMediaPlayer);
+
+        getShadowVideoView().getOnPreparedListener().onPrepared(null);
+
+        assertThat(subject.getShowCloseButtonDelay()).isEqualTo(DEFAULT_VIDEO_DURATION_FOR_CLOSE_BUTTON);
+        assertThat(subject.getHasSkipOffset()).isFalse();
     }
 
     @Test
@@ -754,7 +1093,7 @@ public class VastVideoViewControllerTest {
     @Test
     public void handleClick_shouldMakeRequestsToClickTrackingUrls() {
         initializeSubject();
-        subject.handleClick(Arrays.asList("clicktracker1", "clicktracker2"), "clickthrough");
+        subject.handleClick(Arrays.asList("clicktracker1", "clicktracker2"), CLICKTHROUGH_URL);
 
         verify(mockRequestQueue).add(argThat(isUrl("clicktracker1")));
         verify(mockRequestQueue).add(argThat(isUrl("clicktracker2")));
@@ -763,7 +1102,7 @@ public class VastVideoViewControllerTest {
     @Test
     public void handleClick_withNullClickTrackers_shouldNotThrowAnException() {
         initializeSubject();
-        subject.handleClick(null, "clickthrough");
+        subject.handleClick(null, CLICKTHROUGH_URL);
 
         // pass
     }
@@ -799,6 +1138,15 @@ public class VastVideoViewControllerTest {
         // url2 is an invalid query parameter
         subject.handleClick(Arrays.asList("clicktracker"),
                 "mopubnativebrowser://navigate?url2=http%3A%2F%2Fwww.mopub.com");
+
+        assertThat(Robolectric.getShadowApplication().getNextStartedActivity()).isNull();
+    }
+
+    @Test
+    public void handleClick_withAboutBlankClickThroughUrl_shouldFailSilently() {
+        initializeSubject();
+
+        subject.handleClick(Arrays.asList("clicktracker"), "about:blank");
 
         assertThat(Robolectric.getShadowApplication().getNextStartedActivity()).isNull();
     }
@@ -1039,6 +1387,59 @@ public class VastVideoViewControllerTest {
     }
 
     @Test
+    public void videoProgressCheckerRunnableRun_whenCurrentPositionIsGreaterThanSkipOffset_shouldShowCloseButton() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setSkipOffset("25%");    // skipoffset is at 2.5s
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        // duration is 10s
+        stub(mockMediaPlayer.getDuration()).toReturn(10 * 1000);
+
+        // current position is 1 ms after skipoffset
+        stub(mockMediaPlayer.getCurrentPosition()).toReturn(2501);
+
+        initializeSubject();
+        subject.onResume();
+        setMockMediaPlayer(mockMediaPlayer);
+
+        getShadowVideoView().getOnPreparedListener().onPrepared(null);
+
+        assertThat(subject.getShowCloseButtonDelay()).isEqualTo(2500);
+        assertThat(subject.getHasSkipOffset()).isTrue();
+
+        assertThat(subject.isShowCloseButtonEventFired()).isFalse();
+        Robolectric.getUiThreadScheduler().unPause();
+
+        assertThat(subject.isShowCloseButtonEventFired()).isTrue();
+    }
+
+    @Test
+    public void videoProgressCheckerRunnableRun_whenCurrentPositionIsLessThanSkipOffset_shouldNotShowCloseButton() throws Exception {
+        VastVideoConfiguration vastVideoConfiguration = new VastVideoConfiguration();
+        vastVideoConfiguration.setDiskMediaFileUrl("disk_video_path");
+        vastVideoConfiguration.setSkipOffset("00:00:03");   // skipoffset is at 3s
+        bundle.putSerializable(VAST_VIDEO_CONFIGURATION, vastVideoConfiguration);
+
+        stub(mockMediaPlayer.getDuration()).toReturn(10 * 1000);    // duration is 10s
+        stub(mockMediaPlayer.getCurrentPosition()).toReturn(2999);  // current position is 1ms before skipoffset
+
+        initializeSubject();
+        subject.onResume();
+        setMockMediaPlayer(mockMediaPlayer);
+
+        getShadowVideoView().getOnPreparedListener().onPrepared(null);
+
+        assertThat(subject.getShowCloseButtonDelay()).isEqualTo(3000);
+        assertThat(subject.getHasSkipOffset()).isTrue();
+
+        assertThat(subject.isShowCloseButtonEventFired()).isFalse();
+        Robolectric.getUiThreadScheduler().unPause();
+
+        assertThat(subject.isShowCloseButtonEventFired()).isFalse();
+    }
+
+    @Test
     public void onPause_shouldStopProgressChecker() throws Exception {
         initializeSubject();
 
@@ -1143,6 +1544,7 @@ public class VastVideoViewControllerTest {
         closeButtonOnTouchListener.onTouch(null, GestureUtils.createActionUp(0, 0));
 
         verify(mockRequestQueue).add(argThat(isUrl("close")));
+        verify(mockRequestQueue).add(argThat(isUrl("skip")));
     }
 
     private void initializeSubject() {

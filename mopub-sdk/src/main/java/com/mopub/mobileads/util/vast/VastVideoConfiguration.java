@@ -1,10 +1,14 @@
 package com.mopub.mobileads.util.vast;
 
+import android.support.annotation.Nullable;
+
+import com.mopub.common.util.DeviceUtils;
 import com.mopub.mobileads.VastAbsoluteProgressTracker;
 import com.mopub.mobileads.VastFractionalProgressTracker;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class VastVideoConfiguration implements Serializable {
@@ -15,11 +19,19 @@ public class VastVideoConfiguration implements Serializable {
     private final ArrayList<VastAbsoluteProgressTracker> mAbsoluteTrackers;
     private final ArrayList<String> mCompleteTrackers;
     private final ArrayList<String> mCloseTrackers;
+    private final ArrayList<String> mSkipTrackers;
     private final ArrayList<String> mClickTrackers;
     private String mClickThroughUrl;
     private String mNetworkMediaFileUrl;
     private String mDiskMediaFileUrl;
+    private String mSkipOffset;
     private VastCompanionAd mVastCompanionAd;
+
+    // Custom extensions
+    private String mCustomCtaText;
+    private String mCustomSkipText;
+    private String mCustomCloseIconUrl;
+    private DeviceUtils.ForceOrientation mCustomForceOrientation = DeviceUtils.ForceOrientation.FORCE_LANDSCAPE; // Default is forcing landscape
 
     public VastVideoConfiguration() {
         mImpressionTrackers = new ArrayList<String>();
@@ -27,6 +39,7 @@ public class VastVideoConfiguration implements Serializable {
         mAbsoluteTrackers = new ArrayList<VastAbsoluteProgressTracker>();
         mCompleteTrackers = new ArrayList<String>();
         mCloseTrackers = new ArrayList<String>();
+        mSkipTrackers = new ArrayList<String>();
         mClickTrackers = new ArrayList<String>();
     }
 
@@ -44,6 +57,7 @@ public class VastVideoConfiguration implements Serializable {
      */
     public void addFractionalTrackers(final List<VastFractionalProgressTracker> fractionalTrackers) {
         mFractionalTrackers.addAll(fractionalTrackers);
+        Collections.sort(mFractionalTrackers);
     }
 
     /**
@@ -51,6 +65,7 @@ public class VastVideoConfiguration implements Serializable {
      */
     public void addAbsoluteTrackers(final List<VastAbsoluteProgressTracker> absoluteTrackers) {
         mAbsoluteTrackers.addAll(absoluteTrackers);
+        Collections.sort(mAbsoluteTrackers);
     }
 
     public void addCompleteTrackers(final List<String> completeTrackers) {
@@ -59,6 +74,10 @@ public class VastVideoConfiguration implements Serializable {
 
     public void addCloseTrackers(final List<String> closeTrackers) {
         mCloseTrackers.addAll(closeTrackers);
+    }
+
+    public void addSkipTrackers(final List<String> skipTrackers) {
+        mSkipTrackers.addAll(skipTrackers);
     }
 
     public void addClickTrackers(final List<String> clickTrackers) {
@@ -79,6 +98,36 @@ public class VastVideoConfiguration implements Serializable {
 
     public void setVastCompanionAd(final VastCompanionAd vastCompanionAd) {
         mVastCompanionAd = vastCompanionAd;
+    }
+
+    public void setCustomCtaText(@Nullable final String customCtaText) {
+        if (customCtaText != null) {
+            mCustomCtaText = customCtaText;
+        }
+    }
+
+    public void setCustomSkipText(@Nullable final String customSkipText) {
+        if (customSkipText != null) {
+            mCustomSkipText = customSkipText;
+        }
+    }
+
+    public void setCustomCloseIconUrl(@Nullable final String customCloseIconUrl) {
+        if (customCloseIconUrl != null) {
+            mCustomCloseIconUrl = customCloseIconUrl;
+        }
+    }
+
+    public void setCustomForceOrientation(@Nullable final DeviceUtils.ForceOrientation customForceOrientation) {
+        if (customForceOrientation != null && customForceOrientation != DeviceUtils.ForceOrientation.UNDEFINED) {
+            mCustomForceOrientation = customForceOrientation;
+        }
+    }
+
+    public void setSkipOffset(@Nullable final String skipOffset) {
+        if (skipOffset != null) {
+            mSkipOffset = skipOffset;
+        }
     }
 
     /**
@@ -105,6 +154,10 @@ public class VastVideoConfiguration implements Serializable {
         return mCloseTrackers;
     }
 
+    public List<String> getSkipTrackers() {
+        return mSkipTrackers;
+    }
+
     public List<String> getClickTrackers() {
         return mClickTrackers;
     }
@@ -123,5 +176,29 @@ public class VastVideoConfiguration implements Serializable {
 
     public VastCompanionAd getVastCompanionAd() {
         return mVastCompanionAd;
+    }
+
+    public String getCustomCtaText() {
+        return mCustomCtaText;
+    }
+
+    public String getCustomSkipText() {
+        return mCustomSkipText;
+    }
+
+    public String getCustomCloseIconUrl() {
+        return mCustomCloseIconUrl;
+    }
+
+    /**
+     * Get custom force orientation
+     * @return ForceOrientation enum (default is FORCE_LANDSCAPE)
+     */
+    public DeviceUtils.ForceOrientation getCustomForceOrientation() {
+        return mCustomForceOrientation;
+    }
+
+    public String getSkipOffset() {
+        return mSkipOffset;
     }
 }

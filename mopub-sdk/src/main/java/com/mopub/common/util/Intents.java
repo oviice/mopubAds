@@ -134,6 +134,10 @@ public class Intents {
         return url.startsWith("mopubnativebrowser://");
     }
 
+    public static boolean isAboutScheme(@NonNull final String url) {
+        return "about".equals(Uri.parse(url).getScheme());
+    }
+
     /**
      * Native Browser Scheme URLs provide a means for advertisers to include links that click out to
      * an external browser, rather than the MoPub in-app browser. Properly formatted native browser
