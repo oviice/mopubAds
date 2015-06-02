@@ -10,6 +10,7 @@ import android.widget.TextView;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -24,7 +25,7 @@ public class ViewsTest {
 
     @Before
     public void setup() {
-        context = new Activity();
+        context = Robolectric.buildActivity(Activity.class).create().get();
         subject = new View(context);
         parent = new RelativeLayout(context);
 

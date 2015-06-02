@@ -75,8 +75,8 @@ public class AdAlertReporter {
 
     private void initEmailIntent() {
         Uri emailScheme = Uri.parse(EMAIL_SCHEME);
-        mEmailIntent = new Intent(Intent.ACTION_SEND_MULTIPLE, emailScheme);
-        mEmailIntent.setType("plain/text");
+        mEmailIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+        mEmailIntent.setDataAndType(emailScheme, "plain/text");
         mEmailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{EMAIL_RECIPIENT});
     }
 

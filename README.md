@@ -34,18 +34,7 @@ Integration instructions are available on the [wiki](https://github.com/mopub/mo
 
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for details.
 
-- Updated GooglePlayServices custom events to depend on the Google Play Services `play-services-ads 7.0.0` API.
-- Vungle support updated to SDK 3.3.3.
-- Updated InMobi and Greystripe custom events to accept application IDs from the MoPub UI.
-  - For InMobi: `{"app_id" : "YOUR_INMOBI_APP_ID"}`
-  - For Greystripe: `{"GUID" : "YOUR GREYSTRIPE_GUID"}`
-
-- Updated the following dependencies:
-	- support-v4 AAR to 22.0.0
-	- support-annotations JAR to 22.0.0
-	- Android Maven Plugin to 4.2.0
-	
-- Bug Fixes
+- Updated Chartboost support to 5.3.0. This introduces a new shared class called ChartboostShared. If you are using Chartboost Custom Native Networks you will need to include this class in your build along with ChartboostInterstitial.
 
 ## Requirements
 

@@ -13,13 +13,13 @@ import com.mopub.common.util.Utils;
 import com.mopub.network.MoPubRequestQueue;
 import com.mopub.network.Networking;
 import com.mopub.volley.Request;
-import com.mopub.volley.RequestQueue;
 
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.robolectric.Robolectric;
 
 import java.util.List;
 import java.util.Map;
@@ -53,7 +53,7 @@ public class NativeResponseTest {
 
     @Before
     public void setUp() throws Exception {
-        context = new Activity();
+        context = Robolectric.buildActivity(Activity.class).create().get();
         mNativeAd = new BaseForwardingNativeAd() {
             @Override
             public void recordImpression() {

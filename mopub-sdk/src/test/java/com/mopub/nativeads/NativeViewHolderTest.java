@@ -17,7 +17,6 @@ import com.mopub.common.util.Utils;
 import com.mopub.network.MaxWidthImageLoader;
 import com.mopub.network.MoPubRequestQueue;
 import com.mopub.network.Networking;
-import com.mopub.volley.RequestQueue;
 import com.mopub.volley.toolbox.ImageLoader;
 
 import org.junit.Before;
@@ -26,6 +25,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.robolectric.Robolectric;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
@@ -84,7 +84,7 @@ public class NativeViewHolderTest {
 
         Networking.setRequestQueueForTesting(mockRequestQueue);
         Networking.setImageLoaderForTesting(mockImageLoader);
-        context = new Activity();
+        context = Robolectric.buildActivity(Activity.class).create().get();
         relativeLayout = new RelativeLayout(context);
         relativeLayout.setId((int) Utils.generateUniqueId());
         viewGroup = new LinearLayout(context);

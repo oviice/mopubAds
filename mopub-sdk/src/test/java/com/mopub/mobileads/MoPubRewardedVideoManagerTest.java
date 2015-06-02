@@ -34,7 +34,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
-public class MoPubRewardedVideoManagerTest {
+public class
+        MoPubRewardedVideoManagerTest {
 
     @Mock
     MoPubRequestQueue mockRequestQueue;
@@ -43,11 +44,12 @@ public class MoPubRewardedVideoManagerTest {
 
     AdRequest.Listener requestListener;
     private AdRequest request;
-    private boolean mLoaded;
+    private Activity mActivity;
 
     @Before
     public void setup() {
-        MoPubRewardedVideoManager.init(Robolectric.buildActivity(Activity.class).create().get());
+        mActivity = Robolectric.buildActivity(Activity.class).create().get();
+        MoPubRewardedVideoManager.init(mActivity);
         MoPubRewardedVideoManager.setVideoListener(mockVideoListener);
 
         when(mockRequestQueue.add(any(AdRequest.class))).then(new Answer<Object>() {
@@ -94,6 +96,26 @@ public class MoPubRewardedVideoManagerTest {
         MoPubRewardedVideoManager.onRewardedVideoCompleted(TestCustomEvent.class, "id!", MoPubReward.success("test", 111));
 
         // The test passed because none of the above calls thew an exception even though the listener is null.
+    }
+
+    @Test
+    public void onAdSuccess_noActivityFound_shouldNotCallFailUrl() {
+        AdResponse testResponse = new AdResponse.Builder()
+                .setAdType(AdType.CUSTOM)
+                .setCustomEventClassName(
+                        "com.mopub.mobileads.MoPubRewardedVideoManagerTest$TestCustomEvent")
+                .setFailoverUrl("fail.url")
+                .build();
+
+        MoPubRewardedVideoManager.updateActivity(null);
+        MoPubRewardedVideoManager.loadVideo("testAdUnit");
+        requestListener.onSuccess(testResponse);
+
+        verify(mockRequestQueue).add(any(AdRequest.class));
+        verifyNoMoreInteractions(mockRequestQueue);
+
+        // Clean up the static state we screwed up:
+        MoPubRewardedVideoManager.updateActivity(mActivity);
     }
 
     @Test

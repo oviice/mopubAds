@@ -65,7 +65,7 @@ public class MoPubNativeTest {
 
     @Before
     public void setup() {
-        context = new Activity();
+        context = Robolectric.buildActivity(Activity.class).create().get();
         shadowOf(context).grantPermissions(ACCESS_NETWORK_STATE);
         shadowOf(context).grantPermissions(INTERNET);
         subject = new MoPubNative(context, adUnitId, mockNetworkListener);

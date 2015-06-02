@@ -22,6 +22,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowLocalBroadcastManager;
+import org.robolectric.util.ActivityController;
 
 import static com.mopub.common.DataKeys.CLICKTHROUGH_URL_KEY;
 import static com.mopub.common.DataKeys.CREATIVE_ORIENTATION_KEY;
@@ -74,10 +75,12 @@ public class MoPubActivityTest {
                 EXPECTED_REDIRECT_URL,
                 EXPECTED_CLICKTHROUGH_URL, EXPECTED_ORIENTATION, testBroadcastIdentifier);
 
-        subject = Robolectric.buildActivity(MoPubActivity.class).withIntent(moPubActivityIntent).create().get();
-        customEventInterstitialListener = mock(CustomEventInterstitialListener.class);
+        final ActivityController<MoPubActivity> subjectController = Robolectric.buildActivity(MoPubActivity.class).withIntent(moPubActivityIntent);
+        subject = subjectController.get();
+        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
+        subjectController.create();
 
-        resetMockedView(htmlInterstitialWebView);
+        customEventInterstitialListener = mock(CustomEventInterstitialListener.class);
     }
 
     @Test
@@ -126,14 +129,14 @@ public class MoPubActivityTest {
 
     @Test
     public void onCreate_shouldSetContentView() throws Exception {
-        subject.onCreate(null);
+        // onCreate is called above in #setup
 
         assertThat(getContentView().getChildCount()).isEqualTo(1);
     }
 
     @Test
     public void onCreate_shouldLayoutWebView() throws Exception {
-        subject.onCreate(null);
+        // onCreate is called in #setup
 
         ArgumentCaptor<FrameLayout.LayoutParams> captor = ArgumentCaptor.forClass(FrameLayout.LayoutParams.class);
         verify(htmlInterstitialWebView).setLayoutParams(captor.capture());
@@ -145,6 +148,8 @@ public class MoPubActivityTest {
 
     @Test
     public void getAdView_shouldReturnPopulatedHtmlWebView() throws Exception {
+        // This is needed because we preload in onCreate and the mock gets triggered.
+        resetMockedView(htmlInterstitialWebView);
         View adView = subject.getAdView();
 
         assertThat(adView).isSameAs(htmlInterstitialWebView);
@@ -157,7 +162,7 @@ public class MoPubActivityTest {
 
     @Test
     public void onDestroy_shouldDestroyMoPubView() throws Exception {
-        subject.onCreate(null);
+        // onCreate is called in #setup
         subject.onDestroy();
 
         verify(htmlInterstitialWebView).destroy();
@@ -166,7 +171,7 @@ public class MoPubActivityTest {
 
     @Test
     public void onDestroy_shouldFireJavascriptWebviewDidClose() throws Exception {
-        subject.onCreate(null);
+        // onCreate is called in #setup
         subject.onDestroy();
 
         verify(htmlInterstitialWebView).loadUrl(eq("javascript:webviewDidClose();"));
@@ -188,6 +193,8 @@ public class MoPubActivityTest {
 
     @Test
     public void getAdView_shouldCreateHtmlInterstitialWebViewAndLoadResponse() throws Exception {
+        // This is needed because we preload in onCreate and the mock gets triggered.
+        resetMockedView(htmlInterstitialWebView);
         subject.getAdView();
 
         assertThat(TestHtmlInterstitialWebViewFactory.getLatestListener()).isNotNull();
@@ -239,7 +246,6 @@ public class MoPubActivityTest {
     @Test
     public void broadcastingInterstitialListener_onInterstitialFailed_shouldBroadcastFailAndFinish() throws Exception {
         Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_FAIL, testBroadcastIdentifier);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
 
         MoPubActivity.BroadcastingInterstitialListener broadcastingInterstitialListener = ((MoPubActivity) subject).new BroadcastingInterstitialListener();
         broadcastingInterstitialListener.onInterstitialFailed(null);
@@ -251,7 +257,6 @@ public class MoPubActivityTest {
     @Test
     public void broadcastingInterstitialListener_onInterstitialClicked_shouldBroadcastClick() throws Exception {
         Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_CLICK, testBroadcastIdentifier);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
 
         MoPubActivity.BroadcastingInterstitialListener broadcastingInterstitialListener = ((MoPubActivity) subject).new BroadcastingInterstitialListener();
         broadcastingInterstitialListener.onInterstitialClicked();
@@ -262,9 +267,6 @@ public class MoPubActivityTest {
     @Test
     public void onCreate_shouldBroadcastInterstitialShow() throws Exception {
         Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_SHOW, testBroadcastIdentifier);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
-
-        subject.onCreate(null);
 
         verify(broadcastReceiver).onReceive(any(Context.class), eq(expectedIntent));
     }
@@ -272,9 +274,7 @@ public class MoPubActivityTest {
     @Test
     public void onDestroy_shouldBroadcastInterstitialDismiss() throws Exception {
         Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_DISMISS, testBroadcastIdentifier);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver, getHtmlInterstitialIntentFilter());
 
-        subject.onCreate(null);
         subject.onDestroy();
 
         verify(broadcastReceiver).onReceive(any(Context.class), eq(expectedIntent));

@@ -237,7 +237,7 @@ public class CustomEventBannerAdapterTest {
 
     @Test
     public void onBannerLoaded_shouldSignalMoPubView() throws Exception {
-        View view = new View(new Activity());
+        View view = new View(Robolectric.buildActivity(Activity.class).create().get());
         subject.onBannerLoaded(view);
 
         verify(moPubView).nativeAdLoaded();

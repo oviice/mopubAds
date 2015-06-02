@@ -14,7 +14,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
-import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLocalBroadcastManager;
 import org.robolectric.shadows.ShadowVideoView;
 import org.robolectric.tester.org.apache.http.RequestMatcher;
@@ -32,7 +31,6 @@ import static org.mockito.Mockito.verify;
 import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(SdkTestRunner.class)
-@Config(manifest=Config.NONE)
 public class MraidVideoViewControllerTest {
     private Context context;
     private Bundle bundle;
@@ -42,7 +40,7 @@ public class MraidVideoViewControllerTest {
 
     @Before
     public void setUp() throws Exception {
-        context = new Activity();
+        context = Robolectric.buildActivity(Activity.class).create().get();
         bundle = new Bundle();
         baseVideoViewControllerListener = mock(BaseVideoViewControllerListener.class);
 
@@ -90,7 +88,6 @@ public class MraidVideoViewControllerTest {
         ImageButton closeButton = getCloseButton();
 
         assertThat(closeButton).isNotNull();
-
         assertThat(shadowOf(closeButton).getOnClickListener()).isNotNull();
         assertThat(closeButton.getVisibility()).isEqualTo(GONE);
     }

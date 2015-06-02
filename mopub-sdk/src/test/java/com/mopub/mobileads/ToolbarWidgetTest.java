@@ -22,7 +22,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.robolectric.Robolectric;
-import org.robolectric.annotation.Config;
 
 import static android.view.Gravity.CENTER_VERTICAL;
 import static android.view.Gravity.RIGHT;
@@ -34,9 +33,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@Config(manifest = Config.NONE)
 @RunWith(SdkTestRunner.class)
-
 public class ToolbarWidgetTest {
     private Context context;
     private ToolbarWidget subject;

@@ -12,6 +12,7 @@ import com.mopub.common.test.support.SdkTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -27,7 +28,7 @@ public class VastVideoToolbarTest {
 
     @Before
     public void setUp() throws Exception {
-        context = new Activity();
+        context = Robolectric.buildActivity(Activity.class).create().get();
         subject = new VastVideoToolbar(context);
 
         onTouchListener = mock(View.OnTouchListener.class);

@@ -35,6 +35,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+/**
+ */
 public class MoPubRewardedVideoManager {
     private static MoPubRewardedVideoManager sInstance;
     private static final int DEFAULT_LOAD_TIMEOUT = Constants.THIRTY_SECONDS_MILLIS;
@@ -294,26 +296,37 @@ public class MoPubRewardedVideoManager {
             final Map<String, Object> localExtras = new TreeMap<String, Object>();
             localExtras.put(DataKeys.AD_UNIT_ID_KEY, adUnitId);
 
+            Activity mainActivity = mMainActivity.get();
+            if (mainActivity == null) {
+                MoPubLog.d("Could not load custom event because Activity reference was null. Call" +
+                        " MoPub#updateActivity before requesting more rewarded videos.");
+
+                // Don't go through the ordinary failover process since we have
+                // no activity for the failover to use.
+                mAdRequestStatus.markFail(adUnitId);
+                return;
+            }
+
             // Set up timeout calls.
             Runnable timeout = new Runnable() {
                 @Override
                 public void run() {
                     MoPubLog.d("Custom Event failed to load rewarded video in a timely fashion.");
-                    onRewardedVideoLoadFailure(customEvent.getClass(), customEvent.getAdNetworkId(), MoPubErrorCode.NETWORK_TIMEOUT);
+                    onRewardedVideoLoadFailure(customEvent.getClass(), customEvent.getAdNetworkId(),
+                            MoPubErrorCode.NETWORK_TIMEOUT);
                     customEvent.onInvalidate();
                 }
             };
             mCustomEventTimeoutHandler.postDelayed(timeout, timeoutMillis);
             mTimeoutMap.put(adUnitId, timeout);
 
-            // Load custom event - need an activity reference!
-            customEvent.loadCustomEvent(mMainActivity.get(), localExtras, adResponse.getServerExtras());
+            // Load custom event
+            customEvent.loadCustomEvent(mainActivity, localExtras, adResponse.getServerExtras());
 
             final CustomEventRewardedVideo.CustomEventRewardedVideoListener listener =
                     customEvent.getVideoListenerForSdk();
             final String adNetworkId = customEvent.getAdNetworkId();
             mRewardedVideoData.updateAdUnitCustomEventMapping(adUnitId, customEvent, listener, adNetworkId);
-
         } catch (Exception e) {
             MoPubLog.e(String.format(Locale.US, "Couldn't create custom event with class name %s", customEventClassName));
             failover(adUnitId, MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
@@ -334,6 +347,9 @@ public class MoPubRewardedVideoManager {
                 default:
                     errorCode = MoPubErrorCode.INTERNAL_ERROR;
             }
+        }
+        if (volleyError instanceof com.mopub.volley.NoConnectionError) {
+            errorCode = MoPubErrorCode.NO_CONNECTION;
         }
         failover(adUnitId, errorCode);
     }

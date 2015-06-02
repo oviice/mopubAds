@@ -15,8 +15,8 @@ import android.view.Display;
 import android.view.WindowManager;
 
 import com.mopub.common.MoPub;
-import com.mopub.mobileads.test.support.MoPubShadowTelephonyManager;
 import com.mopub.common.test.support.SdkTestRunner;
+import com.mopub.mobileads.test.support.MoPubShadowTelephonyManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -57,6 +57,7 @@ public class NativeUrlGeneratorTest {
     public void setup() {
         context = spy(Robolectric.buildActivity(Activity.class).create().get());
         shadowOf(context).grantPermissions(ACCESS_NETWORK_STATE);
+        when(context.getPackageName()).thenReturn("testBundle");
         shadowTelephonyManager = (MoPubShadowTelephonyManager)
                 shadowOf((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE));
 
@@ -286,9 +287,9 @@ public class NativeUrlGeneratorTest {
         assertThat(adUrl).isEqualTo(
                 "http://ads.mopub.com/m/ad?id=" +
                         AD_UNIT_ID +
-                        "&nsv=3.6.1" +
+                        "&nsv=" + MoPub.SDK_VERSION + 
                         "&dn=unknown%2Cunknown%2Cunknown" +
-                        "&bundle=com.mopub.mobileads" +
+                        "&bundle=testBundle" +
                         "&z=-0700" +
                         "&o=u" +
                         "&w=" +
@@ -297,7 +298,11 @@ public class NativeUrlGeneratorTest {
                         TEST_SCREEN_HEIGHT +
                         "&sc_a=" +
                         TEST_DENSITY +
-                        "&ct=3&av=1.0&udid=mp_tmpl_advertising_id&dnt=mp_tmpl_do_not_track");
+                        // maven version
+                        "&ct=3&av=1.0" +
+                        // Gradle version
+                        //"&ct=3&av=" + BuildConfig.VERSION_NAME +
+                        "&udid=mp_tmpl_advertising_id&dnt=mp_tmpl_do_not_track");
     }
 
     @Test

@@ -1,18 +1,23 @@
+## Version 3.8.0 (June 1, 2015)
+
+- Updated Chartboost support to 5.3.0. This introduces a new shared class called ChartboostShared. If you are using Chartboost Custom Native Networks you will need to include this class in your build along with ChartboostInterstitial.
+
 ## Version 3.7.0 (April 30, 2015)
 
 - Updated GooglePlayServices custom events to depend on the Google Play Services `play-services-ads 7.0.0` API.
 - Vungle support updated to SDK 3.3.3.
 - Updated InMobi and Greystripe custom events to accept application IDs from the MoPub UI.
-    - For InMobi: `{"app_id" : "YOUR_INMOBI_APP_ID"}`
-    - For Greystripe: `{"GUID" : "YOUR GREYSTRIPE_GUID"}`
+  - For InMobi: `{"app_id" : "YOUR_INMOBI_APP_ID"}`
+  - For Greystripe: `{"GUID" : "YOUR GREYSTRIPE_GUID"}`
+
 - Added toasts to the MoPub Sample App for ad load failures due to no connection.
-- Fixed a crash related to dismissing `MoPubBrowser` when zoom controls are visible; Fixes [issue #158](https://github.com/mopub/mopub-android-sdk/issues/158).
 - Fixed a bug in processing VAST progress trackers in a VAST wrapper tag.
 - Fixed a bug where ad refresh times could be incorrect when an ad request was not filled.
+
 - Updated the following dependencies:
-    - support-v4 AAR to 22.0.0
-    - support-annotations JAR to 22.0.0
-    - Android Maven Plugin to 4.2.0
+	- support-v4 AAR to 22.0.0
+	- support-annotations JAR to 22.0.0
+	- Android Maven Plugin to 4.2.0
 
 #### Version 3.6.1 (April 6, 2015)
 

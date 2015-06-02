@@ -94,6 +94,7 @@ public class WebViewAdUrlGeneratorTest {
         mockDisplayMetrics.density = TEST_DENSITY;
         when(spyResources.getDisplayMetrics()).thenReturn(mockDisplayMetrics);
         when(context.getResources()).thenReturn(spyResources);
+        when(context.getPackageName()).thenReturn("testBundle");
 
         // Only do this on Android 17+ because getRealSize doesn't exist before then.
         // This is the default pathway.
@@ -540,8 +541,7 @@ public class WebViewAdUrlGeneratorTest {
                     "&dn=" + Build.MANUFACTURER +
                     "%2C" + Build.MODEL +
                     "%2C" + Build.PRODUCT +
-                    "&bundle=" + "com.mopub.mobileads" +
-
+                    "&bundle=" + "testBundle" +
                     paramIfNotEmpty("q", query) +
                     (TextUtils.isEmpty(latLon) ? "" :
                             "&ll=" + latLon + "&lla=" + locationAccuracy + "&llf=" + latLonLastUpdated) +
@@ -555,7 +555,10 @@ public class WebViewAdUrlGeneratorTest {
                     paramIfNotEmpty("iso", countryIso) +
                     paramIfNotEmpty("cn", carrierName) +
                     "&ct=" + networkType +
+                    // Maven version
                     "&av=1.0" +
+                    // Gradle Version
+                    //"&av=" + BuildConfig.VERSION_NAME +
                     "&udid=" + PlayServicesUrlRewriter.UDID_TEMPLATE +
                     "&dnt=" + PlayServicesUrlRewriter.DO_NOT_TRACK_TEMPLATE +
                     "&mr=1" +

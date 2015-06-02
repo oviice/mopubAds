@@ -15,7 +15,6 @@ import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.Robolectric;
-import org.robolectric.annotation.Config;
 import org.robolectric.tester.org.apache.http.FakeHttpLayer;
 
 import java.util.ArrayList;
@@ -30,7 +29,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@Config(manifest = Config.NONE)
 @RunWith(SdkTestRunner.class)
 public class VastManagerTest {
     static final String EXTENSIONS_SNIPPET_PLACEHOLDER = "<![CDATA[EXTENSIONS_SNIPPET]]>";
