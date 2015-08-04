@@ -1,3 +1,13 @@
+## Version 3.10.0 (August 3, 2015)
+
+- VAST UI improvements and bug fixes.
+  - Pause trackers no longer fire when the ad is skipped.
+  - Improved retrieval of blurred video frame when there is no companion ad.
+- Added com.mopub:mopub-sdk AAR to [jCenter](https://bintray.com/mopub/mopub-android-sdk/mopub-android-sdk/view).
+- Bug Fixes:
+  - Fixed a NullPointerException in CacheService on devices with low storage space.
+  - Improved redirect loading for in-app browser.
+
 ## Version 3.9.0 (July 1, 2015)
 
 - Added **VAST 3.0** standard support for video ads.
@@ -8,6 +18,7 @@
   - MRAID video interstitials now play automatically when displayed on Jellybean MR1 and newer.
   - MRAID relative assets are correctly rendered.
   - MoPubLog no longer duplicates some messages.
+  - Fixed erroneous output of DeviceUtils.getScreenOrientationFromRotationAndOrientation().
 
 ## Version 3.8.0 (June 1, 2015)
 

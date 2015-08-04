@@ -6,42 +6,66 @@ Sign up for an account at [http://app.mopub.com/](http://app.mopub.com/).
 
 ## Need Help?
 
-You can find integration documentation on our [wiki](https://github.com/mopub/mopub-android-sdk/wiki/Getting-Started) and
-additional help documentation on our [developer help site](http://dev.twitter.com/mopub). 
+You can find integration documentation on our [wiki](https://github.com/mopub/mopub-android-sdk/wiki/Getting-Started) and additional help documentation on our [developer help site](http://dev.twitter.com/mopub).
 
 To file an issue with our team visit the [MoPub Forum](https://twittercommunity.com/c/fabric/mopub) or email [support@mopub.com](mailto:support@mopub.com).
 
-**Please Note: We no longer accept GitHub Issues**
+**Please Note: We no longer accept GitHub Issues.**
 
 ## Download
 
-The MoPub SDK is distributed as source code that you can include in your application.  MoPub provides two prepackaged archives of source code:
+The MoPub SDK is available via:
 
-- **[MoPub Android Full SDK.zip](http://bit.ly/YUdU9v)**
+1. **jCenter AAR**
+    
+    [ ![Download](https://api.bintray.com/packages/mopub/mopub-android-sdk/mopub-android-sdk/images/download.svg)](https://bintray.com/mopub/mopub-android-sdk/mopub-android-sdk/_latestVersion)  
+    The MoPub SDK is available as an AAR via jCenter; to use it, add the following to your `build.gradle`.
+    
+    ```
+    repositories {
+        jcenter()
+    }
 
-  Includes everything you need to serve HTML and MRAID MoPub advertisiments *and* built-in support for Millennial Media third party ad network - [Millennial Media](http://www.millennialmedia.com/) - including the required third party binaries.
+    dependencies {
+        compile('com.mopub:mopub-sdk:3.10.0@aar') {
+            transitive = true
+        }
+    }
+    ```
 
-- **[MoPub Android Base SDK.zip](http://bit.ly/YUdWhH)**
+    **To continue integration using the mopub-sdk AAR, please see the [Getting Started guide](https://github.com/mopub/mopub-android-sdk/wiki/Getting-Started#updating-your-android-manifest).**
 
-  Includes everything you need to serve HTML and MRAID MoPub advertisements.  No third party ad networks are included.
+2. **Zipped Source**
 
-## Integrate
+    The MoPub SDK is also distributed as zipped source code that you can include in your application.  MoPub provides two prepackaged archives of source code:
 
-Integration instructions are available on the [wiki](https://github.com/mopub/mopub-android-sdk/wiki/Getting-Started).
+    **[MoPub Android Full SDK.zip](http://bit.ly/YUdU9v)**  
+    _Includes everything you need to serve MoPub ads *and* built-in support for Millennial Media third party ad network - [Millennial Media](http://www.millennialmedia.com/) - including the required third party binaries._
+    
+    **[MoPub Android Base SDK.zip](http://bit.ly/YUdWhH)**  
+    _Includes everything you need to serve MoPub ads.  No third party ad networks are included._
+    
+    **For additional integration instructions, please see the [Getting Started guide](https://github.com/mopub/mopub-android-sdk/wiki/Getting-Started#requirements-and-dependencies).**
 
+3. **Cloned GitHub repository**
+    
+    Alternatively, you can obtain the MoPub SDK source by cloning the git repository:
+    
+    `git clone git://github.com/mopub/mopub-android-sdk.git`
+    
+    **For additional integration instructions, please see the [Getting Started guide](https://github.com/mopub/mopub-android-sdk/wiki/Getting-Started#requirements-and-dependencies).**
 
 ## New in this Version
 
-Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for details.
+Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the lastest release..
 
-- Added **VAST 3.0** standard support for video ads.
-- Improved **video player UX**.
-- Added **RecyclerView** support for native ads. See the [integration guide](https://github.com/mopub/mopub-android-sdk/wiki/Native-Ads-with-Recycler-View).
-- Improved **deep link** handling.
+- VAST UI improvements and bug fixes.
+  - Pause trackers no longer fire when the ad is skipped.
+  - Improved retrieval of blurred video frame when there is no companion ad.
+- Added com.mopub:mopub-sdk AAR to [jCenter](https://bintray.com/mopub/mopub-android-sdk/mopub-android-sdk/view).
 - Bug Fixes:
-  - MRAID video interstitials now play automatically when displayed on Jellybean MR1 and newer.
-  - MRAID relative assets are correctly rendered.
-  - MoPubLog no longer duplicates some messages.
+  - Fixed a NullPointerException in CacheService on devices with low storage space.
+  - Improved redirect loading for in-app browser.
 
 ## Requirements
 

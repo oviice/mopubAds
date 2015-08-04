@@ -24,11 +24,11 @@ public class BaseVideoPlayerActivityTest {
     private static final String MRAID_VIDEO_URL = "http://mraidVideo";
 
     private long testBroadcastIdentifier;
-    private VastVideoConfiguration vastVideoConfiguration;
+    private VastVideoConfig mVastVideoConfig;
 
     @Before
     public void setup() throws Exception {
-        vastVideoConfiguration = mock(VastVideoConfiguration.class, withSettings().serializable());
+        mVastVideoConfig = mock(VastVideoConfig.class, withSettings().serializable());
         testBroadcastIdentifier = 1234;
     }
 
@@ -40,19 +40,19 @@ public class BaseVideoPlayerActivityTest {
 
     @Test
     public void startVast_shouldStartMraidVideoPlayerActivity() throws Exception {
-        startVast(Robolectric.buildActivity(Activity.class).create().get(), vastVideoConfiguration, testBroadcastIdentifier);
-        assertVastVideoPlayerActivityStarted(MraidVideoPlayerActivity.class, vastVideoConfiguration, testBroadcastIdentifier);
+        startVast(Robolectric.buildActivity(Activity.class).create().get(), mVastVideoConfig, testBroadcastIdentifier);
+        assertVastVideoPlayerActivityStarted(MraidVideoPlayerActivity.class, mVastVideoConfig, testBroadcastIdentifier);
     }
 
     static void assertVastVideoPlayerActivityStarted(final Class clazz,
-            final VastVideoConfiguration vastVideoConfiguration,
+            final VastVideoConfig vastVideoConfig,
             final long broadcastIdentifier) {
         final Intent intent = Robolectric.getShadowApplication().getNextStartedActivity();
         assertIntentAndBroadcastIdentifierAreCorrect(intent, clazz, broadcastIdentifier);
 
-        final VastVideoConfiguration expectedVastVideoConfiguration =
-                (VastVideoConfiguration) intent.getSerializableExtra(VastVideoViewController.VAST_VIDEO_CONFIGURATION);
-        assertThat(expectedVastVideoConfiguration).isEqualsToByComparingFields(vastVideoConfiguration);
+        final VastVideoConfig expectedVastVideoConfig =
+                (VastVideoConfig) intent.getSerializableExtra(VastVideoViewController.VAST_VIDEO_CONFIG);
+        assertThat(expectedVastVideoConfig).isEqualsToByComparingFields(vastVideoConfig);
     }
 
     public static void assertMraidVideoPlayerActivityStarted(final Class clazz, final String url) {
