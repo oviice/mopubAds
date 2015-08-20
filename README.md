@@ -27,7 +27,7 @@ The MoPub SDK is available via:
     }
 
     dependencies {
-        compile('com.mopub:mopub-sdk:3.10.0@aar') {
+        compile('com.mopub:mopub-sdk:3.11.0@aar') {
             transitive = true
         }
     }
@@ -41,6 +41,10 @@ The MoPub SDK is available via:
 
     **[MoPub Android Full SDK.zip](http://bit.ly/YUdU9v)**  
     _Includes everything you need to serve MoPub ads *and* built-in support for Millennial Media third party ad network - [Millennial Media](http://www.millennialmedia.com/) - including the required third party binaries._
+    
+    _**Note:** Millennial Media has updated their minimum supported version of Android to 4.1 (API level 16+). The MoPub Android Full SDK manifest and build.gradle files have been updated accordingly._
+    
+    _**Note:** Millennial Media has deprecated support for Ant/Eclipse; migrating users should use the MoPub Android base SDK and follow [Millennial's Ant/Eclipse Integration Guide](http://docs.millennialmedia.com/android-ad-sdk/ant-eclipse-integration-guide.html)._
     
     **[MoPub Android Base SDK.zip](http://bit.ly/YUdWhH)**  
     _Includes everything you need to serve MoPub ads.  No third party ad networks are included._
@@ -59,13 +63,8 @@ The MoPub SDK is available via:
 
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the lastest release..
 
-- VAST UI improvements and bug fixes.
-  - Pause trackers no longer fire when the ad is skipped.
-  - Improved retrieval of blurred video frame when there is no companion ad.
-- Added com.mopub:mopub-sdk AAR to [jCenter](https://bintray.com/mopub/mopub-android-sdk/mopub-android-sdk/view).
-- Bug Fixes:
-  - Fixed a NullPointerException in CacheService on devices with low storage space.
-  - Improved redirect loading for in-app browser.
+- Updated Millennial Media support to 6.0.0, including updates to the `MillennialBanner.java` and `MillennialInterstitial.java` custom events.
+- Added mediation for Millennial Media native ads: `MillennialNative.java`, located in the native extras directory of the SDK (`/extras/src/com/mopub/nativeads`).
 
 ## Requirements
 

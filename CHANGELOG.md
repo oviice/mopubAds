@@ -1,3 +1,8 @@
+## Version 3.11.0 (August 20, 2015)
+
+- Updated Millennial Media support to 6.0.0, including updates to the `MillennialBanner.java` and `MillennialInterstitial.java` custom events.
+- Added mediation for Millennial Media native ads: `MillennialNative.java`, located in the native extras directory of the SDK (`/extras/src/com/mopub/nativeads`).
+
 ## Version 3.10.0 (August 3, 2015)
 
 - VAST UI improvements and bug fixes.

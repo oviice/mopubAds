@@ -1,19 +1,22 @@
 repositories {
     jcenter()
+    flatDir {
+        dirs '../libs'
+    }
 }
 
 apply plugin: 'com.android.application'
 
 group = 'com.mopub'
 description = '''MoPub Sample App'''
-version = '3.10.0'
+version = '3.11.0'
 
 android {
     compileSdkVersion 22
     buildToolsVersion '22.0.1'
 
     defaultConfig {
-        versionCode 27
+        versionCode 28
         versionName version
         minSdkVersion 9
         targetSdkVersion 22
