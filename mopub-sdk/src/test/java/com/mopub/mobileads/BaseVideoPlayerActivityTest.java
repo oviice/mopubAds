@@ -1,7 +1,9 @@
 package com.mopub.mobileads;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.Utils;
@@ -17,6 +19,10 @@ import static com.mopub.mobileads.BaseVideoPlayerActivity.startMraid;
 import static com.mopub.mobileads.BaseVideoPlayerActivity.startVast;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
 @RunWith(SdkTestRunner.class)
@@ -40,8 +46,23 @@ public class BaseVideoPlayerActivityTest {
 
     @Test
     public void startVast_shouldStartMraidVideoPlayerActivity() throws Exception {
-        startVast(Robolectric.buildActivity(Activity.class).create().get(), mVastVideoConfig, testBroadcastIdentifier);
-        assertVastVideoPlayerActivityStarted(MraidVideoPlayerActivity.class, mVastVideoConfig, testBroadcastIdentifier);
+        startVast(Robolectric.buildActivity(Activity.class).create().get(), mVastVideoConfig,
+                testBroadcastIdentifier);
+        assertVastVideoPlayerActivityStarted(MraidVideoPlayerActivity.class, mVastVideoConfig,
+                testBroadcastIdentifier);
+    }
+
+    @Test
+    public void onDestroy_shouldReleaseAudioFocus() throws Exception {
+        BaseVideoPlayerActivity subject = spy(
+                Robolectric.buildActivity(BaseVideoPlayerActivity.class).create().get());
+        AudioManager mockAudioManager = mock(AudioManager.class);
+        when(subject.getSystemService(Context.AUDIO_SERVICE)).thenReturn(mockAudioManager);
+
+        subject.onDestroy();
+
+        verify(mockAudioManager).abandonAudioFocus(null);
+        verifyNoMoreInteractions(mockAudioManager);
     }
 
     static void assertVastVideoPlayerActivityStarted(final Class clazz,

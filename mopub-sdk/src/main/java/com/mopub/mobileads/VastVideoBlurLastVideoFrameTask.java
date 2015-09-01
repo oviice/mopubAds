@@ -14,6 +14,14 @@ import com.mopub.common.util.ImageUtils;
 import com.mopub.mobileads.resource.DrawableConstants;
 
 public class VastVideoBlurLastVideoFrameTask extends AsyncTask<String, Void, Boolean> {
+
+    private static final int MICROSECONDS_PER_MILLISECOND = 1000;
+
+    /**
+     * Gets a frame this many microseconds from the end of the video.
+     */
+    private static final int OFFSET_IN_MICROSECONDS = 200000;
+
     @NonNull private final MediaMetadataRetriever mMediaMetadataRetriever;
     @NonNull private final ImageView mBlurredLastVideoFrameImageView;
     private int mVideoDuration;
@@ -40,8 +48,12 @@ public class VastVideoBlurLastVideoFrameTask extends AsyncTask<String, Void, Boo
 
                 mMediaMetadataRetriever.setDataSource(videoPath);
 
+                // This actually gets a frame just before the video ends. If we try to get a frame
+                // that's actually past the end of the video or before 0, this will pick some
+                // arbitrary frame.
                 mLastVideoFrame = mMediaMetadataRetriever.getFrameAtTime(
-                        mVideoDuration * 1000, MediaMetadataRetriever.OPTION_CLOSEST);
+                        mVideoDuration * MICROSECONDS_PER_MILLISECOND - OFFSET_IN_MICROSECONDS,
+                        MediaMetadataRetriever.OPTION_CLOSEST);
 
                 if (mLastVideoFrame == null) {
                     return false;

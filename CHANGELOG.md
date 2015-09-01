@@ -1,3 +1,8 @@
+## Version 3.12.0 (August 31, 2015)
+
+- **Rewarded Video Mediation** is now Generally Available. We provide support for Unity Ads, Chartboost, Vungle, and Ad Colony rewarded video.
+- **Privacy Information Icon** is now available for native ads. You should add this view to your ViewBinder. See the example in the MoPub Sample app.
+
 ## Version 3.11.0 (August 20, 2015)
 
 - Updated Millennial Media support to 6.0.0, including updates to the `MillennialBanner.java` and `MillennialInterstitial.java` custom events.

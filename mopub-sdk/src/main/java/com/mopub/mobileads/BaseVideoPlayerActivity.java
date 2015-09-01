@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 
 import com.mopub.common.logging.MoPubLog;
 
@@ -53,6 +54,18 @@ public class BaseVideoPlayerActivity extends Activity {
         intentVideoPlayerActivity.putExtra(VAST_VIDEO_CONFIG, vastVideoConfig);
         intentVideoPlayerActivity.putExtra(BROADCAST_IDENTIFIER_KEY, broadcastIdentifier);
         return intentVideoPlayerActivity;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        // VideoViews may never release audio focus, leaking the activity. See
+        // https://code.google.com/p/android/issues/detail?id=152173.
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am != null) {
+            am.abandonAudioFocus(null);
+        }
     }
 }
 

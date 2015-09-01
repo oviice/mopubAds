@@ -199,6 +199,11 @@ public class NativeResponse {
         return mNativeAd.getStarRating();
     }
 
+    @Nullable
+    public String getDaaIconClickthroughUrl() {
+        return mNativeAd.getDaaIconClickthroughUrl();
+    }
+
     public int getImpressionMinTimeViewed() {
         return mNativeAd.getImpressionMinTimeViewed();
     }

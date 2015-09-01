@@ -35,14 +35,14 @@ task wrapper(type: Wrapper) {
 
 group = 'com.mopub'
 description = '''MoPub Android SDK'''
-version = '3.11.0'
+version = '3.12.0'
 
 android {
     compileSdkVersion 22
     buildToolsVersion '22.0.1'
 
     defaultConfig {
-        versionCode 28
+        versionCode 29
         versionName version
         minSdkVersion 9
         targetSdkVersion 22

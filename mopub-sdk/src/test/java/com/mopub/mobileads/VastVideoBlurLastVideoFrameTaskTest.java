@@ -22,6 +22,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
@@ -50,13 +51,19 @@ public class VastVideoBlurLastVideoFrameTaskTest {
     @Test
     public void doInBackground_beforeGingerbreadMr1_shouldReturnFalse() throws Exception {
         assertThat(subject.doInBackground(videoPath)).isFalse();
+        verifyNoMoreInteractions(mockMediaMetadataRetriever);
         assertThat(subject.getBlurredLastVideoFrame()).isNull();
     }
 
+    @TargetApi(Build.VERSION_CODES.GINGERBREAD_MR1)
     @Config(reportSdk = Build.VERSION_CODES.GINGERBREAD_MR1)
     @Test
-    public void doInBackground_atLeastGingerbreadMr1_shouldReturnTrue() throws Exception {
+    public void doInBackground_atLeastGingerbreadMr1_shouldSetVideoPath_shouldUseVideoDurationMinusOffset_shouldReturnTrue() throws Exception {
         assertThat(subject.doInBackground(videoPath)).isTrue();
+        verify(mockMediaMetadataRetriever).setDataSource(videoPath);
+        verify(mockMediaMetadataRetriever).getFrameAtTime(9800000,
+                MediaMetadataRetriever.OPTION_CLOSEST);
+        verifyNoMoreInteractions(mockMediaMetadataRetriever);
         assertThat(subject.getBlurredLastVideoFrame()).isEqualTo(mockBitmap);
     }
 
@@ -77,7 +84,7 @@ public class VastVideoBlurLastVideoFrameTaskTest {
         assertThat(subject.doInBackground(videoPath)).isFalse();
         assertThat(subject.getBlurredLastVideoFrame()).isNull();
     }
-    
+
     @Test
     public void doInBackground_whenVideoPathIsNull_shouldReturnFalse() throws Exception {
         assertThat(subject.doInBackground((String) null)).isFalse();
