@@ -2,8 +2,12 @@ package com.mopub.nativeads;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.view.View;
 
 import com.mopub.common.test.support.SdkTestRunner;
+import com.mopub.nativeads.CustomEventNative.CustomEventNativeListener;
+import com.mopub.nativeads.MoPubCustomEventNative.MoPubStaticNativeAd;
+import com.mopub.nativeads.BaseNativeAd.NativeEventListener;
 import com.mopub.nativeads.test.support.MoPubShadowBitmap;
 import com.mopub.nativeads.test.support.MoPubShadowDisplay;
 import com.mopub.network.MaxWidthImageLoader;
@@ -20,6 +24,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
@@ -28,13 +33,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import static com.mopub.nativeads.NativeResponse.Parameter;
-import static com.mopub.nativeads.NativeResponse.Parameter.requiredKeys;
+import static com.mopub.common.VolleyRequestMatcher.isUrl;
+import static com.mopub.nativeads.MoPubCustomEventNative.MoPubStaticNativeAd.Parameter;
 import static com.mopub.volley.toolbox.ImageLoader.ImageListener;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -44,61 +50,66 @@ import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
 @Config(shadows={MoPubShadowBitmap.class, MoPubShadowDisplay.class})
-public class MoPubForwardingNativeAdTest {
+public class MoPubStaticNativeAdTest {
 
+    private MoPubStaticNativeAd subject;
     private JSONObject fakeJsonObject;
-    private MoPubCustomEventNative.MoPubForwardingNativeAd subject;
     private Activity context;
 
-    @Mock
-    private CustomEventNative.CustomEventNativeListener mockCustomEventNativeListener;
-    @Mock
-    private MoPubRequestQueue mockRequestQueue;
-    @Mock
-    private MaxWidthImageLoader mockImageLoader;
-    @Mock
-    private ImageLoader.ImageContainer mockImageContainer;
+    @Mock private View mockView;
+    @Mock private ImpressionTracker mockImpressionTracker;
+    @Mock private NativeClickHandler mMockNativeClickHandler;
+    @Mock private CustomEventNativeListener mockCustomEventNativeListener;
+    @Mock private NativeEventListener mockNativeEventListener;
+    @Mock private MoPubRequestQueue mockRequestQueue;
+    @Mock private MaxWidthImageLoader mockImageLoader;
+    @Mock private ImageLoader.ImageContainer mockImageContainer;
 
     @Before
     public void setUp() throws Exception {
-        context = new Activity();
+        context = Robolectric.buildActivity(Activity.class).create().get();
         fakeJsonObject = new JSONObject();
         fakeJsonObject.put("imptracker", new JSONArray("[\"url1\", \"url2\"]"));
         fakeJsonObject.put("clktracker", "expected clicktracker");
+        subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                mMockNativeClickHandler, mockCustomEventNativeListener);
+        subject.setNativeEventListener(mockNativeEventListener);
+
         Networking.setRequestQueueForTesting(mockRequestQueue);
         Networking.setImageLoaderForTesting(mockImageLoader);
         stub(mockImageContainer.getBitmap()).toReturn(mock(Bitmap.class));
     }
 
     @Test
-    public void parameter_requiredKeys_shouldOnlyContainTheRequiredKeys() throws Exception {
+    public void Parameter_requiredKeys_shouldOnlyContainTheRequiredKeys() {
         final HashSet<String> expectedKeys = new HashSet<String>();
         expectedKeys.add("imptracker");
         expectedKeys.add("clktracker");
 
-        assertThat(requiredKeys).isEqualTo(expectedKeys);
+        assertThat(Parameter.requiredKeys).isEqualTo(expectedKeys);
     }
 
     @Test
-    public void parameter_fromString_shouldReturnParameterOnMatch() throws Exception {
+    public void Parameter_fromString_shouldReturnParameterOnMatch() {
         final Parameter parameter = Parameter.from("title");
 
         assertThat(parameter).isEqualTo(Parameter.TITLE);
     }
 
     @Test
-    public void parameter_fromString_shouldReturnNullOnIllegalKey() throws Exception {
+    public void Parameter_fromString_shouldReturnNullOnIllegalKey() {
         final Parameter parameter = Parameter.from("random gibberish");
 
         assertThat(parameter).isNull();
     }
 
     @Test
-    public void loadAd_whenMissingRequiredKeys_shouldThrowIllegalArgumentException() throws Exception {
+    public void loadAd_whenMissingRequiredKeys_shouldThrowIllegalArgumentException() {
         fakeJsonObject.remove("imptracker");
 
         try {
-            subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+            subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                    mMockNativeClickHandler, mockCustomEventNativeListener);
             subject.loadAd();
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException e) {
@@ -111,7 +122,8 @@ public class MoPubForwardingNativeAdTest {
         fakeJsonObject.put("imptracker", 12345);
 
         try {
-            subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+            subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                    mMockNativeClickHandler, mockCustomEventNativeListener);
             subject.loadAd();
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException e) {
@@ -120,8 +132,7 @@ public class MoPubForwardingNativeAdTest {
     }
 
     @Test
-    public void loadAd_shouldSetRequiredExpectedFields() throws Exception {
-        subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+    public void loadAd_shouldSetRequiredExpectedFields() {
         subject.loadAd();
         assertThat(subject.getImpressionTrackers()).containsOnly("url1", "url2");
     }
@@ -139,7 +150,8 @@ public class MoPubForwardingNativeAdTest {
         fakeJsonObject.put("ctatext", "expected ctatext");
         fakeJsonObject.put("starrating", 5.0);
 
-        subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+        subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                mMockNativeClickHandler, mockCustomEventNativeListener);
         subject.loadAd();
 
         assertThat(subject.getTitle()).isEqualTo("expected title");
@@ -149,7 +161,6 @@ public class MoPubForwardingNativeAdTest {
 
         assertThat(subject.getClickDestinationUrl()).isEqualTo("expected clk");
 
-//        assertThat(subject.getFallback()).isEqualTo("expected fallback");
         assertThat(subject.getImpressionTrackers()).containsOnly("url1", "url2");
         assertThat(subject.getCallToAction()).isEqualTo("expected ctatext");
         assertThat(subject.getStarRating()).isEqualTo(5.0);
@@ -159,7 +170,8 @@ public class MoPubForwardingNativeAdTest {
     public void loadAd_withIntegerStarRating_shouldSetStarRating() throws Exception {
         fakeJsonObject.put("starrating", 3);
 
-        subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+        subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                mMockNativeClickHandler, mockCustomEventNativeListener);
         subject.loadAd();
 
         assertThat(subject.getStarRating()).isEqualTo(3.0);
@@ -169,7 +181,8 @@ public class MoPubForwardingNativeAdTest {
     public void loadAd_withStringStarRating_shouldSetStarRating() throws Exception {
         fakeJsonObject.put("starrating", "2.3");
 
-        subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+        subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                mMockNativeClickHandler, mockCustomEventNativeListener);
         subject.loadAd();
 
         assertThat(subject.getStarRating()).isEqualTo(2.3);
@@ -179,7 +192,8 @@ public class MoPubForwardingNativeAdTest {
     public void loadAd_withInvalidStringStarRating_shouldNotSetStarRating() throws Exception {
         fakeJsonObject.put("starrating", "this is not a number");
 
-        subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+        subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                mMockNativeClickHandler, mockCustomEventNativeListener);
         subject.loadAd();
 
         assertThat(subject.getStarRating()).isNull();
@@ -189,7 +203,8 @@ public class MoPubForwardingNativeAdTest {
     public void loadAd_withInvalidlyTypedStarRating_shouldNotSetStarRating() throws Exception {
         fakeJsonObject.put("starrating", new Activity());
 
-        subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+        subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                mMockNativeClickHandler, mockCustomEventNativeListener);
         subject.loadAd();
 
         assertThat(subject.getStarRating()).isNull();
@@ -207,7 +222,8 @@ public class MoPubForwardingNativeAdTest {
         impressionTrackers.put(2.12);
         fakeJsonObject.put("imptracker", impressionTrackers);
 
-        subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+        subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                mMockNativeClickHandler, mockCustomEventNativeListener);
         subject.loadAd();
 
         assertThat(subject.getImpressionTrackers()).containsOnly("url1", "null", "2.12");
@@ -228,7 +244,8 @@ public class MoPubForwardingNativeAdTest {
         fakeJsonObject.put("key3", new JSONArray(array));
         fakeJsonObject.put("key4", new JSONObject(map));
 
-        subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+        subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                mMockNativeClickHandler, mockCustomEventNativeListener);
         subject.loadAd();
 
         assertThat(subject.getExtra("key1")).isEqualTo("yay json");
@@ -253,7 +270,8 @@ public class MoPubForwardingNativeAdTest {
                     }
                 });
 
-        subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+        subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                mMockNativeClickHandler, mockCustomEventNativeListener);
         subject.loadAd();
 
         verify(mockImageLoader).get(eq("mainimageurl"), any(ImageListener.class));
@@ -280,7 +298,8 @@ public class MoPubForwardingNativeAdTest {
                     }
                 });
 
-        subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+        subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                mMockNativeClickHandler, mockCustomEventNativeListener);
         subject.loadAd();
 
         verify(mockCustomEventNativeListener, never()).onNativeAdLoaded(subject);
@@ -295,7 +314,9 @@ public class MoPubForwardingNativeAdTest {
         fakeJsonObject.put("otherIMAGE", "image_url_2");
         fakeJsonObject.put("more filler", "ignored");
         fakeJsonObject.put("lastimage", "image_url_3");
-        subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+
+        subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                mMockNativeClickHandler, mockCustomEventNativeListener);
         subject.loadAd();
 
         assertThat(subject.getExtrasImageUrls()).containsOnly("image_url_1", "image_url_2", "image_url_3");
@@ -308,7 +329,9 @@ public class MoPubForwardingNativeAdTest {
         fakeJsonObject.put("imageAtFront", "ignored");
         fakeJsonObject.put("middle_image_in_key", "ignored");
         fakeJsonObject.put("other", "ignored");
-        subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+
+        subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                mMockNativeClickHandler, mockCustomEventNativeListener);
         subject.loadAd();
 
         assertThat(subject.getExtrasImageUrls()).isEmpty();
@@ -319,7 +342,9 @@ public class MoPubForwardingNativeAdTest {
         fakeJsonObject.put("mainimage", "mainImageUrl");
         fakeJsonObject.put("iconimage", "iconImageUrl");
         fakeJsonObject.put("extraimage", "extraImageUrl");
-        subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+
+        subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                mMockNativeClickHandler, mockCustomEventNativeListener);
         subject.loadAd();
 
         assertThat(subject.getAllImageUrls()).containsOnly(
@@ -333,9 +358,51 @@ public class MoPubForwardingNativeAdTest {
     public void getAllImageUrls_withOnlyExtrasImages_shouldNotIncludeMainOrIconImages() throws Exception {
         fakeJsonObject.put("extra1_image", "expected extra1_image");
         fakeJsonObject.put("extra2_image", "expected extra2_image");
-        subject = new MoPubCustomEventNative.MoPubForwardingNativeAd(context, fakeJsonObject, mockCustomEventNativeListener);
+
+        subject = new MoPubStaticNativeAd(context, fakeJsonObject, mockImpressionTracker,
+                mMockNativeClickHandler, mockCustomEventNativeListener);
         subject.loadAd();
 
         assertThat(subject.getAllImageUrls()).containsOnly("expected extra1_image", "expected extra2_image");
+    }
+
+    @Test
+    public void prepare_shouldAddViewToImpressionTracker_shouldSetOnClickListener() {
+        subject.prepare(mockView);
+
+        verify(mockImpressionTracker).addView(mockView, subject);
+        verify(mMockNativeClickHandler).setOnClickListener(mockView, subject);
+    }
+
+    @Test
+    public void clear_shouldRemoveViewFromImpressionTracker_shouldClearOnClickListener() {
+        subject.clear(mockView);
+
+        verify(mockImpressionTracker).removeView(mockView);
+        verify(mMockNativeClickHandler).clearOnClickListener(mockView);
+    }
+
+    @Test
+    public void destroy_shouldDestroyImpressionTracker() {
+        subject.destroy();
+
+        verify(mockImpressionTracker).destroy();
+    }
+
+    @Test
+    public void recordImpression_shouldNotifyAdImpressed_shouldTrackImpression() {
+        subject.addImpressionTracker("impressionTracker");
+        subject.recordImpression(mockView);
+
+        verify(mockNativeEventListener).onAdImpressed();
+    }
+
+    @Test
+    public void handleClick_shouldNotifyAdClicked_shouldOpenClickDestinationUrl() {
+        subject.setClickDestinationUrl("clickDestinationUrl");
+        subject.handleClick(mockView);
+
+        verify(mockNativeEventListener).onAdClicked();
+        verify(mMockNativeClickHandler).openClickDestinationUrl("clickDestinationUrl", mockView);
     }
 }

@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.Utils;
+import com.mopub.nativeads.MoPubCustomEventNative.MoPubStaticNativeAd;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -22,11 +23,11 @@ import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 @RunWith(SdkTestRunner.class)
-public class MoPubNativeAdRendererTest {
-    private MoPubNativeAdRenderer subject;
+public class MoPubStaticNativeAdRendererTest {
+    private MoPubStaticNativeAdRenderer subject;
+    private StaticNativeAd mStaticNativeAd;
     private RelativeLayout relativeLayout;
     private ViewGroup viewGroup;
-    private NativeResponse nativeResponse;
     private ViewBinder viewBinder;
     private TextView titleView;
     private TextView textView;
@@ -42,17 +43,11 @@ public class MoPubNativeAdRendererTest {
         relativeLayout.setId((int) Utils.generateUniqueId());
         viewGroup = new LinearLayout(context);
 
-        BaseForwardingNativeAd baseForwardingNativeAd = new BaseForwardingNativeAd() {};
-        baseForwardingNativeAd.setTitle("test title");
-        baseForwardingNativeAd.setText("test text");
-        baseForwardingNativeAd.setCallToAction("test call to action");
-        baseForwardingNativeAd.setClickDestinationUrl("destinationUrl");
-
-        nativeResponse = new NativeResponse(context,
-                "impressionTrackerUrl",
-                "clickTrackerUrl",
-                "test ID", baseForwardingNativeAd,
-                mock(MoPubNative.MoPubNativeListener.class));
+        mStaticNativeAd = new StaticNativeAd() {};
+        mStaticNativeAd.setTitle("test title");
+        mStaticNativeAd.setText("test text");
+        mStaticNativeAd.setCallToAction("test call to action");
+        mStaticNativeAd.setClickDestinationUrl("destinationUrl");
 
         titleView = new TextView(context);
         titleView.setId((int) Utils.generateUniqueId());
@@ -82,7 +77,7 @@ public class MoPubNativeAdRendererTest {
                 .iconImageId(iconImageView.getId())
                 .build();
 
-        subject = new MoPubNativeAdRenderer(viewBinder);
+        subject = new MoPubStaticNativeAdRenderer(viewBinder);
     }
 
     @Test(expected = NullPointerException.class)
@@ -92,11 +87,11 @@ public class MoPubNativeAdRendererTest {
 
     @Test(expected = NullPointerException.class)
     public void renderAdView_withNullView_shouldThrowNPE() {
-        subject.renderAdView(null, nativeResponse);
+        subject.renderAdView(null, mStaticNativeAd);
     }
 
     @Test(expected = NullPointerException.class)
-    public void renderAdView_withNullNativeResponse_shouldThrowNPE() {
+    public void renderAdView_withNullNativeAd_shouldThrowNPE() {
         subject.renderAdView(relativeLayout, null);
     }
 
@@ -104,20 +99,22 @@ public class MoPubNativeAdRendererTest {
 
     @Test
     public void renderAdView_withNullViewBinder_shouldThrowNPE() {
-        subject = new MoPubNativeAdRenderer(null);
+        subject = new MoPubStaticNativeAdRenderer(null);
 
         exception.expect(NullPointerException.class);
-        subject.renderAdView(relativeLayout, nativeResponse);
+        subject.renderAdView(relativeLayout, mStaticNativeAd);
     }
 
     @Test
     public void renderAdView_shouldReturnPopulatedView() {
-        subject.renderAdView(relativeLayout, nativeResponse);
+        subject.renderAdView(relativeLayout, mStaticNativeAd);
 
-        assertThat(((TextView)relativeLayout.findViewById(titleView.getId())).getText()).isEqualTo("test title");
-        assertThat(((TextView)relativeLayout.findViewById(textView.getId())).getText()).isEqualTo(
-                "test text");
-        assertThat(((TextView)relativeLayout.findViewById(callToActionView.getId())).getText()).isEqualTo("test call to action");
+        assertThat(((TextView)relativeLayout.findViewById(titleView.getId())).getText())
+                .isEqualTo("test title");
+        assertThat(((TextView)relativeLayout.findViewById(textView.getId())).getText())
+                .isEqualTo("test text");
+        assertThat(((TextView)relativeLayout.findViewById(callToActionView.getId())).getText())
+                .isEqualTo("test call to action");
 
         // not testing images due to testing complexity
     }
@@ -132,8 +129,8 @@ public class MoPubNativeAdRendererTest {
                 .iconImageId(iconImageView.getId())
                 .build();
 
-        subject = new MoPubNativeAdRenderer(viewBinder);
-        subject.renderAdView(relativeLayout, nativeResponse);
+        subject = new MoPubStaticNativeAdRenderer(viewBinder);
+        subject.renderAdView(relativeLayout, mStaticNativeAd);
 
         assertThat(((TextView)relativeLayout.findViewById(titleView.getId())).getText())
                 .isEqualTo("");
@@ -145,29 +142,36 @@ public class MoPubNativeAdRendererTest {
 
     @Test
     public void renderAdView_withNoViewHolder_shouldCreateNativeViewHolder() {
-        subject.renderAdView(relativeLayout, nativeResponse);
+        subject.renderAdView(relativeLayout, mStaticNativeAd);
 
-        NativeViewHolder expectedViewHolder = NativeViewHolder.fromViewBinder(relativeLayout, viewBinder);
-        NativeViewHolder viewHolder = subject.mViewHolderMap.get(relativeLayout);
+        StaticNativeViewHolder expectedViewHolder = StaticNativeViewHolder.fromViewBinder(relativeLayout, viewBinder);
+        StaticNativeViewHolder viewHolder = subject.mViewHolderMap.get(relativeLayout);
         compareNativeViewHolders(expectedViewHolder, viewHolder);
     }
 
     @Test
     public void getOrCreateNativeViewHolder_withViewHolder_shouldNotReCreateNativeViewHolder() {
-        subject.renderAdView(relativeLayout, nativeResponse);
-        NativeViewHolder expectedViewHolder = subject.mViewHolderMap.get(relativeLayout);
-        subject.renderAdView(relativeLayout, nativeResponse);
+        subject.renderAdView(relativeLayout, mStaticNativeAd);
+        StaticNativeViewHolder expectedViewHolder = subject.mViewHolderMap.get(relativeLayout);
+        subject.renderAdView(relativeLayout, mStaticNativeAd);
 
-        NativeViewHolder viewHolder = subject.mViewHolderMap.get(relativeLayout);
+        StaticNativeViewHolder viewHolder = subject.mViewHolderMap.get(relativeLayout);
         assertThat(viewHolder).isEqualTo(expectedViewHolder);
     }
 
-    static private void compareNativeViewHolders(final NativeViewHolder actualViewHolder,
-            final NativeViewHolder expectedViewHolder) {
+    static private void compareNativeViewHolders(final StaticNativeViewHolder actualViewHolder,
+            final StaticNativeViewHolder expectedViewHolder) {
         assertThat(actualViewHolder.titleView).isEqualTo(expectedViewHolder.titleView);
         assertThat(actualViewHolder.textView).isEqualTo(expectedViewHolder.textView);
         assertThat(actualViewHolder.callToActionView).isEqualTo(expectedViewHolder.callToActionView);
         assertThat(actualViewHolder.mainImageView).isEqualTo(expectedViewHolder.mainImageView);
         assertThat(actualViewHolder.iconImageView).isEqualTo(expectedViewHolder.iconImageView);
+    }
+
+    @Test
+    public void supports_withInstanceOfBaseForwardingNativeAd_shouldReturnTrue() throws Exception {
+        assertThat(subject.supports(new StaticNativeAd() {})).isTrue();
+        assertThat(subject.supports(mock(MoPubStaticNativeAd.class))).isTrue();
+        assertThat(subject.supports(mock(BaseNativeAd.class))).isFalse();
     }
 }
