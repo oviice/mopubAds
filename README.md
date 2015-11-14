@@ -61,6 +61,8 @@ The MoPub SDK is available via:
 
 ## New in this Version
 
+Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the latest release.
+
 - A number of Native Ad classes now require `Activity` instances instead of `Context`. Most users should be unaffected by this change, and it fixes a crash caused by handling themes incorrectly. The following classes are affected:
 
   - `CustomEventNative` and its implementations including `MoPubCustomEventNative`.
