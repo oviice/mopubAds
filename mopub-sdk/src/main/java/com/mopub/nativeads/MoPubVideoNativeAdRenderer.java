@@ -77,6 +77,7 @@ public class MoPubVideoNativeAdRenderer implements MoPubAdRenderer<VideoNativeAd
                 mediaViewHolder.iconImageView);
         NativeRendererHelper.addPrivacyInformationIcon(
                 mediaViewHolder.privacyInformationIconImageView,
+                videoNativeAd.getPrivacyInformationIconImageUrl(),
                 videoNativeAd.getPrivacyInformationIconClickThroughUrl());
     }
 

@@ -213,7 +213,7 @@ public class MoPubVideoNativeAdTest {
     @Test
     public void onVastVideoConfigurationPrepared_withNullVastVideoConfig_shouldNotifyListenerFailed() {
         subject.onVastVideoConfigurationPrepared(null);
-        verify(mockCustomEventNativeListener).onNativeAdFailed(NativeErrorCode.EMPTY_AD_RESPONSE);
+        verify(mockCustomEventNativeListener).onNativeAdFailed(NativeErrorCode.INVALID_RESPONSE);
     }
 
     @Test

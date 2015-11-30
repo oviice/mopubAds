@@ -1,3 +1,9 @@
+## Version 4.2.0 (November 30, 2015)
+
+- Support for mediating Facebook Native Video ads.
+- Mediated Facebook Native Ads now display the AdChoices icon.
+- Support for Facebook SDK 8.4.1
+
 ## Version 4.1.0 (November 12, 2015)
 
 - A number of Native Ad classes now require `Activity` instances instead of `Context`. Most users should be unaffected by this change, and it fixes a crash caused by handling themes incorrectly. The following classes are affected:

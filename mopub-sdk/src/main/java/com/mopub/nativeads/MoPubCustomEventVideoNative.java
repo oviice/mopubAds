@@ -31,7 +31,6 @@ import com.mopub.nativeads.NativeVideoController.NativeVideoProgressRunnable;
 import com.mopub.network.TrackingRequest;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
@@ -290,7 +289,7 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
         @Override
         public void onVastVideoConfigurationPrepared(@Nullable VastVideoConfig vastVideoConfig) {
             if (vastVideoConfig == null) {
-                mCustomEventNativeListener.onNativeAdFailed(NativeErrorCode.EMPTY_AD_RESPONSE);
+                mCustomEventNativeListener.onNativeAdFailed(NativeErrorCode.INVALID_RESPONSE);
                 return;
             }
 
