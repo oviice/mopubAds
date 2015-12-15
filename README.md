@@ -62,9 +62,7 @@ The MoPub SDK is available via:
 ## New in this Version
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the latest release.
 
-- Support for mediating Facebook Native Video ads.
-- Mediated Facebook Native Ads now display the AdChoices icon.
-- Support for Facebook SDK 8.4.1
+- Enhancements and bug fixes for VAST video ads.
 
 ## Requirements
 

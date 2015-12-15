@@ -1,3 +1,7 @@
+## Version 4.3.0 (Deceber 15, 2015)
+
+- Enhancements and bug fixes for VAST video ads.
+
 ## Version 4.2.0 (November 30, 2015)
 
 - Support for mediating Facebook Native Video ads.
