@@ -1,4 +1,8 @@
-## Version 4.3.0 (Deceber 15, 2015)
+## Version 4.4.0 (February 11, 2016) 
+- Updated permission model to be compatible with Android 6.0 (API level 23).
+- Enhancements and bug fixes for video ads.
+
+## Version 4.3.0 (December 15, 2015)
 
 - Enhancements and bug fixes for VAST video ads.
 
