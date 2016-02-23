@@ -273,8 +273,7 @@ public enum UrlAction {
         @Override
         public boolean shouldTryHandlingUrl(@NonNull final Uri uri) {
             final String scheme = uri.getScheme();
-            final String host = uri.getHost();
-            return !TextUtils.isEmpty(scheme) && !TextUtils.isEmpty(host);
+            return !TextUtils.isEmpty(scheme);
         }
 
         @Override

@@ -27,7 +27,7 @@ The MoPub SDK is available via:
     }
 
     dependencies {
-        compile('com.mopub:mopub-sdk:4.4.0@aar') {
+        compile('com.mopub:mopub-sdk:4.4.1@aar') {
             transitive = true
         }
     }

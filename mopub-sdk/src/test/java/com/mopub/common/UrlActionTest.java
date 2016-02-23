@@ -98,9 +98,10 @@ public class UrlActionTest {
 
     @Test
     public void followDeepLink_shouldBeCaseInsensitive() throws Exception {
+        assertUrlActionMatching(FOLLOW_DEEP_LINK, "myapp://", true);
+        assertUrlActionMatching(FOLLOW_DEEP_LINK, "MyApP://", true);
         assertUrlActionMatching(FOLLOW_DEEP_LINK, "myapp://myview", true);
-        assertUrlActionMatching(FOLLOW_DEEP_LINK, "MyApP://myview", true);
-        assertUrlActionMatching(FOLLOW_DEEP_LINK, "myapp://MyViEw", true);
+        assertUrlActionMatching(FOLLOW_DEEP_LINK, "myapp://MyView", true);
     }
 
     private void assertUrlActionMatching(@NonNull final UrlAction action,
