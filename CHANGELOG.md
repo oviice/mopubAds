@@ -1,3 +1,7 @@
+## Version 4.5.0 (March 24, 2016)
+- Rewarded video support from the MoPub Marketplace (Beta)
+- Miscellaneous bug fixes.
+
 ## Version 4.4.1 (February 23, 2016)
 - Fixed deeplink bug where host must be present in URL.
 

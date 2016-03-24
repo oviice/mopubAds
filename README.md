@@ -27,7 +27,7 @@ The MoPub SDK is available via:
     }
 
     dependencies {
-        compile('com.mopub:mopub-sdk:4.4.1@aar') {
+        compile('com.mopub:mopub-sdk:4.5.0@aar') {
             transitive = true
         }
     }
@@ -62,7 +62,8 @@ The MoPub SDK is available via:
 ## New in this Version
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the latest release.
 
-- Enhancements and bug fixes for VAST video ads.
+- Rewarded video support from the MoPub Marketplace (Beta)
+- Miscellaneous bug fixes.
 
 ## Requirements
 
