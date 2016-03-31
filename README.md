@@ -27,7 +27,7 @@ The MoPub SDK is available via:
     }
 
     dependencies {
-        compile('com.mopub:mopub-sdk:4.5.0@aar') {
+        compile('com.mopub:mopub-sdk:4.5.1@aar') {
             transitive = true
         }
     }
@@ -84,7 +84,6 @@ If your app's target SDK is 23 or higher _**and**_ the user's device is running 
 - Dangerous permission [`ACCESS_COARSE_LOCATION`](http://developer.android.com/reference/android/Manifest.permission.html#ACCESS_COARSE_LOCATION) is needed to pass network location data to MoPub.
 - Dangerous permission [`ACCESS_FINE_LOCATION`](http://developer.android.com/reference/android/Manifest.permission.html#ACCESS_FINE_LOCATION) is needed to pass GPS location data to MoPub.
     - Granting `ACCESS_FINE_LOCATION` also allows network location data to be passed to MoPub without the need to also grant `ACCESS_COARSE_LOCATION`.
-- Dangerous permission [`READ_EXTERNAL_STORAGE`](http://developer.android.com/reference/android/Manifest.permission.html#READ_EXTERNAL_STORAGE) is needed for exoplayer to play native video.
 - Dangerous permission [`WRITE_EXTERNAL_STORAGE`](http://developer.android.com/reference/android/Manifest.permission.html#WRITE_EXTERNAL_STORAGE) is needed for MRAID 2.
 - _**Note:** The user can deny granting any dangerous permissions during runtime, so please make sure your app can handle this properly._
 - _**Note:** The user can revoke any permissions granted previously by going to your app's Settings screen, so please make sure your app can handle this properly._
