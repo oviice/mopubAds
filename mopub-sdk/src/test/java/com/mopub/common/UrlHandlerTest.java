@@ -13,6 +13,7 @@ import com.mopub.network.MoPubRequestQueue;
 import com.mopub.network.Networking;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -20,6 +21,8 @@ import org.robolectric.Robolectric;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
+
+import java.net.URISyntaxException;
 
 import static com.mopub.common.UrlAction.FOLLOW_DEEP_LINK;
 import static com.mopub.common.UrlAction.FOLLOW_DEEP_LINK_WITH_FALLBACK;
@@ -296,6 +299,25 @@ public class UrlHandlerTest {
         final Intent startedActivity = ShadowApplication.getInstance().peekNextStartedActivity();
         assertThat(startedActivity.getAction()).isEqualTo(Intent.ACTION_VIEW);
         assertThat(startedActivity.getData()).isEqualTo(Uri.parse(deepLinkUrl));
+    }
+
+    @Test
+    public void urlHandler_withMatchingIntentUrl_shouldCallOnClickSuccess_shouldStartActivity() throws URISyntaxException {
+        final String appPackage = "com.google.zxing.client.android";
+        final String intentUrl = "intent://scan/#Intent;scheme=zxing;package=" + appPackage
+                + ";end";
+        makeIntentUrlResolvable(intentUrl);
+
+        new UrlHandler.Builder()
+                .withSupportedUrlActions(FOLLOW_DEEP_LINK)
+                .withResultActions(mockResultActions)
+                .withMoPubSchemeListener(mockMoPubSchemeListener)
+                .build().handleResolvedUrl(context, intentUrl, true, null);
+
+        verify(mockResultActions).urlHandlingSucceeded(intentUrl, FOLLOW_DEEP_LINK);
+        verifyNoMoreCallbacks();
+        final Intent startedActivity = ShadowApplication.getInstance().getNextStartedActivity();
+        assertThat(startedActivity.getAction()).isEqualTo(Intent.ACTION_VIEW);
     }
 
     @Test
@@ -915,5 +937,10 @@ public class UrlHandlerTest {
     private void makeDeeplinkResolvable(String deeplink) {
         RuntimeEnvironment.getRobolectricPackageManager().addResolveInfoForIntent(new Intent(Intent.ACTION_VIEW,
                 Uri.parse(deeplink)), new ResolveInfo());
+    }
+
+    private void makeIntentUrlResolvable(String intentUrl) throws URISyntaxException {
+        RuntimeEnvironment.getRobolectricPackageManager().addResolveInfoForIntent(
+                Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME), new ResolveInfo());
     }
 }

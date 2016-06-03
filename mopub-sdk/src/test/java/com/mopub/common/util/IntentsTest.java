@@ -203,4 +203,22 @@ public class IntentsTest {
 
         assertThat(startedActivity).isNotNull();
     }
+
+    @Test
+    public void getPlayStoreUri_shouldBuildUriFromIntentPackage() throws Exception {
+        final Intent intent = new Intent();
+        final String appPackage = "com.mopub.test";
+        intent.setPackage(appPackage);
+
+        assertThat(Intents.getPlayStoreUri(intent).toString()).isEqualTo("market://details?id="
+                + appPackage);
+    }
+
+    @Test
+    public void getPlayStoreUri_shouldNotBlowUpWithEmptyPackage() throws Exception {
+        final Intent intent = new Intent();
+
+        assertThat(Intents.getPlayStoreUri(intent).toString())
+                .isEqualTo("market://details?id=null");
+    }
 }
