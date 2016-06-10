@@ -52,6 +52,13 @@ public class UrlHandlerTest {
     @Before
     public void setUp() throws Exception {
         context = Robolectric.buildActivity(Activity.class).create().get().getApplicationContext();
+
+        // This url will be attempted when and intent:// url is not resolvable AND the app package
+        // is missing (see Intents.launchApplicationIntent). In this case, we want the url to be
+        // resolvable so the tests behave as a real device and actually attempt to open it.
+        // This discrepancy between devices and test environment/emulators is was led to the
+        // regression of ADF-2291.
+        makeDeeplinkResolvable("market://details?id=null");
     }
 
     @Test

@@ -223,7 +223,18 @@ public class Intents {
     public static void launchApplicationUrl(@NonNull final Context context,
             @NonNull final Uri uri) throws IntentNotResolvableException {
         final Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-        launchApplicationIntent(context, intent);
+        Preconditions.checkNotNull(context);
+        Preconditions.checkNotNull(uri);
+
+        if (deviceCanHandleIntent(context, intent)) {
+            launchApplicationIntent(context, intent);
+        } else {
+            // Deeplink+ needs this exception to know primaryUrl failed and then attempt fallbackUrl
+            // See UrlAction.FOLLOW_DEEP_LINK_WITH_FALLBACK
+            throw new IntentNotResolvableException("Could not handle application specific " +
+                    "action: " + uri + "\n\tYou may be running in the emulator or another " +
+                    "device which does not have the required application.");
+        }
     }
 
     public static void launchApplicationIntent(@NonNull final Context context,

@@ -62,8 +62,7 @@ The MoPub SDK is available via:
 ## New in this Version
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the latest release.
 
-- Rewarded video server-side currency rewarding (Beta).
-- Enhanced Android intent handling.
+- Fixed deeplink bug.
 
 ## Requirements
 
