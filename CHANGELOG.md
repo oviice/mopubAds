@@ -1,3 +1,8 @@
+## Version 4.8.0 (August 1, 2016)
+- Changed the behavior of `MoPubInterstitial#load()` while an interstitial is loading or has been successfully loaded. Previously, this would discard the currently-caching or cached interstitial -- now the interstitial will be unaffected and will remain in the cache.
+- `MoPubInterstitial`s can now be shown only once per successful ad load.
+- Modified a number of Native Ads APIs (manual integration) to accept Context instead of Activity. Affected classes/methods include: `MoPubNative`, `AdapterHelper`, `CustomEventNative#loadNativeAd()`, and `MoPubAdRenderer#createAdView()`.
+
 #### Version 4.7.1 (June 10, 2016)
 - Fixed deeplink bug.
 

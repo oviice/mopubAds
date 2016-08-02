@@ -27,7 +27,7 @@ The MoPub SDK is available via:
     }
 
     dependencies {
-        compile('com.mopub:mopub-sdk:4.7.0@aar') {
+        compile('com.mopub:mopub-sdk:4.8.0@aar') {
             transitive = true
         }
     }
@@ -62,7 +62,9 @@ The MoPub SDK is available via:
 ## New in this Version
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the latest release.
 
-- Fixed deeplink bug.
+- Changed the behavior of `MoPubInterstitial#load()` while an interstitial is loading or has been successfully loaded. Previously, this would discard the currently-caching or cached interstitial -- now the interstitial will be unaffected and will remain in the cache.
+- `MoPubInterstitial`s can now be shown only once per successful ad load.
+- Modified a number of Native Ads APIs (manual integration) to accept Context instead of Activity. Affected classes/methods include: `MoPubNative`, `AdapterHelper`, `CustomEventNative#loadNativeAd()`, and `MoPubAdRenderer#createAdView()`.
 
 ## Requirements
 

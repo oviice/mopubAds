@@ -1,6 +1,5 @@
 package com.mopub.nativeads;
 
-import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 import android.view.View;
@@ -32,7 +31,7 @@ class InMobiNative extends CustomEventNative {
 
     // CustomEventNative implementation
     @Override
-    protected void loadNativeAd(final Activity activity,
+    protected void loadNativeAd(final Context context,
             final CustomEventNativeListener customEventNativeListener,
             final Map<String, Object> localExtras,
             final Map<String, String> serverExtras) {
@@ -45,11 +44,11 @@ class InMobiNative extends CustomEventNative {
             return;
         }
 
-        InMobi.initialize(activity, appId);
+        InMobi.initialize(context, appId);
         final InMobiStaticNativeAd inMobiStaticNativeAd =
-                new InMobiStaticNativeAd(activity,
-                        new ImpressionTracker(activity),
-                        new NativeClickHandler(activity),
+                new InMobiStaticNativeAd(context,
+                        new ImpressionTracker(context),
+                        new NativeClickHandler(context),
                         customEventNativeListener);
         inMobiStaticNativeAd.setIMNative(new IMNative(inMobiStaticNativeAd));
         inMobiStaticNativeAd.loadAd();

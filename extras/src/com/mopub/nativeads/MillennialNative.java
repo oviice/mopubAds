@@ -25,7 +25,7 @@ public class MillennialNative extends CustomEventNative {
     private static final Handler UI_THREAD_HANDLER = new Handler(Looper.getMainLooper());
 
     @Override
-    protected void loadNativeAd(final Activity activity,
+    protected void loadNativeAd(final Context context,
             final CustomEventNativeListener listener,
             final Map<String, Object> localExtras,
             final Map<String, String> serverExtras) {
@@ -35,7 +35,7 @@ public class MillennialNative extends CustomEventNative {
 
         if ( !MMSDK.isInitialized() ) {
             try {
-                MMSDK.initialize(activity);
+                MMSDK.initialize((Activity) context);
             } catch ( Exception e ) {
                 Log.e(LOGCAT_TAG, "Unable to initialize the Millennial SDK-- " + e.getMessage());
                 e.printStackTrace();
@@ -85,10 +85,10 @@ public class MillennialNative extends CustomEventNative {
         try {
             NativeAd nativeAd = NativeAd.createInstance(placementId, NativeAd.NATIVE_TYPE_INLINE);
             final MillennialStaticNativeAd millennialStaticNativeAd =
-                    new MillennialStaticNativeAd(activity,
+                    new MillennialStaticNativeAd(context,
                             nativeAd,
-                            new ImpressionTracker(activity),
-                            new NativeClickHandler(activity),
+                            new ImpressionTracker(context),
+                            new NativeClickHandler(context),
                             listener);
             millennialStaticNativeAd.loadAd();
         } catch ( MMException e ) {

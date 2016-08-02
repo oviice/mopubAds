@@ -1,6 +1,5 @@
 package com.mopub.nativeads;
 
-import android.app.Activity;
 import android.content.Context;
 import android.view.View;
 
@@ -47,7 +46,7 @@ public class FacebookNative extends CustomEventNative {
 
     // CustomEventNative implementation
     @Override
-    protected void loadNativeAd(final Activity activity,
+    protected void loadNativeAd(final Context context,
             final CustomEventNativeListener customEventNativeListener,
             final Map<String, Object> localExtras,
             final Map<String, String> serverExtras) {
@@ -75,12 +74,12 @@ public class FacebookNative extends CustomEventNative {
         if (shouldUseVideoEnabledNativeAd(sIsVideoRendererAvailable, videoEnabledString,
                 videoEnabledFromServer)) {
             final FacebookVideoEnabledNativeAd facebookVideoEnabledNativeAd =
-                    new FacebookVideoEnabledNativeAd(activity,
-                            new NativeAd(activity, placementId), customEventNativeListener);
+                    new FacebookVideoEnabledNativeAd(context,
+                            new NativeAd(context, placementId), customEventNativeListener);
             facebookVideoEnabledNativeAd.loadAd();
         } else {
             final FacebookStaticNativeAd facebookStaticNativeAd = new FacebookStaticNativeAd(
-                    activity, new NativeAd(activity, placementId), customEventNativeListener);
+                    context, new NativeAd(context, placementId), customEventNativeListener);
             facebookStaticNativeAd.loadAd();
         }
     }
