@@ -20,7 +20,8 @@ import static android.view.View.VISIBLE;
  * static and video native ads. This will automatically replace the main image view with the
  * Facebook MediaView that handles showing the main asset.
  */
-public class FacebookAdRenderer implements MoPubAdRenderer<FacebookNative.FacebookVideoEnabledNativeAd> {
+public class FacebookAdRenderer
+        implements MoPubAdRenderer<com.mopub.nativeads.FacebookNative.FacebookVideoEnabledNativeAd> {
     private final ViewBinder mViewBinder;
 
     // This is used instead of View.setTag, which causes a memory leak in 2.3
@@ -81,7 +82,7 @@ public class FacebookAdRenderer implements MoPubAdRenderer<FacebookNative.Facebo
 
     @Override
     public void renderAdView(final View view,
-            final FacebookNative.FacebookVideoEnabledNativeAd facebookVideoEnabledNativeAd) {
+            final com.mopub.nativeads.FacebookNative.FacebookVideoEnabledNativeAd facebookVideoEnabledNativeAd) {
         FacebookNativeViewHolder facebookNativeViewHolder = mViewHolderMap.get(view);
         if (facebookNativeViewHolder == null) {
             facebookNativeViewHolder = FacebookNativeViewHolder.fromViewBinder(view, mViewBinder);
@@ -98,11 +99,11 @@ public class FacebookAdRenderer implements MoPubAdRenderer<FacebookNative.Facebo
     @Override
     public boolean supports(final BaseNativeAd nativeAd) {
         Preconditions.checkNotNull(nativeAd);
-        return nativeAd instanceof FacebookNative.FacebookVideoEnabledNativeAd;
+        return nativeAd instanceof com.mopub.nativeads.FacebookNative.FacebookVideoEnabledNativeAd;
     }
 
     private void update(final FacebookNativeViewHolder facebookNativeViewHolder,
-            final FacebookNative.FacebookVideoEnabledNativeAd nativeAd) {
+            final com.mopub.nativeads.FacebookNative.FacebookVideoEnabledNativeAd nativeAd) {
         final ImageView mainImageView = facebookNativeViewHolder.getMainImageView();
         NativeRendererHelper.addTextView(facebookNativeViewHolder.getTitleView(),
                 nativeAd.getTitle());

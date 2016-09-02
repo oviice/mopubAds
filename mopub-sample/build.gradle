@@ -7,9 +7,9 @@ repositories {
 
 apply plugin: 'com.android.application'
 
-group = 'com.mopub'
-description = '''MoPub Sample App'''
-version = '4.8.0'
+project.group = 'com.mopub'
+project.description = '''MoPub Sample App'''
+project.version = '4.9.0'
 
 android {
     compileSdkVersion 23
@@ -17,7 +17,7 @@ android {
     lintOptions { abortOnError false }
 
     defaultConfig {
-        versionCode 43
+        versionCode 44
         versionName version
         minSdkVersion 9
         targetSdkVersion 23

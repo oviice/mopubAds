@@ -1,3 +1,16 @@
+## Version 4.9.0 (September 1, 2016)
+- Removed the full SDK bundle.
+- Removed Eclipse support.
+- Removed InMobi custom events from extras.
+- Deprecated rewarded video calls from `MoPub.java` and moved them to `MoPubRewardedVideos.java`.
+  - For example, `MoPub#loadRewardedVideo` is deprecated in favor of `MoPubRewardedVideos#loadRewardedVideo`.
+- Bug fixes.
+
+**Modular SDK**
+ - Added the ability to specify which ad formats to include as dependencies (to decrease the overall footprint of the MoPub SDK in your app).
+ - Default behavior remains unchanged and includes access to all ad formats.
+ - **Note:** Maven builds from source are currently unstable and will be reinstated in a future release. Maven developers can still pull the MoPub SDK AAR from JCenter.
+
 ## Version 4.8.0 (August 1, 2016)
 - Changed the behavior of `MoPubInterstitial#load()` while an interstitial is loading or has been successfully loaded. Previously, this would discard the currently-caching or cached interstitial -- now the interstitial will be unaffected and will remain in the cache.
 - `MoPubInterstitial`s can now be shown only once per successful ad load.

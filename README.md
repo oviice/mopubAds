@@ -27,7 +27,48 @@ The MoPub SDK is available via:
     }
 
     dependencies {
-        compile('com.mopub:mopub-sdk:4.8.0@aar') {
+        compile('com.mopub:mopub-sdk:4.9.0@aar') {
+            transitive = true
+        }
+    }
+    ```
+
+    ***SDK Modularization***
+
+    With the modular SDK, you can choose to include specific formats to decrease overall SDK footprint in your app. To do so, include the line for any combination of components that you want in your `build.gradle` file as follows:
+
+    ```groovy
+    repositories {
+        // ... other project repositories
+        jcenter()
+    }
+    // ...
+
+    dependencies {
+        // ... other project dependencies
+
+        // For banners
+        compile('com.mopub:mopub-sdk:mopub-sdk-banner:4.9.0@aar') {
+            transitive = true
+        }
+        
+        // For interstitials
+        compile('com.mopub:mopub-sdk:mopub-sdk-interstitial:4.9.0@aar') {
+            transitive = true
+        }
+
+        // For rewarded videos. This will automatically also include interstitials
+        compile('com.mopub:mopub-sdk:mopub-sdk-rewardedvideo:4.9.0@aar') {
+            transitive = true
+        }
+
+        // For native static (images).
+        compile('com.mopub:mopub-sdk:mopub-sdk-native-static:4.9.0@aar') {
+            transitive = true
+        }
+
+        // For native video. This will automatically also include native static
+        compile('com.mopub:mopub-sdk:mopub-sdk-native-video:4.9.0@aar') {
             transitive = true
         }
     }
@@ -39,14 +80,7 @@ The MoPub SDK is available via:
 
     The MoPub SDK is also distributed as zipped source code that you can include in your application.  MoPub provides two prepackaged archives of source code:
 
-    **[MoPub Android Full SDK.zip](http://bit.ly/YUdU9v)**  
-    _Includes everything you need to serve MoPub ads *and* built-in support for Millennial Media third party ad network - [Millennial Media](http://www.millennialmedia.com/) - including the required third party binaries._
-    
-    _**Note:** Millennial Media has updated their minimum supported version of Android to 4.1 (API level 16+). The MoPub Android Full SDK manifest and build.gradle files have been updated accordingly._
-    
-    _**Note:** Millennial Media has deprecated support for Ant/Eclipse; migrating users should use the MoPub Android base SDK and follow [Millennial's Ant/Eclipse Integration Guide](http://docs.millennialmedia.com/android-ad-sdk/ant-eclipse-integration-guide.html)._
-    
-    **[MoPub Android Base SDK.zip](http://bit.ly/YUdWhH)**  
+    **[MoPub Android SDK.zip](http://bit.ly/YUdWhH)**  
     _Includes everything you need to serve MoPub ads.  No third party ad networks are included._
     
     **For additional integration instructions, please see the [Getting Started guide](https://github.com/mopub/mopub-android-sdk/wiki/Getting-Started#requirements-and-dependencies).**
@@ -62,9 +96,17 @@ The MoPub SDK is available via:
 ## New in this Version
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the latest release.
 
-- Changed the behavior of `MoPubInterstitial#load()` while an interstitial is loading or has been successfully loaded. Previously, this would discard the currently-caching or cached interstitial -- now the interstitial will be unaffected and will remain in the cache.
-- `MoPubInterstitial`s can now be shown only once per successful ad load.
-- Modified a number of Native Ads APIs (manual integration) to accept Context instead of Activity. Affected classes/methods include: `MoPubNative`, `AdapterHelper`, `CustomEventNative#loadNativeAd()`, and `MoPubAdRenderer#createAdView()`.
+- Removed the full SDK bundle.
+- Removed Eclipse support.
+- Removed InMobi custom events from extras.
+- Deprecated rewarded video calls from `MoPub.java` and moved them to `MoPubRewardedVideos.java`.
+  - For example, `MoPub#loadRewardedVideo` is deprecated in favor of `MoPubRewardedVideos#loadRewardedVideo`.
+- Bug fixes.
+
+**Modular SDK**
+ - Added the ability to specify which ad formats to include as dependencies (to decrease the overall footprint of the MoPub SDK in your app).
+ - Default behavior remains unchanged and includes access to all ad formats.
+ - **Note:** Maven builds from source are currently unstable and will be reinstated in a future release. Maven developers can still pull the MoPub SDK AAR from JCenter.
 
 ## Requirements
 
