@@ -724,7 +724,7 @@ public class MraidController {
             mDefaultAdContainer.setVisibility(View.INVISIBLE);
             mCloseableAdContainer.addView(mMraidWebView,
                     new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-            getRootView().addView(mCloseableAdContainer, layoutParams);
+            getAndMemoizeRootView().addView(mCloseableAdContainer, layoutParams);
         } else if (mViewState == ViewState.RESIZED) {
             mCloseableAdContainer.setLayoutParams(layoutParams);
         }
@@ -772,7 +772,7 @@ public class MraidController {
                 mDefaultAdContainer.setVisibility(View.INVISIBLE);
                 mCloseableAdContainer.addView(mMraidWebView, layoutParams);
             }
-            getRootView().addView(mCloseableAdContainer,
+            getAndMemoizeRootView().addView(mCloseableAdContainer,
                     new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         } else if (mViewState == ViewState.RESIZED) {
             if (isTwoPart) {
@@ -821,7 +821,7 @@ public class MraidController {
                         LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
                 mDefaultAdContainer.setVisibility(View.VISIBLE);
             }
-            getRootView().removeView(mCloseableAdContainer);
+            Views.removeFromParent(mCloseableAdContainer);
 
             // Set the view state to default
             setViewState(ViewState.DEFAULT);
@@ -831,18 +831,28 @@ public class MraidController {
         }
     }
 
+    /*
+     * Prefer this method over getAndMemoizeRootView() when the rootView is only being used for
+     * screen size calculations (and not for adding/removing anything from the view hierarchy).
+     * Having consistent return values is less important in the former case.
+     */
     @NonNull
-    @TargetApi(VERSION_CODES.KITKAT)
     private ViewGroup getRootView() {
-        if (mRootView == null) {
-            // This method should never be called this method before the container is ready, ie before
-            // handlePageLoad.
-            if (VERSION.SDK_INT >= VERSION_CODES.KITKAT) {
-                Preconditions.checkState(mDefaultAdContainer.isAttachedToWindow());
-            }
+        if (mRootView != null) {
+            return mRootView;
+        }
 
-            mRootView = (ViewGroup) mDefaultAdContainer.getRootView().findViewById(
-                    android.R.id.content);
+        final View bestRootView = Views.getTopmostView(mWeakActivity.get(),
+                mDefaultAdContainer);
+        return bestRootView instanceof ViewGroup
+                ? (ViewGroup) bestRootView
+                : mDefaultAdContainer;
+    }
+
+    @NonNull
+    private ViewGroup getAndMemoizeRootView() {
+        if (mRootView == null) {
+            mRootView = getRootView();
         }
 
         return mRootView;

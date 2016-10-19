@@ -260,7 +260,6 @@ public class NativeVideoViewController extends BaseVideoViewController implement
         applyState(newState);
     }
 
-
     @VisibleForTesting
     void applyState(@NonNull final VideoState videoState) {
         applyState(videoState, false);

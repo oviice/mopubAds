@@ -21,7 +21,7 @@ import java.util.Map;
 import static com.mopub.nativeads.NativeImageHelper.preCacheImages;
 
 /**
- * Tested with Facebook SDK 4.8.1. FacebookAdRenderer is also necessary in order to show video ads.
+ * Tested with Facebook SDK 4.15.0. FacebookAdRenderer is also necessary in order to show video ads.
  * Video ads will only be shown if VIDEO_ENABLED is set to true or a server configuration
  * "video_enabled" flag is set to true. The server configuration will override the local
  * configuration.

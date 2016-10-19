@@ -35,9 +35,11 @@ import static com.mopub.nativeads.VisibilityTracker.VisibilityChecker;
 import static com.mopub.nativeads.VisibilityTracker.VisibilityTrackerListener;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -82,13 +84,14 @@ public class VisibilityTrackerTest {
 
     @Test
     public void constructor_shouldSetOnPreDrawListenerForDecorView() throws Exception {
-        Activity activity1 = mock(Activity.class);
+        Activity activity1 = spy(Robolectric.buildActivity(Activity.class).create().get());
         Window window = mock(Window.class);
         View decorView = mock(View.class);
         ViewTreeObserver viewTreeObserver = mock(ViewTreeObserver.class);
 
         when(activity1.getWindow()).thenReturn(window);
         when(window.getDecorView()).thenReturn(decorView);
+        when(decorView.findViewById(anyInt())).thenReturn(decorView);
         when(decorView.getViewTreeObserver()).thenReturn(viewTreeObserver);
         when(viewTreeObserver.isAlive()).thenReturn(true);
 
@@ -121,62 +124,6 @@ public class VisibilityTrackerTest {
                 visibilityChecker, visibilityHandler);
 
         assertThat(subject.mWeakViewTreeObserver.get()).isNull();
-    }
-
-    @Test
-    public void getBestRootView_withActivity_withNullView_shouldReturnActivityDecorView() {
-        Activity activity1 = mock(Activity.class);
-        Window window = mock(Window.class);
-        View decorView = mock(View.class);
-        ViewTreeObserver viewTreeObserver = mock(ViewTreeObserver.class);
-
-        when(activity1.getWindow()).thenReturn(window);
-        when(window.getDecorView()).thenReturn(decorView);
-        when(decorView.getViewTreeObserver()).thenReturn(viewTreeObserver);
-        when(viewTreeObserver.isAlive()).thenReturn(true);
-
-        View view = VisibilityTracker.getBestRootView(activity1, null);
-
-        assertThat(view).isEqualTo(decorView);
-    }
-
-    @Test
-    public void getBestRootView_withApplicationContext_withRootView_shouldReturnRootView() {
-        View rootView = new View(activity.getApplicationContext());
-
-        View view = VisibilityTracker.getBestRootView(activity.getApplicationContext(), rootView);
-
-        assertThat(view).isEqualTo(rootView);
-    }
-
-    @Test
-    public void getBestRootView_withApplicationContext_withContentView_shouldReturnContentView() {
-        View rootView = mock(View.class);
-        View contentView = mock(View.class);
-
-        when(rootView.findViewById(android.R.id.content)).thenReturn(contentView);
-        when(rootView.getRootView()).thenReturn(rootView);
-
-        View view = VisibilityTracker.getBestRootView(activity.getApplicationContext(), rootView);
-
-        assertThat(view).isEqualTo(contentView);
-    }
-
-    @Test
-    public void getBestRootView_withApplicationContext_withNullView_shouldReturnNull() {
-        View view = VisibilityTracker.getBestRootView(activity.getApplicationContext(), null);
-
-        assertThat(view).isNull();
-    }
-
-    @Test
-    public void getBestRootView_withApplicationContext_withNullRootView_withNullParentView_shouldReturnNull() {
-        View originalView = mock(View.class);
-        when(originalView.getRootView()).thenReturn(null);
-
-        View view = VisibilityTracker.getBestRootView(activity.getApplicationContext(), originalView);
-
-        assertThat(view).isNull();
     }
 
     @Test
@@ -236,13 +183,14 @@ public class VisibilityTrackerTest {
 
     @Test
     public void destroy_shouldCallClear_shouldRemoveListenerFromDecorView() throws Exception {
-        Activity activity1 = mock(Activity.class);
+        Activity activity1 = spy(Robolectric.buildActivity(Activity.class).create().get());
         Window window = mock(Window.class);
         View decorView = mock(View.class);
         ViewTreeObserver viewTreeObserver = mock(ViewTreeObserver.class);
 
         when(activity1.getWindow()).thenReturn(window);
         when(window.getDecorView()).thenReturn(decorView);
+        when(decorView.findViewById(anyInt())).thenReturn(decorView);
         when(decorView.getViewTreeObserver()).thenReturn(viewTreeObserver);
         when(viewTreeObserver.isAlive()).thenReturn(true);
 

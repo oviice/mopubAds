@@ -55,7 +55,7 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
     @Nullable private CustomEventInterstitialAdapter mCustomEventInterstitialAdapter;
     @Nullable private InterstitialAdListener mInterstitialAdListener;
     @NonNull private Activity mActivity;
-    @NonNull private InterstitialState mCurrentInterstitialState;
+    @NonNull private volatile InterstitialState mCurrentInterstitialState;
 
     public interface InterstitialAdListener {
         void onInterstitialLoaded(MoPubInterstitial interstitial);
@@ -89,7 +89,7 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
      * @return {@code true} if a state change happened, {@code false} if no state change happened.
      */
     @VisibleForTesting
-    boolean attemptStateTransition(@NonNull final InterstitialState endState,
+    synchronized boolean attemptStateTransition(@NonNull final InterstitialState endState,
             boolean forceRefresh) {
         Preconditions.checkNotNull(endState);
 

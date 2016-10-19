@@ -1,3 +1,17 @@
+## Version 4.10.0 (October 18, 2016)
+- **Added and updated mediated network versions**
+  - Added Flurry version 6.5.0. All Flurry adapters can be found in the corresponding `extras` directory (`/extras/src/com/mopub/mobileads` for banners and interstitials, `/extras/src/com/mopub/nativeads` for native).
+    - All Flurry ad formats must include: `FlurryAgentWrapper`
+    - Banners: `FlurryCustomEventBanner`
+    - Interstitial: `FlurryCustomEventInterstitial`
+    - Native: `FlurryCustomEventNative`, `FlurryBaseNativeAd`, `FlurryNativeAdRenderer`, and `FlurryViewBinder`
+  - Certified Facebook Audience Network version 4.15.0  
+  - Certified Tapjoy version 11.8.2
+  - Certified Millennial Media version 6.3.0
+  - Certified Vungle version 4.0.2  
+- Fixed intermittent `IllegalStateException` for MRAID creatives attemping to retrieve getRootView() on unattached Views.
+- Updated `mopub-sample`'s example `proguard.cfg` to properly retain methods called only via reflection.
+
 ## Version 4.9.0 (September 1, 2016)
 - Removed the full SDK bundle.
 - Removed Eclipse support.

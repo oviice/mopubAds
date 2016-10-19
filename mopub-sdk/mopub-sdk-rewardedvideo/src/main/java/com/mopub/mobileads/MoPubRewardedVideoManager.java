@@ -22,6 +22,7 @@ import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.MoPubCollections;
 import com.mopub.common.util.Reflection;
+import com.mopub.common.util.ReflectionTarget;
 import com.mopub.common.util.Utils;
 import com.mopub.network.AdRequest;
 import com.mopub.network.AdResponse;
@@ -131,6 +132,7 @@ public class MoPubRewardedVideoManager {
         }
     }
 
+    @ReflectionTarget
     public static void updateActivity(@NonNull Activity activity) {
         if (sInstance != null) {
             sInstance.mMainActivity = new WeakReference<Activity>(activity);

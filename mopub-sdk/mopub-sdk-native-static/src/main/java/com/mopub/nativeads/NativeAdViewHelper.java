@@ -6,7 +6,6 @@ import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.mopub.common.Preconditions;
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 
@@ -38,17 +37,14 @@ class NativeAdViewHelper {
     static View getAdView(@Nullable View convertView,
             @Nullable final ViewGroup parent,
             @NonNull final Context context,
-            @Nullable final NativeAd nativeAd,
-            @Nullable final ViewBinder viewBinder) {
-
-        Preconditions.NoThrow.checkNotNull(viewBinder, "ViewBinder is null.");
+            @Nullable final NativeAd nativeAd) {
 
         if (convertView != null) {
-            clearNativeAd(context, convertView);
+            clearNativeAd(convertView);
         }
 
-        if (nativeAd == null || nativeAd.isDestroyed() || viewBinder == null) {
-            MoPubLog.d("NativeAd or viewBinder null or invalid. Returning empty view");
+        if (nativeAd == null || nativeAd.isDestroyed()) {
+            MoPubLog.d("NativeAd null or invalid. Returning empty view");
             // Only create a view if one hasn't been created already
             if (convertView == null || !ViewType.EMPTY.equals(convertView.getTag())) {
                 convertView = new View(context);
@@ -61,23 +57,21 @@ class NativeAdViewHelper {
                 convertView = nativeAd.createAdView(context, parent);
                 convertView.setTag(ViewType.AD);
             }
-            prepareNativeAd(context, convertView, nativeAd);
+            prepareNativeAd(convertView, nativeAd);
             nativeAd.renderAdView(convertView);
         }
 
         return convertView;
     }
 
-    private static void clearNativeAd(@NonNull final Context context,
-            @NonNull final View view) {
+    private static void clearNativeAd(@NonNull final View view) {
         final NativeAd nativeAd = sNativeAdMap.get(view);
         if (nativeAd != null) {
             nativeAd.clear(view);
         }
     }
 
-    private static void prepareNativeAd(@NonNull final Context context,
-            @NonNull final View view,
+    private static void prepareNativeAd(@NonNull final View view,
             @NonNull final NativeAd nativeAd) {
         sNativeAdMap.put(view, nativeAd);
         nativeAd.prepare(view);

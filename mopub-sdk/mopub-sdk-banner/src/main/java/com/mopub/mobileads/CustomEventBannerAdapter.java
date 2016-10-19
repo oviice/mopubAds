@@ -10,6 +10,7 @@ import com.mopub.common.AdReport;
 import com.mopub.common.Constants;
 import com.mopub.common.Preconditions;
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.util.ReflectionTarget;
 import com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;
 import com.mopub.mobileads.factories.CustomEventBannerFactory;
 
@@ -77,6 +78,7 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
         mLocalExtras.put(AD_HEIGHT, mMoPubView.getAdHeight());
     }
 
+    @ReflectionTarget
     void loadAd() {
         if (isInvalidated() || mCustomEventBanner == null) {
             return;
@@ -94,6 +96,7 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
         }
     }
 
+    @ReflectionTarget
     void invalidate() {
         if (mCustomEventBanner != null) {
             // Custom event classes can be developed by any third party and may not be tested.

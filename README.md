@@ -16,10 +16,10 @@ To file an issue with our team visit the [MoPub Forum](https://twittercommunity.
 
 The MoPub SDK is available via:
 
-1. **jCenter AAR**
+1. **JCenter AAR**
     
     [ ![Download](https://api.bintray.com/packages/mopub/mopub-android-sdk/mopub-android-sdk/images/download.svg)](https://bintray.com/mopub/mopub-android-sdk/mopub-android-sdk/_latestVersion)  
-    The MoPub SDK is available as an AAR via jCenter; to use it, add the following to your `build.gradle`.
+    The MoPub SDK is available as an AAR via JCenter; to use it, add the following to your `build.gradle`.
     
     ```
     repositories {
@@ -27,7 +27,7 @@ The MoPub SDK is available via:
     }
 
     dependencies {
-        compile('com.mopub:mopub-sdk:4.9.0@aar') {
+        compile('com.mopub:mopub-sdk:4.10.0@aar') {
             transitive = true
         }
     }
@@ -48,27 +48,27 @@ The MoPub SDK is available via:
         // ... other project dependencies
 
         // For banners
-        compile('com.mopub:mopub-sdk-banner:4.9.0@aar') {
+        compile('com.mopub:mopub-sdk:mopub-sdk-banner:4.10.0@aar') {
             transitive = true
         }
         
         // For interstitials
-        compile('com.mopub:mopub-sdk-interstitial:4.9.0@aar') {
+        compile('com.mopub:mopub-sdk:mopub-sdk-interstitial:4.10.0@aar') {
             transitive = true
         }
 
         // For rewarded videos. This will automatically also include interstitials
-        compile('com.mopub:mopub-sdk-rewardedvideo:4.9.0@aar') {
+        compile('com.mopub:mopub-sdk:mopub-sdk-rewardedvideo:4.10.0@aar') {
             transitive = true
         }
 
         // For native static (images).
-        compile('com.mopub:mopub-sdk-native-static:4.9.0@aar') {
+        compile('com.mopub:mopub-sdk:mopub-sdk-native-static:4.10.0@aar') {
             transitive = true
         }
 
         // For native video. This will automatically also include native static
-        compile('com.mopub:mopub-sdk-native-video:4.9.0@aar') {
+        compile('com.mopub:mopub-sdk:mopub-sdk-native-video:4.10.0@aar') {
             transitive = true
         }
     }
@@ -96,17 +96,20 @@ The MoPub SDK is available via:
 ## New in this Version
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the latest release.
 
-- Removed the full SDK bundle.
-- Removed Eclipse support.
-- Removed InMobi custom events from extras.
-- Deprecated rewarded video calls from `MoPub.java` and moved them to `MoPubRewardedVideos.java`.
-  - For example, `MoPub#loadRewardedVideo` is deprecated in favor of `MoPubRewardedVideos#loadRewardedVideo`.
-- Bug fixes.
+- **Added and updated mediated network versions**
+  - Added Flurry version 6.5.0. All Flurry adapters can be found in the corresponding `extras` directory (`/extras/src/com/mopub/mobileads` for banners and interstitials, `/extras/src/com/mopub/nativeads` for native).
+    - All Flurry ad formats must include: `FlurryAgentWrapper`
+    - Banners: `FlurryCustomEventBanner`
+    - Interstitial: `FlurryCustomEventInterstitial`
+    - Native: `FlurryCustomEventNative`, `FlurryBaseNativeAd`, `FlurryNativeAdRenderer`, and `FlurryViewBinder`
+  - Certified Facebook Audience Network version 4.15.0  
+  - Certified Tapjoy version 11.8.2
+  - Certified Millennial Media version 6.3.0
+  - Certified Vungle version 4.0.2  
+- Fixed intermittent `IllegalStateException` for MRAID creatives attemping to retrieve getRootView() on unattached Views.
+- Updated `mopub-sample`'s example `proguard.cfg` to properly retain methods called only via reflection.
 
-**Modular SDK**
- - Added the ability to specify which ad formats to include as dependencies (to decrease the overall footprint of the MoPub SDK in your app).
- - Default behavior remains unchanged and includes access to all ad formats.
- - **Note:** Maven builds from source are currently unstable and will be reinstated in a future release. Maven developers can still pull the MoPub SDK AAR from JCenter.
+- **Note:** Maven builds from source are currently unstable and will be reinstated in a future release. Maven developers can still pull the MoPub SDK AAR from JCenter.
 
 ## Requirements
 
@@ -115,7 +118,7 @@ Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/mast
 - android-support-annotations.jar, r23 (**Updated in 4.4.0**)
 - android-support-v7-recyclerview.jar, r23 (**Updated in 4.4.0**)
 - MoPub Volley Library (mopub-volley-1.1.0.jar - available on JCenter) (**Updated in 3.6.0**)
-- **Recommended** Google Play Services 7.8.0
+- **Recommended** Google Play Services 9.4.0
 
 ## Upgrading from 3.2.0 and Prior
 In 3.3.0 a dependency on android-support-annotations.jar was added. If you are using Maven or Gradle to include the MoPub SDK, this dependency is included in the build scripts. For instructions on adding dependencies for Eclipse projects, see our [Getting Started Guide](https://github.com/mopub/mopub-android-sdk/wiki/Getting-Started#adding-the-support-libraries-to-your-project)

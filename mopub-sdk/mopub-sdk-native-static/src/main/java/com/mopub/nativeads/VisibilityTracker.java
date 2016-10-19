@@ -1,6 +1,5 @@
 package com.mopub.nativeads;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Rect;
 import android.os.Handler;
@@ -12,6 +11,7 @@ import android.view.ViewTreeObserver;
 
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.util.Views;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -110,7 +110,7 @@ class VisibilityTracker {
             return;
         }
 
-        final View rootView = getBestRootView(context, view);
+        final View rootView = Views.getTopmostView(context, view);
         if (rootView == null) {
             MoPubLog.d("Unable to set Visibility Tracker due to no available root view.");
             return;
@@ -125,24 +125,6 @@ class VisibilityTracker {
 
         mWeakViewTreeObserver = new WeakReference<ViewTreeObserver>(viewTreeObserver);
         viewTreeObserver.addOnPreDrawListener(mOnPreDrawListener);
-    }
-
-    @VisibleForTesting
-    @Nullable
-    static View getBestRootView(@Nullable final Context context, @Nullable final View view) {
-        if (context instanceof Activity) {
-            return ((Activity) context).getWindow().getDecorView();
-        }
-
-        if (view != null) {
-            final View rootView = view.getRootView();
-            if (rootView != null) {
-                final View rootContentView = rootView.findViewById(android.R.id.content);
-                return rootContentView != null ? rootContentView : rootView;
-            }
-        }
-
-        return null;
     }
 
     void setVisibilityTrackerListener(

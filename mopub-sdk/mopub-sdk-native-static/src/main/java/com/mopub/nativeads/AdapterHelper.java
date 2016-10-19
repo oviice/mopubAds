@@ -55,9 +55,16 @@ public final class AdapterHelper {
                 convertView,
                 parent,
                 context,
-                nativeAd,
-                viewBinder
+                nativeAd
         );
+    }
+
+    @Deprecated
+    @NonNull
+    public View getAdView(@Nullable final View convertView,
+            @Nullable final ViewGroup parent,
+            @Nullable final NativeAd nativeAd) {
+        return getAdView(convertView, parent, nativeAd, null);
     }
 
     // Total number of content rows + ad rows

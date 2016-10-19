@@ -10,6 +10,10 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * NOTE: Any methods accessed via this class should be annotated with
+ * {@link com.mopub.common.util.ReflectionTarget}
+ */
 public class Reflection {
     public static class MethodBuilder {
         private final Object mInstance;
