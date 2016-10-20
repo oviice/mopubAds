@@ -5,6 +5,7 @@
     - Banners: `FlurryCustomEventBanner`
     - Interstitial: `FlurryCustomEventInterstitial`
     - Native: `FlurryCustomEventNative`, `FlurryBaseNativeAd`, `FlurryNativeAdRenderer`, and `FlurryViewBinder`
+  - Certified Google Play Services 9.4.0
   - Certified Facebook Audience Network version 4.15.0  
   - Certified Tapjoy version 11.8.2
   - Certified Millennial Media version 6.3.0
