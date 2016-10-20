@@ -48,27 +48,27 @@ The MoPub SDK is available via:
         // ... other project dependencies
 
         // For banners
-        compile('com.mopub:mopub-sdk:mopub-sdk-banner:4.10.0@aar') {
+        compile('com.mopub:mopub-sdk-banner:4.10.0@aar') {
             transitive = true
         }
         
         // For interstitials
-        compile('com.mopub:mopub-sdk:mopub-sdk-interstitial:4.10.0@aar') {
+        compile('com.mopub:mopub-sdk-interstitial:4.10.0@aar') {
             transitive = true
         }
 
         // For rewarded videos. This will automatically also include interstitials
-        compile('com.mopub:mopub-sdk:mopub-sdk-rewardedvideo:4.10.0@aar') {
+        compile('com.mopub:mopub-sdk-rewardedvideo:4.10.0@aar') {
             transitive = true
         }
 
         // For native static (images).
-        compile('com.mopub:mopub-sdk:mopub-sdk-native-static:4.10.0@aar') {
+        compile('com.mopub:mopub-sdk-native-static:4.10.0@aar') {
             transitive = true
         }
 
         // For native video. This will automatically also include native static
-        compile('com.mopub:mopub-sdk:mopub-sdk-native-video:4.10.0@aar') {
+        compile('com.mopub:mopub-sdk-native-video:4.10.0@aar') {
             transitive = true
         }
     }
@@ -102,6 +102,7 @@ Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/mast
     - Banners: `FlurryCustomEventBanner`
     - Interstitial: `FlurryCustomEventInterstitial`
     - Native: `FlurryCustomEventNative`, `FlurryBaseNativeAd`, `FlurryNativeAdRenderer`, and `FlurryViewBinder`
+  - Certified Google Play Services 9.4.0
   - Certified Facebook Audience Network version 4.15.0  
   - Certified Tapjoy version 11.8.2
   - Certified Millennial Media version 6.3.0
