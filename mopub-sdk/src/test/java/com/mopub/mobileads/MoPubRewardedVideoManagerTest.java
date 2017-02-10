@@ -83,7 +83,7 @@ public class
     public void tearDown() {
         // Unpause the main looper in case a test terminated while the looper was paused.
         ShadowLooper.unPauseMainLooper();
-        MoPubRewardedVideoManager.getRewardedVideoData().clear();
+        MoPubRewardedVideoManager.getRewardedAdData().clear();
         MoPubRewardedVideoManager.getAdRequestStatusMapping().clearMapping();
     }
 
@@ -110,7 +110,7 @@ public class
 
         MoPubRewardedVideoManager.loadVideo("testAdUnit", new MoPubRewardedVideoManager.RequestParameters("keywords", null, "testCustomerId"));
 
-        assertThat(MoPubRewardedVideoManager.getRewardedVideoData().getCustomerId()).isEqualTo("testCustomerId");
+        assertThat(MoPubRewardedVideoManager.getRewardedAdData().getCustomerId()).isEqualTo("testCustomerId");
 
         // Finish the request
         requestListener.onErrorResponse(new VolleyError("end test"));
@@ -120,7 +120,7 @@ public class
     @Test
     public void loadVideo_withVideoAlreadyShowing_shouldNotLoadVideo() {
         // To simulate that a video is showing
-        MoPubRewardedVideoManager.getRewardedVideoData().setCurrentlyShowingAdUnitId("testAdUnit");
+        MoPubRewardedVideoManager.getRewardedAdData().setCurrentlyShowingAdUnitId("testAdUnit");
 
         // Robolectric executes its handlers immediately, so if we want the async behavior we see
         // in an actual app we have to pause the main looper until we're done successfully loading the ad.
@@ -244,8 +244,8 @@ public class
     @Test
     public void loadVideo_withCustomEventAlreadyLoaded_shouldNotLoadAnotherVideo() throws Exception {
         final CustomEventRewardedVideo mockCustomEvent = mock(CustomEventRewardedVideo.class);
-        MoPubRewardedVideoManager.getRewardedVideoData().updateAdUnitCustomEventMapping(
-                "testAdUnit", mockCustomEvent, null, TestCustomEvent.AD_NETWORK_ID);
+        MoPubRewardedVideoManager.getRewardedAdData().updateAdUnitCustomEventMapping(
+                "testAdUnit", mockCustomEvent, TestCustomEvent.AD_NETWORK_ID);
 
         AdResponse testResponse = new AdResponse.Builder()
                 .setCustomEventClassName(
@@ -305,7 +305,7 @@ public class
 
         // Get the first custom event's broadcast id
         TestCustomEvent testCustomEvent1 = (TestCustomEvent)
-                MoPubRewardedVideoManager.getRewardedVideoData().getCustomEvent("testAdUnit1");
+                MoPubRewardedVideoManager.getRewardedAdData().getCustomEvent("testAdUnit1");
         Long broadcastId1 = (Long) testCustomEvent1.getLocalExtras().get(
                 DataKeys.BROADCAST_IDENTIFIER_KEY);
         assertThat(broadcastId1).isNotNull();
@@ -320,7 +320,7 @@ public class
 
         // Get the second custom event's broadcast id
         TestCustomEvent testCustomEvent2 = (TestCustomEvent)
-                MoPubRewardedVideoManager.getRewardedVideoData().getCustomEvent("testAdUnit2");
+                MoPubRewardedVideoManager.getRewardedAdData().getCustomEvent("testAdUnit2");
         Long broadcastId2 = (Long) testCustomEvent2.getLocalExtras().get(
                 DataKeys.BROADCAST_IDENTIFIER_KEY);
         assertThat(broadcastId2).isNotNull();
@@ -349,7 +349,7 @@ public class
         ShadowLooper.unPauseMainLooper();
 
         MoPubReward moPubReward =
-                MoPubRewardedVideoManager.getRewardedVideoData().getMoPubReward("testAdUnit");
+                MoPubRewardedVideoManager.getRewardedAdData().getMoPubReward("testAdUnit");
         assertThat(moPubReward.getAmount()).isEqualTo(123);
         assertThat(moPubReward.getLabel()).isEqualTo("currency_name");
     }
@@ -422,7 +422,7 @@ public class
         MoPubRewardedVideoManager.showVideo("testAdUnit");
 
         MoPubReward moPubReward =
-                MoPubRewardedVideoManager.getRewardedVideoData().getLastShownMoPubReward(TestCustomEvent.class);
+                MoPubRewardedVideoManager.getRewardedAdData().getLastShownMoPubReward(TestCustomEvent.class);
         assertThat(moPubReward.getAmount()).isEqualTo(123);
         assertThat(moPubReward.getLabel()).isEqualTo("currency_name");
     }
@@ -462,11 +462,11 @@ public class
     @Test
     public void onRewardedVideoCompleted_withEmptyServerCompletionUrl_withCurrentlyShowingAdUnitId_shouldNotifyRewardedVideoCompletedForOneAdUnitId() {
         MoPubReward moPubReward = MoPubReward.success(MOPUB_REWARD, 123);
-        RewardedVideoData rewardedVideoData = MoPubRewardedVideoManager.getRewardedVideoData();
+        RewardedAdData rewardedVideoData = MoPubRewardedVideoManager.getRewardedAdData();
         rewardedVideoData.setCurrentlyShowingAdUnitId("testAdUnit1");
-        rewardedVideoData.updateAdUnitCustomEventMapping("testAdUnit1", new TestCustomEvent(), null,
+        rewardedVideoData.updateAdUnitCustomEventMapping("testAdUnit1", new TestCustomEvent(),
                 TestCustomEvent.AD_NETWORK_ID);
-        rewardedVideoData.updateAdUnitCustomEventMapping("testAdUnit2", new TestCustomEvent(), null,
+        rewardedVideoData.updateAdUnitCustomEventMapping("testAdUnit2", new TestCustomEvent(),
                 TestCustomEvent.AD_NETWORK_ID);
         // Server completion url empty and custom event has no server reward set
 
@@ -486,13 +486,13 @@ public class
     @Test
     public void onRewardedVideoCompleted_withEmptyServerCompletionUrl_withNoCurrentlyShowingAdUnitId_shouldNotifyRewardedVideoCompletedForAllAdUnitIds() {
         MoPubReward moPubReward = MoPubReward.success(MOPUB_REWARD, 123);
-        RewardedVideoData rewardedVideoData = MoPubRewardedVideoManager.getRewardedVideoData();
+        RewardedAdData rewardedVideoData = MoPubRewardedVideoManager.getRewardedAdData();
         rewardedVideoData.setCurrentlyShowingAdUnitId(null);
-        rewardedVideoData.updateAdUnitCustomEventMapping("testAdUnit1", new TestCustomEvent(), null,
+        rewardedVideoData.updateAdUnitCustomEventMapping("testAdUnit1", new TestCustomEvent(),
                 TestCustomEvent.AD_NETWORK_ID);
-        rewardedVideoData.updateAdUnitCustomEventMapping("testAdUnit2", new TestCustomEvent(), null,
+        rewardedVideoData.updateAdUnitCustomEventMapping("testAdUnit2", new TestCustomEvent(),
                 TestCustomEvent.AD_NETWORK_ID);
-        rewardedVideoData.updateAdUnitCustomEventMapping("testAdUnit3", new TestCustomEvent(), null,
+        rewardedVideoData.updateAdUnitCustomEventMapping("testAdUnit3", new TestCustomEvent(),
                 TestCustomEvent.AD_NETWORK_ID);
         // Server completion url empty and custom event has no server reward set
 
@@ -515,12 +515,6 @@ public class
 
         boolean mPlayable = false;
         private Map<String, Object> mLocalExtras;
-
-        @Nullable
-        @Override
-        protected CustomEventRewardedVideoListener getVideoListenerForSdk() {
-            return null;
-        }
 
         @Nullable
         @Override

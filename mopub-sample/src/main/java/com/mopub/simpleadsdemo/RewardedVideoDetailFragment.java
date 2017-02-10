@@ -9,11 +9,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
-import com.mopub.common.MoPub;
 import com.mopub.common.MoPubReward;
 import com.mopub.mobileads.MoPubErrorCode;
 import com.mopub.mobileads.MoPubRewardedVideoListener;
 import com.mopub.mobileads.MoPubRewardedVideoManager.RequestParameters;
+import com.mopub.mobileads.MoPubRewardedVideos;
 
 import java.util.Locale;
 import java.util.Set;
@@ -38,10 +38,10 @@ public class RewardedVideoDetailFragment extends Fragment implements MoPubReward
         hideSoftKeyboard(views.mKeywordsField);
 
         if (!sRewardedVideoInitialized) {
-            MoPub.initializeRewardedVideo(getActivity());
+            MoPubRewardedVideos.initializeRewardedVideo(getActivity());
             sRewardedVideoInitialized = true;
         }
-        MoPub.setRewardedVideoListener(this);
+        MoPubRewardedVideos.setRewardedVideoListener(this);
 
         mAdUnitId = adConfiguration.getAdUnitId();
         views.mDescriptionView.setText(adConfiguration.getDescription());
@@ -52,7 +52,7 @@ public class RewardedVideoDetailFragment extends Fragment implements MoPubReward
                 if (mAdUnitId == null) {
                     return;
                 }
-                MoPub.loadRewardedVideo(mAdUnitId,
+                MoPubRewardedVideos.loadRewardedVideo(mAdUnitId,
                         new RequestParameters(views.mKeywordsField.getText().toString(), null,
                                 "sample_app_customer_id"));
                 if (mShowButton != null) {
@@ -68,7 +68,7 @@ public class RewardedVideoDetailFragment extends Fragment implements MoPubReward
                 if (mAdUnitId == null) {
                     return;
                 }
-                MoPub.showRewardedVideo(mAdUnitId);
+                MoPubRewardedVideos.showRewardedVideo(mAdUnitId);
             }
         });
 

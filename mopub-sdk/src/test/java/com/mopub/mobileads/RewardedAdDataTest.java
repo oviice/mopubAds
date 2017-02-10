@@ -12,13 +12,13 @@ import static org.fest.assertions.api.Assertions.assertThat;
 
 @RunWith(SdkTestRunner.class)
 @Config(constants = BuildConfig.class)
-public class RewardedVideoDataTest {
+public class RewardedAdDataTest {
 
-    private RewardedVideoData subject;
+    private RewardedAdData subject;
 
     @Before
     public void setup() {
-        subject = new RewardedVideoData();
+        subject = new RewardedAdData();
     }
 
     @Test
