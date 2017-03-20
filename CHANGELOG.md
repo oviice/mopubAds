@@ -3,10 +3,10 @@
 - Updated minimum supported Android API version to 16+ (Jelly Bean).
 - New required Activity declaration in `AndroidManifest`, please add:
 
-   ```
+```
 <activity android:name="com.mopub.mobileads.RewardedMraidActivity"
           android:configChanges="keyboardHidden|orientation|screenSize"/>
-    ```
+ ```
 - Added support for **rich media in rewarded video** inventory.
 - Bug fixes:
     - Fixed incorrectly forwarded lifecycle events `onStop()` and `onDestroy()` in `MoPubLifeCycleManager` for rewarded rich media ads.
