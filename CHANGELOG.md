@@ -1,3 +1,12 @@
+## Version 4.13.0 (March 23, 2017)
+
+- Updated AdColony Custom Events.
+- Updated Unity Custom Events.
+- Added AdMob Custom Events:
+  - Native: `GooglePlayServicesAdRenderer` and `GooglePlayServicesNative`
+  - Rewarded Video: `GooglePlayServicesRewardedVideo`
+- Bug fixes.
+
 ## Version 4.12.0 (February 9, 2017)
 
 - Updated minimum supported Android API version to 16+ (Jelly Bean).
@@ -6,7 +15,7 @@
 ```
 <activity android:name="com.mopub.mobileads.RewardedMraidActivity"
           android:configChanges="keyboardHidden|orientation|screenSize"/>
- ```
+```
 - Added support for **rich media in rewarded video** inventory.
 - Bug fixes:
     - Fixed incorrectly forwarded lifecycle events `onStop()` and `onDestroy()` in `MoPubLifeCycleManager` for rewarded rich media ads.
