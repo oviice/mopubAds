@@ -1,3 +1,8 @@
+## Version 4.15.0 (June 19, 2017)
+- The SDK now sends Advertising ID on Amazon devices when appropriate.
+- Fixed issue with Charles proxy in sample app for API 24+.
+- Bug fixes.
+
 ## Version 4.14.0 (May 10, 2017)
 - Rewarded Ad reward callback `onRewardedVideoCompleted(Set<String>, MoPubReward)` is also triggered now on the client for server-side rewarding.
 - Added click callback for Rewarded Ads.

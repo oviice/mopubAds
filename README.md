@@ -27,7 +27,7 @@ The MoPub SDK is available via:
     }
 
     dependencies {
-        compile('com.mopub:mopub-sdk:4.14.0@aar') {
+        compile('com.mopub:mopub-sdk:4.15.0@aar') {
             transitive = true
         }
     }
@@ -48,27 +48,27 @@ The MoPub SDK is available via:
         // ... other project dependencies
 
         // For banners
-        compile('com.mopub:mopub-sdk-banner:4.14.0@aar') {
+        compile('com.mopub:mopub-sdk-banner:4.15.0@aar') {
             transitive = true
         }
         
         // For interstitials
-        compile('com.mopub:mopub-sdk-interstitial:4.14.0@aar') {
+        compile('com.mopub:mopub-sdk-interstitial:4.15.0@aar') {
             transitive = true
         }
 
         // For rewarded videos. This will automatically also include interstitials
-        compile('com.mopub:mopub-sdk-rewardedvideo:4.14.0@aar') {
+        compile('com.mopub:mopub-sdk-rewardedvideo:4.15.0@aar') {
             transitive = true
         }
 
         // For native static (images).
-        compile('com.mopub:mopub-sdk-native-static:4.14.0@aar') {
+        compile('com.mopub:mopub-sdk-native-static:4.15.0@aar') {
             transitive = true
         }
 
         // For native video. This will automatically also include native static
-        compile('com.mopub:mopub-sdk-native-video:4.14.0@aar') {
+        compile('com.mopub:mopub-sdk-native-video:4.15.0@aar') {
             transitive = true
         }
     }
@@ -96,14 +96,8 @@ The MoPub SDK is available via:
 ## New in this Version
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the latest release.
 
-- Rewarded Ad reward callback is also triggered now on the client for server-side rewarding.
-- Added click callback for Rewarded Ads.
-  - Any implementors of `MoPubRewardedVideoListener` will now need to also implement `public void onRewardedVideoClicked(@NonNull String adUnitId)`.
-- MoPub Ads now expire after 4 hours of being unused.
-  - Interstitial and Rewarded ads served by MoPub will expire 4 hours after successfully loading, triggering a load failure with the new `EXPIRED` `MoPubErrorCode`.
-  - Cached Native Ad Placer ads now also expire in 4 hours.
-- Improved logging when attempting to show an ad that is not ready.
-- Updated build tools version to 25.0.2.
+- The SDK now sends Advertising ID on Amazon devices when appropriate.
+- Fixed issue with Charles proxy in sample app for API 24+.
 - Bug fixes.
 
 ## Requirements
