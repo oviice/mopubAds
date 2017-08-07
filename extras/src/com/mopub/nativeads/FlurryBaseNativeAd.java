@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Certified with Flurry 7.0.0
+ * Certified with Flurry 7.2.0
  */
 public interface FlurryBaseNativeAd {
 

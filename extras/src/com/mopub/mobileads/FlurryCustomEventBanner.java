@@ -18,7 +18,7 @@ import static com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL;
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
 
 /**
- * Certified with Flurry 7.0.0
+ * Certified with Flurry 7.2.0
  */
 class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBanner {
     private static final String LOG_TAG = FlurryCustomEventBanner.class.getSimpleName();

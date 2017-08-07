@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Certified with Flurry 7.0.0
+ * Certified with Flurry 7.2.0
  */
 public final class FlurryCustomEventNative extends CustomEventNative {
 
@@ -71,6 +71,9 @@ public final class FlurryCustomEventNative extends CustomEventNative {
     private static final double MOPUB_STAR_RATING_SCALE = StaticNativeAd.MAX_STAR_RATING;
 
     private FlurryAgentListener mFlurryAgentListener;
+
+    /* Static reference of the ads to ensure they don't get garbage collected */
+    private final static List<FlurryAdNative> sFlurryNativeAds = new ArrayList<>();
 
     @Override
     protected void loadNativeAd(@NonNull final Context context,
@@ -208,6 +211,10 @@ public final class FlurryCustomEventNative extends CustomEventNative {
             flurryNativeAd = new FlurryStaticNativeAd(context, flurryAdNative,
                     customEventNativeListener);
         }
+
+        // Add to requested ad list
+        sFlurryNativeAds.add(flurryAdNative);
+
         flurryNativeAd.fetchAd();
     }
 
@@ -579,6 +586,7 @@ public final class FlurryCustomEventNative extends CustomEventNative {
         public void onFetched(final FlurryAdNative flurryAdNative) {
             Log.d(LOG_TAG, "onFetched: Flurry native ad fetched successfully!");
             mapNativeAd(mBaseNativeAd, flurryAdNative);
+            sFlurryNativeAds.remove(flurryAdNative);
         }
 
         @Override
@@ -622,6 +630,7 @@ public final class FlurryCustomEventNative extends CustomEventNative {
                 final int errorCode) {
             Log.d(LOG_TAG, String.format("onError: Flurry native ad not available. " +
                     "Error type: %s. Error code: %s", adErrorType.toString(), errorCode));
+            sFlurryNativeAds.remove(flurryAdNative);
         }
     }
 }
