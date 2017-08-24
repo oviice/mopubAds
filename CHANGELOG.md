@@ -1,6 +1,6 @@
 ## Version 4.16.0 (August 23, 2017)
-- Added support for viewability measurement from AVID (a.k.a. IAS) and Moat.  
-  - **Important:** New dependencies were included in this release; please update your `build.gradle`'s repositories block to include `maven { url "https://s3.amazonaws.com/moat-sdk-builds" }`.
+- Added support for viewability measurement from IAS (AVID library) and Moat.  
+  - **Important:** New dependencies were included in this release; please update your `build.gradle`'s repositories block to include `maven { url "https://s3.amazonaws.com/moat-sdk-builds" }`. Note that the AVID library is provided on JCenter, so no additional steps must be taken -- it will be included automatically.
   - To disable this feature, see note below on [Disabling Viewability Measurement](#disableViewability).
 - Interstitials are now loaded offscreen instead of in a separate WebView.
 - Rewarded Videos have a new init method. See `MoPubRewardedVideos.initializeRewardedVideo(Activity, List<Class<? extends CustomEventRewardedVideo>>, MediationSettings...)`. Pass in a list of networks to initialize, and MoPub will initialize those networks with the settings from the previous ad request, persisted across app close.
