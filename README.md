@@ -12,6 +12,10 @@ To file an issue with our team visit the [MoPub Forum](https://twittercommunity.
 
 **Please Note: We no longer accept GitHub Issues.**
 
+## New Pull Requests?
+
+Thank you for submitting pull requests to the MoPub Android GitHub repository. Our team regularly monitors and investigates all submissions for inclusion in our official SDK releases. Please note that MoPub does not directly merge these pull requests at this time. Please reach out to your account team or [support@mopub.com](mailto:support@mopub.com) if you have further questions.
+
 ## Disclosures
 
 MoPub v4.16 SDK integrates technology from our partners Integral Ad Science, Inc. (“IAS”) and Moat, Inc. (“Moat”) in order to support viewability measurement and other proprietary reporting that [IAS](https://integralads.com/capabilities/viewability/) and [Moat](https://moat.com/analytics) provide to their advertiser and publisher clients. You have the option to remove or disable this technology by following the [opt-out instructions](#disableViewability) below.  
@@ -29,7 +33,7 @@ The MoPub SDK is available via:
     
     ```
     repositories {
-        jcenter()
+        jcenter() // includes the MoPub SDK and AVID library
         maven { url "https://s3.amazonaws.com/moat-sdk-builds" }
     }
 
@@ -47,7 +51,7 @@ The MoPub SDK is available via:
     ```groovy
     repositories {
         // ... other project repositories
-        jcenter()
+        jcenter() // includes the MoPub SDK and AVID library
         maven { url "https://s3.amazonaws.com/moat-sdk-builds" }
     }
 
@@ -164,7 +168,7 @@ If your app's target SDK is 23 or higher _**and**_ the user's device is running 
 - Dangerous permission [`ACCESS_COARSE_LOCATION`](http://developer.android.com/reference/android/Manifest.permission.html#ACCESS_COARSE_LOCATION) is needed to pass network location data to MoPub.
 - Dangerous permission [`ACCESS_FINE_LOCATION`](http://developer.android.com/reference/android/Manifest.permission.html#ACCESS_FINE_LOCATION) is needed to pass GPS location data to MoPub.
     - Granting `ACCESS_FINE_LOCATION` also allows network location data to be passed to MoPub without the need to also grant `ACCESS_COARSE_LOCATION`.
-- Dangerous permission [`WRITE_EXTERNAL_STORAGE`](http://developer.android.com/reference/android/Manifest.permission.html#WRITE_EXTERNAL_STORAGE) is needed for MRAID 2.
+- Dangerous permission [`WRITE_EXTERNAL_STORAGE`](http://developer.android.com/reference/android/Manifest.permission.html#WRITE_EXTERNAL_STORAGE) is optional and only required for MRAID 2.0 storePicture ads.
 - _**Note:** The user can deny granting any dangerous permissions during runtime, so please make sure your app can handle this properly._
 - _**Note:** The user can revoke any permissions granted previously by going to your app's Settings screen, so please make sure your app can handle this properly._
 
