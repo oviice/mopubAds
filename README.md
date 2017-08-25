@@ -38,7 +38,7 @@ The MoPub SDK is available via:
     }
 
     dependencies {
-        compile('com.mopub:mopub-sdk:4.16.0@aar') {
+        compile('com.mopub:mopub-sdk:4.16.1@aar') {
             transitive = true
         }
     }
@@ -59,27 +59,27 @@ The MoPub SDK is available via:
         // ... other project dependencies
 
         // For banners
-        compile('com.mopub:mopub-sdk-banner:4.16.0@aar') {
+        compile('com.mopub:mopub-sdk-banner:4.16.1@aar') {
             transitive = true
         }
         
         // For interstitials
-        compile('com.mopub:mopub-sdk-interstitial:4.16.0@aar') {
+        compile('com.mopub:mopub-sdk-interstitial:4.16.1@aar') {
             transitive = true
         }
 
         // For rewarded videos. This will automatically also include interstitials
-        compile('com.mopub:mopub-sdk-rewardedvideo:4.16.0@aar') {
+        compile('com.mopub:mopub-sdk-rewardedvideo:4.16.1@aar') {
             transitive = true
         }
 
         // For native static (images).
-        compile('com.mopub:mopub-sdk-native-static:4.16.0@aar') {
+        compile('com.mopub:mopub-sdk-native-static:4.16.1@aar') {
             transitive = true
         }
 
         // For native video. This will automatically also include native static
-        compile('com.mopub:mopub-sdk-native-video:4.16.0@aar') {
+        compile('com.mopub:mopub-sdk-native-video:4.16.1@aar') {
             transitive = true
         }
     }
@@ -113,6 +113,7 @@ Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/mast
 - Interstitials are now loaded offscreen instead of in a separate WebView.
 - Rewarded Videos have a new init method. See `MoPubRewardedVideos.initializeRewardedVideo(Activity, List<Class<? extends CustomEventRewardedVideo>>, MediationSettings...)`. Pass in a list of networks to initialize, and MoPub will initialize those networks with the settings from the previous ad request, persisted across app close.
 - Upgraded our ExoPlayer dependency to 2.4.4.
+- Fixed issue where null javascript was being passed to AVID video sessions.
 
 ## Requirements
 
@@ -135,7 +136,7 @@ Normally, to add the MoPub SDK to your app via JCenter, your `build.gradle` woul
 
 ```	
 dependencies {
-    compile('com.mopub:mopub-sdk:4.16.0@aar') {
+    compile('com.mopub:mopub-sdk:4.16.1@aar') {
         transitive = true
     }
 }
@@ -144,7 +145,7 @@ Update to the following to exclude one or both viewability vendors:
 
 ```
 dependencies {
-    compile('com.mopub:mopub-sdk:4.16.0@aar') {
+    compile('com.mopub:mopub-sdk:4.16.1@aar') {
         transitive = true
         exclude module: 'libAvid-mopub' // To exclude AVID
         exclude module: 'moat-mobile-app-kit' // To exclude Moat

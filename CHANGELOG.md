@@ -1,3 +1,6 @@
+#### Version 4.16.1 (August 24, 2017)
+- Fixed issue where null javascript was being passed to AVID video sessions.
+
 ## Version 4.16.0 (August 23, 2017)
 - Added support for viewability measurement from IAS (AVID library) and Moat.  
   - **Important:** New dependencies were included in this release; please update your `build.gradle`'s repositories block to include `maven { url "https://s3.amazonaws.com/moat-sdk-builds" }`. Note that the AVID library is provided on JCenter, so no additional steps must be taken -- it will be included automatically.
@@ -594,3 +597,4 @@ To allow users to play videos using the native video player:
   - Added support for custom events
   - Added network connectivity check before loading an ad
   - Added `OnAdPresentedOverlay` listener methods
+  

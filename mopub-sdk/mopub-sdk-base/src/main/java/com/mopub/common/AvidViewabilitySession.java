@@ -257,9 +257,13 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
         // mAvidVideoAdSession = AvidAdSessionManager.startAvidManagedVideoAdSession(activity,
         //         (ExternalAvidAdSessionContext) getAvidAdSessionContextNonDeferred());
         // mAvidVideoAdSession.registerAdView(view, activity);
-        // mAvidVideoAdSession.injectJavascriptResource(videoViewabilityTrackers.get(AVID_KEY));
+        // if (!TextUtils.isEmpty(videoViewabilityTrackers.get(AVID_KEY))) {
+        //     mAvidVideoAdSession.injectJavaScriptResource(videoViewabilityTrackers.get(AVID_KEY));
+        // }
         // for (final String buyerResource : buyerResources) {
-        //     mAvidVideoAdSession.injectJavascriptResource(buyerResource);
+        //     if (buyerResource != null) {
+        //         mAvidVideoAdSession.injectJavaScriptResource(buyerResource);
+        //     }
         // }
 
         try {
@@ -274,14 +278,18 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
                     .addParam(Activity.class, activity)
                     .execute();
 
-            new Reflection.MethodBuilder(mAvidVideoAdSession, "injectJavaScriptResource")
-                    .addParam(String.class, videoViewabilityTrackers.get(AVID_KEY))
-                    .execute();
+            if (!TextUtils.isEmpty(videoViewabilityTrackers.get(AVID_KEY))) {
+                new Reflection.MethodBuilder(mAvidVideoAdSession, "injectJavaScriptResource")
+                        .addParam(String.class, videoViewabilityTrackers.get(AVID_KEY))
+                        .execute();
+            }
 
             for (final String buyerResource : buyerResources) {
-                new Reflection.MethodBuilder(mAvidVideoAdSession, "injectJavaScriptResource")
-                        .addParam(String.class, buyerResource)
-                        .execute();
+                if (!TextUtils.isEmpty(buyerResource)) {
+                    new Reflection.MethodBuilder(mAvidVideoAdSession, "injectJavaScriptResource")
+                            .addParam(String.class, buyerResource)
+                            .execute();
+                }
             }
 
             return true;
