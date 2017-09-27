@@ -77,7 +77,7 @@ public class RewardedVideoDetailFragment extends Fragment implements MoPubReward
                 }
             }
         });
-        mShowButton = (Button) view.findViewById(R.id.interstitial_show_button);
+        mShowButton = views.mShowButton;
         mShowButton.setEnabled(false);
         mShowButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,9 +85,17 @@ public class RewardedVideoDetailFragment extends Fragment implements MoPubReward
                 if (mAdUnitId == null) {
                     return;
                 }
-                MoPubRewardedVideos.showRewardedVideo(mAdUnitId);
+
+                final String customData = (views.mCustomDataField != null)
+                        ? views.mCustomDataField.getText().toString()
+                        : null;
+
+                MoPubRewardedVideos.showRewardedVideo(mAdUnitId, customData);
             }
         });
+        if (views.mCustomDataField != null) {
+            views.mCustomDataField.setVisibility(View.VISIBLE);
+        }
 
         return view;
     }

@@ -14,7 +14,8 @@ import java.util.Map;
  * This the base class for implementations of the static native ad format.
  */
 public abstract class StaticNativeAd extends BaseNativeAd implements ImpressionInterface, ClickInterface {
-    private static final int IMPRESSION_MIN_PERCENTAGE_VIEWED = 50;
+    private static final int DEFAULT_IMPRESSION_MIN_TIME_VIEWED_MS = 1000;
+    private static final int DEFAULT_IMPRESSION_MIN_PERCENTAGE_VIEWED = 50;
 
     static final double MIN_STAR_RATING = 0;
     static final double MAX_STAR_RATING = 5;
@@ -33,12 +34,14 @@ public abstract class StaticNativeAd extends BaseNativeAd implements ImpressionI
     // Impression logistics
     private boolean mImpressionRecorded;
     private int mImpressionMinTimeViewed;
+    private int mImpressionMinPercentageViewed;
 
     // Extras
     @NonNull private final Map<String, Object> mExtras;
 
     public StaticNativeAd() {
-        mImpressionMinTimeViewed = 1000;
+        mImpressionMinTimeViewed = DEFAULT_IMPRESSION_MIN_TIME_VIEWED_MS;
+        mImpressionMinPercentageViewed = DEFAULT_IMPRESSION_MIN_PERCENTAGE_VIEWED;
 
         mExtras = new HashMap<String, Object>();
     }
@@ -200,9 +203,31 @@ public abstract class StaticNativeAd extends BaseNativeAd implements ImpressionI
         mExtras.put(key, value);
     }
 
+    /**
+     * Sets the minimum time for the ad to be on screen before impression trackers are fired.
+     * This int must be greater than 0.
+     *
+     * @param impressionMinTimeViewed Time in milliseconds (ignored if negative or 0).
+     */
     final public void setImpressionMinTimeViewed(final int impressionMinTimeViewed) {
-        if (impressionMinTimeViewed >= 0) {
+        if (impressionMinTimeViewed > 0) {
             mImpressionMinTimeViewed = impressionMinTimeViewed;
+        } else {
+            MoPubLog.d("Ignoring non-positive impressionMinTimeViewed");
+        }
+    }
+
+    /**
+     * Sets the minimum percent of the ad to be on screen before impression trackers are fired.
+     * This must be a percentage between 0 and 100, inclusive.
+     *
+     * @param impressionMinPercentageViewed Percent of ad (must be between 0 and 100 inclusive).
+     */
+    final public void setImpressionMinPercentageViewed(final int impressionMinPercentageViewed) {
+        if (impressionMinPercentageViewed >= 0 && impressionMinPercentageViewed <= 100) {
+            mImpressionMinPercentageViewed = impressionMinPercentageViewed;
+        } else {
+            MoPubLog.d("Ignoring impressionMinTimeViewed that's not a percent [0, 100]");
         }
     }
 
@@ -233,7 +258,7 @@ public abstract class StaticNativeAd extends BaseNativeAd implements ImpressionI
      */
     @Override
     final public int getImpressionMinPercentageViewed() {
-        return IMPRESSION_MIN_PERCENTAGE_VIEWED;
+        return mImpressionMinPercentageViewed;
     }
 
     /**

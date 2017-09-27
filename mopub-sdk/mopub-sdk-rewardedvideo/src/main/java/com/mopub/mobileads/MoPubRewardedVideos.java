@@ -74,6 +74,13 @@ public class MoPubRewardedVideos {
     }
 
     @ReflectionTarget
+    public static void showRewardedVideo(@NonNull String adUnitId, @Nullable String customData) {
+        Preconditions.checkNotNull(adUnitId);
+
+        MoPubRewardedVideoManager.showVideo(adUnitId, customData);
+    }
+
+    @ReflectionTarget
     public static Set<MoPubReward> getAvailableRewards(@NonNull String adUnitId) {
         Preconditions.checkNotNull(adUnitId);
 

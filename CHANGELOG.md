@@ -1,3 +1,7 @@
+## Version 4.17.0 (September 27, 2017)
+- Rewarded Ads can now send up optional custom data through the server completion url. See `MoPubRewardedVideos#showRewardedVideo(String, String)`.
+- Updated Facebook native adapter to ignore clicks on whitespace as per Facebook policy.
+
 #### Version 4.16.1 (August 24, 2017)
 - Fixed issue where null javascript was being passed to AVID video sessions.
 

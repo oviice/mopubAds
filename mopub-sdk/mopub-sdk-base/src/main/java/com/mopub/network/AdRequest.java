@@ -238,16 +238,24 @@ public class AdRequest extends Request<AdResponse> {
             serverExtras.put(DataKeys.SCROLLABLE_KEY, Boolean.toString(isScrollable));
             serverExtras.put(DataKeys.CREATIVE_ORIENTATION_KEY, extractHeader(headers, ResponseHeader.ORIENTATION));
         }
+        if (AdType.STATIC_NATIVE.equals(adTypeString) || AdType.VIDEO_NATIVE.equals(adTypeString)) {
+            final String impressionMinVisiblePercent = extractPercentHeaderString(headers,
+                    ResponseHeader.IMPRESSION_MIN_VISIBLE_PERCENT);
+            final String impressionVisibleMS = extractHeader(headers,
+                    ResponseHeader.IMPRESSION_VISIBLE_MS);
+            if (!TextUtils.isEmpty(impressionMinVisiblePercent)) {
+                serverExtras.put(DataKeys.IMPRESSION_MIN_VISIBLE_PERCENT,
+                        impressionMinVisiblePercent);
+            }
+            if (!TextUtils.isEmpty(impressionVisibleMS)) {
+                serverExtras.put(DataKeys.IMPRESSION_VISIBLE_MS, impressionVisibleMS);
+            }
+        }
         if (AdType.VIDEO_NATIVE.equals(adTypeString)) {
             serverExtras.put(DataKeys.PLAY_VISIBLE_PERCENT,
                     extractPercentHeaderString(headers, ResponseHeader.PLAY_VISIBLE_PERCENT));
             serverExtras.put(DataKeys.PAUSE_VISIBLE_PERCENT,
                     extractPercentHeaderString(headers, ResponseHeader.PAUSE_VISIBLE_PERCENT));
-            serverExtras.put(DataKeys.IMPRESSION_MIN_VISIBLE_PERCENT,
-                    extractPercentHeaderString(headers,
-                            ResponseHeader.IMPRESSION_MIN_VISIBLE_PERCENT));
-            serverExtras.put(DataKeys.IMPRESSION_VISIBLE_MS, extractHeader(headers,
-                    ResponseHeader.IMPRESSION_VISIBLE_MS));
             serverExtras.put(DataKeys.MAX_BUFFER_MS, extractHeader(headers,
                     ResponseHeader.MAX_BUFFER_MS));
 

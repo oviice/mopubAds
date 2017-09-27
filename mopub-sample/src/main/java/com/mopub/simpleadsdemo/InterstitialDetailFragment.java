@@ -43,7 +43,7 @@ public class InterstitialDetailFragment extends Fragment implements Interstitial
                 mMoPubInterstitial.load();
             }
         });
-        mShowButton = (Button) view.findViewById(R.id.interstitial_show_button);
+        mShowButton = views.mShowButton;
         mShowButton.setEnabled(false);
         mShowButton.setOnClickListener(new View.OnClickListener() {
             @Override

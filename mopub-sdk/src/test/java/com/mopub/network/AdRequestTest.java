@@ -173,6 +173,22 @@ public class AdRequestTest {
     }
 
     @Test
+    public void parseNetworkResponse_forNativeStatic_shouldSucceed() throws Exception {
+        defaultHeaders.put(ResponseHeader.AD_TYPE.getKey(), AdType.STATIC_NATIVE);
+        NetworkResponse testResponse = new NetworkResponse(200,
+                "{\"abc\": \"def\"}".getBytes(Charset.defaultCharset()), defaultHeaders, false);
+
+        final Response<AdResponse> response = subject.parseNetworkResponse(testResponse);
+
+        // Check the server extras
+        final Map<String, String> serverExtras = response.result.getServerExtras();
+        assertThat(serverExtras).isNotNull();
+        assertThat(serverExtras).isNotEmpty();
+        assertThat(serverExtras.get(DataKeys.IMPRESSION_MIN_VISIBLE_PERCENT)).isEqualTo("33");
+        assertThat(serverExtras.get(DataKeys.IMPRESSION_VISIBLE_MS)).isEqualTo("2000");
+    }
+
+    @Test
     public void parseNetworkResponse_forNativeVideo_shouldCombineServerExtrasAndEventData() throws Exception {
         defaultHeaders.put(ResponseHeader.AD_TYPE.getKey(), AdType.VIDEO_NATIVE);
         defaultHeaders.put(ResponseHeader.CUSTOM_EVENT_NAME.getKey(), "class name");

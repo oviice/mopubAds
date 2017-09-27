@@ -2,6 +2,7 @@ package com.mopub.nativeads;
 
 import android.content.Context;
 import android.view.View;
+import android.view.ViewGroup;
 
 import com.facebook.ads.Ad;
 import com.facebook.ads.AdError;
@@ -127,6 +128,23 @@ public class FacebookNative extends CustomEventNative {
         return (placementId != null && placementId.length() > 0);
     }
 
+    private static void registerChildViewsForInteraction(final View view, final NativeAd nativeAd) {
+        if (nativeAd == null) {
+            return;
+        }
+
+        if (view instanceof ViewGroup && ((ViewGroup) view).getChildCount() > 0) {
+            final ViewGroup vg = (ViewGroup) view;
+            final List<View> clickableViews = new ArrayList<>();
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                clickableViews.add(vg.getChildAt(i));
+            }
+            nativeAd.registerViewForInteraction(view, clickableViews);
+        } else {
+            nativeAd.registerViewForInteraction(view);
+        }
+    }
+
     static class FacebookStaticNativeAd extends StaticNativeAd implements AdListener {
         private static final String SOCIAL_CONTEXT_FOR_AD = "socialContextForAd";
 
@@ -229,7 +247,7 @@ public class FacebookNative extends CustomEventNative {
         // BaseForwardingNativeAd
         @Override
         public void prepare(final View view) {
-            mNativeAd.registerViewForInteraction(view);
+            registerChildViewsForInteraction(view, mNativeAd);
         }
 
         @Override
@@ -413,7 +431,7 @@ public class FacebookNative extends CustomEventNative {
         // BaseForwardingNativeAd
         @Override
         public void prepare(final View view) {
-            mNativeAd.registerViewForInteraction(view);
+            registerChildViewsForInteraction(view, mNativeAd);
         }
 
         @Override

@@ -30,15 +30,18 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowLog;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.assertions.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
@@ -70,6 +73,7 @@ public class
                     "  ]\n" +
                     "}\n";
     public static final String TEST_CUSTOM_EVENT_PREF_NAME = "mopubTestCustomEventSettings";
+    private static final String CUSTOM_DATA_MAX_LENGTH_EXCEEDED_MESSAGE = "provided rewarded ad custom data parameter longer than supported";
 
     @Mock
     MoPubRequestQueue mockRequestQueue;
@@ -282,6 +286,50 @@ public class
         ShadowLooper.unPauseMainLooper();
 
         verify(mockRequestQueue).add(any(AdRequest.class));
+    }
+
+    @Test
+    public void loadVideo_withCustomEventAlreadyLoaded_shouldNotLoadAnotherVideo() throws Exception {
+        final CustomEventRewardedVideo mockCustomEvent = mock(CustomEventRewardedVideo.class);
+        MoPubRewardedVideoManager.getRewardedAdData().updateAdUnitCustomEventMapping(
+                "testAdUnit", mockCustomEvent, TestCustomEvent.AD_NETWORK_ID);
+
+        AdResponse testResponse = new AdResponse.Builder()
+                .setCustomEventClassName(
+                        "com.mopub.mobileads.MoPubRewardedVideoManagerTest$TestCustomEvent")
+                .setAdType(AdType.CUSTOM)
+                .build();
+
+        // Robolectric executes its handlers immediately, so if we want the async behavior we see
+        // in an actual app we have to pause the main looper until we're done successfully loading the ad.
+        ShadowLooper.pauseMainLooper();
+
+        // Load the first custom event
+        MoPubRewardedVideoManager.loadVideo("testAdUnit", null);
+        requestListener.onSuccess(testResponse);
+
+        ShadowLooper.unPauseMainLooper();
+
+        // Verify the first custom event
+        assertThat(MoPubRewardedVideoManager.hasVideo("testAdUnit")).isTrue();
+        verify(mockVideoListener).onRewardedVideoLoadSuccess(eq("testAdUnit"));
+        verifyNoMoreInteractions(mockVideoListener);
+        verify(mockRequestQueue).add(any(Request.class));
+        reset(mockVideoListener);
+
+        ShadowLooper.pauseMainLooper();
+
+        // Load the second custom event
+        MoPubRewardedVideoManager.loadVideo("testAdUnit", null);
+
+        ShadowLooper.unPauseMainLooper();
+
+        // Verify the first custom event is still available
+        assertThat(MoPubRewardedVideoManager.hasVideo("testAdUnit")).isTrue();
+        verify(mockVideoListener).onRewardedVideoLoadSuccess(eq("testAdUnit"));
+        verifyNoMoreInteractions(mockVideoListener);
+        // Make sure the second load does not attempt to load another ad
+        verifyNoMoreInteractions(mockRequestQueue);
     }
 
     @Test
@@ -671,50 +719,6 @@ public class
     }
 
     @Test
-    public void loadVideo_withCustomEventAlreadyLoaded_shouldNotLoadAnotherVideo() throws Exception {
-        final CustomEventRewardedVideo mockCustomEvent = mock(CustomEventRewardedVideo.class);
-        MoPubRewardedVideoManager.getRewardedAdData().updateAdUnitCustomEventMapping(
-                "testAdUnit", mockCustomEvent, TestCustomEvent.AD_NETWORK_ID);
-
-        AdResponse testResponse = new AdResponse.Builder()
-                .setCustomEventClassName(
-                        "com.mopub.mobileads.MoPubRewardedVideoManagerTest$TestCustomEvent")
-                .setAdType(AdType.CUSTOM)
-                .build();
-
-        // Robolectric executes its handlers immediately, so if we want the async behavior we see
-        // in an actual app we have to pause the main looper until we're done successfully loading the ad.
-        ShadowLooper.pauseMainLooper();
-
-        // Load the first custom event
-        MoPubRewardedVideoManager.loadVideo("testAdUnit", null);
-        requestListener.onSuccess(testResponse);
-
-        ShadowLooper.unPauseMainLooper();
-
-        // Verify the first custom event
-        assertThat(MoPubRewardedVideoManager.hasVideo("testAdUnit")).isTrue();
-        verify(mockVideoListener).onRewardedVideoLoadSuccess(eq("testAdUnit"));
-        verifyNoMoreInteractions(mockVideoListener);
-        verify(mockRequestQueue).add(any(Request.class));
-        reset(mockVideoListener);
-
-        ShadowLooper.pauseMainLooper();
-
-        // Load the second custom event
-        MoPubRewardedVideoManager.loadVideo("testAdUnit", null);
-
-        ShadowLooper.unPauseMainLooper();
-
-        // Verify the first custom event is still available
-        assertThat(MoPubRewardedVideoManager.hasVideo("testAdUnit")).isTrue();
-        verify(mockVideoListener).onRewardedVideoLoadSuccess(eq("testAdUnit"));
-        verifyNoMoreInteractions(mockVideoListener);
-        // Make sure the second load does not attempt to load another ad
-        verifyNoMoreInteractions(mockRequestQueue);
-    }
-
-    @Test
     public void onAdSuccess_shouldHaveUniqueBroadcastIdsSetForEachCustomEvent() throws Exception {
         AdResponse testResponse = new AdResponse.Builder()
                 .setCustomEventClassName(
@@ -784,7 +788,7 @@ public class
     }
     
     @Test
-    public void playVideo_shouldSetHasVideoFalse() {
+    public void showVideo_shouldSetHasVideoFalse() {
         AdResponse testResponse = new AdResponse.Builder()
                 .setCustomEventClassName("com.mopub.mobileads.MoPubRewardedVideoManagerTest$TestCustomEvent")
                 .setAdType(AdType.CUSTOM)
@@ -807,7 +811,7 @@ public class
     }
     
     @Test
-    public void playVideo_whenNotHasVideo_shouldFail() {
+    public void showVideo_whenNotHasVideo_shouldFail() {
         AdResponse testResponse = new AdResponse.Builder()
                 .setCustomEventClassName("com.mopub.mobileads.MoPubRewardedVideoManagerTest$NoVideoCustomEvent")
                 .setAdType(AdType.CUSTOM)
@@ -830,7 +834,7 @@ public class
     }
 
     @Test
-    public void playVideo_withMultiRewardedCurrenciesJsonHeader_whenRewardNotSelected_shouldFail() {
+    public void showVideo_withMultiRewardedCurrenciesJsonHeader_whenRewardNotSelected_shouldFail() {
         AdResponse testResponse = new AdResponse.Builder()
                 .setCustomEventClassName("com.mopub.mobileads.MoPubRewardedVideoManagerTest$TestCustomEvent")
                 .setAdType(AdType.CUSTOM)
@@ -852,7 +856,7 @@ public class
     }
 
     @Test
-    public void playVideo_withMultiRewardedCurrenciesJsonHeader_whenValidRewardIsSelected_shouldUpdateRewardMappings() {
+    public void showVideo_withMultiRewardedCurrenciesJsonHeader_whenValidRewardIsSelected_shouldUpdateRewardMappings() {
         AdResponse testResponse = new AdResponse.Builder()
                 .setCustomEventClassName("com.mopub.mobileads.MoPubRewardedVideoManagerTest$TestCustomEvent")
                 .setAdType(AdType.CUSTOM)
@@ -894,7 +898,7 @@ public class
     }
 
     @Test
-    public void playVideo_withMultiRewardedCurrenciesJsonHeader_whenSelectRewardWithWrongAdUnit_shouldFail() {
+    public void showVideo_withMultiRewardedCurrenciesJsonHeader_whenSelectRewardWithWrongAdUnit_shouldFail() {
         AdResponse testResponse = new AdResponse.Builder()
                 .setCustomEventClassName("com.mopub.mobileads.MoPubRewardedVideoManagerTest$TestCustomEvent")
                 .setAdType(AdType.CUSTOM)
@@ -929,7 +933,7 @@ public class
     }
 
     @Test
-    public void playVideo_withMultiRewardedCurrenciesJsonHeader_whenSelectedRewardIsNotAvailable_shouldFail() {
+    public void showVideo_withMultiRewardedCurrenciesJsonHeader_whenSelectedRewardIsNotAvailable_shouldFail() {
         AdResponse testResponse = new AdResponse.Builder()
                 .setCustomEventClassName("com.mopub.mobileads.MoPubRewardedVideoManagerTest$TestCustomEvent")
                 .setAdType(AdType.CUSTOM)
@@ -959,7 +963,7 @@ public class
     }
 
     @Test
-    public void playVideo_withSingleRewardedCurrencyJsonHeader_whenRewardNotSelected_shouldSelectOnlyRewardAutomatically() {
+    public void showVideo_withSingleRewardedCurrencyJsonHeader_whenRewardNotSelected_shouldSelectOnlyRewardAutomatically() {
         AdResponse testResponse = new AdResponse.Builder()
                 .setCustomEventClassName("com.mopub.mobileads.MoPubRewardedVideoManagerTest$TestCustomEvent")
                 .setAdType(AdType.CUSTOM)
@@ -993,7 +997,7 @@ public class
     }
 
     @Test
-    public void playVideo_withLegacyRewardedCurrencyHeaders_shouldUpdateLastShownCustomEventRewardMapping() throws Exception {
+    public void showVideo_withLegacyRewardedCurrencyHeaders_shouldUpdateLastShownCustomEventRewardMapping() throws Exception {
         AdResponse testResponse = new AdResponse.Builder()
                 .setCustomEventClassName(
                         "com.mopub.mobileads.MoPubRewardedVideoManagerTest$TestCustomEvent")
@@ -1017,6 +1021,61 @@ public class
                 MoPubRewardedVideoManager.getRewardedAdData().getLastShownMoPubReward(TestCustomEvent.class);
         assertThat(moPubReward.getAmount()).isEqualTo(123);
         assertThat(moPubReward.getLabel()).isEqualTo("currency_name");
+    }
+
+    @Test
+    public void showVideo_withCustomDataShorterThanLengthMaximum_shouldNotLogWarning() {
+        AdResponse testResponse = new AdResponse.Builder()
+                .setCustomEventClassName("com.mopub.mobileads.MoPubRewardedVideoManagerTest$TestCustomEvent")
+                .setAdType(AdType.CUSTOM)
+                .build();
+
+        // Robolectric executes its handlers immediately, so if we want the async behavior we see
+        // in an actual app we have to pause the main looper until we're done successfully loading the ad.
+        ShadowLooper.pauseMainLooper();
+
+        MoPubRewardedVideoManager.loadVideo("testAdUnit", null);
+        requestListener.onSuccess(testResponse);
+
+        ShadowLooper.unPauseMainLooper();
+
+        MoPubRewardedVideoManager.showVideo("testAdUnit",
+                createStringWithLength(MoPubRewardedVideoManager.CUSTOM_DATA_MAX_LENGTH_BYTES - 1));
+
+        for (final ShadowLog.LogItem logItem : ShadowLog.getLogs()) {
+            if (logItem.msg.toLowerCase().contains(CUSTOM_DATA_MAX_LENGTH_EXCEEDED_MESSAGE)) {
+                fail(String.format(Locale.US, "Log item '%s' not expected, found.", CUSTOM_DATA_MAX_LENGTH_EXCEEDED_MESSAGE));
+            }
+        }
+    }
+
+    @Test
+    public void showVideo_withCustomDataGreaterThanLengthMaximum_shouldLogWarning() {
+        AdResponse testResponse = new AdResponse.Builder()
+                .setCustomEventClassName("com.mopub.mobileads.MoPubRewardedVideoManagerTest$TestCustomEvent")
+                .setAdType(AdType.CUSTOM)
+                .build();
+
+        // Robolectric executes its handlers immediately, so if we want the async behavior we see
+        // in an actual app we have to pause the main looper until we're done successfully loading the ad.
+        ShadowLooper.pauseMainLooper();
+
+        MoPubRewardedVideoManager.loadVideo("testAdUnit", null);
+        requestListener.onSuccess(testResponse);
+
+        ShadowLooper.unPauseMainLooper();
+
+        MoPubRewardedVideoManager.showVideo("testAdUnit",
+                createStringWithLength(MoPubRewardedVideoManager.CUSTOM_DATA_MAX_LENGTH_BYTES  + 1));
+
+        for (final ShadowLog.LogItem logItem : ShadowLog.getLogs()) {
+            if (logItem.msg.toLowerCase().contains(CUSTOM_DATA_MAX_LENGTH_EXCEEDED_MESSAGE)) {
+                // Test passes the first time we see the warning log message
+                return;
+            }
+        }
+        fail(String.format(Locale.US, "Expected log item '%s' not found.",
+                CUSTOM_DATA_MAX_LENGTH_EXCEEDED_MESSAGE));
     }
 
     @Test
@@ -1130,6 +1189,69 @@ public class
     }
 
     @Test
+    public void onRewardedVideoCompleted_shouldMakeRewardedVideoCompletionRequestIncludingClassName() {
+        MoPubReward moPubReward = MoPubReward.success(MOPUB_REWARD, 123);
+        RewardedAdData rewardedVideoData = MoPubRewardedVideoManager.getRewardedAdData();
+        rewardedVideoData.setCurrentlyShowingAdUnitId("testAdUnit1");
+
+        rewardedVideoData.updateAdUnitCustomEventMapping("testAdUnit1", new TestCustomEvent(),
+                TestCustomEvent.AD_NETWORK_ID);
+        rewardedVideoData.updateAdUnitToServerCompletionUrlMapping("testAdUnit1", "testUrl");
+
+        ShadowLooper.pauseMainLooper();
+
+        MoPubRewardedVideoManager.onRewardedVideoCompleted(TestCustomEvent.class,
+                TestCustomEvent.AD_NETWORK_ID, moPubReward);
+
+        ShadowLooper.unPauseMainLooper();
+
+        verify(mockRequestQueue).add(any(RewardedVideoCompletionRequest.class));
+        assertThat(rewardedVideoCompletionRequest.getUrl()).contains(
+                "cec=com.mopub.mobileads.MoPubRewardedVideoManagerTest%24TestCustomEvent");
+    }
+
+    @Test
+    public void onRewardedVideoCompleted_withCustomData_shouldMakeRewardedVideoCompletionRequestIncludingCustomData() {
+        MoPubReward moPubReward = MoPubReward.success(MOPUB_REWARD, 123);
+        RewardedAdData rewardedVideoData = MoPubRewardedVideoManager.getRewardedAdData();
+        rewardedVideoData.setCurrentlyShowingAdUnitId("testAdUnit1");
+
+        rewardedVideoData.updateAdUnitToServerCompletionUrlMapping("testAdUnit1", "testUrl");
+        rewardedVideoData.updateAdUnitToCustomDataMapping("testAdUnit1", "very%=custom@[data]");
+
+        ShadowLooper.pauseMainLooper();
+
+        MoPubRewardedVideoManager.onRewardedVideoCompleted(TestCustomEvent.class,
+                TestCustomEvent.AD_NETWORK_ID, moPubReward);
+
+        ShadowLooper.unPauseMainLooper();
+
+        verify(mockRequestQueue).add(any(RewardedVideoCompletionRequest.class));
+        assertThat(rewardedVideoCompletionRequest.getUrl()).contains(
+                "&rcd=very%25%3Dcustom%40%5Bdata%5D");
+    }
+
+    @Test
+    public void onRewardedVideoCompleted_withNullCustomData_shouldMakeRewardedVideoCompletionRequestWithoutCustomData() {
+        MoPubReward moPubReward = MoPubReward.success(MOPUB_REWARD, 123);
+        RewardedAdData rewardedVideoData = MoPubRewardedVideoManager.getRewardedAdData();
+        rewardedVideoData.setCurrentlyShowingAdUnitId("testAdUnit1");
+
+        rewardedVideoData.updateAdUnitToServerCompletionUrlMapping("testAdUnit1", "testUrl");
+        rewardedVideoData.updateAdUnitToCustomDataMapping("testAdUnit1", null);
+
+        ShadowLooper.pauseMainLooper();
+
+        MoPubRewardedVideoManager.onRewardedVideoCompleted(TestCustomEvent.class,
+                TestCustomEvent.AD_NETWORK_ID, moPubReward);
+
+        ShadowLooper.unPauseMainLooper();
+
+        verify(mockRequestQueue).add(any(RewardedVideoCompletionRequest.class));
+        assertThat(rewardedVideoCompletionRequest.getUrl()).doesNotContain("&rcd=");
+    }
+
+    @Test
     public void onRewardedVideoCompleted_withServerCompletionUrl_withNullRewardForCurrentlyShowingAdUnitId_shouldMakeRewardedVideoCompletionRequestWithDefaultRewardValues() {
         MoPubReward moPubReward = MoPubReward.success(MOPUB_REWARD, 123);
         RewardedAdData rewardedVideoData = MoPubRewardedVideoManager.getRewardedAdData();
@@ -1171,6 +1293,16 @@ public class
         verifyNoMoreInteractions(mockVideoListener);
         verify(mockRequestQueue).add(any(AdRequest.class));
         verifyNoMoreInteractions(mockRequestQueue);
+    }
+
+    private String createStringWithLength(int length) {
+        if (length < 1) {
+            return "";
+        }
+
+        char[] chars = new char[length];
+        Arrays.fill(chars, '*');
+        return new String(chars);
     }
 
     public static class TestCustomEvent extends CustomEventRewardedVideo {
