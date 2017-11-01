@@ -4,9 +4,11 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.mopub.common.Preconditions;
 import com.mopub.common.UrlAction;
 import com.mopub.common.UrlHandler;
 import com.mopub.common.logging.MoPubLog;
@@ -34,8 +36,8 @@ class HtmlWebViewClient extends WebViewClient {
 
     private final Context mContext;
     private final String mDspCreativeId;
-    private HtmlWebViewListener mHtmlWebViewListener;
-    private BaseHtmlWebView mHtmlWebView;
+    private final HtmlWebViewListener mHtmlWebViewListener;
+    private final BaseHtmlWebView mHtmlWebView;
     private final String mClickthroughUrl;
     private final String mRedirectUrl;
 
@@ -83,10 +85,8 @@ class HtmlWebViewClient extends WebViewClient {
 
                     @Override
                     public void onFailLoad() {
-                        mHtmlWebView.getSettings().setJavaScriptEnabled(false);
                         mHtmlWebView.stopLoading();
                         mHtmlWebViewListener.onFailed(UNSPECIFIED);
-                        mHtmlWebView.getSettings().setJavaScriptEnabled(true);
                     }
                 })
                 .build().handleUrl(mContext, url, mHtmlWebView.wasClicked());

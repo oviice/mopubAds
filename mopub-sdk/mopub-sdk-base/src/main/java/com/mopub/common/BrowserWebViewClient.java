@@ -78,8 +78,6 @@ class BrowserWebViewClient extends WebViewClient {
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
-        mMoPubBrowser.getForwardButton()
-                .setImageDrawable(UNRIGHT_ARROW.createDrawable(mMoPubBrowser));
     }
 
     @Override

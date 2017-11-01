@@ -1,3 +1,15 @@
+## Version 4.18.0 (November 1, 2017)
+- Updated the SDK compile version to 26. Android API 26 artifacts live in the new Google maven repository `maven { url 'https://maven.google.com' }`. See [this article](https://developer.android.com/about/versions/oreo/android-8.0-migration.html) for more information about using Android API 26.
+- Fixed MoPub in-app browser's back and forward button icons.
+- Updated AdMob adapters to 11.4.0.
+- Updated Chartboost adapters to 7.0.1.
+- Updated Facebook Audience Network adapters to 4.26.0.
+- Updated Millennial to 6.6.1.
+- Updated TapJoy adapters to 11.11.0.
+- Updated Unity Ads adapters to 2.1.1.
+- Updated Vungle adapters to 5.3.0.
+- Bug fixes.
+
 ## Version 4.17.0 (September 27, 2017)
 - Rewarded Ads can now send up optional custom data through the server completion url. See `MoPubRewardedVideos#showRewardedVideo(String, String)`.
 - Updated Facebook native adapter to ignore clicks on whitespace as per Facebook policy.
