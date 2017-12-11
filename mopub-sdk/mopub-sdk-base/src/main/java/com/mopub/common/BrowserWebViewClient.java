@@ -8,7 +8,6 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import com.mopub.common.logging.MoPubLog;
-import com.mopub.exceptions.IntentNotResolvableException;
 
 import java.util.EnumSet;
 

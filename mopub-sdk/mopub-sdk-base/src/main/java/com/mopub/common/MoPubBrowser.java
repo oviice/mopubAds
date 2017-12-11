@@ -24,12 +24,12 @@ import com.mopub.mobileads.util.WebViews;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
-import static com.mopub.common.event.BaseEvent.*;
+import static com.mopub.common.event.BaseEvent.Category;
+import static com.mopub.common.event.BaseEvent.Name;
+import static com.mopub.common.event.BaseEvent.SamplingRate;
 import static com.mopub.common.util.Drawables.BACKGROUND;
 import static com.mopub.common.util.Drawables.CLOSE;
-import static com.mopub.common.util.Drawables.LEFT_ARROW;
 import static com.mopub.common.util.Drawables.REFRESH;
-import static com.mopub.common.util.Drawables.RIGHT_ARROW;
 import static com.mopub.common.util.Drawables.UNLEFT_ARROW;
 import static com.mopub.common.util.Drawables.UNRIGHT_ARROW;
 
