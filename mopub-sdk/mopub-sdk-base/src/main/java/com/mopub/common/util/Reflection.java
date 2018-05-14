@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import com.mopub.common.Preconditions;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -176,4 +177,12 @@ public class Reflection {
 
         return constructor.newInstance(parameters);
     }
+
+    // access class private field
+    public static Field getPrivateField(@NonNull final Class classType, @NonNull final String fieldName) throws NoSuchFieldException {
+        Field declaredField = classType.getDeclaredField(fieldName);
+        declaredField.setAccessible(true);
+        return declaredField;
+    }
+
 }

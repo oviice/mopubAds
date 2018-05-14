@@ -20,7 +20,6 @@ import com.mopub.common.util.test.support.ShadowAsyncTasks;
 import com.mopub.common.util.test.support.ShadowMoPubHttpUrlConnection;
 import com.mopub.mobileads.BuildConfig;
 import com.mopub.mobileads.test.support.FileUtils;
-import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 import com.mopub.mraid.MraidNativeCommandHandler.DownloadImageAsyncTask;
 import com.mopub.mraid.MraidNativeCommandHandler.DownloadImageAsyncTask.DownloadImageAsyncTaskListener;
 import com.mopub.mraid.MraidNativeCommandHandler.MraidCommandFailureListener;
@@ -86,7 +85,6 @@ public class MraidNativeCommandHandlerTest {
     private File expectedFile;
     private File pictureDirectory;
     private File fileWithoutExtension;
-    private TestHttpResponseWithHeaders response;
 
     @Before
     public void setUp() throws Exception {

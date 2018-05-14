@@ -56,6 +56,15 @@ public enum ResponseHeader {
     VIDEO_VIEWABILITY_TRACKERS("X-Video-Viewability-Trackers"),
     DISABLE_VIEWABILITY("X-Disable-Viewability"),
 
+    // Advanced bidding fields
+    AD_RESPONSE_TYPE("X-Ad-Response-Type"),
+
+    // Consent fields
+    INVALIDATE_CONSENT("invalidate_consent"),
+    FORCE_EXPLICIT_NO("force_explicit_no"),
+    REACQUIRE_CONSENT("reacquire_consent"),
+    CONSENT_CHANGE_REASON("consent_change_reason"),
+
     @Deprecated CUSTOM_SELECTOR("X-Customselector");
 
     private final String key;

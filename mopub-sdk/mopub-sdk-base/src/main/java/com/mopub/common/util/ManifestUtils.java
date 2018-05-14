@@ -19,6 +19,10 @@ import com.mopub.common.logging.MoPubLog;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This class maintains lists of required Activity permissions,
+ * for the WebView, Native SDKs, and base SDK.
+ */
 public class ManifestUtils {
     private ManifestUtils() {}
 
@@ -26,13 +30,11 @@ public class ManifestUtils {
     private static final String MRAID_ACTIVITY = "com.mopub.mobileads.MraidActivity";
     private static final String REWARDED_MRAID_ACTIVITY =
             "com.mopub.mobileads.RewardedMraidActivity";
-    private static final List<Class<? extends Activity>> REQUIRED_WEB_VIEW_SDK_ACTIVITIES;
+    private static final String CONSENT_ACTIVITY = "com.mopub.common.privacy.ConsentDialogActivity";
+
     private static FlagCheckUtil sFlagCheckUtil = new FlagCheckUtil();
 
-    /**
-     * This class maintains two different lists of required Activity permissions,
-     * for the WebView and Native SDKs.
-     */
+    private static final List<Class<? extends Activity>> REQUIRED_WEB_VIEW_SDK_ACTIVITIES;
     static {
         REQUIRED_WEB_VIEW_SDK_ACTIVITIES = new ArrayList<Class<? extends Activity>>(4);
         // As a convenience, full class paths are provided here, in case the MoPub SDK was imported
@@ -57,6 +59,22 @@ public class ManifestUtils {
         REQUIRED_NATIVE_SDK_ACTIVITIES = new ArrayList<Class<? extends Activity>>(1);
         REQUIRED_NATIVE_SDK_ACTIVITIES.add(com.mopub.common.MoPubBrowser.class);
     }
+
+    private static final List<Class<? extends Activity>> REQUIRED_SDK_ACTIVITIES;
+    static {
+        REQUIRED_SDK_ACTIVITIES = new ArrayList<>(1);
+        REQUIRED_SDK_ACTIVITIES.add(com.mopub.common.privacy.ConsentDialogActivity.class);
+    }
+
+    public static void checkSdkActivitiesDeclared(@NonNull final Context context) {
+        if (!Preconditions.NoThrow.checkNotNull(context, "context is not allowed to be null")) {
+            return;
+        }
+
+        displayWarningForMissingActivities(context, REQUIRED_SDK_ACTIVITIES);
+        displayWarningForMisconfiguredActivities(context, REQUIRED_SDK_ACTIVITIES);
+    }
+
 
     public static void checkWebViewActivitiesDeclared(@NonNull final Context context) {
         if (!Preconditions.NoThrow.checkNotNull(context, "context is not allowed to be null")) {

@@ -4,7 +4,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.mopub.common.MoPub.BrowserAgent;
-import com.mopub.common.event.EventDetails;
 import com.mopub.common.util.DateAndTime;
 
 import org.json.JSONObject;
@@ -69,9 +68,6 @@ public class AdResponse implements Serializable {
     private final JSONObject mJsonBody;
 
     @Nullable
-    private final EventDetails mEventDetails;
-
-    @Nullable
     private final String mCustomEventClassName;
     @Nullable
     private final BrowserAgent mBrowserAgent;
@@ -107,9 +103,8 @@ public class AdResponse implements Serializable {
         mScrollable = builder.scrollable;
         mResponseBody = builder.responseBody;
         mJsonBody = builder.jsonBody;
-        mEventDetails = builder.eventDetails;
         mCustomEventClassName = builder.customEventClassName;
-        mBrowserAgent = builder.mBrowserAgent;
+        mBrowserAgent = builder.browserAgent;
         mServerExtras = builder.serverExtras;
         mTimestamp = DateAndTime.now().getTime();
     }
@@ -121,11 +116,6 @@ public class AdResponse implements Serializable {
     @Nullable
     public JSONObject getJsonBody() {
         return mJsonBody;
-    }
-
-    @Nullable
-    public EventDetails getEventDetails() {
-        return mEventDetails;
     }
 
     @Nullable
@@ -275,7 +265,6 @@ public class AdResponse implements Serializable {
                 .setScrollable(mScrollable)
                 .setResponseBody(mResponseBody)
                 .setJsonBody(mJsonBody)
-                .setEventDetails(mEventDetails)
                 .setCustomEventClassName(mCustomEventClassName)
                 .setBrowserAgent(mBrowserAgent)
                 .setServerExtras(mServerExtras);
@@ -311,10 +300,9 @@ public class AdResponse implements Serializable {
         private String responseBody;
         private JSONObject jsonBody;
 
-        private EventDetails eventDetails;
-
         private String customEventClassName;
-        private BrowserAgent mBrowserAgent;
+        private BrowserAgent browserAgent;
+
         private Map<String, String> serverExtras = new TreeMap<String, String>();
 
         public Builder setAdType(@Nullable final String adType) {
@@ -432,18 +420,13 @@ public class AdResponse implements Serializable {
             return this;
         }
 
-        public Builder setEventDetails(@Nullable final EventDetails eventDetails) {
-            this.eventDetails = eventDetails;
-            return this;
-        }
-
         public Builder setCustomEventClassName(@Nullable final String customEventClassName) {
             this.customEventClassName = customEventClassName;
             return this;
         }
 
         public Builder setBrowserAgent(@Nullable final BrowserAgent browserAgent) {
-            this.mBrowserAgent = browserAgent;
+            this.browserAgent = browserAgent;
             return this;
         }
 

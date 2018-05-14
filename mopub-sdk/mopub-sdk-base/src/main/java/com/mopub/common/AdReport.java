@@ -3,6 +3,7 @@ package com.mopub.common;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
+import com.mopub.common.privacy.AdvertisingId;
 import com.mopub.network.AdResponse;
 
 import java.io.Serializable;
@@ -22,14 +23,14 @@ public class AdReport implements Serializable {
     private final String mSdkVersion;
     private final String mDeviceModel;
     private final Locale mDeviceLocale;
-    private final String mUdid;
+    private final AdvertisingId mAdvertisingId;
 
     public AdReport(@NonNull String adUnitId, @NonNull ClientMetadata clientMetadata, @NonNull AdResponse adResponse) {
         mAdUnitId = adUnitId;
         mSdkVersion = clientMetadata.getSdkVersion();
         mDeviceModel = clientMetadata.getDeviceModel();
         mDeviceLocale = clientMetadata.getDeviceLocale();
-        mUdid = clientMetadata.getDeviceId();
+        mAdvertisingId = clientMetadata.getMoPubIdentifier().getAdvertisingInfo();
         mAdResponse = adResponse;
     }
 
@@ -43,7 +44,8 @@ public class AdReport implements Serializable {
         appendKeyValue(parameters, "ad_unit_id", mAdUnitId);
         appendKeyValue(parameters, "device_locale",
                 mDeviceLocale == null ? null : mDeviceLocale.toString());
-        appendKeyValue(parameters, "device_id", mUdid);
+        appendKeyValue(parameters, "device_id",
+                mAdvertisingId.getIdentifier(MoPub.canCollectPersonalInformation()));
         appendKeyValue(parameters, "network_type", mAdResponse.getNetworkType());
         appendKeyValue(parameters, "platform", "android");
         appendKeyValue(parameters, "timestamp", getFormattedTimeStamp(mAdResponse.getTimestamp()));

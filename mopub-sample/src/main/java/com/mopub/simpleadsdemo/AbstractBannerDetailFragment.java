@@ -45,7 +45,8 @@ public abstract class AbstractBannerDetailFragment extends Fragment implements B
         mMoPubView.setLayoutParams(layoutParams);
 
         views.mKeywordsField.setText(getArguments().getString(MoPubListFragment.KEYWORDS_KEY, ""));
-        hideSoftKeyboard(views.mKeywordsField);
+        views.mUserDataKeywordsField.setText(getArguments().getString(MoPubListFragment.USER_DATA_KEYWORDS_KEY, ""));
+        hideSoftKeyboard(views.mUserDataKeywordsField);
 
         final String adUnitId = mMoPubSampleAdUnit.getAdUnitId();
         views.mDescriptionView.setText(mMoPubSampleAdUnit.getDescription());
@@ -54,11 +55,12 @@ public abstract class AbstractBannerDetailFragment extends Fragment implements B
             @Override
             public void onClick(View view) {
                 final String keywords = views.mKeywordsField.getText().toString();
-                loadMoPubView(adUnitId, keywords);
+                final String userDataKeywords = views.mUserDataKeywordsField.getText().toString();
+                loadMoPubView(adUnitId, keywords, userDataKeywords);
             }
         });
         mMoPubView.setBannerAdListener(this);
-        loadMoPubView(adUnitId, null);
+        loadMoPubView(adUnitId, null, null);
 
         return view;
     }
@@ -73,9 +75,10 @@ public abstract class AbstractBannerDetailFragment extends Fragment implements B
         }
     }
 
-    private void loadMoPubView(final String adUnitId, final String keywords) {
+    private void loadMoPubView(final String adUnitId, final String keywords, final String userDataKeywords) {
         mMoPubView.setAdUnitId(adUnitId);
         mMoPubView.setKeywords(keywords);
+        mMoPubView.setUserDataKeywords(userDataKeywords);
         mMoPubView.loadAd();
     }
 

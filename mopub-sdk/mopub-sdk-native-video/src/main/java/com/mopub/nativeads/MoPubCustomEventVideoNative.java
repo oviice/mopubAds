@@ -12,10 +12,6 @@ import android.view.View;
 import com.mopub.common.DataKeys;
 import com.mopub.common.Preconditions;
 import com.mopub.common.VisibleForTesting;
-import com.mopub.common.event.BaseEvent;
-import com.mopub.common.event.Event;
-import com.mopub.common.event.EventDetails;
-import com.mopub.common.event.MoPubEvents;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Utils;
 import com.mopub.mobileads.MraidVideoPlayerActivity;
@@ -40,7 +36,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import static com.mopub.common.DataKeys.EVENT_DETAILS;
 import static com.mopub.common.DataKeys.IMPRESSION_MIN_VISIBLE_PERCENT;
 import static com.mopub.common.DataKeys.IMPRESSION_MIN_VISIBLE_PX;
 import static com.mopub.common.DataKeys.IMPRESSION_VISIBLE_MS;
@@ -66,10 +61,6 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
             return;
         }
 
-        final Object eventDetailsObject = localExtras.get(EVENT_DETAILS);
-        final EventDetails eventDetails = eventDetailsObject instanceof EventDetails ?
-                (EventDetails) eventDetailsObject : null;
-
         final VideoResponseHeaders videoResponseHeaders = new VideoResponseHeaders(serverExtras);
         if (!videoResponseHeaders.hasValidHeaders()) {
             customEventNativeListener.onNativeAdFailed(NativeErrorCode.INVALID_RESPONSE);
@@ -87,7 +78,7 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
 
         final String clickTrackingUrlFromHeader = (String) clickTrackingUrlFromHeaderObject;
         final MoPubVideoNativeAd videoNativeAd = new MoPubVideoNativeAd(context, (JSONObject) json,
-                customEventNativeListener, videoResponseHeaders, eventDetails,
+                customEventNativeListener, videoResponseHeaders,
                 clickTrackingUrlFromHeader);
         try {
             videoNativeAd.loadAd();
@@ -167,7 +158,6 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
         @Nullable VastVideoConfig mVastVideoConfig;
         @Nullable private MediaLayout mMediaLayout;
         @Nullable private View mRootView;
-        @Nullable private final EventDetails mEventDetails;
 
         private final long mId;
         private boolean mNeedsSeek;
@@ -187,11 +177,10 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
                 @NonNull final JSONObject jsonObject,
                 @NonNull final CustomEventNativeListener customEventNativeListener,
                 @NonNull final VideoResponseHeaders videoResponseHeaders,
-                @Nullable final EventDetails eventDetails,
                 @NonNull final String clickTrackingUrl) {
             this(context, jsonObject, customEventNativeListener, videoResponseHeaders,
                     new VisibilityTracker(context), new NativeVideoControllerFactory(),
-                    eventDetails, clickTrackingUrl, VastManagerFactory.create(context.getApplicationContext(), false));
+                    clickTrackingUrl, VastManagerFactory.create(context.getApplicationContext(), false));
         }
 
         @VisibleForTesting
@@ -202,7 +191,6 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
                 @NonNull final VideoResponseHeaders videoResponseHeaders,
                 @NonNull final VisibilityTracker visibilityTracker,
                 @NonNull final NativeVideoControllerFactory nativeVideoControllerFactory,
-                @Nullable final EventDetails eventDetails,
                 @NonNull final String clickTrackingUrl,
                 @NonNull final VastManager vastManager) {
             Preconditions.checkNotNull(context);
@@ -221,8 +209,6 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
 
             mNativeVideoControllerFactory = nativeVideoControllerFactory;
             mMoPubClickTrackingUrl = clickTrackingUrl;
-
-            mEventDetails = eventDetails;
 
             mId = Utils.generateUniqueId();
             mNeedsSeek = true;
@@ -277,7 +263,7 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
                 public void onImagesCached() {
                     mVastManager.prepareVastVideoConfiguration(getVastVideo(),
                             MoPubVideoNativeAd.this,
-                            mEventDetails == null ? null : mEventDetails.getDspCreativeId(),
+                            null,
                             mContext);
                 }
 
@@ -355,7 +341,7 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
             mVastVideoConfig.setClickThroughUrl(getClickDestinationUrl());
 
             mNativeVideoController = mNativeVideoControllerFactory.createForId(
-                    mId, mContext, visibilityTrackingEvents, mVastVideoConfig, mEventDetails);
+                    mId, mContext, visibilityTrackingEvents, mVastVideoConfig);
 
             mCustomEventNativeListener.onNativeAdLoaded(this);
 
@@ -674,14 +660,6 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
                     mVastVideoConfig.handleError(mContext, null, 0);
                     mNativeVideoController.setAppAudioEnabled(false);
                     mMediaLayout.setMode(MediaLayout.Mode.IMAGE);
-                    // Only log the failed to play event when the video has not started
-                    if (previousState != VideoState.PLAYING && previousState != VideoState.PLAYING_MUTED) {
-                        MoPubEvents.log(Event.createEventFromDetails(
-                                BaseEvent.Name.ERROR_FAILED_TO_PLAY,
-                                BaseEvent.Category.NATIVE_VIDEO,
-                                BaseEvent.SamplingRate.NATIVE_VIDEO,
-                                mEventDetails));
-                    }
                     break;
                 case CREATED:
                 case LOADING:
@@ -896,10 +874,9 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
         public NativeVideoController createForId(final long id,
                 @NonNull final Context context,
                 @NonNull final List<VisibilityTrackingEvent> visibilityTrackingEvents,
-                @NonNull final VastVideoConfig vastVideoConfig,
-                @Nullable final EventDetails eventDetails) {
+                @NonNull final VastVideoConfig vastVideoConfig) {
             return NativeVideoController.createForId(id, context, visibilityTrackingEvents,
-                    vastVideoConfig, eventDetails);
+                    vastVideoConfig);
         }
     }
 

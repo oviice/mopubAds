@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import com.mopub.common.ClientMetadata;
-import com.mopub.common.DownloadResponse;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.BuildConfig;
@@ -18,7 +17,6 @@ import com.mopub.volley.NoConnectionError;
 import com.mopub.volley.Request;
 import com.mopub.volley.VolleyError;
 
-import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,10 +47,6 @@ import static org.mockito.Mockito.when;
 public class ServerPositioningSourceTest {
     @Mock PositioningListener mockPositioningListener;
     @Captor ArgumentCaptor<PositioningRequest> positionRequestCaptor;
-    @Mock DownloadResponse mockValidResponse;
-    @Mock DownloadResponse mockNotFoundResponse;
-    @Mock DownloadResponse mockInvalidJsonResponse;
-    @Mock DownloadResponse mockWarmingUpJsonResponse;
     @Mock Context mockContext;
     @Mock ClientMetadata mockClientMetaData;
     @Mock MoPubRequestQueue mockRequestQueue;
@@ -70,18 +64,6 @@ public class ServerPositioningSourceTest {
         subject = new ServerPositioningSource(spyActivity);
         setupClientMetadata();
         Networking.setRequestQueueForTesting(mockRequestQueue);
-
-        when(mockValidResponse.getStatusCode()).thenReturn(HttpStatus.SC_OK);
-        when(mockValidResponse.getByteArray()).thenReturn("{fixed: []}".getBytes());
-
-        when(mockInvalidJsonResponse.getStatusCode()).thenReturn(HttpStatus.SC_OK);
-        when(mockInvalidJsonResponse.getByteArray()).thenReturn("blah blah".getBytes());
-
-        when(mockWarmingUpJsonResponse.getStatusCode()).thenReturn(HttpStatus.SC_OK);
-        when(mockWarmingUpJsonResponse.getByteArray()).thenReturn(
-                "{\"error\":\"WARMING_UP\"}".getBytes());
-
-        when(mockNotFoundResponse.getStatusCode()).thenReturn(HttpStatus.SC_NOT_FOUND);
     }
 
     private void setupClientMetadata() {
@@ -89,8 +71,6 @@ public class ServerPositioningSourceTest {
         when(mockClientMetaData.getAppName()).thenReturn("app_name");
         when(mockClientMetaData.getAppPackageName()).thenReturn("app_package_name");
         when(mockClientMetaData.getAppVersion()).thenReturn("app_version");
-        when(mockClientMetaData.getDeviceId()).thenReturn("client_device_id");
-        when(mockClientMetaData.isDoNotTrackSet()).thenReturn(true);
         when(mockClientMetaData.getDeviceManufacturer()).thenReturn("device_manufacturer");
         when(mockClientMetaData.getDeviceModel()).thenReturn("device_model");
         when(mockClientMetaData.getDeviceProduct()).thenReturn("device_product");

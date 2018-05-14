@@ -6,6 +6,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.StateListDrawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.SoundEffectConstants;
@@ -99,8 +100,14 @@ public class CloseableLayout extends FrameLayout {
     private UnsetPressedState mUnsetPressedState;
 
     public CloseableLayout(@NonNull Context context) {
-        super(context);
+        this(context, null, 0);
+    }
+    public CloseableLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
+        this(context, attrs, 0);
+    }
 
+    public CloseableLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
         mCloseDrawable = new StateListDrawable();
         mClosePosition = ClosePosition.TOP_RIGHT;
 
@@ -121,6 +128,7 @@ public class CloseableLayout extends FrameLayout {
         setWillNotDraw(false);
         mCloseAlwaysInteractable = true;
     }
+
 
     public void setOnCloseListener(@Nullable OnCloseListener onCloseListener) {
         mOnCloseListener = onCloseListener;

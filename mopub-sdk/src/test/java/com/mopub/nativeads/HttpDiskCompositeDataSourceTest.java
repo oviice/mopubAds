@@ -49,7 +49,7 @@ public class HttpDiskCompositeDataSourceTest {
     public void setUp() throws Exception {
         Context context = Robolectric.buildActivity(Activity.class).create().get();
         CacheService.initialize(context);
-        subject = new HttpDiskCompositeDataSource(context, "userAgent", null, mockHttpDataSource);
+        subject = new HttpDiskCompositeDataSource(context, "userAgent", mockHttpDataSource);
         uri = new Uri.Builder().scheme("https").path("www.someurl").build();
         dataSpec = new DataSpec(uri, 0, -1, null);
     }

@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.mopub.common.privacy.PersonalInfoManager;
+
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.Set;
@@ -72,6 +74,11 @@ public class MoPubLifecycleManager implements LifecycleListener {
 
     @Override
     public void onResume(@NonNull final Activity activity) {
+        final PersonalInfoManager personalInfoManager = MoPub.getPersonalInformationManager();
+        if (personalInfoManager != null) {
+            personalInfoManager.requestSync(false);
+        }
+
         for (LifecycleListener lifecycleListener : mLifecycleListeners) {
             lifecycleListener.onResume(activity);
         }

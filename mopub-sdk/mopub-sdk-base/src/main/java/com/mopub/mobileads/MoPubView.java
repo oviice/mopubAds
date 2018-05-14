@@ -15,6 +15,7 @@ import android.widget.FrameLayout;
 
 import com.mopub.common.AdFormat;
 import com.mopub.common.AdReport;
+import com.mopub.common.MoPub;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.ManifestUtils;
 import com.mopub.common.util.Reflection;
@@ -271,15 +272,27 @@ public class MoPubView extends FrameLayout {
     }
 
     public String getKeywords() {
-        return (mAdViewController != null) ? mAdViewController.getKeywords() : null;
+        return (mAdViewController != null) ? mAdViewController.getKeywords(): null;
+    }
+
+    public void setUserDataKeywords(String userDataKeywords) {
+        if (mAdViewController != null && MoPub.canCollectPersonalInformation()) {
+            mAdViewController.setUserDataKeywords(userDataKeywords);
+        }
+    }
+
+    public String getUserDataKeywords() {
+        return (mAdViewController != null && MoPub.canCollectPersonalInformation()) ? mAdViewController.getUserDataKeywords() : null;
     }
 
     public void setLocation(Location location) {
-        if (mAdViewController != null) mAdViewController.setLocation(location);
+        if (mAdViewController != null && MoPub.canCollectPersonalInformation()) {
+            mAdViewController.setLocation(location);
+        }
     }
 
     public Location getLocation() {
-        return (mAdViewController != null) ? mAdViewController.getLocation() : null;
+        return (mAdViewController != null && MoPub.canCollectPersonalInformation()) ? mAdViewController.getLocation() : null;
     }
 
     public int getAdWidth() {

@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
-import com.mopub.common.event.BaseEvent;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Intents;
 import com.mopub.exceptions.IntentNotResolvableException;
@@ -313,8 +312,7 @@ public class UrlHandler {
                     if (!mAlreadySucceeded && !mTaskPending
                             && !UrlAction.IGNORE_ABOUT_SCHEME.equals(urlAction)
                             && !UrlAction.HANDLE_MOPUB_SCHEME.equals(urlAction)) {
-                        makeTrackingHttpRequest(trackingUrls, context,
-                                BaseEvent.Name.CLICK_REQUEST);
+                        makeTrackingHttpRequest(trackingUrls, context);
                         mResultActions.urlHandlingSucceeded(destinationUri.toString(),
                                 urlAction);
                         mAlreadySucceeded = true;

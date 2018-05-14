@@ -10,7 +10,6 @@ import android.support.v4.util.LruCache;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
-import com.mopub.common.ClientMetadata;
 import com.mopub.common.Constants;
 import com.mopub.common.Preconditions;
 import com.mopub.common.VisibleForTesting;
@@ -18,9 +17,9 @@ import com.mopub.common.util.DeviceUtils;
 import com.mopub.volley.Cache;
 import com.mopub.volley.Network;
 import com.mopub.volley.RequestQueue;
+import com.mopub.volley.toolbox.BaseHttpStack;
 import com.mopub.volley.toolbox.BasicNetwork;
 import com.mopub.volley.toolbox.DiskBasedCache;
-import com.mopub.volley.toolbox.HttpStack;
 import com.mopub.volley.toolbox.HurlStack;
 import com.mopub.volley.toolbox.ImageLoader;
 
@@ -40,6 +39,7 @@ public class Networking {
     private volatile static String sUserAgent;
     private volatile static MaxWidthImageLoader sMaxWidthImageLoader;
     private static boolean sUseHttps = false;
+    private static HurlStack.UrlRewriter sUrlRewriter;
 
     @Nullable
     public static MoPubRequestQueue getRequestQueue() {
@@ -47,7 +47,18 @@ public class Networking {
     }
 
     @NonNull
-    public static MoPubRequestQueue getRequestQueue(@NonNull Context context) {
+    public static HurlStack.UrlRewriter getUrlRewriter(@NonNull final Context context) {
+        Preconditions.checkNotNull(context);
+
+        // No synchronization done here since it's fine to create the same rewriter more than once.
+        if (sUrlRewriter == null) {
+            sUrlRewriter = new PlayServicesUrlRewriter();
+        }
+        return sUrlRewriter;
+    }
+
+    @NonNull
+    public static MoPubRequestQueue getRequestQueue(@NonNull final Context context) {
         MoPubRequestQueue requestQueue = sRequestQueue;
         // Double-check locking to initialize.
         if (requestQueue == null) {
@@ -55,18 +66,18 @@ public class Networking {
                 requestQueue = sRequestQueue;
                 if (requestQueue == null) {
 
-                    // Guarantee ClientMetadata is set up.
-                    final ClientMetadata clientMetadata = ClientMetadata.getInstance(context);
-                    final HurlStack.UrlRewriter urlRewriter = new PlayServicesUrlRewriter(clientMetadata.getDeviceId(), context);
                     final SSLSocketFactory socketFactory = CustomSSLSocketFactory.getDefault(Constants.TEN_SECONDS_MILLIS);
 
-                    final String userAgent = Networking.getUserAgent(context.getApplicationContext());
-                    HttpStack httpStack = new RequestQueueHttpStack(userAgent, urlRewriter, socketFactory);
+                    final String userAgent = Networking.getUserAgent(
+                            context.getApplicationContext());
+                    final BaseHttpStack httpStack = new RequestQueueHttpStack(userAgent,
+                            getUrlRewriter(context), socketFactory);
 
-                    Network network = new BasicNetwork(httpStack);
-                    File volleyCacheDir = new File(context.getCacheDir().getPath() + File.separator
-                            + CACHE_DIRECTORY_NAME);
-                    Cache cache = new DiskBasedCache(volleyCacheDir, (int) DeviceUtils.diskCacheSizeBytes(volleyCacheDir, Constants.TEN_MB));
+                    final Network network = new BasicNetwork(httpStack);
+                    final File volleyCacheDir = new File(context.getCacheDir().getPath() +
+                            File.separator + CACHE_DIRECTORY_NAME);
+                    final Cache cache = new DiskBasedCache(volleyCacheDir,
+                            (int) DeviceUtils.diskCacheSizeBytes(volleyCacheDir, Constants.TEN_MB));
                     requestQueue = new MoPubRequestQueue(cache, network);
                     sRequestQueue = requestQueue;
                     requestQueue.start();
@@ -190,32 +201,34 @@ public class Networking {
     }
 
     /**
-     * Set whether to use HTTPS for communication with MoPub ad servers.
+     * Set whether to use HTTP or HTTPS for WebView base urls.
      */
     public static void useHttps(boolean useHttps) {
         sUseHttps = useHttps;
     }
 
-    public static boolean useHttps() {
+    public static boolean shouldUseHttps() {
         return sUseHttps;
     }
 
     /**
-     * Retrieve the scheme that should be used based on {@link #useHttps()}.
+     * Retrieve the scheme that should be used to communicate to the ad server. This should always
+     * return https.
      *
-     * @return "https" if {@link #useHttps()} is true; "http" otherwise.
+     * @return "https"
      */
     public static String getScheme() {
-        return useHttps() ? Constants.HTTPS : Constants.HTTP;
+        return Constants.HTTPS;
     }
 
     /**
      * DSPs are currently not ready for full https creatives. When we flip the switch to go full
-     * https, this should just return {@link #getScheme()}.
+     * https, this should just return https. However, for now, we allow the publisher to use
+     * either http or https. This only affects WebView base urls.
      *
-     * @return "http"
+     * @return "https" if {@link #shouldUseHttps()} is true; "http" otherwise.
      */
     public static String getBaseUrlScheme() {
-        return Constants.HTTP;
+        return shouldUseHttps() ? Constants.HTTPS : Constants.HTTP;
     }
 }

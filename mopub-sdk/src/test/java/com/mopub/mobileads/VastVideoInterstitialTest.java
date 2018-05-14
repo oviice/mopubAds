@@ -8,10 +8,10 @@ import com.mopub.common.AdReport;
 import com.mopub.common.CacheServiceTest;
 import com.mopub.common.DataKeys;
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.mobileads.test.support.TestHttpResponseWithHeaders;
 import com.mopub.mobileads.test.support.TestVastManagerFactory;
 import com.mopub.mobileads.test.support.VastUtils;
 
+import org.apache.http.HttpResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,9 +28,9 @@ import java.util.Map;
 import static com.mopub.common.DataKeys.AD_REPORT_KEY;
 import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
 import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
-import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
 import static com.mopub.common.IntentActions.ACTION_INTERSTITIAL_DISMISS;
 import static com.mopub.common.IntentActions.ACTION_INTERSTITIAL_SHOW;
+import static com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiverTest.getIntentForActionAndIdentifier;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
 import static com.mopub.mobileads.VastManager.VastManagerListener;
@@ -51,7 +51,7 @@ public class VastVideoInterstitialTest extends ResponseBodyInterstitialTest {
     private CustomEventInterstitialListener customEventInterstitialListener;
     private Map<String, Object> localExtras;
     private Map<String, String> serverExtras;
-    private TestHttpResponseWithHeaders response;
+    private HttpResponse response;
     private String expectedResponse;
     private VastManager vastManager;
     private String videoUrl;
@@ -73,7 +73,7 @@ public class VastVideoInterstitialTest extends ResponseBodyInterstitialTest {
         serverExtras = new HashMap<String, String>();
         serverExtras.put(DataKeys.HTML_RESPONSE_BODY_KEY, expectedResponse);
 
-        response = new TestHttpResponseWithHeaders(200, expectedResponse);
+        response = mock(HttpResponse.class);
 
         broadcastIdentifier = 2222;
         localExtras.put(BROADCAST_IDENTIFIER_KEY, broadcastIdentifier);

@@ -10,6 +10,52 @@ import com.mopub.network.PlayServicesUrlRewriter;
 
 public abstract class BaseUrlGenerator {
 
+    /**
+     * The ad unit id which identifies a spot for an ad to be placed.
+     */
+    protected static final String AD_UNIT_ID_KEY = "id";
+
+    /**
+     * nv = native version. This is the version of MoPub.
+     */
+    protected static final String SDK_VERSION_KEY = "nv";
+
+    /**
+     * User ifa or mopub-generated identifier.
+     */
+    protected static final String UDID_KEY = "udid";
+
+    /**
+     * "Do not track." Equal to 1 when limit ad tracking is turned on. Equal to 0 otherwise.
+     */
+    protected static final String DNT_KEY = "dnt";
+
+    /**
+     * Bundle ID, as in package name.
+     */
+    protected static final String BUNDLE_ID_KEY = "bundle";
+
+    /**
+     * The current consent state.
+     */
+    protected static final String CURRENT_CONSENT_STATUS_KEY = "current_consent_status";
+
+    /**
+     * The version of the vendor list that has been consented to. Null if no consent given.
+     */
+    protected static final String CONSENTED_VENDOR_LIST_VERSION_KEY = "consented_vendor_list_version";
+
+    /**
+     * The version of the privacy policy that has been consented to. Null if no consent given.
+     */
+    protected static final String CONSENTED_PRIVACY_POLICY_VERSION_KEY = "consented_privacy_policy_version";
+
+    /**
+     * Whether or not GDPR applies to this user. Can be different from whether or not this user is
+     * in a GDPR region.
+     */
+    protected static final String GDPR_APPLIES = "gdpr_applies";
+
     private static final String WIDTH_KEY = "w";
     private static final String HEIGHT_KEY = "h";
 
@@ -37,6 +83,17 @@ public abstract class BaseUrlGenerator {
         mStringBuilder.append(key);
         mStringBuilder.append("=");
         mStringBuilder.append(Uri.encode(value));
+    }
+
+    protected void addParam(String key, Boolean value) {
+        if (value == null) {
+            return;
+        }
+
+        mStringBuilder.append(getParamDelimiter());
+        mStringBuilder.append(key);
+        mStringBuilder.append("=");
+        mStringBuilder.append(value ? "1" : "0");
     }
 
     private String getParamDelimiter() {
@@ -75,12 +132,12 @@ public abstract class BaseUrlGenerator {
 
     protected void setDoNotTrack(boolean dnt) {
         if (dnt) {
-            addParam("dnt", "1");
+            addParam(DNT_KEY, "1");
         }
     }
 
     protected void setUdid(String udid) {
-        addParam("udid", udid);
+        addParam(UDID_KEY, udid);
     }
 
     /**
@@ -88,8 +145,8 @@ public abstract class BaseUrlGenerator {
      * replace these templates with the correct values when the request is processed.
      */
     protected void appendAdvertisingInfoTemplates() {
-        addParam("udid", PlayServicesUrlRewriter.UDID_TEMPLATE);
-        addParam("dnt", PlayServicesUrlRewriter.DO_NOT_TRACK_TEMPLATE);
+        addParam(UDID_KEY, PlayServicesUrlRewriter.UDID_TEMPLATE);
+        addParam(DNT_KEY, PlayServicesUrlRewriter.DO_NOT_TRACK_TEMPLATE);
     }
 
     /**

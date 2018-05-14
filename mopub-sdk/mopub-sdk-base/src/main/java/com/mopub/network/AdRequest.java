@@ -1,7 +1,6 @@
 package com.mopub.network;
 
 import android.content.Context;
-import android.location.Location;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -11,29 +10,26 @@ import com.mopub.common.AdFormat;
 import com.mopub.common.AdType;
 import com.mopub.common.DataKeys;
 import com.mopub.common.FullAdType;
-import com.mopub.common.LocationService;
 import com.mopub.common.MoPub;
 import com.mopub.common.MoPub.BrowserAgent;
 import com.mopub.common.Preconditions;
+import com.mopub.common.SdkConfiguration;
 import com.mopub.common.VisibleForTesting;
-import com.mopub.common.event.BaseEvent;
-import com.mopub.common.event.Event;
-import com.mopub.common.event.EventDetails;
-import com.mopub.common.event.MoPubEvents;
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.privacy.PersonalInfoManager;
 import com.mopub.common.util.Json;
 import com.mopub.common.util.ResponseHeader;
 import com.mopub.mobileads.AdTypeTranslator;
 import com.mopub.volley.DefaultRetryPolicy;
 import com.mopub.volley.NetworkResponse;
-import com.mopub.volley.Request;
 import com.mopub.volley.Response;
 import com.mopub.volley.toolbox.HttpHeaderParser;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
@@ -44,7 +40,13 @@ import static com.mopub.network.HeaderUtils.extractHeader;
 import static com.mopub.network.HeaderUtils.extractIntegerHeader;
 import static com.mopub.network.HeaderUtils.extractPercentHeaderString;
 
-public class AdRequest extends Request<AdResponse> {
+public class AdRequest extends MoPubRequest<AdResponse> {
+
+    @VisibleForTesting
+    static final String AD_RESPONSES_KEY = "ad-responses";
+    private static final String ADM_KEY = "adm";
+    private static final String BODY_KEY = "body";
+    private static final String HEADERS_KEY = "headers";
 
     @NonNull private final AdRequest.Listener mListener;
     @NonNull private final AdFormat mAdFormat;
@@ -60,7 +62,7 @@ public class AdRequest extends Request<AdResponse> {
             @Nullable final String adUnitId,
             @NonNull Context context,
             @NonNull final Listener listener) {
-        super(Method.GET, url, listener);
+        super(context, url, listener);
         Preconditions.checkNotNull(adFormat);
         Preconditions.checkNotNull(listener);
         mAdUnitId = adUnitId;
@@ -73,6 +75,18 @@ public class AdRequest extends Request<AdResponse> {
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
         setRetryPolicy(retryPolicy);
         setShouldCache(false);
+
+        final PersonalInfoManager personalInfoManager = MoPub.getPersonalInformationManager();
+        if (personalInfoManager == null) {
+            MoPubLog.e("Make sure you initialize the SDK before loading an ad. For now, the SDK " +
+                    "will be automatically initialized on your behalf. Starting from release " +
+                    "5.2.0, initialization will be a strict requirement, and ad requests " +
+                    "made with an uninitialized SDK will begin to fail.");
+            MoPub.initializeSdk(context,
+                    new SdkConfiguration.Builder(adUnitId == null ? "" : adUnitId).build(), null);
+        } else {
+            personalInfoManager.requestSync(false);
+        }
     }
 
     @NonNull
@@ -108,28 +122,53 @@ public class AdRequest extends Request<AdResponse> {
         // NOTE: We never get status codes outside of {[200, 299], 304}. Those errors are sent to the
         // error listener.
 
-        Map<String, String> headers = networkResponse.headers;
-
-        if (extractBooleanHeader(headers, ResponseHeader.WARMUP, false)) {
-            return Response.error(new MoPubNetworkError("Ad Unit is warming up.", MoPubNetworkError.Reason.WARMING_UP));
+        // convert all keys to lowercase
+        final Map<String, String> headers = new HashMap<>();
+        for(final String key : networkResponse.headers.keySet() ){
+            headers.put(key.toLowerCase(), networkResponse.headers.get(key));
         }
 
+        final JSONObject jsonHeaders;
+        final JSONObject currentAdResponse;
 
-        Location location = LocationService.getLastKnownLocation(mContext,
-                MoPub.getLocationPrecision(),
-                MoPub.getLocationAwareness());
+        if (extractBooleanHeader(headers, ResponseHeader.WARMUP, false)) {
+            return Response.error(new MoPubNetworkError("Ad Unit is warming up.",
+                    MoPubNetworkError.Reason.WARMING_UP));
+        }
 
-        AdResponse.Builder builder = new AdResponse.Builder();
+        final AdResponse.Builder builder = new AdResponse.Builder();
         builder.setAdUnitId(mAdUnitId);
 
-        String adTypeString = extractHeader(headers, ResponseHeader.AD_TYPE);
-        String fullAdTypeString = extractHeader(headers, ResponseHeader.FULL_AD_TYPE);
+        // Response Body encoding / decoding
+        final String responseBody = parseStringBody(networkResponse);
+        builder.setResponseBody(responseBody);
+
+        if (AdType.MULTI.equalsIgnoreCase(extractHeader(headers, ResponseHeader.AD_RESPONSE_TYPE))) {
+            try {
+                final JSONObject rootBody = new JSONObject(responseBody);
+                final JSONArray adResponsesJson = rootBody.getJSONArray(AD_RESPONSES_KEY);
+                // Currently, there is only one ad response. Client-side waterfall will be
+                // able to handle multiple ad responses.
+                currentAdResponse = adResponsesJson.getJSONObject(0);
+                jsonHeaders = currentAdResponse.getJSONObject(HEADERS_KEY);
+            } catch (JSONException e) {
+                return Response.error(
+                        new MoPubNetworkError("Failed to decode header JSON",
+                                e, MoPubNetworkError.Reason.BAD_HEADER_DATA));
+            }
+        } else {
+            jsonHeaders = new JSONObject(headers);
+            currentAdResponse = null;
+        }
+
+        String adTypeString = extractHeader(jsonHeaders, ResponseHeader.AD_TYPE);
+        String fullAdTypeString = extractHeader(jsonHeaders, ResponseHeader.FULL_AD_TYPE);
         builder.setAdType(adTypeString);
         builder.setFullAdType(fullAdTypeString);
 
         // In the case of a CLEAR response, the REFRESH_TIME header must still be respected. Ensure
         // that it is parsed and passed along to the MoPubNetworkError.
-        final Integer refreshTimeSeconds = extractIntegerHeader(headers,
+        final Integer refreshTimeSeconds = extractIntegerHeader(jsonHeaders,
                 ResponseHeader.REFRESH_TIME);
         final Integer refreshTimeMilliseconds = refreshTimeSeconds == null
                 ? null
@@ -138,7 +177,6 @@ public class AdRequest extends Request<AdResponse> {
 
         if (AdType.CLEAR.equals(adTypeString)) {
             final AdResponse adResponse = builder.build();
-            logScribeEvent(adResponse, networkResponse, location);
             return Response.error(
                     new MoPubNetworkError(
                             "No ads found for ad unit.",
@@ -148,44 +186,41 @@ public class AdRequest extends Request<AdResponse> {
             );
         }
 
-        String dspCreativeId = extractHeader(headers, ResponseHeader.DSP_CREATIVE_ID);
+        String dspCreativeId = extractHeader(jsonHeaders, ResponseHeader.DSP_CREATIVE_ID);
         builder.setDspCreativeId(dspCreativeId);
 
-        String networkType = extractHeader(headers, ResponseHeader.NETWORK_TYPE);
+        String networkType = extractHeader(jsonHeaders, ResponseHeader.NETWORK_TYPE);
         builder.setNetworkType(networkType);
 
-        String redirectUrl = extractHeader(headers, ResponseHeader.REDIRECT_URL);
+        String redirectUrl = extractHeader(jsonHeaders, ResponseHeader.REDIRECT_URL);
         builder.setRedirectUrl(redirectUrl);
 
         // X-Clickthrough is parsed into the AdResponse as the click tracker
         // Used by AdViewController, Rewarded Video, Native Adapter, MoPubNative
-        String clickTrackingUrl = extractHeader(headers, ResponseHeader.CLICK_TRACKING_URL);
+        String clickTrackingUrl = extractHeader(jsonHeaders, ResponseHeader.CLICK_TRACKING_URL);
         builder.setClickTrackingUrl(clickTrackingUrl);
 
-        builder.setImpressionTrackingUrl(extractHeader(headers, ResponseHeader.IMPRESSION_URL));
+        builder.setImpressionTrackingUrl(extractHeader(jsonHeaders, ResponseHeader.IMPRESSION_URL));
 
-        String failUrl = extractHeader(headers, ResponseHeader.FAIL_URL);
+        String failUrl = extractHeader(jsonHeaders, ResponseHeader.FAIL_URL);
         builder.setFailoverUrl(failUrl);
 
         String requestId = getRequestId(failUrl);
         builder.setRequestId(requestId);
 
-        boolean isScrollable = extractBooleanHeader(headers, ResponseHeader.SCROLLABLE, false);
+        boolean isScrollable = extractBooleanHeader(jsonHeaders, ResponseHeader.SCROLLABLE, false);
         builder.setScrollable(isScrollable);
 
-        Integer width = extractIntegerHeader(headers, ResponseHeader.WIDTH);
-        Integer height = extractIntegerHeader(headers, ResponseHeader.HEIGHT);
+        Integer width = extractIntegerHeader(jsonHeaders, ResponseHeader.WIDTH);
+        Integer height = extractIntegerHeader(jsonHeaders, ResponseHeader.HEIGHT);
         builder.setDimensions(width, height);
 
-        Integer adTimeoutDelaySeconds = extractIntegerHeader(headers, ResponseHeader.AD_TIMEOUT);
+        Integer adTimeoutDelaySeconds = extractIntegerHeader(jsonHeaders, ResponseHeader.AD_TIMEOUT);
         builder.setAdTimeoutDelayMilliseconds(
                 adTimeoutDelaySeconds == null
                         ? null
                         : adTimeoutDelaySeconds * 1000);
 
-        // Response Body encoding / decoding
-        String responseBody = parseStringBody(networkResponse);
-        builder.setResponseBody(responseBody);
         if (AdType.STATIC_NATIVE.equals(adTypeString) || AdType.VIDEO_NATIVE.equals(adTypeString)) {
             try {
                 builder.setJsonBody(new JSONObject(responseBody));
@@ -198,21 +233,21 @@ public class AdRequest extends Request<AdResponse> {
 
         // Derive custom event fields
         String customEventClassName = AdTypeTranslator.getCustomEventName(mAdFormat, adTypeString,
-                fullAdTypeString, headers);
+                fullAdTypeString, jsonHeaders);
         builder.setCustomEventClassName(customEventClassName);
 
         // Default browser agent from X-Browser-Agent header
         BrowserAgent browserAgent = BrowserAgent.fromHeader(
-                extractIntegerHeader(headers, ResponseHeader.BROWSER_AGENT));
+                extractIntegerHeader(jsonHeaders, ResponseHeader.BROWSER_AGENT));
         MoPub.setBrowserAgentFromAdServer(browserAgent);
         builder.setBrowserAgent(browserAgent);
 
         // Process server extras if they are present:
-        String customEventData = extractHeader(headers, ResponseHeader.CUSTOM_EVENT_DATA);
+        String customEventData = extractHeader(jsonHeaders, ResponseHeader.CUSTOM_EVENT_DATA);
 
         // Some server-supported custom events (like Millennial banners) use a different header field
         if (TextUtils.isEmpty(customEventData)) {
-            customEventData = extractHeader(headers, ResponseHeader.NATIVE_PARAMS);
+            customEventData = extractHeader(jsonHeaders, ResponseHeader.NATIVE_PARAMS);
         }
 
         final Map<String, String> serverExtras;
@@ -224,10 +259,20 @@ public class AdRequest extends Request<AdResponse> {
                             e, MoPubNetworkError.Reason.BAD_HEADER_DATA));
         }
 
-        if (redirectUrl != null) {
+        try {
+            if (currentAdResponse != null) {
+                serverExtras.put(DataKeys.ADM_KEY, currentAdResponse.getString(ADM_KEY));
+            }
+        } catch (JSONException e) {
+            return Response.error(
+                    new MoPubNetworkError("Failed to parse ADM for advanced bidding",
+                            e, MoPubNetworkError.Reason.BAD_BODY));
+        }
+
+        if (!TextUtils.isEmpty(redirectUrl)) {
             serverExtras.put(DataKeys.REDIRECT_URL_KEY, redirectUrl);
         }
-        if (clickTrackingUrl != null) {
+        if (!TextUtils.isEmpty(clickTrackingUrl)) {
             // X-Clickthrough parsed into serverExtras
             // Used by Banner, Interstitial
             serverExtras.put(DataKeys.CLICKTHROUGH_URL_KEY, clickTrackingUrl);
@@ -236,12 +281,12 @@ public class AdRequest extends Request<AdResponse> {
             // Some MoPub-specific custom events get their serverExtras from the response itself:
             serverExtras.put(DataKeys.HTML_RESPONSE_BODY_KEY, responseBody);
             serverExtras.put(DataKeys.SCROLLABLE_KEY, Boolean.toString(isScrollable));
-            serverExtras.put(DataKeys.CREATIVE_ORIENTATION_KEY, extractHeader(headers, ResponseHeader.ORIENTATION));
+            serverExtras.put(DataKeys.CREATIVE_ORIENTATION_KEY, extractHeader(jsonHeaders, ResponseHeader.ORIENTATION));
         }
         if (AdType.STATIC_NATIVE.equals(adTypeString) || AdType.VIDEO_NATIVE.equals(adTypeString)) {
-            final String impressionMinVisiblePercent = extractPercentHeaderString(headers,
+            final String impressionMinVisiblePercent = extractPercentHeaderString(jsonHeaders,
                     ResponseHeader.IMPRESSION_MIN_VISIBLE_PERCENT);
-            final String impressionVisibleMS = extractHeader(headers,
+            final String impressionVisibleMS = extractHeader(jsonHeaders,
                     ResponseHeader.IMPRESSION_VISIBLE_MS);
             final String impressionMinVisiblePx = extractHeader(headers,
                     ResponseHeader.IMPRESSION_MIN_VISIBLE_PX);
@@ -258,40 +303,23 @@ public class AdRequest extends Request<AdResponse> {
         }
         if (AdType.VIDEO_NATIVE.equals(adTypeString)) {
             serverExtras.put(DataKeys.PLAY_VISIBLE_PERCENT,
-                    extractPercentHeaderString(headers, ResponseHeader.PLAY_VISIBLE_PERCENT));
+                    extractPercentHeaderString(jsonHeaders, ResponseHeader.PLAY_VISIBLE_PERCENT));
             serverExtras.put(DataKeys.PAUSE_VISIBLE_PERCENT,
-                    extractPercentHeaderString(headers, ResponseHeader.PAUSE_VISIBLE_PERCENT));
-            serverExtras.put(DataKeys.MAX_BUFFER_MS, extractHeader(headers,
+                    extractPercentHeaderString(jsonHeaders, ResponseHeader.PAUSE_VISIBLE_PERCENT));
+            serverExtras.put(DataKeys.MAX_BUFFER_MS, extractHeader(jsonHeaders,
                     ResponseHeader.MAX_BUFFER_MS));
-
-            builder.setEventDetails(new EventDetails.Builder()
-                            .adUnitId(mAdUnitId)
-                            .adType(adTypeString)
-                            .adNetworkType(networkType)
-                            .adWidthPx(width)
-                            .adHeightPx(height)
-                            .dspCreativeId(dspCreativeId)
-                            .geoLatitude(location == null ? null : location.getLatitude())
-                            .geoLongitude(location == null ? null : location.getLongitude())
-                            .geoAccuracy(location == null ? null : location.getAccuracy())
-                            .performanceDurationMs(networkResponse.networkTimeMs)
-                            .requestId(requestId)
-                            .requestStatusCode(networkResponse.statusCode)
-                            .requestUri(getUrl())
-                            .build()
-            );
         }
 
         // Extract internal video trackers, if available
-        final String videoTrackers = extractHeader(headers, ResponseHeader.VIDEO_TRACKERS);
-        if (videoTrackers != null) {
+        final String videoTrackers = extractHeader(jsonHeaders, ResponseHeader.VIDEO_TRACKERS);
+        if (!TextUtils.isEmpty(videoTrackers)) {
             serverExtras.put(DataKeys.VIDEO_TRACKERS_KEY, videoTrackers);
         }
         if (AdType.REWARDED_VIDEO.equals(adTypeString) ||
                 (AdType.INTERSTITIAL.equals(adTypeString) &&
                         FullAdType.VAST.equals(fullAdTypeString))) {
             serverExtras.put(DataKeys.EXTERNAL_VIDEO_VIEWABILITY_TRACKERS_KEY,
-                    extractHeader(headers, ResponseHeader.VIDEO_VIEWABILITY_TRACKERS));
+                    extractHeader(jsonHeaders, ResponseHeader.VIDEO_VIEWABILITY_TRACKERS));
         }
 
         // Banner imp tracking
@@ -303,7 +331,7 @@ public class AdRequest extends Request<AdResponse> {
         }
 
         // Disable viewability vendors, if any
-        final String disabledViewabilityVendors = extractHeader(headers,
+        final String disabledViewabilityVendors = extractHeader(jsonHeaders,
                 ResponseHeader.DISABLE_VIEWABILITY);
         if (!TextUtils.isEmpty(disabledViewabilityVendors)) {
             final ViewabilityVendor disabledVendors =
@@ -317,17 +345,17 @@ public class AdRequest extends Request<AdResponse> {
 
         if (AdType.REWARDED_VIDEO.equals(adTypeString) || AdType.CUSTOM.equals(adTypeString) ||
                 AdType.REWARDED_PLAYABLE.equals(adTypeString)) {
-            final String rewardedVideoCurrencyName = extractHeader(headers,
+            final String rewardedVideoCurrencyName = extractHeader(jsonHeaders,
                     ResponseHeader.REWARDED_VIDEO_CURRENCY_NAME);
-            final String rewardedVideoCurrencyAmount = extractHeader(headers,
+            final String rewardedVideoCurrencyAmount = extractHeader(jsonHeaders,
                     ResponseHeader.REWARDED_VIDEO_CURRENCY_AMOUNT);
-            final String rewardedCurrencies = extractHeader(headers,
+            final String rewardedCurrencies = extractHeader(jsonHeaders,
                     ResponseHeader.REWARDED_CURRENCIES);
-            final String rewardedVideoCompletionUrl = extractHeader(headers,
+            final String rewardedVideoCompletionUrl = extractHeader(jsonHeaders,
                     ResponseHeader.REWARDED_VIDEO_COMPLETION_URL);
-            final Integer rewardedDuration = extractIntegerHeader(headers,
+            final Integer rewardedDuration = extractIntegerHeader(jsonHeaders,
                     ResponseHeader.REWARDED_DURATION);
-            final boolean shouldRewardOnClick = extractBooleanHeader(headers,
+            final boolean shouldRewardOnClick = extractBooleanHeader(jsonHeaders,
                     ResponseHeader.SHOULD_REWARD_ON_CLICK, false);
             builder.setRewardedVideoCurrencyName(rewardedVideoCurrencyName);
             builder.setRewardedVideoCurrencyAmount(rewardedVideoCurrencyAmount);
@@ -337,8 +365,22 @@ public class AdRequest extends Request<AdResponse> {
             builder.setShouldRewardOnClick(shouldRewardOnClick);
         }
 
+        final boolean invalidateConsent = extractBooleanHeader(jsonHeaders, ResponseHeader.INVALIDATE_CONSENT, false);
+        final boolean forceExplicitNo = extractBooleanHeader(jsonHeaders, ResponseHeader.FORCE_EXPLICIT_NO, false);
+        final boolean reacquireConsent = extractBooleanHeader(jsonHeaders, ResponseHeader.REACQUIRE_CONSENT, false);
+        String consentChangeReason = extractHeader(jsonHeaders, ResponseHeader.CONSENT_CHANGE_REASON);
+
+        if (MoPub.getPersonalInformationManager() != null) {
+            if (forceExplicitNo) {
+                MoPub.getPersonalInformationManager().forceExplicitNo(consentChangeReason);
+            } else if (invalidateConsent) {
+                MoPub.getPersonalInformationManager().invalidateConsent(consentChangeReason);
+            } else if (reacquireConsent) {
+                MoPub.getPersonalInformationManager().reacquireConsent(consentChangeReason);
+            }
+        }
+
         AdResponse adResponse = builder.build();
-        logScribeEvent(adResponse, networkResponse, location);
 
         return Response.success(builder.build(),  // Cast needed for Response generic.
                 HttpHeaderParser.parseCacheHeaders(networkResponse));
@@ -350,17 +392,6 @@ public class AdRequest extends Request<AdResponse> {
                 (AdType.INTERSTITIAL.equals(adType) && FullAdType.VAST.equals(fullAdType)) ||
                 (AdType.REWARDED_VIDEO.equals(adType) && FullAdType.VAST.equals(fullAdType)) ||
                 AdType.REWARDED_PLAYABLE.equals(adType);
-    }
-
-    // Based on Volley's StringResponse class.
-    protected String parseStringBody(NetworkResponse response) {
-        String parsed;
-        try {
-            parsed = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-        } catch (UnsupportedEncodingException e) {
-            parsed = new String(response.data);
-        }
-        return parsed;
     }
 
     @Override
@@ -384,35 +415,5 @@ public class AdRequest extends Request<AdResponse> {
         }
 
         return requestId;
-    }
-
-    @VisibleForTesting
-    void logScribeEvent(@NonNull AdResponse adResponse, @NonNull NetworkResponse networkResponse,
-            @Nullable Location location) {
-        Preconditions.checkNotNull(adResponse);
-        Preconditions.checkNotNull(networkResponse);
-
-        MoPubEvents.log(
-                new Event.Builder(BaseEvent.Name.AD_REQUEST, BaseEvent.Category.REQUESTS,
-                        BaseEvent.SamplingRate.AD_REQUEST.getSamplingRate())
-                        .withAdUnitId(mAdUnitId)
-                        .withDspCreativeId(adResponse.getDspCreativeId())
-                        .withAdType(adResponse.getAdType())
-                        .withAdNetworkType(adResponse.getNetworkType())
-                        .withAdWidthPx(adResponse.getWidth() != null
-                                ? adResponse.getWidth().doubleValue()
-                                : null)
-                        .withAdHeightPx(adResponse.getHeight() != null
-                                ? adResponse.getHeight().doubleValue()
-                                : null)
-                        .withGeoLat(location != null ? location.getLatitude() : null)
-                        .withGeoLon(location != null ? location.getLongitude() : null)
-                        .withGeoAccuracy(location != null ? (double) location.getAccuracy() : null)
-                        .withPerformanceDurationMs((double) networkResponse.networkTimeMs)
-                        .withRequestId(adResponse.getRequestId())
-                        .withRequestStatusCode(networkResponse.statusCode)
-                        .withRequestUri(getUrl())
-                        .build()
-        );
     }
 }

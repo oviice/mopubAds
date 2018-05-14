@@ -8,6 +8,7 @@ import android.text.TextUtils;
 import com.mopub.common.AdUrlGenerator;
 import com.mopub.common.ClientMetadata;
 import com.mopub.common.Constants;
+import com.mopub.common.MoPub;
 
 class NativeUrlGenerator extends AdUrlGenerator {
     @Nullable private String mDesiredAssets;
@@ -27,8 +28,12 @@ class NativeUrlGenerator extends AdUrlGenerator {
     @NonNull
     NativeUrlGenerator withRequest(@Nullable final RequestParameters requestParameters) {
         if (requestParameters != null) {
+            final boolean canCollectPersonalInformation = MoPub.canCollectPersonalInformation();
+
+            mUserDataKeywords = canCollectPersonalInformation ? requestParameters.getUserDataKeywords() : null;
+            mLocation = canCollectPersonalInformation ? requestParameters.getLocation() : null;
+
             mKeywords = requestParameters.getKeywords();
-            mLocation = requestParameters.getLocation();
             mDesiredAssets = requestParameters.getDesiredAssets();
         }
         return this;
@@ -64,10 +69,5 @@ class NativeUrlGenerator extends AdUrlGenerator {
         if (!TextUtils.isEmpty(mDesiredAssets)) {
             addParam("assets", mDesiredAssets);
         }
-    }
-
-    @Override
-    protected void setSdkVersion(String sdkVersion) {
-        addParam("nsv", sdkVersion);
     }
 }

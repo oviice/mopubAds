@@ -6,9 +6,12 @@ import android.content.Context;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 
+import com.mopub.common.privacy.MoPubIdentifierTest;
+import com.mopub.common.privacy.PersonalInfoManager;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.BuildConfig;
 import com.mopub.mobileads.test.support.MoPubShadowTelephonyManager;
+import com.mopub.common.util.Reflection;
 
 import org.junit.After;
 import org.junit.Before;
@@ -21,14 +24,17 @@ import org.robolectric.annotation.Config;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
 @Config(constants = BuildConfig.class,
         shadows = {MoPubShadowTelephonyManager.class})
 public class ClientMetadataTest {
 
-    public Activity activityContext;
+    private Activity activityContext;
     private MoPubShadowTelephonyManager shadowTelephonyManager;
+    private PersonalInfoManager mockPersonalInfoManager;
 
     @Before
     public void setUp() throws Exception {
@@ -36,10 +42,13 @@ public class ClientMetadataTest {
         Shadows.shadowOf(activityContext).grantPermissions(ACCESS_NETWORK_STATE);
         shadowTelephonyManager = (MoPubShadowTelephonyManager)
                 Shadows.shadowOf((TelephonyManager) activityContext.getSystemService(Context.TELEPHONY_SERVICE));
+        mockPersonalInfoManager = mock(PersonalInfoManager.class);
+        MoPubIdentifierTest.writeAdvertisingInfoToSharedPreferences(activityContext, false);
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
+        MoPubIdentifierTest.clearPreferences(activityContext);
         ContentResolver resolver = RuntimeEnvironment.application.getContentResolver();
         Settings.Secure.putString(resolver, "limit_ad_tracking", null);
         Settings.Secure.putString(resolver, "advertising_id", null);
@@ -67,78 +76,42 @@ public class ClientMetadataTest {
     }
 
     @Test
-    public void testCachedData_shouldBeAvailable() {
+    public void testCachedData_shouldBeAvailable() throws Exception {
         shadowTelephonyManager.setNetworkOperatorName("testNetworkOperatorName");
         shadowTelephonyManager.setNetworkOperator("testNetworkOperator");
         shadowTelephonyManager.setNetworkCountryIso("1");
         shadowTelephonyManager.setSimCountryIso("1");
+
+        when(mockPersonalInfoManager.canCollectPersonalInformation()).thenReturn(true);
+        new Reflection.MethodBuilder(null, "setPersonalInfoManager")
+            .setStatic(MoPub.class)
+            .setAccessible()
+            .addParam(PersonalInfoManager.class, mockPersonalInfoManager)
+            .execute();
 
         final ClientMetadata clientMetadata = ClientMetadata.getInstance(activityContext);
         // Telephony manager data.
         assertThat(clientMetadata.getNetworkOperatorForUrl()).isEqualTo("testNetworkOperator");
         assertThat(clientMetadata.getNetworkOperatorName()).isEqualTo("testNetworkOperatorName");
         assertThat(clientMetadata.getIsoCountryCode()).isEqualTo("1");
-
-        // Other cached data.
-        assertThat(clientMetadata.getDeviceId()).isNotNull().isNotEmpty();
     }
 
     @Test
-    public void constructor_onAmazonDevice_shouldSetAmazonAdvertisingInfo() {
-        ContentResolver resolver = RuntimeEnvironment.application.getContentResolver();
-        Settings.Secure.putInt(resolver, "limit_ad_tracking", 1);
-        Settings.Secure.putString(resolver, "advertising_id", "this-is-an-ifa");
+    public void testCachedData_shouldNotBeAvailableWhenConsentIsFalse() throws Exception {
+        shadowTelephonyManager.setNetworkOperatorName("testNetworkOperatorName");
+        shadowTelephonyManager.setNetworkOperator("testNetworkOperator");
+        shadowTelephonyManager.setNetworkCountryIso("1");
+        shadowTelephonyManager.setSimCountryIso("1");
+
+        when(mockPersonalInfoManager.canCollectPersonalInformation()).thenReturn(false);
+        new Reflection.MethodBuilder(null, "setPersonalInfoManager")
+                .setStatic(MoPub.class)
+                .setAccessible()
+                .addParam(PersonalInfoManager.class, mockPersonalInfoManager)
+                .execute();
 
         final ClientMetadata clientMetadata = ClientMetadata.getInstance(activityContext);
-
-        assertThat(clientMetadata.getDeviceId()).isEqualTo("ifa:this-is-an-ifa");
-        assertThat(clientMetadata.isDoNotTrackSet()).isTrue();
-        assertThat(clientMetadata.isAdvertisingInfoSet()).isTrue();
-    }
-
-    @Test
-    public void constructor_onNonAmazonDevice_shouldSetSha() {
-        final ClientMetadata clientMetadata = ClientMetadata.getInstance(activityContext);
-
-        assertThat(clientMetadata.getDeviceId()).startsWith("sha:");
-        assertThat(clientMetadata.isDoNotTrackSet()).isFalse();
-        assertThat(clientMetadata.isAdvertisingInfoSet()).isFalse();
-    }
-
-    @Test
-    public void constructor_onAmazonDevice_withoutLimitAdTracking_shouldSetSha() {
-        ContentResolver resolver = RuntimeEnvironment.application.getContentResolver();
-        Settings.Secure.putString(resolver, "advertising_id", "this-is-an-ifa");
-
-        final ClientMetadata clientMetadata = ClientMetadata.getInstance(activityContext);
-
-        assertThat(clientMetadata.getDeviceId()).startsWith("sha:");
-        assertThat(clientMetadata.isDoNotTrackSet()).isFalse();
-        assertThat(clientMetadata.isAdvertisingInfoSet()).isFalse();
-    }
-
-    @Test
-    public void constructor_onAmazonDevice_withoutAdvertisingId_shouldSetSha() {
-        ContentResolver resolver = RuntimeEnvironment.application.getContentResolver();
-        Settings.Secure.putInt(resolver, "limit_ad_tracking", 1);
-
-        final ClientMetadata clientMetadata = ClientMetadata.getInstance(activityContext);
-
-        assertThat(clientMetadata.getDeviceId()).startsWith("sha:");
-        assertThat(clientMetadata.isDoNotTrackSet()).isFalse();
-        assertThat(clientMetadata.isAdvertisingInfoSet()).isFalse();
-    }
-
-    @Test
-    public void constructor_onAmazonDevice_withEmptyAdvertisingId_shouldSetSha() {
-        ContentResolver resolver = RuntimeEnvironment.application.getContentResolver();
-        Settings.Secure.putInt(resolver, "limit_ad_tracking", 1);
-        Settings.Secure.putString(resolver, "advertising_id", "");
-
-        final ClientMetadata clientMetadata = ClientMetadata.getInstance(activityContext);
-
-        assertThat(clientMetadata.getDeviceId()).startsWith("sha:");
-        assertThat(clientMetadata.isDoNotTrackSet()).isFalse();
-        assertThat(clientMetadata.isAdvertisingInfoSet()).isFalse();
+        // Telephony manager data.
+        assertThat(clientMetadata.getIsoCountryCode()).isEqualTo("");
     }
 }

@@ -410,7 +410,7 @@ public class UrlHandlerTest {
     public void urlHandler_withDeeplinkPlus_shouldTriggerMultiplePrimaryTrackers() {
         final String primaryUrl = "twitter://timeline";
         final String primaryTracker1 = "https://ads.twitter.com/tracking?pubId=1234&userId=5678";
-        final String primaryTracker2 = "https://ads.mopub.com/tracking?pubId=4321&userId=8765";
+        final String primaryTracker2 = "https://tracker.mopub.com/tracking?pubId=4321&userId=8765";
         final String url = "deeplink+://navigate?primaryUrl=" + Uri.encode(primaryUrl)
                 + "&primaryTrackingUrl=" + Uri.encode(primaryTracker1)
                 + "&primaryTrackingUrl=" + Uri.encode(primaryTracker2);
@@ -451,7 +451,7 @@ public class UrlHandlerTest {
         final String primaryUrl = "missingApp://somePath";
         final String fallbackUrl = "https://twitter.com";
         final String fallbackTracker1 = "https://ads.twitter.com/tracking?pubId=1234&userId=5678";
-        final String fallbackTracker2 = "https://ads.mopub.com/tracking?pubId=4321&userId=8765";
+        final String fallbackTracker2 = "https://tracker.mopub.com/tracking?pubId=4321&userId=8765";
         final String url = "deeplink+://navigate?primaryUrl=" + Uri.encode(primaryUrl)
                 + "&fallbackUrl=" + Uri.encode(fallbackUrl)
                 + "&fallbackTrackingUrl=" + Uri.encode(fallbackTracker1)

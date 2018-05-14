@@ -91,18 +91,38 @@ public class MoPubInterstitialTest {
     }
 
     @Test
-    public void setKeywordsTest() throws Exception {
+    public void setUserDataKeywordsTest() throws Exception {
+        subject.setInterstitialView(interstitialView);
+        String userDataKeywords = "these_are_user_data_keywords";
+
+        subject.setUserDataKeywords(userDataKeywords);
+        verify(interstitialView).setUserDataKeywords(eq(userDataKeywords));
+    }
+
+    @Test
+    public void getUserDataKeywords() throws Exception {
+        subject.setInterstitialView(interstitialView);
+
+        subject.getUserDataKeywords();
+        verify(interstitialView).getUserDataKeywords();
+    }
+
+    @Test
+    public void setKeywords_withNonEmptyKeywords_shouldsetKeywordsOnInterstitialView() throws Exception {
         subject.setInterstitialView(interstitialView);
         String keywords = "these_are_keywords";
 
         subject.setKeywords(keywords);
+
         verify(interstitialView).setKeywords(eq(keywords));
     }
+
     @Test
-    public void getKeywordsTest() throws Exception {
+    public void getKeywordsTest_shouldCallGetKeywordsOnInterstitialView() throws Exception {
         subject.setInterstitialView(interstitialView);
 
         subject.getKeywords();
+
         verify(interstitialView).getKeywords();
     }
 

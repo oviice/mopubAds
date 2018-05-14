@@ -4,67 +4,109 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 
-import com.mopub.common.BaseUrlGenerator;
-import com.mopub.common.ClientMetadata;
 import com.mopub.common.Constants;
+import com.mopub.common.MoPub;
+import com.mopub.common.Preconditions;
 import com.mopub.common.SharedPreferencesHelper;
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.privacy.ConsentData;
+import com.mopub.common.privacy.PersonalInfoManager;
 import com.mopub.network.TrackingRequest;
 import com.mopub.volley.VolleyError;
 
 public class MoPubConversionTracker {
-    private Context mContext;
-    private String mIsTrackedKey;
-    private SharedPreferences mSharedPreferences;
-    private String mPackageName;
+    private static final String WANT_TO_TRACK = " wantToTrack";
 
-    public void reportAppOpen(Context context) {
-        if (context == null) {
+    @NonNull
+    private final Context mContext;
+    @NonNull
+    private final String mWantToTrack;
+    @NonNull
+    private final String mIsTrackedKey;
+    @NonNull
+    private SharedPreferences mSharedPreferences;
+
+    public MoPubConversionTracker(@NonNull final Context context) {
+        Preconditions.checkNotNull(context);
+
+        mContext = context.getApplicationContext();
+        String packageName = mContext.getPackageName();
+        mWantToTrack = packageName + WANT_TO_TRACK;
+        mIsTrackedKey = packageName + " tracked";
+        mSharedPreferences = SharedPreferencesHelper.getSharedPreferences(mContext);
+    }
+
+    /**
+     * Call this to report conversion tracking.
+     */
+    public void reportAppOpen() {
+        reportAppOpen(false);
+    }
+
+    /**
+     * This method is only used internally. Do not call this method.
+     *
+     * @param sessionTracker - true for session tracking
+     */
+    public void reportAppOpen(boolean sessionTracker) {
+        final PersonalInfoManager infoManager = MoPub.getPersonalInformationManager();
+        if (infoManager == null) {
+            MoPubLog.w("Cannot report app open until initialization is done");
             return;
         }
 
-        mContext = context;
-        mPackageName = mContext.getPackageName();
-        mIsTrackedKey = mPackageName + " tracked";
-        mSharedPreferences = SharedPreferencesHelper.getSharedPreferences(mContext);
 
-        if (!isAlreadyTracked()) {
-            TrackingRequest.makeTrackingHttpRequest(new ConversionUrlGenerator().generateUrlString(Constants.HOST),
-                    mContext, new TrackingRequest.Listener() {
-                @Override
-                public void onResponse(@NonNull String url) {
-                    mSharedPreferences
-                            .edit()
-                            .putBoolean(mIsTrackedKey, true)
-                            .commit();
-                }
-
-                @Override
-                public void onErrorResponse(final VolleyError volleyError) { }
-            });
-        } else {
+        if (!sessionTracker && isAlreadyTracked()) {
             MoPubLog.d("Conversion already tracked");
+            return;
         }
+
+        if (!sessionTracker && !MoPub.canCollectPersonalInformation()) {
+            mSharedPreferences
+                    .edit()
+                    .putBoolean(mWantToTrack, true)
+                    .apply();
+            return;
+        }
+
+        final ConsentData consentData = infoManager.getConsentData();
+        final String url = new ConversionUrlGenerator(mContext)
+                .withGdprApplies(infoManager.gdprApplies())
+                .withCurrentConsentStatus(infoManager.getPersonalInfoConsentStatus().getValue())
+                .withConsentedPrivacyPolicyVersion(consentData.getConsentedPrivacyPolicyVersion())
+                .withConsentedVendorListVersion(consentData.getConsentedVendorListVersion())
+                .withSessionTracker(sessionTracker)
+                .generateUrlString(Constants.HOST);
+
+        TrackingRequest.makeTrackingHttpRequest(url,
+                mContext, new TrackingRequest.Listener() {
+                    @Override
+                    public void onResponse(@NonNull final String url) {
+                        mSharedPreferences
+                                .edit()
+                                .putBoolean(mIsTrackedKey, true)
+                                .putBoolean(mWantToTrack, false)
+                                .apply();
+                    }
+
+                    @Override
+                    public void onErrorResponse(final VolleyError volleyError) {
+                    }
+                });
+
+    }
+
+    public boolean shouldTrack() {
+        PersonalInfoManager infoManager = MoPub.getPersonalInformationManager();
+        if (infoManager == null) {
+            return false;
+        }
+
+        return infoManager.canCollectPersonalInformation() &&
+                mSharedPreferences.getBoolean(mWantToTrack, false);
     }
 
     private boolean isAlreadyTracked() {
         return mSharedPreferences.getBoolean(mIsTrackedKey, false);
-    }
-
-    private class ConversionUrlGenerator extends BaseUrlGenerator {
-        @Override
-        public String generateUrlString(String serverHostname) {
-            initUrlString(serverHostname, Constants.CONVERSION_TRACKING_HANDLER);
-            setApiVersion("6");
-            setPackageId(mPackageName);
-            ClientMetadata clientMetadata = ClientMetadata.getInstance(mContext);
-            setAppVersion(clientMetadata.getAppVersion());
-            appendAdvertisingInfoTemplates();
-            return getFinalUrlString();
-        }
-
-        private void setPackageId(String packageName) {
-            addParam("id", packageName);
-        }
     }
 }

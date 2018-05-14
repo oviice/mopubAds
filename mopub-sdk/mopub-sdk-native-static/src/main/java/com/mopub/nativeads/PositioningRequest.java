@@ -1,21 +1,24 @@
 package com.mopub.nativeads;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.mopub.common.VisibleForTesting;
 import com.mopub.network.MoPubNetworkError;
+import com.mopub.network.MoPubRequestUtils;
 import com.mopub.volley.NetworkResponse;
 import com.mopub.volley.Response;
 import com.mopub.volley.VolleyError;
 import com.mopub.volley.toolbox.HttpHeaderParser;
 import com.mopub.volley.toolbox.JsonRequest;
 
-import org.apache.http.HttpStatus;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.util.Map;
 
 import static com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
 
@@ -29,13 +32,24 @@ public class PositioningRequest extends JsonRequest<MoPubClientPositioning> {
     // Max value to avoid bad integer math calculations. This is 2 ^ 16.
     private static final int MAX_VALUE = 1 << 16;
 
-    public PositioningRequest(final String url,
+    @NonNull private final String mOriginalUrl;
+    @NonNull private final Context mContext;
+
+    public PositioningRequest(@NonNull final Context context,
+            final String url,
             final Response.Listener<MoPubClientPositioning> listener,
             final Response.ErrorListener errorListener) {
-        super(Method.GET, url, null, listener, errorListener);
+        super(MoPubRequestUtils.chooseMethod(url),
+                MoPubRequestUtils.truncateQueryParamsIfPost(url),
+                null,
+                listener,
+                errorListener);
+
+        mOriginalUrl = url;
+        mContext = context.getApplicationContext();
     }
 
-    // This is done just for unit testing visibolity.
+    // This is done just for unit testing visibility.
     @Override
     protected void deliverResponse(final MoPubClientPositioning response) {
         super.deliverResponse(response);
@@ -43,7 +57,7 @@ public class PositioningRequest extends JsonRequest<MoPubClientPositioning> {
 
     @Override
     protected Response<MoPubClientPositioning> parseNetworkResponse(final NetworkResponse response) {
-        if (response.statusCode != HttpStatus.SC_OK) {
+        if (response.statusCode != HttpURLConnection.HTTP_OK) {
             return Response.error(new VolleyError(response));
         }
 
@@ -123,5 +137,23 @@ public class PositioningRequest extends JsonRequest<MoPubClientPositioning> {
             throw new JSONException("Invalid interval " + interval + " in JSON response");
         }
         positioning.enableRepeatingPositions(interval);
+    }
+
+    @Override
+    protected Map<String, String> getParams() {
+        if (!MoPubRequestUtils.isMoPubRequest(getUrl())) {
+            return null;
+        }
+
+        return MoPubRequestUtils.convertQueryToMap(mContext, mOriginalUrl);
+    }
+
+    @Override
+    public byte[] getBody() {
+        final String body = MoPubRequestUtils.generateBodyFromParams(getParams(), getUrl());
+        if (body == null) {
+            return null;
+        }
+        return body.getBytes();
     }
 }

@@ -38,6 +38,12 @@ public class BaseWebView extends WebView {
     }
 
     @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        WebViews.manageThirdPartyCookies(this);
+    }
+
+    @Override
     public void destroy() {
         mIsDestroyed = true;
 

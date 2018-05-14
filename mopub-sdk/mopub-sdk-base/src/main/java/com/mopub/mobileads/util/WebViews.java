@@ -1,11 +1,15 @@
 package com.mopub.mobileads.util;
 
+import android.os.Build;
 import android.support.annotation.NonNull;
+import android.webkit.CookieManager;
 import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
+import com.mopub.common.MoPub;
+import com.mopub.common.Preconditions;
 import com.mopub.common.logging.MoPubLog;
 
 public class WebViews {
@@ -58,5 +62,35 @@ public class WebViews {
                 return true;
             }
         });
+    }
+
+    public static void manageWebCookies() {
+        CookieManager cookieManager = CookieManager.getInstance();
+        if (MoPub.canCollectPersonalInformation()) {
+            cookieManager.setAcceptCookie(true);
+            CookieManager.setAcceptFileSchemeCookies(true);
+            return;
+        }
+
+        // remove all cookies
+        cookieManager.setAcceptCookie(false);
+        CookieManager.setAcceptFileSchemeCookies(false);
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            cookieManager.removeSessionCookies(null);
+            cookieManager.removeAllCookies(null);
+            cookieManager.flush();
+        } else {
+            cookieManager.removeSessionCookie();
+            cookieManager.removeAllCookie();
+        }
+    }
+
+    public static void manageThirdPartyCookies(@NonNull final WebView webView){
+        Preconditions.checkNotNull(webView);
+
+        CookieManager cookieManager = CookieManager.getInstance();
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            cookieManager.setAcceptThirdPartyCookies(webView, MoPub.canCollectPersonalInformation());
+        }
     }
 }

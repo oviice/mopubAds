@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="com.mopub.simpleadsdemo"
-      android:versionCode="58"
-      android:versionName="4.20.0">
+      android:versionCode="59"
+      android:versionName="5.0.0">
     <uses-sdk android:minSdkVersion="16"
               android:targetSdkVersion="26"/>
 
@@ -40,6 +40,9 @@
         <activity android:name="com.mopub.mobileads.MraidVideoPlayerActivity"
                 android:configChanges="keyboardHidden|orientation|screenSize"/>
         <activity android:name="com.mopub.mobileads.RewardedMraidActivity"
+                  android:configChanges="keyboardHidden|orientation|screenSize"/>
+
+        <activity android:name="com.mopub.common.privacy.ConsentDialogActivity"
                   android:configChanges="keyboardHidden|orientation|screenSize"/>
 
         <meta-data android:name="com.google.android.gms.version"

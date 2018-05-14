@@ -1,6 +1,5 @@
 package com.mopub.common;
 
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -10,14 +9,14 @@ import android.graphics.Point;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
-import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.telephony.TelephonyManager;
-import android.text.TextUtils;
 
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.privacy.MoPubIdentifier;
 import com.mopub.common.util.DeviceUtils;
 import com.mopub.common.util.Dips;
-import com.mopub.common.util.Utils;
 
 import java.util.Locale;
 
@@ -35,21 +34,18 @@ public class ClientMetadata {
     private static final String DEVICE_ORIENTATION_LANDSCAPE = "l";
     private static final String DEVICE_ORIENTATION_SQUARE = "s";
     private static final String DEVICE_ORIENTATION_UNKNOWN = "u";
-    private static final String IFA_PREFIX = "ifa:";
-    private static final String SHA_PREFIX = "sha:";
     private static final int UNKNOWN_NETWORK = -1;
-    private static final int MISSING_VALUE = -1;
 
     private String mNetworkOperatorForUrl;
     private final String mNetworkOperator;
     private String mSimOperator;
-    private final String mIsoCountryCode;
-    private final String mSimIsoCountryCode;
+    private String mIsoCountryCode;
+    private String mSimIsoCountryCode;
     private String mNetworkOperatorName;
     private String mSimOperatorName;
-    private String mUdid;
-    private boolean mDoNotTrack = false;
-    private boolean mAdvertisingInfoSet = false;
+
+    @NonNull
+    private final MoPubIdentifier moPubIdentifier;
 
     public enum MoPubNetworkType {
         UNKNOWN(0),
@@ -106,6 +102,7 @@ public class ClientMetadata {
     /**
      * Returns the singleton ClientMetadata object, using the context to obtain data if necessary.
      */
+    @NonNull
     public static ClientMetadata getInstance(Context context) {
         // Use a local variable so we can reduce accesses of the volatile field.
         ClientMetadata result = sInstance;
@@ -126,6 +123,7 @@ public class ClientMetadata {
      * ClientMetadata. If the object has never been referenced from a thread with a context,
      * this will return null.
      */
+    @Nullable
     public static ClientMetadata getInstance() {
         ClientMetadata result = sInstance;
         if (result == null) {
@@ -174,8 +172,14 @@ public class ClientMetadata {
             mSimOperator = telephonyManager.getSimOperator();
         }
 
-        mIsoCountryCode = telephonyManager.getNetworkCountryIso();
-        mSimIsoCountryCode = telephonyManager.getSimCountryIso();
+        if (MoPub.canCollectPersonalInformation()) {
+            mIsoCountryCode = telephonyManager.getNetworkCountryIso();
+            mSimIsoCountryCode = telephonyManager.getSimCountryIso();
+        } else {
+            mIsoCountryCode = "";
+            mSimIsoCountryCode = "";
+        }
+
         try {
             // Some Lenovo devices require READ_PHONE_STATE here.
             mNetworkOperatorName = telephonyManager.getNetworkOperatorName();
@@ -187,27 +191,15 @@ public class ClientMetadata {
             mSimOperatorName = null;
         }
 
-        setAmazonAdvertisingInfo();
-        if (!mAdvertisingInfoSet) {
-            // Amazon ad info is not supported on this device, so get the device ID.
-            // This will be replaced later when the Play Services callbacks complete.
-            mUdid = getDeviceIdFromContext(mContext);
-        }
-
+        moPubIdentifier = new MoPubIdentifier(mContext);
     }
 
-    // For Amazon tablets running Fire OS 5.1+ and TV devices running Fire OS 5.2.1.1+, the
-    // advertising info is available as System Settings.
-    // See https://developer.amazon.com/public/solutions/devices/fire-tv/docs/fire-tv-advertising-id
-    @VisibleForTesting
-    protected void setAmazonAdvertisingInfo() {
-        ContentResolver resolver = mContext.getContentResolver();
-        int limitAdTracking = Settings.Secure.getInt(resolver, "limit_ad_tracking", MISSING_VALUE);
-        String advertisingId = Settings.Secure.getString(resolver, "advertising_id");
-
-        if (limitAdTracking != MISSING_VALUE && !TextUtils.isEmpty(advertisingId)) {
-            boolean doNotTrack = limitAdTracking != 0;
-            setAdvertisingInfo(advertisingId, doNotTrack);
+    public void repopulateCountryData() {
+        final TelephonyManager telephonyManager =
+                (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+        if (MoPub.canCollectPersonalInformation() && telephonyManager != null) {
+            mIsoCountryCode = telephonyManager.getNetworkCountryIso();
+            mSimIsoCountryCode = telephonyManager.getSimCountryIso();
         }
     }
 
@@ -221,13 +213,6 @@ public class ClientMetadata {
             MoPubLog.d("Failed to retrieve PackageInfo#versionName.");
             return null;
         }
-    }
-
-    private static String getDeviceIdFromContext(Context context) {
-        String deviceId = Settings.Secure.getString(context.getContentResolver(),
-                Settings.Secure.ANDROID_ID);
-        deviceId = (deviceId == null) ? "" : Utils.sha1(deviceId);
-        return SHA_PREFIX + deviceId;
     }
 
     /**
@@ -294,14 +279,14 @@ public class ClientMetadata {
      * @return the country code of the device.
      */
     public String getIsoCountryCode() {
-        return mIsoCountryCode;
+        return MoPub.canCollectPersonalInformation() ? mIsoCountryCode : "";
     }
 
     /**
      * @return the sim provider's country code.
      */
     public String getSimIsoCountryCode() {
-        return mSimIsoCountryCode;
+        return MoPub.canCollectPersonalInformation() ? mSimIsoCountryCode : "";
     }
 
     /**
@@ -319,28 +304,12 @@ public class ClientMetadata {
     }
 
     /**
-     * @return the stored device ID.
+     *
+     * @return class to get Advertising ID and 'do not track' state
      */
-    public synchronized String getDeviceId() {
-        return mUdid;
-    }
-
-    /**
-     * @return the user's do not track preference. Should be set whenever a getAdInfo() call is
-     *         completed.
-     */
-    public synchronized boolean isDoNotTrackSet() {
-        return mDoNotTrack;
-    }
-
-    public synchronized void setAdvertisingInfo(String advertisingId, boolean doNotTrack) {
-        mUdid = IFA_PREFIX + advertisingId;
-        mDoNotTrack = doNotTrack;
-        mAdvertisingInfoSet = true;
-    }
-
-    public synchronized boolean isAdvertisingInfoSet() {
-        return mAdvertisingInfoSet;
+    @NonNull
+    public MoPubIdentifier getMoPubIdentifier() {
+        return moPubIdentifier;
     }
 
     /**
@@ -427,6 +396,21 @@ public class ClientMetadata {
         return mAppName;
     }
 
+    @NonNull
+    public static String getCurrentLanguage(@NonNull final Context context) {
+        // Use default locale first for language code
+        String languageCode = Locale.getDefault().getLanguage().trim();
+
+        // If user's preferred locale is different from default locale, override language code
+        Locale userLocale = context.getResources().getConfiguration().locale;
+        if (userLocale != null) {
+            if (!userLocale.getLanguage().trim().isEmpty()) {
+                languageCode = userLocale.getLanguage().trim();
+            }
+        }
+        return languageCode;
+    }
+
     @Deprecated
     @VisibleForTesting
     public static void setInstance(ClientMetadata clientMetadata) {
@@ -435,6 +419,7 @@ public class ClientMetadata {
         }
     }
 
+    @Deprecated
     @VisibleForTesting
     public static void clearForTesting() {
         sInstance = null;

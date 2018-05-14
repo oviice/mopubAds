@@ -4,8 +4,6 @@ import com.mopub.common.CacheService;
 import com.mopub.common.ClientMetadata;
 import com.mopub.common.MoPub;
 import com.mopub.common.Preconditions;
-import com.mopub.common.event.EventDispatcher;
-import com.mopub.common.event.MoPubEvents;
 import com.mopub.common.factories.MethodBuilderFactory;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.DateAndTime;
@@ -45,7 +43,6 @@ import org.robolectric.TestLifecycle;
 import org.robolectric.android.util.concurrent.RoboExecutorService;
 
 import static com.mopub.common.MoPub.LocationAwareness;
-import static org.mockito.Mockito.mock;
 
 public class SdkTestRunner extends RobolectricTestRunner {
 
@@ -84,7 +81,6 @@ public class SdkTestRunner extends RobolectricTestRunner {
             ShadowAsyncTasks.reset();
             ShadowMoPubHttpUrlConnection.reset();
             ShadowReflection.reset();
-            MoPubEvents.setEventDispatcher(mock(EventDispatcher.class));
             MoPub.setLocationAwareness(LocationAwareness.NORMAL);
             MoPub.setLocationPrecision(6);
 

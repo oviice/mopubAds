@@ -13,6 +13,8 @@ public class Constants {
     public static final String AD_HANDLER = "/m/ad";
     public static final String CONVERSION_TRACKING_HANDLER = "/m/open";
     public static final String POSITIONING_HANDLER = "/m/pos";
+    public static final String GDPR_SYNC_HANDLER = "/m/gdpr_sync";
+    public static final String GDPR_CONSENT_HANDLER = "/m/gdpr_consent_dialog";
 
 
     public static final int TEN_SECONDS_MILLIS = 10 * 1000;

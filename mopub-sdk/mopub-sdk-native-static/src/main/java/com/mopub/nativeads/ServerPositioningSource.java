@@ -126,7 +126,7 @@ class ServerPositioningSource implements PositioningSource {
     private void requestPositioningInternal() {
         MoPubLog.d("Loading positioning from: " + mRetryUrl);
 
-        mRequest = new PositioningRequest(mRetryUrl, mPositioningListener, mErrorListener);
+        mRequest = new PositioningRequest(mContext, mRetryUrl, mPositioningListener, mErrorListener);
         final RequestQueue requestQueue = Networking.getRequestQueue(mContext);
         requestQueue.add(mRequest);
     }

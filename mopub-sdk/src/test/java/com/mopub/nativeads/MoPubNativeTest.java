@@ -3,6 +3,7 @@ package com.mopub.nativeads;
 import android.app.Activity;
 
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.privacy.MoPubIdentifierTest;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.test.support.ShadowAsyncTasks;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
@@ -60,8 +61,9 @@ public class MoPubNativeTest {
     @Mock private MoPubStaticNativeAdRenderer mockRenderer;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         context = Robolectric.buildActivity(Activity.class).create().get();
+        MoPubIdentifierTest.writeAdvertisingInfoToSharedPreferences(context, false);
         Shadows.shadowOf(context).grantPermissions(ACCESS_NETWORK_STATE);
         Shadows.shadowOf(context).grantPermissions(INTERNET);
         subject = new MoPubNative(context, adUnitId, mockAdRendererRegistry, mockNetworkListener);
@@ -71,6 +73,7 @@ public class MoPubNativeTest {
 
     @After
     public void tearDown() {
+        MoPubIdentifierTest.clearPreferences(context);
         reset(methodBuilder);
     }
 

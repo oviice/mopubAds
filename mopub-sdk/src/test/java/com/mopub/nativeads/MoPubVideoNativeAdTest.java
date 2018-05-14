@@ -12,7 +12,6 @@ import android.view.TextureView.SurfaceTextureListener;
 import android.view.View;
 
 import com.mopub.common.Constants;
-import com.mopub.common.event.EventDetails;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.BaseVideoPlayerActivity;
 import com.mopub.mobileads.BuildConfig;
@@ -133,13 +132,12 @@ public class MoPubVideoNativeAdTest {
 
         subject = new MoPubVideoNativeAd(
                 activity, jsonObject, mockCustomEventNativeListener, videoResponseHeaders,
-                mockVisibilityTracker, mockNativeVideoControllerFactory, null,
+                mockVisibilityTracker, mockNativeVideoControllerFactory,
                 "header click tracker", mockVastManager);
         subject.setNativeEventListener(mockNativeEventListener);
         // noinspection unchecked
         when(mockNativeVideoControllerFactory
-                .createForId(anyInt(), any(Context.class), any(List.class), eq(mockVastVideoConfig),
-                        any(EventDetails.class)))
+                .createForId(anyInt(), any(Context.class), any(List.class), eq(mockVastVideoConfig)))
                 .thenReturn(mockNativeVideoController);
 
         when(mockImageLoader.get(anyString(), any(ImageListener.class)))
@@ -233,8 +231,7 @@ public class MoPubVideoNativeAdTest {
         verify(mockNativeVideoControllerFactory).createForId(anyInt(),
                 eq(activity.getApplicationContext()),
                 argumentCaptor.capture(),
-                eq(mockVastVideoConfig),
-                any(EventDetails.class));
+                eq(mockVastVideoConfig));
 
         List<VisibilityTrackingEvent> visibilityTrackingEvents = (List<VisibilityTrackingEvent>) argumentCaptor.getValue();
         assertThat(visibilityTrackingEvents.get(0).strategy).isInstanceOf(HeaderVisibilityStrategy.class);

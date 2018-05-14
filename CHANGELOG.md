@@ -1,3 +1,10 @@
+## Version 5.0.0 (May 14, 2018)
+- General Data Protection Regulation (GDPR) update to support a way for publishers to determine GDPR applicability and to obtain and manage consent from users in European Economic Area, the United Kingdom, or Switzerland to serve personalized ads.
+- New SDK initialization method to initialize consent management and rewarded video ad networks. Required for receiving personalized ads. In future versions of the SDK, initialization will be required to receive ads.
+- Updated network stack to MoPub-Volley-2.0.0.
+- Updated ad requests to use POST instead of GET.
+- All communication with MoPub servers is now made via HTTPS.
+
 ## Version 4.20.0 (February 20, 2018)
 - Upgraded Gradle dependency to 4.3.1.
 - Upgraded Moat dependency to 2.4.1. This fixes the AAPT2 manifest merge error.

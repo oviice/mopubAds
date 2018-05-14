@@ -115,6 +115,11 @@ public class LocationService {
     public static Location getLastKnownLocation(@NonNull final Context context,
             final int locationPrecision,
             final @NonNull MoPub.LocationAwareness locationAwareness) {
+
+        if (!MoPub.canCollectPersonalInformation()) {
+            return null;
+        }
+
         Preconditions.checkNotNull(context);
         Preconditions.checkNotNull(locationAwareness);
 
@@ -148,6 +153,10 @@ public class LocationService {
             @NonNull final ValidLocationProvider provider) {
         Preconditions.checkNotNull(context);
         Preconditions.checkNotNull(provider);
+
+        if (!MoPub.canCollectPersonalInformation()) {
+            return null;
+        }
 
         if (!provider.hasRequiredPermissions(context)) {
             return null;

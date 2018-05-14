@@ -95,6 +95,22 @@ public class ManifestUtilsTest {
     }
 
     @Test
+    public void checSdkActivitiesDeclared_shouldIncludeOneActivityDeclaration() throws Exception {
+        ShadowLog.setupLogging();
+
+        ManifestUtils.checkSdkActivitiesDeclared(context);
+
+        assertLogIncludes("com.mopub.common.privacy.ConsentDialogActivity");
+        assertLogDoesntInclude(
+                "com.mopub.mobileads.MoPubActivity",
+                "com.mopub.mobileads.MraidActivity",
+                "com.mopub.mobileads.MraidVideoPlayerActivity",
+                "com.mopub.mobileads.RewardedMraidActivity",
+                "com.mopub.common.MoPubBrowser"
+        );
+    }
+
+    @Test
     public void displayWarningForMissingActivities_withAllActivitiesDeclared_shouldNotShowLogOrToast() throws Exception {
         shadowOf(context.getPackageManager()).addResolveInfoForIntent(new Intent(context, MoPubActivity.class), mockResolveInfo);
         shadowOf(context.getPackageManager()).addResolveInfoForIntent(new Intent(context, MraidActivity.class), mockResolveInfo);

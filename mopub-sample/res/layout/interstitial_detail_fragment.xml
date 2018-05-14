@@ -38,6 +38,15 @@
         android:singleLine="true" />
 
     <EditText
+        android:id="@+id/user_data_keywords_field"
+        android:hint="@string/user_data_keywords"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="text|textFilter|textShortMessage"
+        android:imeOptions="actionDone"
+        android:singleLine="true" />
+
+    <EditText
         android:id="@+id/custom_data_field"
         android:visibility="gone"
         android:hint="@string/custom_data"

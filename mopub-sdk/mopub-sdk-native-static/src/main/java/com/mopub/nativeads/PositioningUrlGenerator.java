@@ -51,6 +51,6 @@ class PositioningUrlGenerator extends BaseUrlGenerator {
     }
 
     private void setSdkVersion(@NonNull String sdkVersion) {
-        addParam("nsv", sdkVersion);
+        addParam("nv", sdkVersion);
     }
 }

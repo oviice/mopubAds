@@ -14,4 +14,5 @@ public class AdType {
     public static final String REWARDED_PLAYABLE = "rewarded_playable";
     public static final String CUSTOM = "custom";
     public static final String CLEAR = "clear";
+    public static final String MULTI = "multi";
 }

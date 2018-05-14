@@ -17,6 +17,7 @@ import com.mopub.common.ClientMetadata;
 import com.mopub.common.Constants;
 import com.mopub.common.DataKeys;
 import com.mopub.common.MediationSettings;
+import com.mopub.common.MoPub;
 import com.mopub.common.MoPubReward;
 import com.mopub.common.Preconditions;
 import com.mopub.common.SharedPreferencesHelper;
@@ -107,6 +108,7 @@ public class MoPubRewardedVideoManager {
 
     public static final class RequestParameters {
         @Nullable public final String mKeywords;
+        @Nullable public final String mUserDataKeywords;
         @Nullable public final Location mLocation;
         @Nullable public final String mCustomerId;
 
@@ -114,16 +116,28 @@ public class MoPubRewardedVideoManager {
             this(keywords, null);
         }
 
-        public RequestParameters(@Nullable final String keywords,
-                @Nullable final Location location) {
-            this(keywords, location, null);
+        public RequestParameters(@Nullable final String keywords, @Nullable final String userDataKeywords) {
+            this(keywords, userDataKeywords,null);
         }
 
-        public RequestParameters(@Nullable final String keywords, @Nullable final Location location,
-                @Nullable final String customerId) {
+        public RequestParameters(@Nullable final String keywords,
+                                 @Nullable final String userDataKeywords,
+                                 @Nullable final Location location) {
+            this(keywords, userDataKeywords, location, null);
+        }
+
+        public RequestParameters(@Nullable final String keywords,
+                                 @Nullable final String userDataKeywords,
+                                 @Nullable final Location location,
+                                 @Nullable final String customerId) {
             mKeywords = keywords;
-            mLocation = location;
             mCustomerId = customerId;
+
+            // Only add userDataKeywords and location to RequestParameters if we are allowed to collect
+            // personal information from a user
+            final boolean canCollectPersonalInformation = MoPub.canCollectPersonalInformation();
+            mUserDataKeywords = canCollectPersonalInformation ? userDataKeywords: null;
+            mLocation = canCollectPersonalInformation ? location : null;
         }
     }
 
@@ -297,8 +311,9 @@ public class MoPubRewardedVideoManager {
      * method will not make a new request if there is already a video loading for this adUnitId.
      *
      * @param adUnitId MoPub adUnitId String
-     * @param requestParameters Optional RequestParameters object containing optional keywords,
-     *                          optional location value, and optional customer id
+     * @param requestParameters Optional RequestParameters object containing optional keywords
+     *                          Optional RequestParameters object containing optional user data keywords
+     *                          optional location value, and optional customer id.
      * @param mediationSettings Optional instance-level MediationSettings to associate with the
      *                          above adUnitId.
      */
@@ -350,6 +365,8 @@ public class MoPubRewardedVideoManager {
         final AdUrlGenerator urlGenerator = new WebViewAdUrlGenerator(sInstance.mContext, false);
         final String adUrlString = urlGenerator.withAdUnitId(adUnitId)
                 .withKeywords(requestParameters == null ? null : requestParameters.mKeywords)
+                .withUserDataKeywords((requestParameters == null ||
+                        !MoPub.canCollectPersonalInformation()) ? null : requestParameters.mUserDataKeywords)
                 .withLocation(requestParameters == null ? null : requestParameters.mLocation)
                 .generateUrlString(Constants.HOST);
 

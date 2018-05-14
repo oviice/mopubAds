@@ -2,20 +2,26 @@ package com.mopub.mobileads;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.mopub.common.AdType;
 import com.mopub.common.DataKeys;
 import com.mopub.common.LifecycleListener;
+import com.mopub.common.MoPub;
 import com.mopub.common.MoPubReward;
 import com.mopub.common.SharedPreferencesHelper;
+import com.mopub.common.privacy.ConsentStatus;
+import com.mopub.common.privacy.MoPubIdentifierTest;
+import com.mopub.common.privacy.PersonalInfoManager;
+import com.mopub.common.privacy.SyncRequest;
 import com.mopub.common.test.support.SdkTestRunner;
+import com.mopub.common.util.Reflection;
 import com.mopub.network.AdRequest;
 import com.mopub.network.AdResponse;
 import com.mopub.network.MoPubRequestQueue;
 import com.mopub.network.Networking;
+import com.mopub.volley.AuthFailureError;
 import com.mopub.volley.Request;
 import com.mopub.volley.VolleyError;
 
@@ -85,10 +91,12 @@ public class
     private RewardedVideoCompletionRequest rewardedVideoCompletionRequest;
     private Activity mActivity;
     private SharedPreferences mTestCustomEventSharedPrefs;
+    private PersonalInfoManager mockPersonalInfoManager;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         mActivity = Robolectric.buildActivity(Activity.class).create().get();
+        MoPubIdentifierTest.writeAdvertisingInfoToSharedPreferences(mActivity, false);
         MoPubRewardedVideoManager.init(mActivity);
         // The fact that next call fixes issues in multiple tests proves that Robolectric doesn't
         // teardown singletons properly between tests.
@@ -100,6 +108,9 @@ public class
                         mActivity, TEST_CUSTOM_EVENT_PREF_NAME);
         MoPubRewardedVideoManager.setCustomEventSharedPrefs(mTestCustomEventSharedPrefs);
 
+        mockPersonalInfoManager = mock(PersonalInfoManager.class);
+        when(mockPersonalInfoManager.getPersonalInfoConsentStatus()).thenReturn(ConsentStatus.UNKNOWN);
+
         when(mockRequestQueue.add(any(Request.class))).then(new Answer<Object>() {
             @Override
             public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
@@ -110,6 +121,8 @@ public class
                     return null;
                 } else if (req.getClass().equals(RewardedVideoCompletionRequest.class)) {
                     rewardedVideoCompletionRequest = (RewardedVideoCompletionRequest) req;
+                    return null;
+                } else if(req.getClass().equals(SyncRequest.class)){
                     return null;
                 } else {
                     throw new Exception(String.format("Request object added to RequestQueue can " +
@@ -129,6 +142,8 @@ public class
         MoPubRewardedVideoManager.getRewardedAdData().clear();
         MoPubRewardedVideoManager.getAdRequestStatusMapping().clearMapping();
         mTestCustomEventSharedPrefs.edit().clear().commit();
+        MoPubIdentifierTest.clearPreferences(mActivity);
+
     }
 
     @Test
@@ -231,14 +246,52 @@ public class
     }
 
     @Test
-    public void loadVideo_withRequestParameters_shouldGenerateUrlWithKeywords() {
+    public void createRequestParameters_withUserDataKeywordsButNoConsent_shouldNotSetUserDataKeywords() throws Exception {
+        when(mockPersonalInfoManager.canCollectPersonalInformation()).thenReturn(false);
+        new Reflection.MethodBuilder(null, "setPersonalInfoManager")
+                .setStatic(MoPub.class)
+                .setAccessible()
+                .addParam(PersonalInfoManager.class, mockPersonalInfoManager)
+                .execute();
+
+        MoPubRewardedVideoManager.RequestParameters requestParameters = new MoPubRewardedVideoManager.RequestParameters("keywords", "user_data_keywords",null, "testCustomerId");
+
+        assertThat(requestParameters.mKeywords).isEqualTo("keywords");
+        assertThat(requestParameters.mUserDataKeywords).isEqualTo(null);
+    }
+
+    @Test
+    public void createRequestParameters_withUserDataKeywordsWithConsent_shouldSetUserDataKeywords() throws Exception {
+        when(mockPersonalInfoManager.canCollectPersonalInformation()).thenReturn(true);
+        new Reflection.MethodBuilder(null, "setPersonalInfoManager")
+                .setStatic(MoPub.class)
+                .setAccessible()
+                .addParam(PersonalInfoManager.class, mockPersonalInfoManager)
+                .execute();
+
+        MoPubRewardedVideoManager.RequestParameters requestParameters = new MoPubRewardedVideoManager.RequestParameters("keywords", "user_data_keywords", null, "testCustomerId");
+
+        assertThat(requestParameters.mKeywords).isEqualTo("keywords");
+        assertThat(requestParameters.mUserDataKeywords).isEqualTo("user_data_keywords");
+    }
+
+    @Test
+    public void loadVideo_withRequestParameters_shouldGenerateUrlWithKeywords() throws Exception {
+        when(mockPersonalInfoManager.canCollectPersonalInformation()).thenReturn(true);
+
+        new Reflection.MethodBuilder(null, "setPersonalInfoManager")
+                .setStatic(MoPub.class)
+                .setAccessible()
+                .addParam(PersonalInfoManager.class, mockPersonalInfoManager)
+                .execute();
+
         // Robolectric executes its handlers immediately, so if we want the async behavior we see
         // in an actual app we have to pause the main looper until we're done successfully loading the ad.
         ShadowLooper.pauseMainLooper();
 
         MoPubRewardedVideoManager.loadVideo("testAdUnit", new MoPubRewardedVideoManager.RequestParameters("nonsense;garbage;keywords"));
 
-        verify(mockRequestQueue).add(argThat(new RequestUrlContains(Uri.encode("nonsense;garbage;keywords"))));
+        verify(mockRequestQueue).add(argThat(new RequestBodyContains("nonsense;garbage;keywords")));
 
         // Finish the request
         requestListener.onErrorResponse(new VolleyError("end test"));
@@ -246,12 +299,18 @@ public class
     }
 
     @Test
-    public void loadVideo_withCustomerIdInRequestParameters_shouldSetCustomerId() {
+    public void loadVideo_withCustomerIdInRequestParameters_shouldSetCustomerId() throws Exception {
         // Robolectric executes its handlers immediately, so if we want the async behavior we see
         // in an actual app we have to pause the main looper until we're done successfully loading the ad.
         ShadowLooper.pauseMainLooper();
+        when(mockPersonalInfoManager.canCollectPersonalInformation()).thenReturn(false);
+        new Reflection.MethodBuilder(null, "setPersonalInfoManager")
+                .setStatic(MoPub.class)
+                .setAccessible()
+                .addParam(PersonalInfoManager.class, mockPersonalInfoManager)
+                .execute();
 
-        MoPubRewardedVideoManager.loadVideo("testAdUnit", new MoPubRewardedVideoManager.RequestParameters("keywords", null, "testCustomerId"));
+        MoPubRewardedVideoManager.loadVideo("testAdUnit", new MoPubRewardedVideoManager.RequestParameters("keywords", "user_data_keywords",null, "testCustomerId"));
 
         assertThat(MoPubRewardedVideoManager.getRewardedAdData().getCustomerId()).isEqualTo("testCustomerId");
 
@@ -415,7 +474,7 @@ public class
 
         MoPubRewardedVideoManager.loadVideo("testAdUnit", null);
 
-        assertThat(request.getUrl()).contains("testAdUnit");
+        assertThat(new String(request.getBody())).contains("testAdUnit");
         requestListener.onSuccess(testResponse);
         assertThat(request.getUrl()).isEqualTo("fail.url");
         // Clear up the static state :(
@@ -1088,7 +1147,7 @@ public class
 
         MoPubRewardedVideoManager.loadVideo("testAdUnit", null);
 
-        assertThat(request.getUrl()).contains("testAdUnit");
+        assertThat(new String(request.getBody())).contains("testAdUnit");
         requestListener.onErrorResponse(e);
         verify(mockVideoListener).onRewardedVideoLoadFailure(anyString(), any(MoPubErrorCode.class));
         verifyNoMoreInteractions(mockVideoListener);
@@ -1376,18 +1435,22 @@ public class
         }
     }
 
-    private static class RequestUrlContains extends ArgumentMatcher<Request> {
+    private static class RequestBodyContains extends ArgumentMatcher<Request> {
 
         private final String mMustContain;
 
-        RequestUrlContains(String stringToFind) {
+        RequestBodyContains(String stringToFind) {
             mMustContain = stringToFind;
         }
 
         @Override
         public boolean matches(final Object argument) {
-            return argument instanceof Request
-                    && ((Request) argument).getUrl().contains(mMustContain);
+            try {
+                return argument instanceof Request
+                        && new String(((Request) argument).getBody()).contains(mMustContain);
+            } catch (AuthFailureError authFailureError) {
+                return false;
+            }
         }
     }
 }

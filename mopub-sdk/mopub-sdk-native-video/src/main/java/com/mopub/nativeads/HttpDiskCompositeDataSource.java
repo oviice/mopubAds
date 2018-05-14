@@ -13,10 +13,6 @@ import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.mopub.common.CacheService;
 import com.mopub.common.Preconditions;
 import com.mopub.common.VisibleForTesting;
-import com.mopub.common.event.BaseEvent;
-import com.mopub.common.event.Event;
-import com.mopub.common.event.EventDetails;
-import com.mopub.common.event.MoPubEvents;
 import com.mopub.common.logging.MoPubLog;
 
 import org.json.JSONArray;
@@ -124,29 +120,18 @@ public class HttpDiskCompositeDataSource implements DataSource {
      */
     private boolean mIsDirty;
 
-    /**
-     * Used to store metadata around event logging.
-     */
-    @Nullable private final EventDetails mEventDetails;
-
-    /**
-     * Whether or not the event for starting the download has already been fired.
-     */
-    private boolean mHasLoggedDownloadStart;
-
     public HttpDiskCompositeDataSource(@NonNull final Context context,
-            @NonNull final String userAgent, @Nullable final EventDetails eventDetails) {
-        this(context, userAgent, eventDetails, new DefaultHttpDataSource(userAgent, null));
+            @NonNull final String userAgent) {
+        this(context, userAgent, new DefaultHttpDataSource(userAgent, null));
     }
 
     @VisibleForTesting
     HttpDiskCompositeDataSource(@NonNull final Context context,
-            @NonNull final String userAgent, @Nullable final EventDetails eventDetails,
+            @NonNull final String userAgent,
             @NonNull final HttpDataSource httpDataSource) {
         mHttpDataSource = httpDataSource;
         CacheService.initialize(context);
         mIntervals = new TreeSet<IntInterval>();
-        mEventDetails = eventDetails;
     }
 
     @Override
@@ -211,14 +196,6 @@ public class HttpDiskCompositeDataSource implements DataSource {
                             String.valueOf(mExpectedFileLength).getBytes());
                 }
                 mIsHttpSourceOpen = true;
-                if (!mHasLoggedDownloadStart) {
-                    MoPubEvents.log(Event.createEventFromDetails(
-                            BaseEvent.Name.DOWNLOAD_START,
-                            BaseEvent.Category.NATIVE_VIDEO,
-                            BaseEvent.SamplingRate.NATIVE_VIDEO,
-                            mEventDetails));
-                    mHasLoggedDownloadStart = true;
-                }
             } catch (HttpDataSource.InvalidResponseCodeException e) {
                 // This shouldn't happen anymore, but if we accidentally requested too many bytes
                 // because we already had the bytes before that point, then it's still fine.
@@ -287,14 +264,6 @@ public class HttpDiskCompositeDataSource implements DataSource {
             CacheService.putToDiskCache(mSegment + mKey, mCachedBytes);
             addNewInterval(mIntervals, mStartInFile, mDataBlockOffset);
             writeIntervalsToDisk(mIntervals, mKey);
-            if (mIsDirty && mExpectedFileLength != null && getFirstContiguousPointAfter(
-                    0, mIntervals) == mExpectedFileLength) {
-                MoPubEvents.log(Event.createEventFromDetails(
-                        BaseEvent.Name.DOWNLOAD_FINISHED,
-                        BaseEvent.Category.NATIVE_VIDEO,
-                        BaseEvent.SamplingRate.NATIVE_VIDEO,
-                        mEventDetails));
-            }
         }
         mCachedBytes = null;
 

@@ -8,7 +8,6 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.mopub.common.MoPub.BrowserAgent;
-import com.mopub.common.event.BaseEvent;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Intents;
 import com.mopub.exceptions.IntentNotResolvableException;
@@ -254,7 +253,7 @@ public enum UrlAction {
             // 2. Attempt to handle the primary URL
             try {
                 Intents.launchApplicationUrl(context, primaryUri);
-                makeTrackingHttpRequest(primaryTrackingUrls, context, BaseEvent.Name.CLICK_REQUEST);
+                makeTrackingHttpRequest(primaryTrackingUrls, context);
                 return;
             } catch (IntentNotResolvableException e) {
                 // Primary URL failed; proceed to attempt fallback URL

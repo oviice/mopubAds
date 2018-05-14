@@ -165,7 +165,6 @@ public class NativeVideoControllerTest {
                         return mockExoPlayer;
                     }
                 },
-                null,
                 mockAudioManager);
 
         nativeVideoProgressRunnable = new NativeVideoProgressRunnable(activity,
@@ -184,14 +183,14 @@ public class NativeVideoControllerTest {
     @Test
     public void createForId_shouldAddNativeVideoControllerToMap_shouldReturnNativeVideoController() {
         NativeVideoController nativeVideoController =
-                createForId(123, activity, visibilityTrackingEvents, vastVideoConfig, null);
+                createForId(123, activity, visibilityTrackingEvents, vastVideoConfig);
         assertThat(nativeVideoController).isEqualTo(getForId(123));
     }
 
     @Test
     public void remove_shouldRemoveNativeVideoControllerFromMap() {
         NativeVideoController nativeVideoController =
-                createForId(123, activity, visibilityTrackingEvents, vastVideoConfig, null);
+                createForId(123, activity, visibilityTrackingEvents, vastVideoConfig);
         assertThat(nativeVideoController).isEqualTo(getForId(123));
         remove(123);
         assertThat(getForId(123)).isNull();
@@ -367,7 +366,6 @@ public class NativeVideoControllerTest {
                 vastVideoConfig,
                 mockNativeVideoProgressRunnable,
                 mockMoPubExoPlayerFactory,
-                null,
                 mockAudioManager);
         subject.prepare(this);
 
@@ -525,7 +523,6 @@ public class NativeVideoControllerTest {
                         return mockExoPlayer;
                     }
                 },
-                null,
                 mockAudioManager);
 
         subject.handleCtaClick(activity);
