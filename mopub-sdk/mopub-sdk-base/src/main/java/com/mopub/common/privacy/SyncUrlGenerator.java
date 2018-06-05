@@ -38,6 +38,11 @@ public class SyncUrlGenerator extends BaseUrlGenerator {
      */
     private static final String EXTRAS_KEY = "extras";
 
+    /**
+     * "1" when the publisher just forced gdpr applies. Otherwise, this is not sent.
+     */
+    private static final String FORCED_GDPR_APPLIES_CHANGED = "forced_gdpr_applies_changed";
+
     @NonNull private final Context mContext;
     @Nullable private String mAdUnitId;
     @Nullable private String mUdid;
@@ -50,6 +55,8 @@ public class SyncUrlGenerator extends BaseUrlGenerator {
     @Nullable private String mCachedVendorListIabHash;
     @Nullable private String mExtras;
     @Nullable private Boolean mGdprApplies;
+    private boolean mForceGdprApplies;
+    @Nullable private Boolean mForceGdprAppliesChanged;
 
     public SyncUrlGenerator(@NonNull final Context context,
             @NonNull final String currentConsentStatus) {
@@ -72,6 +79,17 @@ public class SyncUrlGenerator extends BaseUrlGenerator {
 
     public SyncUrlGenerator withGdprApplies(@Nullable final Boolean gdprApplies) {
         mGdprApplies = gdprApplies;
+        return this;
+    }
+
+    public SyncUrlGenerator withForceGdprApplies(final boolean forceGdprApplies) {
+        mForceGdprApplies = forceGdprApplies;
+        return this;
+    }
+
+    public SyncUrlGenerator withForceGdprAppliesChanged(
+            @Nullable final Boolean forceGdprAppliesChanged) {
+        mForceGdprAppliesChanged = forceGdprAppliesChanged;
         return this;
     }
 
@@ -128,9 +146,9 @@ public class SyncUrlGenerator extends BaseUrlGenerator {
         addParam(CACHED_VENDOR_LIST_IAB_HASH_KEY, mCachedVendorListIabHash);
         addParam(EXTRAS_KEY, mExtras);
         addParam(UDID_KEY, mUdid);
-        if (mGdprApplies != null) {
-            addParam(GDPR_APPLIES, mGdprApplies ? "1" : "0");
-        }
+        addParam(GDPR_APPLIES, mGdprApplies);
+        addParam(FORCE_GDPR_APPLIES, mForceGdprApplies);
+        addParam(FORCED_GDPR_APPLIES_CHANGED, mForceGdprAppliesChanged);
         addParam(BUNDLE_ID_KEY, ClientMetadata.getInstance(mContext).getAppPackageName());
         addParam(DNT_KEY, PlayServicesUrlRewriter.DO_NOT_TRACK_TEMPLATE);
 

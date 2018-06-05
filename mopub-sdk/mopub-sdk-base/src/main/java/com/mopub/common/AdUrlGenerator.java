@@ -109,14 +109,6 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
      */
     private static final String ADVANCED_BIDDING_TOKENS_KEY = "abt";
 
-    private static final String GDPR_APPLIES = "gdpr_applies";
-
-    private static final String CURRENT_CONSENT_STATUS = "current_consent_status";
-
-    private static final String CONSENTED_PRIVACY_POLICY_VERSION = "consented_privacy_policy_version";
-
-    private static final String CONSENTED_VENDOR_LIST_VERSION = "consented_vendor_list_version";
-
     protected Context mContext;
     protected String mAdUnitId;
     protected String mKeywords;
@@ -124,6 +116,7 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
     protected Location mLocation;
     @Nullable private final PersonalInfoManager mPersonalInfoManager;
     @Nullable private final ConsentData mConsentData;
+    protected Boolean mForceGdprApplies;
 
     public AdUrlGenerator(Context context) {
         mContext = context;
@@ -269,23 +262,29 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
         }
     }
 
+    protected void setForceGdprApplies() {
+        if (mConsentData != null) {
+            addParam(FORCE_GDPR_APPLIES, mConsentData.isForceGdprApplies());
+        }
+    }
+
     protected void setCurrentConsentStatus() {
         if (mPersonalInfoManager != null) {
-            addParam(CURRENT_CONSENT_STATUS, mPersonalInfoManager.getPersonalInfoConsentStatus()
+            addParam(CURRENT_CONSENT_STATUS_KEY, mPersonalInfoManager.getPersonalInfoConsentStatus()
                     .getValue());
         }
     }
 
     protected void setConsentedPrivacyPolicyVersion() {
         if (mConsentData != null) {
-            addParam(CONSENTED_PRIVACY_POLICY_VERSION,
+            addParam(CONSENTED_PRIVACY_POLICY_VERSION_KEY,
                     mConsentData.getConsentedPrivacyPolicyVersion());
         }
     }
 
     protected void setConsentedVendorListVersion() {
         if (mConsentData != null) {
-            addParam(CONSENTED_VENDOR_LIST_VERSION, mConsentData.getConsentedVendorListVersion());
+            addParam(CONSENTED_VENDOR_LIST_VERSION_KEY, mConsentData.getConsentedVendorListVersion());
         }
     }
 
@@ -327,6 +326,8 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
         appendAdvertisingInfoTemplates();
 
         setGdprApplies();
+
+        setForceGdprApplies();
 
         setCurrentConsentStatus();
 

@@ -1019,6 +1019,7 @@ public class WebViewAdUrlGeneratorTest {
         private String abt = "";
         private String currentConsentStatus = "";
         private String gdprApplies = "0";
+        private String forceGdprApplies = "0";
         private String consentedPrivacyPolicyVersion = "";
         private String consentedVendorListVersion = "";
 
@@ -1054,6 +1055,7 @@ public class WebViewAdUrlGeneratorTest {
                     "&udid=" + PlayServicesUrlRewriter.UDID_TEMPLATE +
                     "&dnt=" + PlayServicesUrlRewriter.DO_NOT_TRACK_TEMPLATE +
                     paramIfNotEmpty("gdpr_applies", gdprApplies) +
+                    paramIfNotEmpty("force_gdpr_applies", forceGdprApplies) +
                     paramIfNotEmpty("current_consent_status", currentConsentStatus) +
                     paramIfNotEmpty("consented_privacy_policy_version", consentedPrivacyPolicyVersion) +
                     paramIfNotEmpty("consented_vendor_list_version", consentedVendorListVersion) +

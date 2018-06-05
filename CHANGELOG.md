@@ -1,3 +1,10 @@
+## Version 5.1.0 (June 5, 2018)
+- Upgraded Moat dependency to 2.4.5.
+- Banners now only refresh after an impression is made.
+- Added `PersonalInfoManager.forceGdprApplies()` in order to let MoPub know that this app should always apply GDPR rules.
+- Loading MoPub's consent dialog is only possible when GDPR rules applies to the app.
+- Bug fixes.
+
 ## Version 5.0.0 (May 14, 2018)
 - General Data Protection Regulation (GDPR) update to support a way for publishers to determine GDPR applicability and to obtain and manage consent from users in European Economic Area, the United Kingdom, or Switzerland to serve personalized ads.
 - New SDK initialization method to initialize consent management and rewarded video ad networks. Required for receiving personalized ads. In future versions of the SDK, initialization will be required to receive ads.

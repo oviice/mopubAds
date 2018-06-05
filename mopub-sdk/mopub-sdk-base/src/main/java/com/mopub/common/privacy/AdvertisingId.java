@@ -42,8 +42,8 @@ public class AdvertisingId implements Serializable {
                   @NonNull String mopubId,
                   boolean limitAdTrackingEnabled,
                   long rotationTime) {
-        Preconditions.NoThrow.checkNotNull(ifaId);
-        Preconditions.NoThrow.checkNotNull(ifaId);
+        Preconditions.checkNotNull(ifaId);
+        Preconditions.checkNotNull(ifaId);
 
         mAdvertisingId = ifaId;
         mMopubId = mopubId;

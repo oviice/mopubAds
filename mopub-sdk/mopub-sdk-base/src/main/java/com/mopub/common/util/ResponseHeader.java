@@ -64,6 +64,8 @@ public enum ResponseHeader {
     FORCE_EXPLICIT_NO("force_explicit_no"),
     REACQUIRE_CONSENT("reacquire_consent"),
     CONSENT_CHANGE_REASON("consent_change_reason"),
+    FORCE_GDPR_APPLIES("force_gdpr_applies"),
+
 
     @Deprecated CUSTOM_SELECTOR("X-Customselector");
 

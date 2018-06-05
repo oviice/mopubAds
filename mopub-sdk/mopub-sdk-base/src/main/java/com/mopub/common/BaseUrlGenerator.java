@@ -56,6 +56,11 @@ public abstract class BaseUrlGenerator {
      */
     protected static final String GDPR_APPLIES = "gdpr_applies";
 
+    /**
+     * "1" if the publisher has forced GDPR rules to apply to this app. "0" if this is not set.
+     */
+    protected static final String FORCE_GDPR_APPLIES = "force_gdpr_applies";
+
     private static final String WIDTH_KEY = "w";
     private static final String HEIGHT_KEY = "h";
 
@@ -128,16 +133,6 @@ public abstract class BaseUrlGenerator {
         result.append(info[info.length-1]);
 
         addParam("dn", result.toString());
-    }
-
-    protected void setDoNotTrack(boolean dnt) {
-        if (dnt) {
-            addParam(DNT_KEY, "1");
-        }
-    }
-
-    protected void setUdid(String udid) {
-        addParam(UDID_KEY, udid);
     }
 
     /**

@@ -72,6 +72,7 @@ public class MoPubConversionTracker {
         final ConsentData consentData = infoManager.getConsentData();
         final String url = new ConversionUrlGenerator(mContext)
                 .withGdprApplies(infoManager.gdprApplies())
+                .withForceGdprApplies(consentData.isForceGdprApplies())
                 .withCurrentConsentStatus(infoManager.getPersonalInfoConsentStatus().getValue())
                 .withConsentedPrivacyPolicyVersion(consentData.getConsentedPrivacyPolicyVersion())
                 .withConsentedVendorListVersion(consentData.getConsentedVendorListVersion())

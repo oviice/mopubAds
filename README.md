@@ -39,7 +39,7 @@ The MoPub SDK is available via:
     }
 
     dependencies {
-        implementation('com.mopub:mopub-sdk:5.0.0@aar') {
+        implementation('com.mopub:mopub-sdk:5.1.0@aar') {
             transitive = true
         }
     }
@@ -61,27 +61,27 @@ The MoPub SDK is available via:
         // ... other project dependencies
 
         // For banners
-        implementation('com.mopub:mopub-sdk-banner:5.0.0@aar') {
+        implementation('com.mopub:mopub-sdk-banner:5.1.0@aar') {
             transitive = true
         }
         
         // For interstitials
-        implementation('com.mopub:mopub-sdk-interstitial:5.0.0@aar') {
+        implementation('com.mopub:mopub-sdk-interstitial:5.1.0@aar') {
             transitive = true
         }
 
         // For rewarded videos. This will automatically also include interstitials
-        implementation('com.mopub:mopub-sdk-rewardedvideo:5.0.0@aar') {
+        implementation('com.mopub:mopub-sdk-rewardedvideo:5.1.0@aar') {
             transitive = true
         }
 
         // For native static (images).
-        implementation('com.mopub:mopub-sdk-native-static:5.0.0@aar') {
+        implementation('com.mopub:mopub-sdk-native-static:5.1.0@aar') {
             transitive = true
         }
 
         // For native video. This will automatically also include native static
-        implementation('com.mopub:mopub-sdk-native-video:5.0.0@aar') {
+        implementation('com.mopub:mopub-sdk-native-video:5.1.0@aar') {
             transitive = true
         }
     }
@@ -109,11 +109,10 @@ The MoPub SDK is available via:
 ## New in this Version
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the latest release.
 
-- General Data Protection Regulation (GDPR) update to support a way for publishers to determine GDPR applicability and to obtain and manage consent from users in European Economic Area, the United Kingdom, or Switzerland to serve personalized ads.
-- New SDK initialization method to initialize consent management and rewarded video ad networks. Required for receiving personalized ads. In future versions of the SDK, initialization will be required to receive ads.
-- Updated network stack to MoPub-Volley-2.0.0.
-- Updated ad requests to use POST instead of GET.
-- All communication with MoPub servers is now made via HTTPS.
+- Upgraded Moat dependency to 2.4.5.
+- Banners now only refresh after an impression is made.
+- Added `PersonalInfoManager.forceGdprApplies()` in order to let MoPub know that this app should always apply GDPR rules.
+- Loading MoPub's consent dialog is only possible when GDPR rules applies to the app.
 
 ## Requirements
 
@@ -128,7 +127,7 @@ Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/mast
 
 Please see the [Getting Started Guide](https://developers.mopub.com/docs/android/getting-started/) for instructions on upgrading from SDK 4.X to SDK 5.0.
 
-For GDPR-specific upgrading instructions, also see the [GDPR Integration Guide](https://developers.mopub.com/docs/publisher/gdpr-guide/).
+For GDPR-specific upgrading instructions, also see the [GDPR Integration Guide](https://developers.mopub.com/docs/publisher/gdpr).
 
 ## <a name="upgradeRepositoryViewability"></a>Upgrading from 4.15.0 and Prior
 In 4.16.0, dependencies were added to viewability libraries provided by AVID and Moat. Apps upgrading from previous versions must add
@@ -142,7 +141,7 @@ Normally, to add the MoPub SDK to your app via JCenter, your `build.gradle` woul
 
 ```	
 dependencies {
-    implementation('com.mopub:mopub-sdk:5.0.0@aar') {
+    implementation('com.mopub:mopub-sdk:5.1.0@aar') {
         transitive = true
     }
 }
@@ -151,7 +150,7 @@ Update to the following to exclude one or both viewability vendors:
 
 ```
 dependencies {
-    implementation('com.mopub:mopub-sdk:4.20.0@aar') {
+    implementation('com.mopub:mopub-sdk:5.1.0@aar') {
         transitive = true
         exclude module: 'libAvid-mopub' // To exclude AVID
         exclude module: 'moat-mobile-app-kit' // To exclude Moat

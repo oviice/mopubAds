@@ -12,6 +12,7 @@ public class SyncResponse {
     private final boolean mInvalidateConsent;
     private final boolean mReacquireConsent;
     private final boolean mIsWhitelisted;
+    private final boolean mForceGdprApplies;
     @NonNull private final String mCurrentVendorListVersion;
     @NonNull private final String mCurrentVendorListLink;
     @NonNull private final String mCurrentPrivacyPolicyVersion;
@@ -40,6 +41,10 @@ public class SyncResponse {
 
     public boolean isWhitelisted() {
         return mIsWhitelisted;
+    }
+
+    public boolean isForceGdprApplies() {
+        return mForceGdprApplies;
     }
 
     @NonNull
@@ -92,6 +97,7 @@ public class SyncResponse {
             @Nullable final String invalidateConsent,
             @Nullable final String reacquireConsent,
             @NonNull final String isWhitelisted,
+            @Nullable final String forceGdprApplies,
             @NonNull final String currentVendorListVersion,
             @NonNull final String currentVendorListLink,
             @NonNull final String currentPrivacyPolicyVersion,
@@ -112,11 +118,12 @@ public class SyncResponse {
         // Default for this is true
         mIsGdprRegion = !"0".equals(isGdprRegion);
 
-        // Default for the next four is false
+        // Default for the next five is false
         mForceExplicitNo = "1".equals(forceExplicitNo);
         mInvalidateConsent = "1".equals(invalidateConsent);
         mReacquireConsent = "1".equals(reacquireConsent);
         mIsWhitelisted = "1".equals(isWhitelisted);
+        mForceGdprApplies = "1".equals(forceGdprApplies);
 
         mCurrentVendorListVersion = currentVendorListVersion;
         mCurrentVendorListLink = currentVendorListLink;
@@ -135,6 +142,7 @@ public class SyncResponse {
         private String invalidateConsent;
         private String reacquireConsent;
         private String isWhitelisted;
+        private String forceGdprApplies;
         private String currentVendorListVersion;
         private String currentVendorListLink;
         private String currentPrivacyPolicyVersion;
@@ -170,6 +178,11 @@ public class SyncResponse {
 
         public Builder setIsWhitelisted(@NonNull final String isWhitelisted) {
             this.isWhitelisted = isWhitelisted;
+            return this;
+        }
+
+        public Builder setForceGdprApplies(@Nullable final String forceGdprApplies) {
+            this.forceGdprApplies = forceGdprApplies;
             return this;
         }
 
@@ -222,7 +235,7 @@ public class SyncResponse {
 
         public SyncResponse build() {
             return new SyncResponse(isGdprRegion, forceExplicitNo, invalidateConsent,
-                    reacquireConsent, isWhitelisted, currentVendorListVersion,
+                    reacquireConsent, isWhitelisted, forceGdprApplies, currentVendorListVersion,
                     currentVendorListLink, currentPrivacyPolicyVersion, currentPrivacyPolicyLink,
                     currentVendorListIabFormat, currentVendorListIabHash, callAgainAfterSecs,
                     extras, consentChangeReason);

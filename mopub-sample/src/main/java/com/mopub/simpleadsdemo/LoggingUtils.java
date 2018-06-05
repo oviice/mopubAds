@@ -34,6 +34,7 @@ public class LoggingUtils {
         }
 
         final Handler handler = new SampleAppLogHandler(context.getApplicationContext());
+        MoPubLog.c("Setting up MoPubLog");
         final Logger logger = getLogger();
         logger.addHandler(handler);
 

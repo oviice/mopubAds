@@ -52,9 +52,17 @@ public class AdRequest extends MoPubRequest<AdResponse> {
     @NonNull private final AdFormat mAdFormat;
     @Nullable private final String mAdUnitId;
     @NonNull private final Context mContext;
+    @Nullable private static ServerOverrideListener sServerOverrideListener;
 
     public interface Listener extends Response.ErrorListener {
         void onSuccess(AdResponse response);
+    }
+
+    public interface ServerOverrideListener {
+        void onForceExplicitNo(@Nullable final String consentChangeReason);
+        void onInvalidateConsent(@Nullable final String consentChangeReason);
+        void onReacquireConsent(@Nullable final String consentChangeReason);
+        void onForceGdprApplies();
     }
 
     public AdRequest(@NonNull final String url,
@@ -92,6 +100,11 @@ public class AdRequest extends MoPubRequest<AdResponse> {
     @NonNull
     public Listener getListener() {
         return mListener;
+    }
+
+    public static void setServerOverrideListener(
+            @NonNull final ServerOverrideListener serverOverrideListener) {
+        sServerOverrideListener = serverOverrideListener;
     }
 
     @Override
@@ -365,18 +378,27 @@ public class AdRequest extends MoPubRequest<AdResponse> {
             builder.setShouldRewardOnClick(shouldRewardOnClick);
         }
 
-        final boolean invalidateConsent = extractBooleanHeader(jsonHeaders, ResponseHeader.INVALIDATE_CONSENT, false);
-        final boolean forceExplicitNo = extractBooleanHeader(jsonHeaders, ResponseHeader.FORCE_EXPLICIT_NO, false);
-        final boolean reacquireConsent = extractBooleanHeader(jsonHeaders, ResponseHeader.REACQUIRE_CONSENT, false);
-        String consentChangeReason = extractHeader(jsonHeaders, ResponseHeader.CONSENT_CHANGE_REASON);
+        final boolean invalidateConsent = extractBooleanHeader(jsonHeaders,
+                ResponseHeader.INVALIDATE_CONSENT, false);
+        final boolean forceExplicitNo = extractBooleanHeader(jsonHeaders,
+                ResponseHeader.FORCE_EXPLICIT_NO, false);
+        final boolean reacquireConsent = extractBooleanHeader(jsonHeaders,
+                ResponseHeader.REACQUIRE_CONSENT, false);
+        String consentChangeReason = extractHeader(jsonHeaders,
+                ResponseHeader.CONSENT_CHANGE_REASON);
+        final boolean forceGdprApplies = extractBooleanHeader(jsonHeaders,
+                ResponseHeader.FORCE_GDPR_APPLIES, false);
 
-        if (MoPub.getPersonalInformationManager() != null) {
+        if (sServerOverrideListener != null) {
+            if (forceGdprApplies) {
+                sServerOverrideListener.onForceGdprApplies();
+            }
             if (forceExplicitNo) {
-                MoPub.getPersonalInformationManager().forceExplicitNo(consentChangeReason);
+                sServerOverrideListener.onForceExplicitNo(consentChangeReason);
             } else if (invalidateConsent) {
-                MoPub.getPersonalInformationManager().invalidateConsent(consentChangeReason);
+                sServerOverrideListener.onInvalidateConsent(consentChangeReason);
             } else if (reacquireConsent) {
-                MoPub.getPersonalInformationManager().reacquireConsent(consentChangeReason);
+                sServerOverrideListener.onReacquireConsent(consentChangeReason);
             }
         }
 

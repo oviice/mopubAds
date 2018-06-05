@@ -60,19 +60,19 @@ public class ManifestUtils {
         REQUIRED_NATIVE_SDK_ACTIVITIES.add(com.mopub.common.MoPubBrowser.class);
     }
 
-    private static final List<Class<? extends Activity>> REQUIRED_SDK_ACTIVITIES;
+    private static final List<Class<? extends Activity>> REQUIRED_GDPR_ACTIVITIES;
     static {
-        REQUIRED_SDK_ACTIVITIES = new ArrayList<>(1);
-        REQUIRED_SDK_ACTIVITIES.add(com.mopub.common.privacy.ConsentDialogActivity.class);
+        REQUIRED_GDPR_ACTIVITIES = new ArrayList<>(1);
+        REQUIRED_GDPR_ACTIVITIES.add(com.mopub.common.privacy.ConsentDialogActivity.class);
     }
 
-    public static void checkSdkActivitiesDeclared(@NonNull final Context context) {
+    public static void checkGdprActivitiesDeclared(@NonNull final Context context) {
         if (!Preconditions.NoThrow.checkNotNull(context, "context is not allowed to be null")) {
             return;
         }
 
-        displayWarningForMissingActivities(context, REQUIRED_SDK_ACTIVITIES);
-        displayWarningForMisconfiguredActivities(context, REQUIRED_SDK_ACTIVITIES);
+        displayWarningForMissingActivities(context, REQUIRED_GDPR_ACTIVITIES);
+        displayWarningForMisconfiguredActivities(context, REQUIRED_GDPR_ACTIVITIES);
     }
 
 

@@ -27,6 +27,7 @@ public enum MoPubErrorCode {
     REWARD_NOT_SELECTED("Reward not selected for rewarded ad."),
 
     DO_NOT_TRACK("Do not track is enabled."),
+    GDPR_DOES_NOT_APPLY("GDPR does not apply. Ignoring consent-related actions."),
 
     UNSPECIFIED("Unspecified error.");
 

@@ -35,6 +35,7 @@ class PersonalInfoData implements ConsentData {
     private static final String CONSENT_CHANGE_REASON_SP_KEY = PERSONAL_INFO_PREFIX + "consent_change_reason";
     private static final String REACQUIRE_CONSENT_SP_KEY = PERSONAL_INFO_PREFIX + "reacquire_consent";
     private static final String GDPR_APPLIES_SP_KEY = PERSONAL_INFO_PREFIX + "gdpr_applies";
+    private static final String FORCE_GDPR_APPLIES_SP_KEY = PERSONAL_INFO_PREFIX + "force_gdpr_applies";
     private static final String UDID_SP_KEY = PERSONAL_INFO_PREFIX + "udid";
     private static final String LAST_CHANGED_MS_SP_KEY = PERSONAL_INFO_PREFIX + "last_changed_ms";
     private static final String CONSENT_STATUS_BEFORE_DNT_SP_KEY = PERSONAL_INFO_PREFIX + "consent_status_before_dnt";
@@ -51,6 +52,7 @@ class PersonalInfoData implements ConsentData {
     @NonNull private ConsentStatus mConsentStatus;
     @Nullable private ConsentStatus mLastSuccessfullySyncedConsentStatus;
     @Nullable private String mConsentChangeReason;
+    private boolean mForceGdprApplies;
     @Nullable private String mUdid;
     @Nullable private String mLastChangedMs;
     @Nullable private ConsentStatus mConsentStatusBeforeDnt;
@@ -121,6 +123,7 @@ class PersonalInfoData implements ConsentData {
         } else {
             mGdprApplies = Boolean.parseBoolean(gdprAppliesString);
         }
+        mForceGdprApplies = sharedPreferences.getBoolean(FORCE_GDPR_APPLIES_SP_KEY, false);
         mUdid = sharedPreferences.getString(UDID_SP_KEY, null);
         mLastChangedMs = sharedPreferences.getString(LAST_CHANGED_MS_SP_KEY, null);
         final String consentStatusBeforeDnt = sharedPreferences.getString(
@@ -154,6 +157,7 @@ class PersonalInfoData implements ConsentData {
         editor.putBoolean(REACQUIRE_CONSENT_SP_KEY, mReacquireConsent);
         editor.putString(GDPR_APPLIES_SP_KEY,
                 mGdprApplies == null ? null : mGdprApplies.toString());
+        editor.putBoolean(FORCE_GDPR_APPLIES_SP_KEY, mForceGdprApplies);
         editor.putString(UDID_SP_KEY, mUdid);
         editor.putString(LAST_CHANGED_MS_SP_KEY, mLastChangedMs);
         editor.putString(CONSENT_STATUS_BEFORE_DNT_SP_KEY,
@@ -319,8 +323,16 @@ class PersonalInfoData implements ConsentData {
         return mGdprApplies;
     }
 
-    void setGdprApplies(final boolean gdprApplies) {
+    void setGdprApplies(@Nullable final Boolean gdprApplies) {
         mGdprApplies = gdprApplies;
+    }
+
+    public boolean isForceGdprApplies() {
+        return mForceGdprApplies;
+    }
+
+    void setForceGdprApplies(final boolean forceGdprApplies) {
+        mForceGdprApplies = forceGdprApplies;
     }
 
     @Nullable

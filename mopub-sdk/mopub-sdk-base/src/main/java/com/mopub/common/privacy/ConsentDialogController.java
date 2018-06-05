@@ -57,22 +57,24 @@ public class ConsentDialogController implements ConsentDialogRequest.Listener {
         if (loadListener == null) {
             return;
         }
+
         if (volleyError instanceof MoPubNetworkError) {
             switch(((MoPubNetworkError) volleyError).getReason()) {
                 case BAD_BODY:
                     loadListener.onConsentDialogLoadFailed(MoPubErrorCode.INTERNAL_ERROR);
-                    break;
+                    return;
                 default:
-                    loadListener.onConsentDialogLoadFailed(MoPubErrorCode.UNSPECIFIED);
                     break;
             }
         }
+
+        loadListener.onConsentDialogLoadFailed(MoPubErrorCode.UNSPECIFIED);
     }
 
     void loadConsentDialog(@Nullable final ConsentDialogListener listener,
-            @NonNull final String adUnitId) {
-        Preconditions.checkNotNull(adUnitId);
-
+            @Nullable final Boolean gdprApplies,
+            @NonNull final PersonalInfoData personalInfoData) {
+        Preconditions.checkNotNull(personalInfoData);
 
         if (mReady) {
             if (listener != null) {
@@ -89,12 +91,16 @@ public class ConsentDialogController implements ConsentDialogRequest.Listener {
             return;
         }
 
-
         mExtListener = listener;
         mRequestInFlight = true;
 
         ConsentDialogRequest consentDialogRequest = new ConsentDialogRequest(mAppContext,
-                new ConsentDialogUrlGenerator(mAppContext, adUnitId)
+                new ConsentDialogUrlGenerator(mAppContext, personalInfoData.getAdUnitId(),
+                        personalInfoData.getConsentStatus().getValue())
+                        .withGdprApplies(gdprApplies)
+                        .withConsentedPrivacyPolicyVersion(personalInfoData.getConsentedPrivacyPolicyVersion())
+                        .withConsentedVendorListVersion(personalInfoData.getConsentedVendorListVersion())
+                        .withForceGdprApplies(personalInfoData.isForceGdprApplies())
                         .generateUrlString(Constants.HOST), this);
         Networking.getRequestQueue(mAppContext).add(consentDialogRequest);
     }

@@ -307,6 +307,7 @@ public class CustomEventBannerAdapterTest {
         verify(moPubView).nativeAdLoaded();
         verify(moPubView).setAdContentView(eq(mockHtmlBannerWebView));
         verify(moPubView, never()).trackNativeImpression();
+        verify(moPubView).pauseAutorefresh();
     }
 
     @Test
@@ -328,6 +329,7 @@ public class CustomEventBannerAdapterTest {
         verify(moPubView).nativeAdLoaded();
         verify(moPubView).setAdContentView(eq(view));
         verify(moPubView, never()).trackNativeImpression();
+        verify(moPubView).pauseAutorefresh();
     }
 
     @Test
@@ -345,27 +347,27 @@ public class CustomEventBannerAdapterTest {
     }
 
     @Test
-    public void onBannerExpanded_shouldPauseRefreshAndCallAdPresentOverlay() throws Exception {
+    public void onBannerExpanded_shouldPauseRefreshAndCallAdPresentOverlay_shouldCallExpand() throws Exception {
         subject.onBannerExpanded();
 
-        verify(moPubView).setAutorefreshEnabled(eq(false));
+        verify(moPubView).expand();
         verify(moPubView).adPresentedOverlay();
     }
 
     @Test
-    public void onBannerCollapsed_shouldRestoreRefreshSettingAndCallAdClosed() throws Exception {
+    public void onBannerCollapsed_shouldRestoreRefreshSettingAndCallAdClosed_shouldCallCollapse() throws Exception {
         when(moPubView.getAutorefreshEnabled()).thenReturn(true);
         subject.onBannerExpanded();
         reset(moPubView);
         subject.onBannerCollapsed();
-        verify(moPubView).setAutorefreshEnabled(eq(true));
+        verify(moPubView).collapse();
         verify(moPubView).adClosed();
 
         when(moPubView.getAutorefreshEnabled()).thenReturn(false);
         subject.onBannerExpanded();
         reset(moPubView);
         subject.onBannerCollapsed();
-        verify(moPubView).setAutorefreshEnabled(eq(false));
+        verify(moPubView).collapse();
         verify(moPubView).adClosed();
     }
 

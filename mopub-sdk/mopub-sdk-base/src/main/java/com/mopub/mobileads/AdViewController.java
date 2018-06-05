@@ -66,6 +66,7 @@ public class AdViewController {
     private Handler mHandler;
     private boolean mIsLoading;
     private String mUrl;
+    private boolean mExpanded;
 
     // This is the power of the exponential term in the exponential backoff calculation.
     @VisibleForTesting
@@ -397,7 +398,7 @@ public class AdViewController {
     }
 
     void resumeRefresh() {
-        if (mShouldAllowAutoRefresh) {
+        if (mShouldAllowAutoRefresh && !mExpanded) {
             setAutoRefreshStatus(true);
         }
     }
@@ -421,6 +422,16 @@ public class AdViewController {
         } else if (!mCurrentAutoRefreshStatus) {
             cancelRefreshTimer();
         }
+    }
+
+    void expand() {
+        mExpanded = true;
+        pauseRefresh();
+    }
+
+    void collapse() {
+        mExpanded = false;
+        resumeRefresh();
     }
 
     @Nullable

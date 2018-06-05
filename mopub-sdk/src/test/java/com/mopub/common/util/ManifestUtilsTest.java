@@ -98,7 +98,7 @@ public class ManifestUtilsTest {
     public void checSdkActivitiesDeclared_shouldIncludeOneActivityDeclaration() throws Exception {
         ShadowLog.setupLogging();
 
-        ManifestUtils.checkSdkActivitiesDeclared(context);
+        ManifestUtils.checkGdprActivitiesDeclared(context);
 
         assertLogIncludes("com.mopub.common.privacy.ConsentDialogActivity");
         assertLogDoesntInclude(

@@ -15,8 +15,10 @@ import com.mopub.common.Preconditions;
 import com.mopub.common.SdkInitializationListener;
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.util.ManifestUtils;
 import com.mopub.mobileads.MoPubConversionTracker;
 import com.mopub.mobileads.MoPubErrorCode;
+import com.mopub.network.AdRequest;
 import com.mopub.network.MoPubNetworkError;
 import com.mopub.network.Networking;
 import com.mopub.volley.VolleyError;
@@ -30,7 +32,7 @@ import java.util.Set;
  * The manager handling personal information. If the user is in a GDPR region, MoPub must get
  * user consent to handle and store user data.
  */
-public class PersonalInfoManager implements SyncRequest.Listener {
+public class PersonalInfoManager {
 
     /**
      * Default minimum sync delay of 5 minutes.
@@ -42,6 +44,8 @@ public class PersonalInfoManager implements SyncRequest.Listener {
     @NonNull private final PersonalInfoData mPersonalInfoData;
     @NonNull private final ConsentDialogController mConsentDialogController;
     @NonNull private final MoPubConversionTracker mConversionTracker;
+    @NonNull private final SyncRequest.Listener mSyncRequestListener;
+    @NonNull private AdRequest.ServerOverrideListener mServerOverrideListener;
     @Nullable private SdkInitializationListener mSdkInitializationListener;
 
     private long mSyncDelayMs = MINIMUM_SYNC_DELAY;
@@ -49,6 +53,8 @@ public class PersonalInfoManager implements SyncRequest.Listener {
     @Nullable private ConsentStatus mSyncRequestConsentStatus;
     private long mSyncRequestEpochTime;
     private boolean mSyncRequestInFlight;
+    private boolean mForceGdprAppliesChanged;
+    private boolean mForceGdprAppliesChangedSending;
 
     public PersonalInfoManager(@NonNull final Context context, @NonNull final String adUnitId,
             @Nullable SdkInitializationListener sdkInitializationListener) {
@@ -58,6 +64,9 @@ public class PersonalInfoManager implements SyncRequest.Listener {
         mAppContext = context.getApplicationContext();
         mConsentStatusChangeListeners = Collections.synchronizedSet(
                 new HashSet<ConsentStatusChangeListener>());
+        mSyncRequestListener = new PersonalInfoSyncRequestListener();
+        mServerOverrideListener = new PersonalInfoServerOverrideListener();
+        AdRequest.setServerOverrideListener(mServerOverrideListener);
 
         mConsentDialogController = new ConsentDialogController(mAppContext);
 
@@ -106,7 +115,8 @@ public class PersonalInfoManager implements SyncRequest.Listener {
                 };
         mSdkInitializationListener = sdkInitializationListener;
 
-        final MoPubIdentifier moPubIdentifier = ClientMetadata.getInstance(mAppContext).getMoPubIdentifier();
+        final MoPubIdentifier moPubIdentifier = ClientMetadata.getInstance(
+                mAppContext).getMoPubIdentifier();
         moPubIdentifier.setIdChangeListener(advertisingIdChangeListener);
         moPubIdentifier.setInitializationListener(createInitializationListener());
     }
@@ -151,6 +161,8 @@ public class PersonalInfoManager implements SyncRequest.Listener {
      */
     public void loadConsentDialog(
             @Nullable final ConsentDialogListener consentDialogListener) {
+        ManifestUtils.checkGdprActivitiesDeclared(mAppContext);
+
         if (ClientMetadata.getInstance(
                 mAppContext).getMoPubIdentifier().getAdvertisingInfo().isDoNotTrack()) {
             if (consentDialogListener != null) {
@@ -164,8 +176,21 @@ public class PersonalInfoManager implements SyncRequest.Listener {
             }
             return;
         }
-        mConsentDialogController.loadConsentDialog(consentDialogListener,
-                mPersonalInfoData.getAdUnitId());
+        final Boolean gdprApplies = gdprApplies();
+        if (gdprApplies != null && !gdprApplies) {
+            if (consentDialogListener != null) {
+                new Handler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        consentDialogListener.onConsentDialogLoadFailed(
+                                MoPubErrorCode.GDPR_DOES_NOT_APPLY);
+                    }
+                });
+            }
+            return;
+        }
+        mConsentDialogController.loadConsentDialog(consentDialogListener, gdprApplies,
+                mPersonalInfoData);
     }
 
     /**
@@ -203,51 +228,30 @@ public class PersonalInfoManager implements SyncRequest.Listener {
 
     /**
      * Returns whether or not the SDK thinks the user is in a GDPR region or not. Returns true for
-     * in a GDPR region, no for not in a GDPR region, and null for unknown.
+     * in a GDPR region, false for not in a GDPR region, and null for unknown. This value can be
+     * overwritten to true by setting forceGdprApplies().
      *
      * @return true for in GDPR region, false for not in GDPR region, null for unknown
      */
     public Boolean gdprApplies() {
+        if (mPersonalInfoData.isForceGdprApplies()) {
+            return true;
+        }
         return mPersonalInfoData.getGdprApplies();
     }
 
     /**
-     * Don't call this.
-     *
-     * @param consentChangeReason
+     * Forces the SDK to treat this app as in a GDPR region. Setting this will permanently force
+     * GDPR rules for this user unless this app is uninstalled or the data for this app is cleared.
      */
-    public void invalidateConsent(@Nullable final String consentChangeReason) {
-        if (TextUtils.isEmpty(consentChangeReason)) {
-            attemptStateTransition(ConsentStatus.UNKNOWN, ConsentChangeReason.REACQUIRE_BY_SERVER);
+    public void forceGdprApplies() {
+        if (mPersonalInfoData.isForceGdprApplies()) {
             return;
         }
-        attemptStateTransition(ConsentStatus.UNKNOWN, consentChangeReason);
-    }
-
-    /**
-     * Don't call this.
-     *
-     * @param consentChangeReason
-     */
-    public void forceExplicitNo(@Nullable final String consentChangeReason) {
-        if (TextUtils.isEmpty(consentChangeReason)) {
-            attemptStateTransition(ConsentStatus.EXPLICIT_NO,
-                    ConsentChangeReason.REVOKED_BY_SERVER);
-            return;
-        }
-        attemptStateTransition(ConsentStatus.EXPLICIT_NO, consentChangeReason);
-    }
-
-    /**
-     * Don't call this.
-     *
-     * @param consentChangeReason
-     */
-    public void reacquireConsent(@Nullable final String consentChangeReason) {
-        if (!TextUtils.isEmpty(consentChangeReason)) {
-            mPersonalInfoData.setConsentChangeReason(consentChangeReason);
-        }
-        mPersonalInfoData.setShouldReacquireConsent(true);
+        mPersonalInfoData.setForceGdprApplies(true);
+        mForceGdprAppliesChanged = true;
+        mPersonalInfoData.writeToDisk();
+        requestSync(true);
     }
 
     /**
@@ -262,7 +266,7 @@ public class PersonalInfoManager implements SyncRequest.Listener {
     }
 
     /**
-     * For use from whitelisted publishers only. Grants consent to collect personally identifiable
+     * For use by whitelisted publishers only. Grants consent to collect personally identifiable
      * information for the current user.
      */
     public void grantConsent() {
@@ -276,6 +280,8 @@ public class PersonalInfoManager implements SyncRequest.Listener {
             attemptStateTransition(ConsentStatus.EXPLICIT_YES,
                     ConsentChangeReason.GRANTED_BY_WHITELISTED_PUB);
         } else {
+            MoPubLog.w("You do not have approval to use the grantConsent API. Please reach out " +
+                    "to your account teams or support@mopub.com for more information.");
             attemptStateTransition(ConsentStatus.POTENTIAL_WHITELIST,
                     ConsentChangeReason.GRANTED_BY_NOT_WHITELISTED_PUB);
         }
@@ -364,7 +370,7 @@ public class PersonalInfoManager implements SyncRequest.Listener {
     }
 
     /**
-     * Called internally to request a sync to ad server about consent status and other metadata
+     * Called internally to request a sync to ad server about consent status and other metadata.
      *
      * @param force Call sync even if it has not been mSyncDelayMs. Still won't happen if not in
      *              a GDPR region or if a request is already in flight.
@@ -399,92 +405,27 @@ public class PersonalInfoManager implements SyncRequest.Listener {
                         mPersonalInfoData.getConsentedPrivacyPolicyVersion())
                 .withCachedVendorListIabHash(mPersonalInfoData.getCurrentVendorListIabHash())
                 .withExtras(mPersonalInfoData.getExtras())
-                .withGdprApplies(gdprApplies());
-
+                .withGdprApplies(gdprApplies())
+                .withForceGdprApplies(mPersonalInfoData.isForceGdprApplies());
+        if (mForceGdprAppliesChanged) {
+            mForceGdprAppliesChangedSending = true;
+            syncUrlGenerator.withForceGdprAppliesChanged(true);
+        }
 
         final SyncRequest syncRequest = new SyncRequest(mAppContext,
                 syncUrlGenerator.generateUrlString(
-                        Constants.HOST), this);
+                        Constants.HOST), mSyncRequestListener);
         Networking.getRequestQueue(mAppContext).add(syncRequest);
     }
 
+    /**
+     * For use by whitelisted publishers only. Gets a copy of the current and consented vendor
+     * list and privacy policy and their versions.
+     *
+     * @return ConsentData which is a snapshot of the underlying data store.
+     */
     public ConsentData getConsentData() {
         return new PersonalInfoData(mAppContext, mPersonalInfoData.getAdUnitId());
-    }
-
-    /**
-     * Do not call this. This is used internally.
-     */
-    @Deprecated
-    @Override
-    public void onSuccess(final SyncResponse response) {
-        if (mPersonalInfoData.getGdprApplies() == null) {
-            mPersonalInfoData.setGdprApplies(response.isGdprRegion());
-        }
-        mPersonalInfoData.setLastChangedMs("" + mSyncRequestEpochTime);
-        mPersonalInfoData.setLastSuccessfullySyncedConsentStatus(mSyncRequestConsentStatus);
-        mPersonalInfoData.setWhitelisted(response.isWhitelisted());
-        mPersonalInfoData.setCurrentVendorListVersion(response.getCurrentVendorListVersion());
-        mPersonalInfoData.setCurrentVendorListLink(response.getCurrentVendorListLink());
-        mPersonalInfoData.setCurrentPrivacyPolicyVersion(response.getCurrentPrivacyPolicyVersion());
-        mPersonalInfoData.setCurrentPrivacyPolicyLink(response.getCurrentPrivacyPolicyLink());
-        final String iabHash = response.getCurrentVendorListIabHash();
-        final String iabFormat = response.getCurrentVendorListIabFormat();
-        if (!TextUtils.isEmpty(iabHash) && !iabHash.equals(
-                mPersonalInfoData.getCurrentVendorListIabHash()) && !TextUtils.isEmpty(iabFormat)) {
-            mPersonalInfoData.setCurrentVendorListIabFormat(iabFormat);
-            mPersonalInfoData.setCurrentVendorListIabHash(iabHash);
-        }
-        final String extras = response.getExtras();
-        if (!TextUtils.isEmpty(extras)) {
-            mPersonalInfoData.setExtras(extras);
-        }
-        final String consentChangeReason = response.getConsentChangeReason();
-
-        // Only one of these should happen. Prioritize no.
-        if (response.isForceExplicitNo()) {
-            forceExplicitNo(consentChangeReason);
-        } else if (response.isInvalidateConsent()) {
-            invalidateConsent(consentChangeReason);
-        } else if (response.isReacquireConsent()) {
-            reacquireConsent(consentChangeReason);
-        }
-
-        final String callAgainAfterSecs = response.getCallAgainAfterSecs();
-        if (!TextUtils.isEmpty(callAgainAfterSecs)) {
-            try {
-                final long callAgainAfterSecsLong = Long.parseLong(callAgainAfterSecs);
-                if (callAgainAfterSecsLong > 0) {
-                    mSyncDelayMs = callAgainAfterSecsLong * 1000;
-                } else {
-                    MoPubLog.d("callAgainAfterSecs is not positive: " + callAgainAfterSecs);
-                }
-            } catch (NumberFormatException e) {
-                MoPubLog.d("Unable to parse callAgainAfterSecs. Ignoring value");
-            }
-        }
-
-        // Clear out our cached udid if we have sent it one last time in case limit ad tracking
-        // is turned on.
-        if (!ConsentStatus.EXPLICIT_YES.equals(mSyncRequestConsentStatus)) {
-            mPersonalInfoData.setUdid(null);
-        }
-
-        mPersonalInfoData.writeToDisk();
-
-        mSyncRequestInFlight = false;
-
-        if (ConsentStatus.POTENTIAL_WHITELIST.equals(
-                mSyncRequestConsentStatus) && mPersonalInfoData.isWhitelisted()) {
-            attemptStateTransition(ConsentStatus.EXPLICIT_YES,
-                    ConsentChangeReason.GRANTED_BY_WHITELISTED_PUB);
-            requestSync(true);
-        }
-
-        if (mSdkInitializationListener != null) {
-            mSdkInitializationListener.onInitializationFinished();
-            mSdkInitializationListener = null;
-        }
     }
 
     /**
@@ -567,22 +508,6 @@ public class PersonalInfoManager implements SyncRequest.Listener {
         }
     }
 
-    /**
-     * Do not call this. This is used internally.
-     */
-    @Deprecated
-    @Override
-    public void onErrorResponse(final VolleyError volleyError) {
-        MoPubLog.d("Failed sync request because of " + ((volleyError instanceof MoPubNetworkError) ?
-                ((MoPubNetworkError) volleyError).getReason() : volleyError.getMessage()));
-        mSyncRequestInFlight = false;
-        if (mSdkInitializationListener != null) {
-            MoPubLog.d("Personal Info Manager initialization finished but ran into errors.");
-            mSdkInitializationListener.onInitializationFinished();
-            mSdkInitializationListener = null;
-        }
-    }
-
     private SdkInitializationListener createInitializationListener() {
         return new SdkInitializationListener() {
 
@@ -608,5 +533,143 @@ public class PersonalInfoManager implements SyncRequest.Listener {
                 new MoPubConversionTracker(mAppContext).reportAppOpen(true);
             }
         };
+    }
+
+    private class PersonalInfoSyncRequestListener implements SyncRequest.Listener {
+
+        @Override
+        public void onSuccess(final SyncResponse response) {
+            if (response.isForceGdprApplies()) {
+                mPersonalInfoData.setGdprApplies(true);
+            } else if (mPersonalInfoData.getGdprApplies() == null) {
+                mPersonalInfoData.setGdprApplies(response.isGdprRegion());
+            }
+            mPersonalInfoData.setLastChangedMs("" + mSyncRequestEpochTime);
+            mPersonalInfoData.setLastSuccessfullySyncedConsentStatus(mSyncRequestConsentStatus);
+            mPersonalInfoData.setWhitelisted(response.isWhitelisted());
+            mPersonalInfoData.setCurrentVendorListVersion(response.getCurrentVendorListVersion());
+            mPersonalInfoData.setCurrentVendorListLink(response.getCurrentVendorListLink());
+            mPersonalInfoData.setCurrentPrivacyPolicyVersion(
+                    response.getCurrentPrivacyPolicyVersion());
+            mPersonalInfoData.setCurrentPrivacyPolicyLink(response.getCurrentPrivacyPolicyLink());
+            final String iabHash = response.getCurrentVendorListIabHash();
+            final String iabFormat = response.getCurrentVendorListIabFormat();
+            if (!TextUtils.isEmpty(iabHash) && !iabHash.equals(
+                    mPersonalInfoData.getCurrentVendorListIabHash()) && !TextUtils.isEmpty(
+                    iabFormat)) {
+                mPersonalInfoData.setCurrentVendorListIabFormat(iabFormat);
+                mPersonalInfoData.setCurrentVendorListIabHash(iabHash);
+            }
+            final String extras = response.getExtras();
+            if (!TextUtils.isEmpty(extras)) {
+                mPersonalInfoData.setExtras(extras);
+            }
+            final String consentChangeReason = response.getConsentChangeReason();
+
+            // Only one of these should happen. Prioritize no.
+            if (response.isForceExplicitNo()) {
+                mServerOverrideListener.onForceExplicitNo(consentChangeReason);
+            } else if (response.isInvalidateConsent()) {
+                mServerOverrideListener.onInvalidateConsent(consentChangeReason);
+            } else if (response.isReacquireConsent()) {
+                mServerOverrideListener.onReacquireConsent(consentChangeReason);
+            }
+
+            final String callAgainAfterSecs = response.getCallAgainAfterSecs();
+            if (!TextUtils.isEmpty(callAgainAfterSecs)) {
+                try {
+                    final long callAgainAfterSecsLong = Long.parseLong(callAgainAfterSecs);
+                    if (callAgainAfterSecsLong > 0) {
+                        mSyncDelayMs = callAgainAfterSecsLong * 1000;
+                    } else {
+                        MoPubLog.d("callAgainAfterSecs is not positive: " + callAgainAfterSecs);
+                    }
+                } catch (NumberFormatException e) {
+                    MoPubLog.d("Unable to parse callAgainAfterSecs. Ignoring value");
+                }
+            }
+
+            // Clear out our cached udid if we have sent it one last time in case limit ad tracking
+            // is turned on.
+            if (!ConsentStatus.EXPLICIT_YES.equals(mSyncRequestConsentStatus)) {
+                mPersonalInfoData.setUdid(null);
+            }
+
+            if (mForceGdprAppliesChangedSending) {
+                mForceGdprAppliesChanged = false;
+                mForceGdprAppliesChangedSending = false;
+            }
+
+            mPersonalInfoData.writeToDisk();
+
+            mSyncRequestInFlight = false;
+
+            if (ConsentStatus.POTENTIAL_WHITELIST.equals(
+                    mSyncRequestConsentStatus) && mPersonalInfoData.isWhitelisted()) {
+                attemptStateTransition(ConsentStatus.EXPLICIT_YES,
+                        ConsentChangeReason.GRANTED_BY_WHITELISTED_PUB);
+                requestSync(true);
+            }
+
+            if (mSdkInitializationListener != null) {
+                mSdkInitializationListener.onInitializationFinished();
+                mSdkInitializationListener = null;
+            }
+        }
+
+        @Override
+        public void onErrorResponse(final VolleyError volleyError) {
+            MoPubLog.d("Failed sync request because of " +
+                    ((volleyError instanceof MoPubNetworkError) ?
+                            ((MoPubNetworkError) volleyError).getReason() : volleyError.getMessage()));
+            mSyncRequestInFlight = false;
+            if (mSdkInitializationListener != null) {
+                MoPubLog.d("Personal Info Manager initialization finished but ran into errors.");
+                mSdkInitializationListener.onInitializationFinished();
+                mSdkInitializationListener = null;
+            }
+        }
+    }
+
+    private class PersonalInfoServerOverrideListener implements AdRequest.ServerOverrideListener {
+        @Override
+        public void onForceExplicitNo(@Nullable final String consentChangeReason) {
+            if (TextUtils.isEmpty(consentChangeReason)) {
+                attemptStateTransition(ConsentStatus.EXPLICIT_NO,
+                        ConsentChangeReason.REVOKED_BY_SERVER);
+                return;
+            }
+            attemptStateTransition(ConsentStatus.EXPLICIT_NO, consentChangeReason);
+        }
+
+        @Override
+        public void onInvalidateConsent(@Nullable final String consentChangeReason) {
+            if (TextUtils.isEmpty(consentChangeReason)) {
+                attemptStateTransition(ConsentStatus.UNKNOWN,
+                        ConsentChangeReason.REACQUIRE_BY_SERVER);
+                return;
+            }
+            attemptStateTransition(ConsentStatus.UNKNOWN, consentChangeReason);
+        }
+
+        @Override
+        public void onReacquireConsent(@Nullable final String consentChangeReason) {
+            if (!TextUtils.isEmpty(consentChangeReason)) {
+                mPersonalInfoData.setConsentChangeReason(consentChangeReason);
+            }
+            mPersonalInfoData.setShouldReacquireConsent(true);
+            mPersonalInfoData.writeToDisk();
+        }
+
+        @Override
+        public void onForceGdprApplies() {
+            if (mPersonalInfoData.isForceGdprApplies()) {
+                return;
+            }
+            mPersonalInfoData.setForceGdprApplies(true);
+            mPersonalInfoData.writeToDisk();
+            mForceGdprAppliesChanged = true;
+            requestSync(true);
+        }
     }
 }

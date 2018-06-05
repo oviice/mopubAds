@@ -7,9 +7,7 @@ import android.support.annotation.Nullable;
 
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.privacy.PersonalInfoManager;
-import com.mopub.common.util.ManifestUtils;
 import com.mopub.common.util.Reflection;
-import com.mopub.mobileads.MoPubConversionTracker;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -17,7 +15,7 @@ import java.lang.reflect.Method;
 import static com.mopub.common.ExternalViewabilitySessionManager.ViewabilityVendor;
 
 public class MoPub {
-    public static final String SDK_VERSION = "5.0.0";
+    public static final String SDK_VERSION = "5.1.0";
 
     public enum LocationAwareness { NORMAL, TRUNCATED, DISABLED }
 
@@ -157,7 +155,7 @@ public class MoPub {
         Preconditions.checkNotNull(sdkConfiguration);
 
         // This also initializes MoPubLog
-        MoPubLog.d("Initializing MoPub");
+        MoPubLog.d("Initializing MoPub with ad unit: " + sdkConfiguration.getAdUnitId());
 
         if (context instanceof Activity && Reflection.classFound(MOPUB_REWARDED_VIDEO_MANAGER)) {
             final Activity activity = (Activity) context;
@@ -185,8 +183,6 @@ public class MoPub {
 
         sAdvancedBiddingTokens = new AdvancedBiddingTokens(compositeSdkInitializationListener);
         sAdvancedBiddingTokens.addAdvancedBidders(sdkConfiguration.getAdvancedBidders());
-
-        ManifestUtils.checkSdkActivitiesDeclared(context);
     }
 
     /**
