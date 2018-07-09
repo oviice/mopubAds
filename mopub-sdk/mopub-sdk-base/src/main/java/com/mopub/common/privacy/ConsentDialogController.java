@@ -20,8 +20,8 @@ public class ConsentDialogController implements ConsentDialogRequest.Listener {
 
     @Nullable private String mHtmlBody;
     @Nullable private ConsentDialogListener mExtListener;
-    private boolean mReady;
-    private boolean mRequestInFlight;
+    volatile boolean mReady;
+    volatile boolean mRequestInFlight;
     private final Handler mHandler;
 
     ConsentDialogController(@NonNull final Context appContext) {
@@ -71,7 +71,7 @@ public class ConsentDialogController implements ConsentDialogRequest.Listener {
         loadListener.onConsentDialogLoadFailed(MoPubErrorCode.UNSPECIFIED);
     }
 
-    void loadConsentDialog(@Nullable final ConsentDialogListener listener,
+    synchronized void loadConsentDialog(@Nullable final ConsentDialogListener listener,
             @Nullable final Boolean gdprApplies,
             @NonNull final PersonalInfoData personalInfoData) {
         Preconditions.checkNotNull(personalInfoData);

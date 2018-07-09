@@ -40,6 +40,7 @@ import java.util.Map;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
@@ -153,7 +154,7 @@ public class MoPubTest {
                 new SdkConfiguration.Builder(INIT_ADUNIT).build(),
                 mockInitializationListener);
 
-        org.mockito.Mockito.verify(mockInitializationListener).onInitializationFinished();
+        verify(mockInitializationListener).onInitializationFinished();
         verifyStatic();
         MoPubRewardedVideoManager.init(mActivity, mMediationSettings);
     }
@@ -164,7 +165,7 @@ public class MoPubTest {
                 new SdkConfiguration.Builder(INIT_ADUNIT).withMediationSettings(mMediationSettings).build(),
                 mockInitializationListener);
 
-        org.mockito.Mockito.verify(mockInitializationListener).onInitializationFinished();
+        verify(mockInitializationListener).onInitializationFinished();
         verifyStatic();
         MoPubRewardedVideoManager.init(mActivity, mMediationSettings);
     }
@@ -188,7 +189,7 @@ public class MoPubTest {
                         .build(),
                 mockInitializationListener);
 
-        org.mockito.Mockito.verify(mockInitializationListener).onInitializationFinished();
+        verify(mockInitializationListener).onInitializationFinished();
         List<Class<? extends CustomEventRewardedVideo>> classList = new ArrayList<>();
         classList.add(TestCustomEventRewardedVideo.class);
         classList.add(TestInheritedCustomEventRewardedVideo.class);
@@ -217,6 +218,7 @@ public class MoPubTest {
 
         verifyStatic(times(2));
         MoPubRewardedVideoManager.init(mActivity, mMediationSettings);
+        verify(mockInitializationListener);
     }
 
     @Test
@@ -292,7 +294,7 @@ public class MoPubTest {
         MoPub.initializeSdk(mActivity, new SdkConfiguration.Builder(
                 INIT_ADUNIT).build(), mockInitializationListener);
 
-        org.mockito.Mockito.verify(mockInitializationListener).onInitializationFinished();
+        verify(mockInitializationListener).onInitializationFinished();
     }
 
     private static class AdvancedBidderTestClass implements MoPubAdvancedBidder {

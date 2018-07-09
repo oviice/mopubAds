@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.GradientDrawable;
+import android.support.annotation.NonNull;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.ImageView;
@@ -25,23 +26,31 @@ import com.mopub.nativeads.NativeFullScreenVideoView.LoadingBackground;
 import com.mopub.nativeads.NativeFullScreenVideoView.Mode;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
 @Config(constants = BuildConfig.class)
+@PowerMockIgnore({ "org.mockito.*", "org.robolectric.*", "android.*", "org.json.*"})
+@PrepareForTest(NativeImageHelper.class)
 public class NativeFullScreenVideoViewTest {
 
     private NativeFullScreenVideoView subject;
@@ -66,10 +75,12 @@ public class NativeFullScreenVideoViewTest {
     private ImageView spyCtaButton;
     private ImageView spyCloseControl;
 
-    @Mock TextureView.SurfaceTextureListener mockSurfaceTextureListener;
-    @Mock SurfaceTexture mockSurfaceTexture;
-    @Mock RectF mockRectF;
-    @Mock Paint mockPaint;
+    @Rule public PowerMockRule rule = new PowerMockRule();
+
+    private TextureView.SurfaceTextureListener mockSurfaceTextureListener;
+    private SurfaceTexture mockSurfaceTexture;
+    private RectF mockRectF;
+    private Paint mockPaint;
     private Configuration configuration;
 
     @Before
@@ -90,12 +101,17 @@ public class NativeFullScreenVideoViewTest {
         spyLoadingSpinner = spy(new ProgressBar(context));
         spyBottomGradient = spy(new ImageView(context));
         spyTopGradient = spy(new ImageView(context));
-        spyVideoProgress = spy(new VastVideoProgressBarWidget(context));
+        spyVideoProgress = spy(new VastVideoProgressBarWidgetMock(context));
         spyOverlay = spy(new View(context));
         spyPlayButton = spy(new ImageView(context));
         spyPrivacyInformationIcon = spy(new ImageView(context));
         spyCtaButton = spy(new ImageView(context));
         spyCloseControl = spy(new ImageView(context));
+
+        mockSurfaceTextureListener = mock(TextureView.SurfaceTextureListener.class);
+        mockSurfaceTexture = mock(SurfaceTexture.class);
+        mockRectF = mock(RectF.class);
+        mockPaint = mock(Paint.class);
 
         subject = new NativeFullScreenVideoView(context, Configuration.ORIENTATION_LANDSCAPE, "Learn More",
                 spyCachedImage,
@@ -103,6 +119,7 @@ public class NativeFullScreenVideoViewTest {
                 spyVideoProgress, spyOverlay, spyPlayButton, spyPrivacyInformationIcon, spyCtaButton,
                 spyCloseControl);
 
+        PowerMockito.mockStatic(NativeImageHelper.class);
     }
 
     @Test
@@ -214,10 +231,10 @@ public class NativeFullScreenVideoViewTest {
     }
 
     @Test
-    public void constructor_shouldAddPrivacyInformationIconToLayout() throws Exception {
+    public void constructor_shouldSetUpPrivacyInformationIconToLayout() throws Exception {
         assertThat(subject.findViewById(spyPrivacyInformationIcon.getId())).isEqualTo(
                 spyPrivacyInformationIcon);
-        verify(spyPrivacyInformationIcon).setImageDrawable(
+        verify(spyPrivacyInformationIcon, times(0)).setImageDrawable(
                 Drawables.NATIVE_PRIVACY_INFORMATION_ICON.createDrawable(context));
         assertThat(spyPrivacyInformationIcon.getPaddingLeft()).isEqualTo(subject.mClosePaddingPx);
         assertThat(spyPrivacyInformationIcon.getPaddingTop()).isEqualTo(subject.mClosePaddingPx);
@@ -273,6 +290,22 @@ public class NativeFullScreenVideoViewTest {
                 .isEqualTo(spyVideoTexture.getId());
         assertThat(layoutParams.getRules()[RelativeLayout.ALIGN_RIGHT])
                 .isEqualTo(spyVideoTexture.getId());
+    }
+
+    @Test
+    public void setPrivacyInformationIconImageUrl_withNullUrl_shouldUseDefaultIcon() {
+        subject.setPrivacyInformationIconImageUrl(null);
+
+        verify(spyPrivacyInformationIcon).setImageDrawable(
+                Drawables.NATIVE_PRIVACY_INFORMATION_ICON.createDrawable(context));
+    }
+
+    @Test
+    public void setPrivacyInformationIconImageUrl_withUrl_shouldSetIconImageToUrl() {
+        subject.setPrivacyInformationIconImageUrl("imageurl");
+
+        PowerMockito.verifyStatic();
+        NativeImageHelper.loadImageView("imageurl", spyPrivacyInformationIcon);
     }
 
     @Test
@@ -488,5 +521,14 @@ public class NativeFullScreenVideoViewTest {
     public void LoadingBackground_getOpacity_shouldReturn0() throws Exception {
         assertThat(new LoadingBackground(context, mockRectF, mockPaint).getOpacity())
                 .isEqualTo(0);
+    }
+
+    // To get around objenesis errors
+    class VastVideoProgressBarWidgetMock extends VastVideoProgressBarWidget {
+
+        public VastVideoProgressBarWidgetMock(
+                @NonNull final Context context) {
+            super(context);
+        }
     }
 }

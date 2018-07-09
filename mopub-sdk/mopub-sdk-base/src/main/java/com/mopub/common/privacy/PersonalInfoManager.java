@@ -248,9 +248,15 @@ public class PersonalInfoManager {
         if (mPersonalInfoData.isForceGdprApplies()) {
             return;
         }
+        final boolean oldCanCollectPersonalInformation = canCollectPersonalInformation();
         mPersonalInfoData.setForceGdprApplies(true);
         mForceGdprAppliesChanged = true;
         mPersonalInfoData.writeToDisk();
+        final boolean newCanCollectPersonalInformation = canCollectPersonalInformation();
+        if (oldCanCollectPersonalInformation != newCanCollectPersonalInformation) {
+            fireOnConsentStateChangeListeners(mPersonalInfoData.getConsentStatus(),
+                    mPersonalInfoData.getConsentStatus(), newCanCollectPersonalInformation);
+        }
         requestSync(true);
     }
 
@@ -446,13 +452,19 @@ public class PersonalInfoManager {
      * @param newConsentStatus    The new consent status we want to transition to.
      * @param consentChangeReason Why the state changed.
      */
-    private void attemptStateTransition(@NonNull final ConsentStatus newConsentStatus,
+    @VisibleForTesting
+    void attemptStateTransition(@NonNull final ConsentStatus newConsentStatus,
             @NonNull final String consentChangeReason) {
         Preconditions.checkNotNull(newConsentStatus);
         Preconditions.checkNotNull(consentChangeReason);
 
-
         final ConsentStatus oldConsentStatus = mPersonalInfoData.getConsentStatus();
+        if (oldConsentStatus.equals(newConsentStatus)) {
+            MoPubLog.d("Consent status is already " + oldConsentStatus +
+                    ". Not doing a state transition.");
+            return;
+        }
+
         MoPubLog.d("Changing consent status from " + oldConsentStatus + "to " + newConsentStatus +
                 " because " + consentChangeReason);
         mPersonalInfoData.setConsentChangeReason(consentChangeReason);
@@ -495,6 +507,13 @@ public class PersonalInfoManager {
             }
         }
 
+        fireOnConsentStateChangeListeners(oldConsentStatus, newConsentStatus,
+                canCollectPersonalInformation);
+    }
+
+    private void fireOnConsentStateChangeListeners(@NonNull final ConsentStatus oldConsentStatus,
+            @NonNull final ConsentStatus newConsentStatus,
+            final boolean canCollectPersonalInformation) {
         synchronized (mConsentStatusChangeListeners) {
             for (final ConsentStatusChangeListener stateChangeListener : mConsentStatusChangeListeners) {
                 new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -539,11 +558,20 @@ public class PersonalInfoManager {
 
         @Override
         public void onSuccess(final SyncResponse response) {
-            if (response.isForceGdprApplies()) {
-                mPersonalInfoData.setGdprApplies(true);
-            } else if (mPersonalInfoData.getGdprApplies() == null) {
+            final boolean oldCanCollectPersonalInformation = canCollectPersonalInformation();
+            if (mPersonalInfoData.getGdprApplies() == null) {
                 mPersonalInfoData.setGdprApplies(response.isGdprRegion());
             }
+            if (response.isForceGdprApplies()) {
+                mForceGdprAppliesChanged = true;
+                mPersonalInfoData.setForceGdprApplies(true);
+                final boolean newCanCollectPersonalInformation = canCollectPersonalInformation();
+                if (oldCanCollectPersonalInformation != newCanCollectPersonalInformation) {
+                    fireOnConsentStateChangeListeners(mPersonalInfoData.getConsentStatus(),
+                            mPersonalInfoData.getConsentStatus(), newCanCollectPersonalInformation);
+                }
+            }
+
             mPersonalInfoData.setLastChangedMs("" + mSyncRequestEpochTime);
             mPersonalInfoData.setLastSuccessfullySyncedConsentStatus(mSyncRequestConsentStatus);
             mPersonalInfoData.setWhitelisted(response.isWhitelisted());
@@ -663,13 +691,21 @@ public class PersonalInfoManager {
 
         @Override
         public void onForceGdprApplies() {
-            if (mPersonalInfoData.isForceGdprApplies()) {
-                return;
-            }
-            mPersonalInfoData.setForceGdprApplies(true);
-            mPersonalInfoData.writeToDisk();
-            mForceGdprAppliesChanged = true;
-            requestSync(true);
+            forceGdprApplies();
         }
+    }
+
+    @NonNull
+    @Deprecated
+    @VisibleForTesting
+    PersonalInfoData getPersonalInfoData() {
+        return mPersonalInfoData;
+    }
+
+    @NonNull
+    @Deprecated
+    @VisibleForTesting
+    AdRequest.ServerOverrideListener getServerOverrideListener() {
+        return mServerOverrideListener;
     }
 }

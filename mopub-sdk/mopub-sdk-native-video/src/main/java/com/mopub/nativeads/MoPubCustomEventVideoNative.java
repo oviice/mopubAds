@@ -101,7 +101,9 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
             CLICK_DESTINATION("clk", false),
             FALLBACK("fallback", false),
             CALL_TO_ACTION("ctatext", false),
-            VAST_VIDEO("video", false);
+            VAST_VIDEO("video", false),
+            PRIVACY_INFORMATION_ICON_IMAGE_URL("privacyicon", false),
+            PRIVACY_INFORMATION_ICON_CLICKTHROUGH_URL("privacyclkurl", false);
 
             @NonNull final String mName;
             final boolean mRequired;
@@ -256,7 +258,9 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
                     addExtra(key, mJsonObject.opt(key));
                 }
             }
-            setPrivacyInformationIconClickThroughUrl(PRIVACY_INFORMATION_CLICKTHROUGH_URL);
+            if (TextUtils.isEmpty(getPrivacyInformationIconClickThroughUrl())) {
+                setPrivacyInformationIconClickThroughUrl(PRIVACY_INFORMATION_CLICKTHROUGH_URL);
+            }
 
             preCacheImages(mContext, getAllImageUrls(), new NativeImageHelper.ImageListener() {
                 @Override
@@ -326,6 +330,10 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
                         vastVideoViewabilityTracker.getViewablePlaytimeMS();
                 visibilityTrackingEvents.add(vastVisibilityTrackingEvent);
             }
+
+            mVastVideoConfig.setPrivacyInformationIconImageUrl(getPrivacyInformationIconImageUrl());
+            mVastVideoConfig.setPrivacyInformationIconClickthroughUrl(
+                    getPrivacyInformationIconClickThroughUrl());
 
             Set<String> clickTrackers = new HashSet<String>();
             clickTrackers.add(mMoPubClickTrackingUrl);
@@ -397,6 +405,12 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
                         break;
                     case VAST_VIDEO:
                         setVastVideo((String) value);
+                        break;
+                    case PRIVACY_INFORMATION_ICON_IMAGE_URL:
+                        setPrivacyInformationIconImageUrl((String) value);
+                        break;
+                    case PRIVACY_INFORMATION_ICON_CLICKTHROUGH_URL:
+                        setPrivacyInformationIconClickThroughUrl((String) value);
                         break;
                     default:
                         MoPubLog.d("Unable to add JSON key to internal mapping: " + key.mName);
@@ -767,11 +781,14 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
         @NonNull
         private List<String> getAllImageUrls() {
             final List<String> imageUrls = new ArrayList<String>();
-            if (getMainImageUrl() != null) {
+            if (!TextUtils.isEmpty(getMainImageUrl())) {
                 imageUrls.add(getMainImageUrl());
             }
-            if (getIconImageUrl() != null) {
+            if (!TextUtils.isEmpty(getIconImageUrl())) {
                 imageUrls.add(getIconImageUrl());
+            }
+            if (!TextUtils.isEmpty(getPrivacyInformationIconImageUrl())) {
+                imageUrls.add(getPrivacyInformationIconImageUrl());
             }
 
             imageUrls.addAll(getExtrasImageUrls());

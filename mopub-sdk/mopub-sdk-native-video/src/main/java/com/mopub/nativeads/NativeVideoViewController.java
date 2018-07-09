@@ -9,6 +9,7 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
@@ -124,11 +125,16 @@ public class NativeVideoViewController extends BaseVideoViewController implement
             public void onClick(View v) {
                 mNativeVideoController.setPlayWhenReady(false);
                 mCachedVideoFrame = mFullScreenVideoView.getTextureView().getBitmap();
+                String url = mVastVideoConfig.getPrivacyInformationIconClickthroughUrl();
+                if (TextUtils.isEmpty(url)) {
+                    url = MoPubVideoNativeAd.PRIVACY_INFORMATION_CLICKTHROUGH_URL;
+                }
                 new UrlHandler.Builder().withSupportedUrlActions(UrlAction.OPEN_IN_APP_BROWSER)
-                        .build().handleUrl(getContext(),
-                        MoPubVideoNativeAd.PRIVACY_INFORMATION_CLICKTHROUGH_URL);
+                        .build().handleUrl(getContext(), url);
             }
         });
+        mFullScreenVideoView.setPrivacyInformationIconImageUrl(
+                mVastVideoConfig.getPrivacyInformationIconImageUrl());
 
         final LayoutParams adViewLayout =
                 new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);

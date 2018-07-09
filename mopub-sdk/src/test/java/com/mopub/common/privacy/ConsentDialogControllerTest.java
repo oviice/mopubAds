@@ -3,11 +3,12 @@ package com.mopub.common.privacy;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.app.SupportActivity;
+import android.net.Uri;
 
 import com.mopub.common.Constants;
+import com.mopub.common.MoPub;
+import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.Intents;
-import com.mopub.common.util.Reflection;
 import com.mopub.mobileads.BuildConfig;
 import com.mopub.mobileads.MoPubErrorCode;
 import com.mopub.network.MoPubNetworkError;
@@ -27,10 +28,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.robolectric.Robolectric;
-import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-
-import java.lang.reflect.Field;
 
 import static com.mopub.network.MoPubNetworkError.Reason.BAD_BODY;
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -40,14 +38,13 @@ import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
-@RunWith(RobolectricTestRunner.class)
+@RunWith(SdkTestRunner.class)
 @Config(constants = BuildConfig.class)
 @PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "org.json.*"})
 @PrepareForTest({Networking.class, Intents.class})
 public class ConsentDialogControllerTest {
     private static final String AD_UNIT_ID = "ad_unit_id";
-    private static final String MREADY = "mReady";
-    private static final String REQUEST_IN_FLIGHT = "mRequestInFlight";
+    private static final String HTML_TEXT = "html_text";
 
     @Rule
     public PowerMockRule rule = new PowerMockRule();
@@ -62,11 +59,11 @@ public class ConsentDialogControllerTest {
 
     @Before
     public void setup() {
-        Activity activity = Robolectric.buildActivity(SupportActivity.class).get();
+        Activity activity = Robolectric.buildActivity(Activity.class).get();
         Context context = activity.getApplicationContext();
         mockRequestQueue = Mockito.mock(MoPubRequestQueueTest.TestMoPubRequestQueue.class);
         mockDialogListener = Mockito.mock(ConsentDialogListener.class);
-        dialogResponse = new ConsentDialogResponse("html_text");
+        dialogResponse = new ConsentDialogResponse(HTML_TEXT);
         personalInfoData = new PersonalInfoData(context, AD_UNIT_ID);
 
         PowerMockito.mockStatic(Networking.class);
@@ -79,42 +76,44 @@ public class ConsentDialogControllerTest {
     }
 
     @Test
-    public void loadConsentDialog_whenReadyIsFalse_whenRequestInFlightIsFalse_shouldAddRequestToNetworkQueue() throws Exception {
+    public void loadConsentDialog_whenReadyIsFalse_whenRequestInFlightIsFalse_shouldAddRequestToNetworkQueue() {
         ArgumentCaptor<ConsentDialogRequest> requestCaptor = ArgumentCaptor.forClass(ConsentDialogRequest.class);
 
         subject.loadConsentDialog(mockDialogListener, true, personalInfoData);
 
-        assertThat(getFlag(subject, REQUEST_IN_FLIGHT)).isTrue();
+        assertThat(subject.mRequestInFlight).isTrue();
         verify(mockDialogListener, never()).onConsentDialogLoaded();
         verify(mockRequestQueue).add(requestCaptor.capture());
         ConsentDialogRequest request = requestCaptor.getValue();
-        assertThat(request.getUrl().indexOf(Constants.GDPR_CONSENT_HANDLER)).isNotNegative();
+        String originalUrl = request.getOriginalUrl();
+        String minUrl = generateTestUrl();
+        assertThat(minUrl).isEqualTo(originalUrl);
     }
 
     @Test
-    public void loadConsentDialog_whenReadyIsTrue_whenRequestInFlightIsFalse_shouldNotAddRequestToNetworkQueue() throws Exception {
-        setFlagReady(subject);
+    public void loadConsentDialog_whenReadyIsTrue_whenRequestInFlightIsFalse_shouldNotAddRequestToNetworkQueue() {
+        subject.mReady = true;
 
         subject.loadConsentDialog(mockDialogListener, true, personalInfoData);
 
-        assertThat(getFlag(subject, REQUEST_IN_FLIGHT)).isFalse();
+        assertThat(subject.mRequestInFlight).isFalse();
         verify(mockDialogListener).onConsentDialogLoaded(); // should call listener immediately
         verify(mockRequestQueue, never()).add(any(ConsentDialogRequest.class));
     }
 
     @Test
-    public void loadConsentDialog_whenReadyIsTrue_witListenerNotSet_shouldNotCrash() throws Exception {
-        setFlagReady(subject);
+    public void loadConsentDialog_whenReadyIsTrue_withListenerNotSet_shouldNotCrash() {
+        subject.mReady = true;
 
         subject.loadConsentDialog(null, true, personalInfoData);
 
-        assertThat(getFlag(subject, REQUEST_IN_FLIGHT)).isFalse();
+        assertThat(subject.mRequestInFlight).isFalse();
         verify(mockRequestQueue, never()).add(any(ConsentDialogRequest.class));
     }
 
     @Test
-    public void loadConsentDialog_whenRequestInFlightIsTrue_shouldNotCreateNewRequest_shouldNotCallListener() throws Exception {
-        setFlagRequestInFlight(subject);
+    public void loadConsentDialog_whenRequestInFlightIsTrue_shouldNotCreateNewRequest_shouldNotCallListener() {
+        subject.mRequestInFlight = true;
 
         subject.loadConsentDialog(mockDialogListener, true, personalInfoData);
 
@@ -123,45 +122,45 @@ public class ConsentDialogControllerTest {
     }
 
     @Test
-    public void onSuccess_withValidResponse_shouldCallConsentDialogLoaded() throws Exception {
+    public void onSuccess_withValidResponse_shouldCallConsentDialogLoaded() {
         subject.loadConsentDialog(mockDialogListener, true, personalInfoData);
         subject.onSuccess(dialogResponse);
 
-        assertThat(getFlag(subject, MREADY)).isTrue();
-        assertThat(getFlag(subject, REQUEST_IN_FLIGHT)).isFalse();
+        assertThat(subject.mReady).isTrue();
+        assertThat(subject.mRequestInFlight).isFalse();
         verify(mockDialogListener).onConsentDialogLoaded();
         verify(mockDialogListener, never()).onConsentDialogLoadFailed(any(MoPubErrorCode.class));
     }
 
     @Test
-    public void onSuccess_withEmptyResponse_shouldNotCallConsentDialogLoaded() throws Exception {
+    public void onSuccess_withEmptyResponse_shouldNotCallConsentDialogLoaded() {
         subject.loadConsentDialog(mockDialogListener, true, personalInfoData);
         subject.onSuccess(new ConsentDialogResponse(""));
 
-        assertThat(getFlag(subject, MREADY)).isFalse();
-        assertThat(getFlag(subject, REQUEST_IN_FLIGHT)).isFalse();
+        assertThat(subject.mReady).isFalse();
+        assertThat(subject.mRequestInFlight).isFalse();
         verify(mockDialogListener, never()).onConsentDialogLoaded();
         verify(mockDialogListener).onConsentDialogLoadFailed(any(MoPubErrorCode.class));
     }
 
     @Test
-    public void onErrorResponse_shouldResetState_shouldCallDialogFailed() throws Exception {
+    public void onErrorResponse_shouldResetState_shouldCallDialogFailed() {
         subject.loadConsentDialog(mockDialogListener, true, personalInfoData);
         subject.onErrorResponse(new VolleyError());
 
-        assertThat(getFlag(subject, MREADY)).isFalse();
-        assertThat(getFlag(subject, REQUEST_IN_FLIGHT)).isFalse();
+        assertThat(subject.mReady).isFalse();
+        assertThat(subject.mRequestInFlight).isFalse();
         verify(mockDialogListener, never()).onConsentDialogLoaded();
         verify(mockDialogListener).onConsentDialogLoadFailed(any(MoPubErrorCode.class));
     }
 
     @Test
-    public void onErrorResponse_withErrorBadBody_shouldResetState_shouldCallDialogFailed() throws Exception {
+    public void onErrorResponse_withErrorBadBody_shouldResetState_shouldCallDialogFailed() {
         subject.loadConsentDialog(mockDialogListener, true, personalInfoData);
         subject.onErrorResponse(new MoPubNetworkError(BAD_BODY));
 
-        assertThat(getFlag(subject, MREADY)).isFalse();
-        assertThat(getFlag(subject, REQUEST_IN_FLIGHT)).isFalse();
+        assertThat(subject.mReady).isFalse();
+        assertThat(subject.mRequestInFlight).isFalse();
         verify(mockDialogListener, never()).onConsentDialogLoaded();
         verify(mockDialogListener).onConsentDialogLoadFailed(MoPubErrorCode.INTERNAL_ERROR);
     }
@@ -173,8 +172,8 @@ public class ConsentDialogControllerTest {
 
         subject.showConsentDialog();
 
-        assertThat(getFlag(subject, MREADY)).isFalse();
-        assertThat(getFlag(subject, REQUEST_IN_FLIGHT)).isFalse();
+        assertThat(subject.mReady).isFalse();
+        assertThat(subject.mRequestInFlight).isFalse();
         verifyStatic();
         Intents.startActivity(any(Context.class), any(Intent.class));
     }
@@ -186,25 +185,21 @@ public class ConsentDialogControllerTest {
 
         subject.showConsentDialog();
 
-        assertThat(getFlag(subject, MREADY)).isFalse();
-        assertThat(getFlag(subject, REQUEST_IN_FLIGHT)).isFalse();
+        assertThat(subject.mReady).isFalse();
+        assertThat(subject.mRequestInFlight).isFalse();
         verifyStatic(never());
         Intents.startActivity(any(Context.class), any(Intent.class));
     }
 
     // test utils
-    private static void setFlagReady(ConsentDialogController target) throws Exception {
-        Field field = Reflection.getPrivateField(ConsentDialogController.class, MREADY);
-        field.setBoolean(target, true);
-    }
-
-    private static void setFlagRequestInFlight(ConsentDialogController target) throws Exception {
-        Field field = Reflection.getPrivateField(ConsentDialogController.class, REQUEST_IN_FLIGHT);
-        field.setBoolean(target, true);
-    }
-
-    private static boolean getFlag(ConsentDialogController target, final String fieldName) throws Exception {
-        Field field = Reflection.getPrivateField(ConsentDialogController.class, fieldName);
-        return field.getBoolean(target);
+    private String generateTestUrl() {
+        return "https://" + Constants.HOST + "/m/gdpr_consent_dialog" +
+                "?id=" + Uri.encode(AD_UNIT_ID) +
+                "&current_consent_status=unknown" +
+                "&nv=" + Uri.encode(MoPub.SDK_VERSION) +
+                "&language=en" +
+                "&gdpr_applies=1" +
+                "&force_gdpr_applies=0" +
+                "&bundle=com.mopub.mobileads";
     }
 }

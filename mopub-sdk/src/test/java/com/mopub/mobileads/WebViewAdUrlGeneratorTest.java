@@ -25,17 +25,18 @@ import com.mopub.common.LocationService;
 import com.mopub.common.MoPub;
 import com.mopub.common.MoPubAdvancedBidder;
 import com.mopub.common.SdkConfiguration;
+import com.mopub.common.privacy.AdvertisingId;
 import com.mopub.common.privacy.ConsentData;
 import com.mopub.common.privacy.ConsentStatus;
-import com.mopub.common.privacy.PersonalInfoManager;
-import com.mopub.common.privacy.AdvertisingId;
 import com.mopub.common.privacy.MoPubIdentifier;
 import com.mopub.common.privacy.MoPubIdentifierTest;
+import com.mopub.common.privacy.PersonalInfoManager;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.Reflection;
 import com.mopub.common.util.Reflection.MethodBuilder;
 import com.mopub.common.util.Utils;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
+import com.mopub.mobileads.test.support.MoPubShadowConnectivityManager;
 import com.mopub.mobileads.test.support.MoPubShadowTelephonyManager;
 import com.mopub.mraid.MraidNativeCommandHandler;
 import com.mopub.network.PlayServicesUrlRewriter;
@@ -50,20 +51,16 @@ import org.robolectric.Robolectric;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowConnectivityManager;
 import org.robolectric.shadows.ShadowLocationManager;
 import org.robolectric.shadows.ShadowNetworkInfo;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
+import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.net.ConnectivityManager.TYPE_DUMMY;
 import static android.net.ConnectivityManager.TYPE_ETHERNET;
 import static android.net.ConnectivityManager.TYPE_MOBILE;
-import static android.net.ConnectivityManager.TYPE_MOBILE_DUN;
-import static android.net.ConnectivityManager.TYPE_MOBILE_HIPRI;
-import static android.net.ConnectivityManager.TYPE_MOBILE_MMS;
-import static android.net.ConnectivityManager.TYPE_MOBILE_SUPL;
 import static android.net.ConnectivityManager.TYPE_WIFI;
 import static android.telephony.TelephonyManager.NETWORK_TYPE_UNKNOWN;
 import static com.mopub.common.ClientMetadata.MoPubNetworkType;
@@ -78,7 +75,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class, shadows = {MoPubShadowTelephonyManager.class})
+@Config(constants = BuildConfig.class, shadows = {MoPubShadowTelephonyManager.class, MoPubShadowConnectivityManager.class})
 public class WebViewAdUrlGeneratorTest {
 
     private static final String TEST_UDID = "20b013c721c";
@@ -90,7 +87,7 @@ public class WebViewAdUrlGeneratorTest {
     private String expectedUdid;
     private Configuration configuration;
     private MoPubShadowTelephonyManager shadowTelephonyManager;
-    private ShadowConnectivityManager shadowConnectivityManager;
+    private MoPubShadowConnectivityManager shadowConnectivityManager;
     private Activity context;
     private MethodBuilder methodBuilder;
     private PersonalInfoManager mockPersonalInfoManager;
@@ -102,6 +99,7 @@ public class WebViewAdUrlGeneratorTest {
         Shadows.shadowOf(context).grantPermissions(ACCESS_NETWORK_STATE);
         Shadows.shadowOf(context).grantPermissions(ACCESS_FINE_LOCATION);
         Shadows.shadowOf(context).grantPermissions(ACCESS_COARSE_LOCATION);
+        Shadows.shadowOf(context).grantPermissions(READ_PHONE_STATE);
 
         // Set the expected screen dimensions to arbitrary numbers
         final Resources spyResources = spy(context.getResources());
@@ -157,7 +155,9 @@ public class WebViewAdUrlGeneratorTest {
         expectedUdid = "sha%3A" + Utils.sha1(TEST_UDID);
         configuration = RuntimeEnvironment.application.getResources().getConfiguration();
         shadowTelephonyManager = (MoPubShadowTelephonyManager) Shadows.shadowOf((TelephonyManager) RuntimeEnvironment.application.getSystemService(Context.TELEPHONY_SERVICE));
-        shadowConnectivityManager = Shadows.shadowOf((ConnectivityManager) RuntimeEnvironment.application.getSystemService(Context.CONNECTIVITY_SERVICE));
+        shadowConnectivityManager = (MoPubShadowConnectivityManager) Shadows.shadowOf((ConnectivityManager) RuntimeEnvironment.application.getSystemService(Context.CONNECTIVITY_SERVICE));
+        shadowConnectivityManager.clearAllNetworks();
+        shadowConnectivityManager.setActiveNetworkInfo(createNetworkInfo(TYPE_MOBILE));
         methodBuilder = TestMethodBuilderFactory.getSingletonMock();
 
         LocationService.clearLastKnownLocation();
@@ -562,6 +562,7 @@ public class WebViewAdUrlGeneratorTest {
 
         when(mockPersonalInfoManager.canCollectPersonalInformation()).thenReturn(true);
 
+        shadowConnectivityManager.setActiveNetworkInfo(null);
         shadowConnectivityManager.setActiveNetworkInfo(createNetworkInfo(TYPE_DUMMY));
         adUrl = generateMinimumUrlString();
         assertThat(adUrl).isEqualTo(urlBuilder.withNetworkType(MoPubNetworkType.UNKNOWN).build());
@@ -569,31 +570,36 @@ public class WebViewAdUrlGeneratorTest {
         shadowConnectivityManager.setActiveNetworkInfo(createNetworkInfo(TYPE_ETHERNET));
         adUrl = generateMinimumUrlString();
         assertThat(adUrl).isEqualTo(urlBuilder.withNetworkType(MoPubNetworkType.ETHERNET).build());
+        shadowConnectivityManager.clearAllNetworks();
 
         shadowConnectivityManager.setActiveNetworkInfo(createNetworkInfo(TYPE_WIFI));
         adUrl = generateMinimumUrlString();
         assertThat(adUrl).isEqualTo(urlBuilder.withNetworkType(MoPubNetworkType.WIFI).build());
 
-        // bunch of random mobile types just to make life more interesting
+        shadowConnectivityManager.setNetworkInfo(TYPE_WIFI, null);
+        shadowConnectivityManager.clearAllNetworks();
         shadowConnectivityManager.setActiveNetworkInfo(createNetworkInfo(TYPE_MOBILE));
-        adUrl = generateMinimumUrlString();
-        assertThat(adUrl).isEqualTo(urlBuilder.withNetworkType(MoPubNetworkType.MOBILE).build());
 
-        shadowConnectivityManager.setActiveNetworkInfo(createNetworkInfo(TYPE_MOBILE_DUN));
+        // bunch of random mobile types just to make life more interesting
+        shadowConnectivityManager.setActiveNetworkInfo(
+                createNetworkInfo(TYPE_MOBILE, TelephonyManager.NETWORK_TYPE_GPRS));
         adUrl = generateMinimumUrlString();
-        assertThat(adUrl).isEqualTo(urlBuilder.withNetworkType(MoPubNetworkType.MOBILE).build());
+        assertThat(adUrl).isEqualTo(urlBuilder.withNetworkType(MoPubNetworkType.GG).build());
 
-        shadowConnectivityManager.setActiveNetworkInfo(createNetworkInfo(TYPE_MOBILE_HIPRI));
+        shadowConnectivityManager.setActiveNetworkInfo(
+                createNetworkInfo(TYPE_MOBILE, TelephonyManager.NETWORK_TYPE_HSPA));
         adUrl = generateMinimumUrlString();
-        assertThat(adUrl).isEqualTo(urlBuilder.withNetworkType(MoPubNetworkType.MOBILE).build());
+        assertThat(adUrl).isEqualTo(urlBuilder.withNetworkType(MoPubNetworkType.GGG).build());
 
-        shadowConnectivityManager.setActiveNetworkInfo(createNetworkInfo(TYPE_MOBILE_MMS));
+        shadowConnectivityManager.setActiveNetworkInfo(
+                createNetworkInfo(TYPE_MOBILE, TelephonyManager.NETWORK_TYPE_EVDO_0));
         adUrl = generateMinimumUrlString();
-        assertThat(adUrl).isEqualTo(urlBuilder.withNetworkType(MoPubNetworkType.MOBILE).build());
+        assertThat(adUrl).isEqualTo(urlBuilder.withNetworkType(MoPubNetworkType.GGG).build());
 
-        shadowConnectivityManager.setActiveNetworkInfo(createNetworkInfo(TYPE_MOBILE_SUPL));
+        shadowConnectivityManager.setActiveNetworkInfo(
+                createNetworkInfo(TYPE_MOBILE, TelephonyManager.NETWORK_TYPE_LTE));
         adUrl = generateMinimumUrlString();
-        assertThat(adUrl).isEqualTo(urlBuilder.withNetworkType(MoPubNetworkType.MOBILE).build());
+        assertThat(adUrl).isEqualTo(urlBuilder.withNetworkType(MoPubNetworkType.GGGG).build());
     }
 
     @Test
@@ -991,10 +997,14 @@ public class WebViewAdUrlGeneratorTest {
         return parameter;
     }
 
-    private NetworkInfo createNetworkInfo(int type) {
+    private NetworkInfo createNetworkInfo(int type, int subtype) {
         return ShadowNetworkInfo.newInstance(null,
                 type,
-                NETWORK_TYPE_UNKNOWN, true, true);
+                subtype, true, true);
+    }
+
+    private NetworkInfo createNetworkInfo(int type) {
+       return createNetworkInfo(type, NETWORK_TYPE_UNKNOWN);
     }
 
     private String generateMinimumUrlString() {

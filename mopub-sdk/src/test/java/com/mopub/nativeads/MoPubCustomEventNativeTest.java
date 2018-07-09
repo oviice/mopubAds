@@ -49,6 +49,8 @@ public class MoPubCustomEventNativeTest {
         fakeJsonObject.put("mainimage", "mainimageurl");
         fakeJsonObject.put("iconimage", "iconimageurl");
         fakeJsonObject.put("extraimage", "extraimageurl");
+        fakeJsonObject.put("privacyicon", "privacyiconurl");
+        fakeJsonObject.put("privacyclkurl", "privacyiconclickthroughurl");
 
         localExtras.put(DataKeys.JSON_BODY_KEY, fakeJsonObject);
     }

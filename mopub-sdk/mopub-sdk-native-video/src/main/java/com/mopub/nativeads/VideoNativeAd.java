@@ -66,6 +66,12 @@ public abstract class VideoNativeAd extends BaseNativeAd implements NativeVideoC
         return mCallToAction;
     }
 
+    /**
+     * Returns the Privacy Information clickthrough url
+     *
+     * @return String representing the Privacy Information Icon clickthrough url, or {@code null}
+     * if not set.
+     */
     @Nullable
     public String getPrivacyInformationIconClickThroughUrl() {
         return mPrivacyInformationIconClickThroughUrl;

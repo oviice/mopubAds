@@ -10,6 +10,7 @@ import com.mopub.common.DataKeys;
 import com.mopub.common.LifecycleListener;
 import com.mopub.common.MoPub;
 import com.mopub.common.MoPubReward;
+import com.mopub.common.SdkConfiguration;
 import com.mopub.common.SharedPreferencesHelper;
 import com.mopub.common.privacy.ConsentStatus;
 import com.mopub.common.privacy.MoPubIdentifierTest;
@@ -96,6 +97,13 @@ public class
     @Before
     public void setup() throws Exception {
         mActivity = Robolectric.buildActivity(Activity.class).create().get();
+
+        new Reflection.MethodBuilder(null, "clearAdvancedBidders")
+                .setStatic(MoPub.class)
+                .setAccessible()
+                .execute();
+        MoPub.initializeSdk(mActivity, new SdkConfiguration.Builder("adunit").build(), null);
+
         MoPubIdentifierTest.writeAdvertisingInfoToSharedPreferences(mActivity, false);
         MoPubRewardedVideoManager.init(mActivity);
         // The fact that next call fixes issues in multiple tests proves that Robolectric doesn't
@@ -110,6 +118,11 @@ public class
 
         mockPersonalInfoManager = mock(PersonalInfoManager.class);
         when(mockPersonalInfoManager.getPersonalInfoConsentStatus()).thenReturn(ConsentStatus.UNKNOWN);
+        new Reflection.MethodBuilder(null, "setPersonalInfoManager")
+                .setStatic(MoPub.class)
+                .setAccessible()
+                .addParam(PersonalInfoManager.class, mockPersonalInfoManager)
+                .execute();
 
         when(mockRequestQueue.add(any(Request.class))).then(new Answer<Object>() {
             @Override
@@ -136,14 +149,17 @@ public class
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         // Unpause the main looper in case a test terminated while the looper was paused.
         ShadowLooper.unPauseMainLooper();
         MoPubRewardedVideoManager.getRewardedAdData().clear();
         MoPubRewardedVideoManager.getAdRequestStatusMapping().clearMapping();
         mTestCustomEventSharedPrefs.edit().clear().commit();
         MoPubIdentifierTest.clearPreferences(mActivity);
-
+        new Reflection.MethodBuilder(null, "clearAdvancedBidders")
+                .setStatic(MoPub.class)
+                .setAccessible()
+                .execute();
     }
 
     @Test
@@ -300,15 +316,16 @@ public class
 
     @Test
     public void loadVideo_withCustomerIdInRequestParameters_shouldSetCustomerId() throws Exception {
-        // Robolectric executes its handlers immediately, so if we want the async behavior we see
-        // in an actual app we have to pause the main looper until we're done successfully loading the ad.
-        ShadowLooper.pauseMainLooper();
         when(mockPersonalInfoManager.canCollectPersonalInformation()).thenReturn(false);
         new Reflection.MethodBuilder(null, "setPersonalInfoManager")
                 .setStatic(MoPub.class)
                 .setAccessible()
                 .addParam(PersonalInfoManager.class, mockPersonalInfoManager)
                 .execute();
+
+        // Robolectric executes its handlers immediately, so if we want the async behavior we see
+        // in an actual app we have to pause the main looper until we're done successfully loading the ad.
+        ShadowLooper.pauseMainLooper();
 
         MoPubRewardedVideoManager.loadVideo("testAdUnit", new MoPubRewardedVideoManager.RequestParameters("keywords", "user_data_keywords",null, "testCustomerId"));
 

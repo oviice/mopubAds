@@ -143,6 +143,8 @@ public class MoPubStaticNativeAdTest {
         fakeJsonObject.put("text", "expected text");
         fakeJsonObject.put("mainimage", "expected mainimage");
         fakeJsonObject.put("iconimage", "expected iconimage");
+        fakeJsonObject.put("privacyicon", "piiimageurl");
+        fakeJsonObject.put("privacyclkurl", "piiclkurl");
 
         fakeJsonObject.put("clk", "expected clk");
 
@@ -164,6 +166,8 @@ public class MoPubStaticNativeAdTest {
         assertThat(subject.getImpressionTrackers()).containsOnly("url1", "url2");
         assertThat(subject.getCallToAction()).isEqualTo("expected ctatext");
         assertThat(subject.getStarRating()).isEqualTo(5.0);
+        assertThat(subject.getPrivacyInformationIconImageUrl()).isEqualTo("piiimageurl");
+        assertThat(subject.getPrivacyInformationIconClickThroughUrl()).isEqualTo("piiclkurl");
     }
 
     @Test

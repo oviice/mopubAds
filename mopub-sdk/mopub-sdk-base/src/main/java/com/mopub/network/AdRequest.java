@@ -13,7 +13,6 @@ import com.mopub.common.FullAdType;
 import com.mopub.common.MoPub;
 import com.mopub.common.MoPub.BrowserAgent;
 import com.mopub.common.Preconditions;
-import com.mopub.common.SdkConfiguration;
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.privacy.PersonalInfoManager;
@@ -70,7 +69,7 @@ public class AdRequest extends MoPubRequest<AdResponse> {
             @Nullable final String adUnitId,
             @NonNull Context context,
             @NonNull final Listener listener) {
-        super(context, url, listener);
+        super(context, clearUrlIfSdkNotInitialized(url), listener);
         Preconditions.checkNotNull(adFormat);
         Preconditions.checkNotNull(listener);
         mAdUnitId = adUnitId;
@@ -85,16 +84,24 @@ public class AdRequest extends MoPubRequest<AdResponse> {
         setShouldCache(false);
 
         final PersonalInfoManager personalInfoManager = MoPub.getPersonalInformationManager();
-        if (personalInfoManager == null) {
-            MoPubLog.e("Make sure you initialize the SDK before loading an ad. For now, the SDK " +
-                    "will be automatically initialized on your behalf. Starting from release " +
-                    "5.2.0, initialization will be a strict requirement, and ad requests " +
-                    "made with an uninitialized SDK will begin to fail.");
-            MoPub.initializeSdk(context,
-                    new SdkConfiguration.Builder(adUnitId == null ? "" : adUnitId).build(), null);
-        } else {
+        if (personalInfoManager != null) {
             personalInfoManager.requestSync(false);
         }
+    }
+
+    /**
+     * For 5.2 and onwards, disable load when the sdk is not initialized.
+     *
+     * @param url The original url
+     * @return The original url if the sdk is initialized. Otherwise, returns an empty url.
+     */
+    @NonNull
+    private static String clearUrlIfSdkNotInitialized(@NonNull final String url) {
+        if (MoPub.getPersonalInformationManager() == null || !MoPub.isSdkInitialized()) {
+            MoPubLog.e("Make sure to call MoPub#initializeSdk before loading an ad.");
+            return "";
+        }
+        return url;
     }
 
     @NonNull

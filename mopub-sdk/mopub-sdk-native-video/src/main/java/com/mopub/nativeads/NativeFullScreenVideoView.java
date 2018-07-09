@@ -65,7 +65,8 @@ public class NativeFullScreenVideoView extends RelativeLayout {
     @VisibleForTesting final int mPlayControlSizePx;
     @VisibleForTesting final int mGradientStripHeightPx;
 
-    public NativeFullScreenVideoView(@NonNull final Context context, int orientation, @Nullable String ctaText) {
+    public NativeFullScreenVideoView(@NonNull final Context context, int orientation,
+            @Nullable String ctaText) {
         this(context, orientation, ctaText,
                 new ImageView(context),
                 new TextureView(context), new ProgressBar(context), new ImageView(context),
@@ -185,8 +186,6 @@ public class NativeFullScreenVideoView extends RelativeLayout {
 
         mPrivacyInformationIcon = privacyInformationIcon;
         mPrivacyInformationIcon.setId((int) Utils.generateUniqueId());
-        mPrivacyInformationIcon.setImageDrawable(
-                Drawables.NATIVE_PRIVACY_INFORMATION_ICON.createDrawable(context));
         mPrivacyInformationIcon.setPadding(mClosePaddingPx, mClosePaddingPx, mClosePaddingPx * 2,
                 mClosePaddingPx * 2);
         addView(mPrivacyInformationIcon);
@@ -254,6 +253,15 @@ public class NativeFullScreenVideoView extends RelativeLayout {
     public void setPrivacyInformationClickListener(
             @Nullable OnClickListener privacyInformationListener) {
         mPrivacyInformationIcon.setOnClickListener(privacyInformationListener);
+    }
+
+    public void setPrivacyInformationIconImageUrl(@Nullable final String privacyInformationIconImageUrl) {
+        if (TextUtils.isEmpty(privacyInformationIconImageUrl)) {
+            mPrivacyInformationIcon.setImageDrawable(
+                    Drawables.NATIVE_PRIVACY_INFORMATION_ICON.createDrawable(mPrivacyInformationIcon.getContext()));
+        } else {
+            NativeImageHelper.loadImageView(privacyInformationIconImageUrl, mPrivacyInformationIcon);
+        }
     }
 
     public void setCtaClickListener(@Nullable OnClickListener ctaListener) {

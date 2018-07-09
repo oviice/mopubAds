@@ -1,6 +1,7 @@
 package com.mopub.common.privacy;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -8,7 +9,6 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.common.util.Reflection;
 import com.mopub.mobileads.BuildConfig;
 
 import org.junit.Before;
@@ -18,12 +18,11 @@ import org.robolectric.Robolectric;
 import org.robolectric.android.controller.ActivityController;
 import org.robolectric.annotation.Config;
 
-import java.lang.reflect.Field;
-
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 @RunWith(SdkTestRunner.class)
@@ -31,29 +30,36 @@ import static org.mockito.Mockito.verify;
 public class ConsentDialogActivityTest {
     private static final String HTML = "some_html";
 
-    private Context context;
+    private Context mContext;
 
     private ActivityController<ConsentDialogActivity> activityController;
     private ConsentDialogActivity subject;
-    private Intent intent;
 
     @Before
     public void setUp() throws Exception {
-        context = Robolectric.buildActivity(Activity.class).create().get();
-        intent = ConsentDialogActivity.createIntent(context, HTML);
+        mContext = Robolectric.buildActivity(Activity.class).create().get();
         activityController = Robolectric.buildActivity(ConsentDialogActivity.class);
     }
 
     @Test
+    public void start_withValidParameters_shouldStartActivity() {
+        Context context = spy(mContext);
+        ConsentDialogActivity.start(context, HTML);
+        verify(context).startActivity(any(Intent.class));
+    }
+
+    @Test
     public void createIntent_correctParameters_shouldCreateValidIntent() {
-        intent = ConsentDialogActivity.createIntent(context, HTML);
+        Intent intent = ConsentDialogActivity.createIntent(mContext, HTML);
         assertThat(intent.getStringExtra("html-page-content")).isEqualTo(HTML);
-        assertThat(intent.getComponent()).isNotNull();
-        assertThat(intent.getComponent().getClassName()).isEqualTo(ConsentDialogActivity.class.getCanonicalName());
+        ComponentName componentName = intent.getComponent();
+        assertNotNull(componentName);
+        assertThat(componentName.getClassName()).isEqualTo(ConsentDialogActivity.class.getCanonicalName());
     }
 
     @Test
     public void onCreate_shouldSetContentView() {
+        Intent intent = ConsentDialogActivity.createIntent(mContext, HTML);
         subject = activityController.get();
         subject.setIntent(intent);
         subject.onCreate(null);
@@ -63,44 +69,39 @@ public class ConsentDialogActivityTest {
     }
 
     @Test
-    public void setCloseButtonVisible_shouldCallViewAndClearHandler() throws NoSuchFieldException, IllegalAccessException {
+    public void setCloseButtonVisible_shouldCallViewAndClearHandler() {
         subject = activityController.create().get();
 
         Handler handler = mock(Handler.class);
         ConsentDialogLayout dialogLayout = mock(ConsentDialogLayout.class);
 
-        Field fieldHandler = Reflection.getPrivateField(ConsentDialogActivity.class, "mCloseButtonHandler");
-        fieldHandler.set(subject, handler);
-
-        Field fieldLayout = Reflection.getPrivateField(ConsentDialogActivity.class, "mView");
-        fieldLayout.set(subject, dialogLayout);
+        subject.mCloseButtonHandler = handler;
+        subject.mView = dialogLayout;
 
         subject.setCloseButtonVisibility(true);
 
-        verify(handler, times(1)).removeCallbacks(any(Runnable.class));
-        verify(dialogLayout, times(1)).setCloseVisible(true);
+        verify(handler).removeCallbacks(any(Runnable.class));
+        verify(dialogLayout).setCloseVisible(true);
     }
 
     @Test
-    public void setCloseButtonInvisible_shouldCallViewAndClearHandler() throws NoSuchFieldException, IllegalAccessException {
+    public void setCloseButtonInvisible_shouldCallViewAndClearHandler() {
         subject = activityController.create().get();
 
         Handler handler = mock(Handler.class);
         ConsentDialogLayout dialogLayout = mock(ConsentDialogLayout.class);
 
-        Field fieldHandler = Reflection.getPrivateField(ConsentDialogActivity.class, "mCloseButtonHandler");
-        fieldHandler.set(subject, handler);
-
-        Field fieldLayout = Reflection.getPrivateField(ConsentDialogActivity.class, "mView");
-        fieldLayout.set(subject, dialogLayout);
+        subject.mCloseButtonHandler = handler;
+        subject.mView = dialogLayout;
 
         subject.setCloseButtonVisibility(false);
 
-        verify(handler, times(1)).removeCallbacks(any(Runnable.class));
-        verify(dialogLayout, times(1)).setCloseVisible(false);
+        verify(handler).removeCallbacks(any(Runnable.class));
+        verify(dialogLayout).setCloseVisible(false);
     }
 
     private FrameLayout getContentView() {
         return (FrameLayout) ((ViewGroup) subject.findViewById(android.R.id.content)).getChildAt(0);
     }
+
 }

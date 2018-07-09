@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.mopub.common.Preconditions;
+import com.mopub.common.VisibleForTesting;
 import com.mopub.volley.NetworkResponse;
 import com.mopub.volley.Request;
 import com.mopub.volley.Response;
@@ -26,8 +27,8 @@ public abstract class MoPubRequest<T> extends Request<T>  {
     @NonNull private final Context mContext;
 
     public MoPubRequest(@NonNull final Context context,
-            @NonNull final String url,
-            @Nullable final Response.ErrorListener listener) {
+                        @NonNull final String url,
+                        @Nullable final Response.ErrorListener listener) {
         super(MoPubRequestUtils.chooseMethod(url), MoPubRequestUtils.truncateQueryParamsIfPost(url),
                 listener);
 
@@ -72,5 +73,11 @@ public abstract class MoPubRequest<T> extends Request<T>  {
             parsed = new String(response.data);
         }
         return parsed;
+    }
+
+    @VisibleForTesting
+    @NonNull
+    public String getOriginalUrl() {
+        return mOriginalUrl;
     }
 }

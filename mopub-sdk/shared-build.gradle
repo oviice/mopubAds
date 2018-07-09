@@ -1,17 +1,16 @@
 apply plugin: 'com.android.library'
 
 repositories {
-    mavenCentral()
+    google()
     jcenter()
     flatDir {
         dirs project(':mopub-sdk').file('../libs')
     }
     maven { url "https://s3.amazonaws.com/moat-sdk-builds" }
-    maven { url 'https://maven.google.com' }
 }
 
 project.group = 'com.mopub'
-project.version = '5.1.0'
+project.version = '5.2.0'
 
 android {
     compileSdkVersion 26
@@ -20,7 +19,7 @@ android {
     useLibrary 'org.apache.http.legacy'
 
     defaultConfig {
-        versionCode 61
+        versionCode 62
         versionName version
         minSdkVersion 16
         targetSdkVersion 26

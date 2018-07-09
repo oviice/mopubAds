@@ -6,6 +6,7 @@ import android.content.res.Resources;
 import android.graphics.Point;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
 import android.telephony.TelephonyManager;
@@ -22,6 +23,7 @@ import com.mopub.common.privacy.PersonalInfoManager;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.Reflection;
 import com.mopub.mobileads.BuildConfig;
+import com.mopub.mobileads.test.support.MoPubShadowConnectivityManager;
 import com.mopub.mobileads.test.support.MoPubShadowTelephonyManager;
 
 import org.junit.After;
@@ -35,6 +37,7 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLocationManager;
+import org.robolectric.shadows.ShadowNetworkInfo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,7 +54,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class, shadows = {MoPubShadowTelephonyManager.class})
+@Config(constants = BuildConfig.class, shadows = {MoPubShadowTelephonyManager.class, MoPubShadowConnectivityManager.class})
 public class NativeUrlGeneratorTest {
     public static final String AD_UNIT_ID = "1234";
     private static final int TEST_SCREEN_WIDTH = 999;
@@ -60,6 +63,7 @@ public class NativeUrlGeneratorTest {
     private Activity context;
     private NativeUrlGenerator subject;
     private MoPubShadowTelephonyManager shadowTelephonyManager;
+    private MoPubShadowConnectivityManager shadowConnectivityManager;
     private PersonalInfoManager mockPersonalInfoManager;
 
     @Before
@@ -70,6 +74,11 @@ public class NativeUrlGeneratorTest {
         when(context.getPackageName()).thenReturn("testBundle");
         shadowTelephonyManager = (MoPubShadowTelephonyManager)
                 Shadows.shadowOf((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE));
+        shadowConnectivityManager = (MoPubShadowConnectivityManager)
+                Shadows.shadowOf((ConnectivityManager) RuntimeEnvironment.application.getSystemService(Context.CONNECTIVITY_SERVICE));
+        shadowConnectivityManager.setActiveNetworkInfo(ShadowNetworkInfo.newInstance(null,
+                ConnectivityManager.TYPE_MOBILE, TelephonyManager.NETWORK_TYPE_UNKNOWN, true,
+                true));
 
         // Set the expected screen dimensions to arbitrary numbers
         final Resources spyResources = spy(context.getResources());

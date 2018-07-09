@@ -12,4 +12,10 @@ public class MoPubRequestQueueTest {
         }
     }
 
+    public static class TestMoPubRequestQueue2 extends MoPubRequestQueue {
+
+        TestMoPubRequestQueue2(Cache cache, Network network) {
+            super(cache, network);
+        }
+    }
 }

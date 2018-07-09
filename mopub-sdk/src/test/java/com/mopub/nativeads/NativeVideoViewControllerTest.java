@@ -65,6 +65,7 @@ public class NativeVideoViewControllerTest {
         NativeVideoController.setForId(123, mockVideoController);
 
         when(mockVastVideoConfig.getCustomCtaText()).thenReturn("Learn More");
+        when(mockVastVideoConfig.getPrivacyInformationIconImageUrl()).thenReturn("piiimageurl");
         when(mockFullScreenVideoView.getTextureView()).thenReturn(mockTextureView);
         when(mockTextureView.getBitmap()).thenReturn(mockBitmap);
         intentExtras.putSerializable(Constants.NATIVE_VAST_VIDEO_CONFIG, mockVastVideoConfig);
@@ -114,6 +115,7 @@ public class NativeVideoViewControllerTest {
         verify(mockFullScreenVideoView).setCtaClickListener(any(View.OnClickListener.class));
         verify(mockFullScreenVideoView).setPrivacyInformationClickListener(
                 any(View.OnClickListener.class));
+        verify(mockFullScreenVideoView).setPrivacyInformationIconImageUrl("piiimageurl");
         verify(mockFullScreenVideoView).setLayoutParams(any(LayoutParams.class));
         verify(mockBaseVideoViewControllerListener).onSetContentView(mockFullScreenVideoView);
         verify(mockBaseVideoViewControllerListener, never()).onFinish();

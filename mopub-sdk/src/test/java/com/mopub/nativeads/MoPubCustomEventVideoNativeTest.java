@@ -53,6 +53,8 @@ public class MoPubCustomEventVideoNativeTest {
         jsonObject.put("mainimage", "mainimageurl");
         jsonObject.put("iconimage", "iconimageurl");
         jsonObject.put("extraimage", "extraimageurl");
+        jsonObject.put("privacyicon", "privacyiconurl");
+        jsonObject.put("privacyclkurl", "privacyiconclickthroughurl");
         localExtras.put(DataKeys.JSON_BODY_KEY, jsonObject);
         localExtras.put(DataKeys.CLICK_TRACKING_URL_KEY, "clicktrackingurl");
 

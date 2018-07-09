@@ -39,7 +39,7 @@ The MoPub SDK is available via:
     }
 
     dependencies {
-        implementation('com.mopub:mopub-sdk:5.1.0@aar') {
+        implementation('com.mopub:mopub-sdk:5.2.0@aar') {
             transitive = true
         }
     }
@@ -61,27 +61,27 @@ The MoPub SDK is available via:
         // ... other project dependencies
 
         // For banners
-        implementation('com.mopub:mopub-sdk-banner:5.1.0@aar') {
+        implementation('com.mopub:mopub-sdk-banner:5.2.0@aar') {
             transitive = true
         }
         
         // For interstitials
-        implementation('com.mopub:mopub-sdk-interstitial:5.1.0@aar') {
+        implementation('com.mopub:mopub-sdk-interstitial:5.2.0@aar') {
             transitive = true
         }
 
         // For rewarded videos. This will automatically also include interstitials
-        implementation('com.mopub:mopub-sdk-rewardedvideo:5.1.0@aar') {
+        implementation('com.mopub:mopub-sdk-rewardedvideo:5.2.0@aar') {
             transitive = true
         }
 
         // For native static (images).
-        implementation('com.mopub:mopub-sdk-native-static:5.1.0@aar') {
+        implementation('com.mopub:mopub-sdk-native-static:5.2.0@aar') {
             transitive = true
         }
 
         // For native video. This will automatically also include native static
-        implementation('com.mopub:mopub-sdk-native-video:5.1.0@aar') {
+        implementation('com.mopub:mopub-sdk-native-video:5.2.0@aar') {
             transitive = true
         }
     }
@@ -109,10 +109,8 @@ The MoPub SDK is available via:
 ## New in this Version
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the latest release.
 
-- Upgraded Moat dependency to 2.4.5.
-- Banners now only refresh after an impression is made.
-- Added `PersonalInfoManager.forceGdprApplies()` in order to let MoPub know that this app should always apply GDPR rules.
-- Loading MoPub's consent dialog is only possible when GDPR rules applies to the app.
+- SDK initialization is required for ads to load. Ad requests will fail unless MoPub is initialized.
+- `MoPub#isSdkInitialized()` now more accurately reflects whether or not MoPub is initialized. This method now returns true after the `SdkInitializationListener#onInitializationFinished()` callback instead of immediately.
 
 ## Requirements
 
@@ -141,7 +139,7 @@ Normally, to add the MoPub SDK to your app via JCenter, your `build.gradle` woul
 
 ```	
 dependencies {
-    implementation('com.mopub:mopub-sdk:5.1.0@aar') {
+    implementation('com.mopub:mopub-sdk:5.2.0@aar') {
         transitive = true
     }
 }
@@ -150,7 +148,7 @@ Update to the following to exclude one or both viewability vendors:
 
 ```
 dependencies {
-    implementation('com.mopub:mopub-sdk:5.1.0@aar') {
+    implementation('com.mopub:mopub-sdk:5.2.0@aar') {
         transitive = true
         exclude module: 'libAvid-mopub' // To exclude AVID
         exclude module: 'moat-mobile-app-kit' // To exclude Moat

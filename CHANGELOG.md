@@ -1,3 +1,8 @@
+## Version 5.2.0 (July 9, 2018)
+- SDK initialization is required for ads to load. Ad requests will fail unless MoPub is initialized.
+- `MoPub#isSdkInitialized()` now more accurately reflects whether or not MoPub is initialized. This method now returns true after the `SdkInitializationListener#onInitializationFinished()` callback instead of immediately.
+- Bug fixes.
+
 ## Version 5.1.0 (June 5, 2018)
 - Upgraded Moat dependency to 2.4.5.
 - Banners now only refresh after an impression is made.

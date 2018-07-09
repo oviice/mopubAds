@@ -72,6 +72,8 @@ public class VastVideoConfig implements Serializable {
 
     // MoPub-specific metadata
     private String mDspCreativeId;
+    private String mPrivacyInformationIconImageUrl;
+    private String mPrivacyInformationIconClickthroughUrl;
 
     /**
      * Flag to indicate if the VAST xml document has explicitly set the orientation as opposed to
@@ -339,6 +341,16 @@ public class VastVideoConfig implements Serializable {
         mIsRewardedVideo = isRewardedVideo;
     }
 
+    public void setPrivacyInformationIconImageUrl(
+            @Nullable final String privacyInformationIconImageUrl) {
+        mPrivacyInformationIconImageUrl = privacyInformationIconImageUrl;
+    }
+
+    public void setPrivacyInformationIconClickthroughUrl(
+            @Nullable final String privacyInformationIconClickthroughUrl) {
+        mPrivacyInformationIconClickthroughUrl = privacyInformationIconClickthroughUrl;
+    }
+
     /**
      * Getters
      */
@@ -511,6 +523,16 @@ public class VastVideoConfig implements Serializable {
      */
     public boolean isRewardedVideo() {
         return mIsRewardedVideo;
+    }
+
+    @Nullable
+    public String getPrivacyInformationIconImageUrl() {
+        return mPrivacyInformationIconImageUrl;
+    }
+
+    @Nullable
+    public String getPrivacyInformationIconClickthroughUrl() {
+        return mPrivacyInformationIconClickthroughUrl;
     }
 
     /**

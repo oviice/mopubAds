@@ -3,6 +3,7 @@ package com.mopub.nativeads;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.view.View;
 
 import com.mopub.common.DataKeys;
@@ -97,7 +98,10 @@ public class MoPubCustomEventNative extends CustomEventNative {
             CLICK_DESTINATION("clk", false),
             FALLBACK("fallback", false),
             CALL_TO_ACTION("ctatext", false),
-            STAR_RATING("starrating", false);
+            STAR_RATING("starrating", false),
+
+            PRIVACY_INFORMATION_ICON_IMAGE_URL("privacyicon", false),
+            PRIVACY_INFORMATION_ICON_CLICKTHROUGH_URL("privacyclkurl", false);
 
             @NonNull final String name;
             final boolean required;
@@ -171,7 +175,9 @@ public class MoPubCustomEventNative extends CustomEventNative {
                     addExtra(key, mJsonObject.opt(key));
                 }
             }
-            setPrivacyInformationIconClickThroughUrl(PRIVACY_INFORMATION_CLICKTHROUGH_URL);
+            if (TextUtils.isEmpty(getPrivacyInformationIconClickThroughUrl())) {
+                setPrivacyInformationIconClickThroughUrl(PRIVACY_INFORMATION_CLICKTHROUGH_URL);
+            }
 
             preCacheImages(mContext, getAllImageUrls(), new ImageListener() {
                 @Override
@@ -227,6 +233,12 @@ public class MoPubCustomEventNative extends CustomEventNative {
                     case STAR_RATING:
                         setStarRating(parseDouble(value));
                         break;
+                    case PRIVACY_INFORMATION_ICON_IMAGE_URL:
+                        setPrivacyInformationIconImageUrl((String) value);
+                        break;
+                    case PRIVACY_INFORMATION_ICON_CLICKTHROUGH_URL:
+                        setPrivacyInformationIconClickThroughUrl((String) value);
+                        break;
                     default:
                         MoPubLog.d("Unable to add JSON key to internal mapping: " + key.name);
                         break;
@@ -267,13 +279,15 @@ public class MoPubCustomEventNative extends CustomEventNative {
         @NonNull
         List<String> getAllImageUrls() {
             final List<String> imageUrls = new ArrayList<String>();
-            if (getMainImageUrl() != null) {
+            if (!TextUtils.isEmpty(getMainImageUrl())) {
                 imageUrls.add(getMainImageUrl());
             }
-            if (getIconImageUrl() != null) {
+            if (!TextUtils.isEmpty(getIconImageUrl())) {
                 imageUrls.add(getIconImageUrl());
             }
-
+            if (!TextUtils.isEmpty(getPrivacyInformationIconImageUrl())) {
+                imageUrls.add(getPrivacyInformationIconImageUrl());
+            }
             imageUrls.addAll(getExtrasImageUrls());
             return imageUrls;
         }

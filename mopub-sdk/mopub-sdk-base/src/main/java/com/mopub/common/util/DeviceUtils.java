@@ -248,8 +248,14 @@ public class DeviceUtils {
         Preconditions.checkNotNull(context);
         Preconditions.checkNotNull(permission);
 
-        return ContextCompat.checkSelfPermission(context, permission) ==
-                PackageManager.PERMISSION_GRANTED;
+        // Bug in ContextCompat where it can return a RuntimeException in rare circumstances.
+        // If this happens, then we return false.
+        try {
+            return ContextCompat.checkSelfPermission(context, permission) ==
+                    PackageManager.PERMISSION_GRANTED;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
