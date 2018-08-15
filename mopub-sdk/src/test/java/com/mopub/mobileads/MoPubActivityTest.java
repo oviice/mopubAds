@@ -189,8 +189,10 @@ public class MoPubActivityTest {
     }
 
     @Test
-    public void start_shouldStartMoPubActivityWithCorrectParameters() throws Exception {
-        MoPubActivity.start(subject, "expectedResponse", mockAdReport, true, "redirectUrl", "clickthroughUrl", CreativeOrientation.PORTRAIT, testBroadcastIdentifier);
+    public void start_shouldStartMoPubActivityWithCorrectParameters() {
+        final ActivityController<MoPubActivity> activityController = Robolectric.buildActivity(MoPubActivity.class);
+        final MoPubActivity activitySubject = activityController.get();
+        MoPubActivity.start(activitySubject, "expectedResponse", mockAdReport, true, "redirectUrl", "clickthroughUrl", CreativeOrientation.PORTRAIT, testBroadcastIdentifier);
 
         Intent nextStartedActivity = ShadowApplication.getInstance().getNextStartedActivity();
         assertThat(nextStartedActivity.getStringExtra(HTML_RESPONSE_BODY_KEY)).isEqualTo("expectedResponse");

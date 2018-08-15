@@ -38,7 +38,7 @@ public class MoPubHttpUrlConnectionTest {
     public void getHttpUrlConnection_shouldReturnHttpUrlConnectionWithUserAgent() throws Exception {
         HttpURLConnection urlConnection = MoPubHttpUrlConnection.getHttpUrlConnection(url);
 
-        List<String> userAgentHeaders = urlConnection.getRequestProperties().get("User-Agent");
+        List<String> userAgentHeaders = urlConnection.getRequestProperties().get("user-agent");
         assertThat(userAgentHeaders).containsExactly(userAgent);
     }
 

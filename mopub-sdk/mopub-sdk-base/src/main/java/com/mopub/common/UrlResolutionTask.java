@@ -113,7 +113,7 @@ public class UrlResolutionTask extends AsyncTask<String, Void, String> {
             @NonNull final HttpURLConnection httpUrlConnection) throws IOException, URISyntaxException {
         final URI baseUri = new URI(baseUrl);
         final int responseCode = httpUrlConnection.getResponseCode();
-        final String redirectUrl = httpUrlConnection.getHeaderField("Location");
+        final String redirectUrl = httpUrlConnection.getHeaderField("location");
         String result = null;
 
         if (responseCode >= 300 && responseCode < 400) {
@@ -123,10 +123,10 @@ public class UrlResolutionTask extends AsyncTask<String, Void, String> {
                 result =  baseUri.resolve(redirectUrl).toString();
             } catch (IllegalArgumentException e) {
                 // Ensure the request is cancelled instead of resolving an intermediary URL
-                MoPubLog.e("Invalid URL redirection. baseUrl=" + baseUrl + "\n redirectUrl=" + redirectUrl);
+                MoPubLog.d("Invalid URL redirection. baseUrl=" + baseUrl + "\n redirectUrl=" + redirectUrl);
                 throw new URISyntaxException(redirectUrl, "Unable to parse invalid URL");
             } catch (NullPointerException e) {
-                MoPubLog.e("Invalid URL redirection. baseUrl=" + baseUrl + "\n redirectUrl=" + redirectUrl);
+                MoPubLog.d("Invalid URL redirection. baseUrl=" + baseUrl + "\n redirectUrl=" + redirectUrl);
                 throw e;
             }
         }

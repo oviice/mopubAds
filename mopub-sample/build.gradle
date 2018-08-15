@@ -11,18 +11,17 @@ apply plugin: 'com.android.application'
 
 project.group = 'com.mopub'
 project.description = '''MoPub Sample App'''
-project.version = '5.2.0'
+project.version = '5.3.0'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion '26.0.2'
+    compileSdkVersion 27
     lintOptions { abortOnError false }
 
     defaultConfig {
-        versionCode 62
+        versionCode 63
         versionName version
         minSdkVersion 16
-        targetSdkVersion 26
+        targetSdkVersion 27
     }
 
     buildTypes {
@@ -57,9 +56,10 @@ android {
 }
 
 dependencies {
-    implementation 'com.android.support:support-v4:26.1.0'
-    implementation 'com.google.android.gms:play-services-ads:11.4.0'
-    implementation 'com.google.android.gms:play-services-base:11.4.0'
-    implementation 'com.android.support:recyclerview-v7:26.1.0'
+    implementation 'com.android.support:customtabs:27.1.1'
+    implementation 'com.android.support:support-v4:27.1.1'
+    implementation 'com.google.android.gms:play-services-ads:15.0.1'
+    implementation 'com.google.android.gms:play-services-base:15.0.1'
+    implementation 'com.android.support:recyclerview-v7:27.1.1'
     implementation project(':mopub-sdk')
 }

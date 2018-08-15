@@ -203,6 +203,10 @@ public class MoPubActivity extends BaseInterstitialActivity {
         }
 
         @Override
+        public void onInterstitialImpression() {
+        }
+
+        @Override
         public void onLeaveApplication() {
         }
 

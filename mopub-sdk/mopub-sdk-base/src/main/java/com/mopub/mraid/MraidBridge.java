@@ -218,7 +218,7 @@ public class MraidBridge {
                     + "attached:\n\t" + javascript);
             return;
         }
-        MoPubLog.v("Injecting Javascript into MRAID WebView:\n\t" + javascript);
+        MoPubLog.d("Injecting Javascript into MRAID WebView:\n\t" + javascript);
         mMraidWebView.loadUrl("javascript:" + javascript);
     }
 
@@ -293,7 +293,7 @@ public class MraidBridge {
         try {
             uri = new URI(url);
         } catch (URISyntaxException e) {
-            MoPubLog.w("Invalid MRAID URL: " + url);
+            MoPubLog.d("Invalid MRAID URL: " + url);
             fireErrorEvent(MraidJavascriptCommand.UNSPECIFIED, "Mraid command sent an invalid URL");
             return true;
         }

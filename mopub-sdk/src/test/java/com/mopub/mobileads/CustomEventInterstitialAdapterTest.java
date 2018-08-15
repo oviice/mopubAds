@@ -29,16 +29,19 @@ import static com.mopub.mobileads.MoPubErrorCode.NETWORK_TIMEOUT;
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.stub;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
 @Config(constants = BuildConfig.class)
 public class CustomEventInterstitialAdapterTest {
+    private static final int DEFAULT_TIMEOUT_DELAY = CustomEventInterstitialAdapter.DEFAULT_INTERSTITIAL_TIMEOUT_DELAY;
+
     private static long BROADCAST_IDENTIFER = 123;
     private CustomEventInterstitialAdapter subject;
     @Mock
@@ -58,11 +61,11 @@ public class CustomEventInterstitialAdapterTest {
     @Before
     public void setUp() throws Exception {
 
-        stub(mockMoPubInterstitial.getAdTimeoutDelay()).toReturn(null);
+        when(mockMoPubInterstitial.getAdTimeoutDelay(anyInt())).thenReturn(DEFAULT_TIMEOUT_DELAY);
         moPubInterstitialView = mock(MoPubInterstitial.MoPubInterstitialView.class);
-        stub(moPubInterstitialView.getAdViewController()).toReturn(mockAdViewController);
-        stub(mockAdViewController.getAdReport()).toReturn(mockAdReport);
-        stub(mockMoPubInterstitial.getMoPubInterstitialView()).toReturn(moPubInterstitialView);
+        when(moPubInterstitialView.getAdViewController()).thenReturn(mockAdViewController);
+        when(mockAdViewController.getAdReport()).thenReturn(mockAdReport);
+        when(mockMoPubInterstitial.getMoPubInterstitialView()).thenReturn(moPubInterstitialView);
 
         serverExtras = new HashMap<String, String>();
         serverExtras.put("key", "value");
@@ -76,6 +79,7 @@ public class CustomEventInterstitialAdapterTest {
 
         interstitialAdapterListener = mock(CustomEventInterstitialAdapter.CustomEventInterstitialAdapterListener.class);
         subject.setAdapterListener(interstitialAdapterListener);
+        when(interstitial.isAutomaticImpressionAndClickTrackingEnabled()).thenReturn(true);
     }
 
     @Test
@@ -90,7 +94,7 @@ public class CustomEventInterstitialAdapterTest {
     @Test
     public void timeout_shouldSignalFailureAndInvalidateWithDefaultDelay() throws Exception {
         subject.loadInterstitial();
-        ShadowLooper.idleMainLooper(CustomEventInterstitialAdapter.DEFAULT_INTERSTITIAL_TIMEOUT_DELAY - 1);
+        ShadowLooper.idleMainLooper(DEFAULT_TIMEOUT_DELAY - 1);
         verify(interstitialAdapterListener, never()).onCustomEventInterstitialFailed(eq(NETWORK_TIMEOUT));
         assertThat(subject.isInvalidated()).isFalse();
 
@@ -100,22 +104,8 @@ public class CustomEventInterstitialAdapterTest {
     }
 
     @Test
-    public void timeout_withNegativeAdTimeoutDelay_shouldSignalFailureAndInvalidateWithDefaultDelay() throws Exception {
-        stub(mockMoPubInterstitial.getAdTimeoutDelay()).toReturn(-1);
-
-        subject.loadInterstitial();
-        ShadowLooper.idleMainLooper(CustomEventInterstitialAdapter.DEFAULT_INTERSTITIAL_TIMEOUT_DELAY - 1);
-        verify(interstitialAdapterListener, never()).onCustomEventInterstitialFailed(eq(NETWORK_TIMEOUT));
-        assertThat(subject.isInvalidated()).isFalse();
-
-        ShadowLooper.idleMainLooper(1);
-        verify(interstitialAdapterListener).onCustomEventInterstitialFailed(eq(NETWORK_TIMEOUT));
-        assertThat(subject.isInvalidated()).isTrue();
-    }
-
-    @Test
-    public void timeout_withNonNullAdTimeoutDelay_shouldSignalFailureAndInvalidateWithCustomDelay() throws Exception {
-        stub(mockMoPubInterstitial.getAdTimeoutDelay()).toReturn(77);
+    public void timeout_withNonNullAdTimeoutDelay_shouldSignalFailureAndInvalidateWithCustomDelay() {
+        when(mockMoPubInterstitial.getAdTimeoutDelay(anyInt())).thenReturn(77000);
 
         subject.loadInterstitial();
         ShadowLooper.idleMainLooper(77000 - 1);
@@ -132,7 +122,7 @@ public class CustomEventInterstitialAdapterTest {
         Location expectedLocation = new Location("");
         expectedLocation.setLongitude(10.0);
         expectedLocation.setLongitude(20.1);
-        stub(mockMoPubInterstitial.getLocation()).toReturn(expectedLocation);
+        when(mockMoPubInterstitial.getLocation()).thenReturn(expectedLocation);
         subject = new CustomEventInterstitialAdapter(mockMoPubInterstitial, CLASS_NAME, new HashMap<String, String>(), BROADCAST_IDENTIFER, mockAdViewController.getAdReport());
         subject.loadInterstitial();
 
@@ -278,6 +268,13 @@ public class CustomEventInterstitialAdapterTest {
         subject.onInterstitialClicked();
 
         verify(interstitialAdapterListener).onCustomEventInterstitialClicked();
+    }
+
+    @Test
+    public void onInterstitialImpression_shouldSignalAdapterListener() {
+        subject.onInterstitialImpression();
+
+        verify(interstitialAdapterListener).onCustomEventInterstitialImpression();
     }
 
     @Test

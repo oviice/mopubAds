@@ -29,7 +29,7 @@ import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
 @RunWith(SdkTestRunner.class)
@@ -102,11 +102,11 @@ public class IntentsTest {
         List<ResolveInfo> resolveInfos = new ArrayList<ResolveInfo>();
         resolveInfos.add(new ResolveInfo());
 
-        stub(context.getPackageManager()).toReturn(packageManager);
+        when(context.getPackageManager()).thenReturn(packageManager);
         Intent specificIntent = new Intent();
         specificIntent.setData(Uri.parse("specificIntent:"));
 
-        stub(packageManager.queryIntentActivities(eq(specificIntent), eq(0))).toReturn(resolveInfos);
+        when(packageManager.queryIntentActivities(eq(specificIntent), eq(0))).thenReturn(resolveInfos);
 
         assertThat(Intents.deviceCanHandleIntent(context, specificIntent)).isTrue();
     }
@@ -119,13 +119,13 @@ public class IntentsTest {
         List<ResolveInfo> resolveInfos = new ArrayList<ResolveInfo>();
         resolveInfos.add(new ResolveInfo());
 
-        stub(context.getPackageManager()).toReturn(packageManager);
+        when(context.getPackageManager()).thenReturn(packageManager);
         Intent specificIntent = new Intent();
         specificIntent.setData(Uri.parse("specificIntent:"));
 
         Intent otherIntent = new Intent();
         otherIntent.setData(Uri.parse("other:"));
-        stub(packageManager.queryIntentActivities(eq(specificIntent), eq(0))).toReturn(resolveInfos);
+        when(packageManager.queryIntentActivities(eq(specificIntent), eq(0))).thenReturn(resolveInfos);
 
         assertThat(Intents.deviceCanHandleIntent(context, otherIntent)).isFalse();
     }

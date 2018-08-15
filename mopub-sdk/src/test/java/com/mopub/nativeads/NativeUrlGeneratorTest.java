@@ -470,10 +470,10 @@ public class NativeUrlGeneratorTest {
                 "https://ads.mopub.com/m/ad?id=" +
                         AD_UNIT_ID +
                         "&nv=" + Uri.encode(MoPub.SDK_VERSION) +
-                        "&dn=unknown%2Cunknown%2Cunknown" +
+                        "&dn=unknown%2Crobolectric%2Crobolectric" +
                         "&bundle=testBundle" +
                         "&z=-0700" +
-                        "&o=u" +
+                        "&o=p" +
                         "&w=" +
                         TEST_SCREEN_WIDTH +
                         "&h=" +

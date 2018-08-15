@@ -165,6 +165,10 @@ public abstract class MoPubRewardedAd extends CustomEventRewardedAd {
         }
 
         @Override
+        public void onInterstitialImpression() {
+        }
+
+        @Override
         public void onLeaveApplication() {
         }
 

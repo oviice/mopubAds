@@ -20,7 +20,7 @@ import static com.mopub.mobileads.ViewGestureDetector.UserClickListener;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 
 
@@ -37,8 +37,8 @@ public class ViewGestureDetectorTest {
     public void setUp() throws Exception {
         context = Robolectric.buildActivity(Activity.class).create().get();
         view = mock(View.class);
-        stub(view.getWidth()).toReturn(320);
-        stub(view.getHeight()).toReturn(50);
+        when(view.getWidth()).thenReturn(320);
+        when(view.getHeight()).thenReturn(50);
 
         adAlertGestureListener = mock(AdAlertGestureListener.class);
 

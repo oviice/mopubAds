@@ -17,6 +17,8 @@ import org.mockito.Mock;
 import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -60,7 +62,7 @@ public class NativeAdTest {
         when(mockBaseNativeAd.getClickTrackers()).thenReturn(clkUrls);
 
         subject = new NativeAd(activity,
-                "moPubImpressionTrackerUrl",
+                Arrays.asList("moPubImpressionTrackerUrl1", "moPubImpressionTrackerUrl2"),
                 "moPubClickTrackerUrl",
                 "adunit_id",
                 mockBaseNativeAd,
@@ -72,16 +74,16 @@ public class NativeAdTest {
     @Test
     public void constructor_shouldSetNativeEventListener() {
         reset(mockBaseNativeAd);
-        subject = new NativeAd(activity, "moPubImpressionTrackerUrl", "moPubClickTrackerUrl",
-                "adunit_id", mockBaseNativeAd, mockRenderer);
+        subject = new NativeAd(activity, Collections.singletonList("moPubImpressionTrackerUrl"),
+                "moPubClickTrackerUrl", "adunit_id", mockBaseNativeAd, mockRenderer);
         verify(mockBaseNativeAd).setNativeEventListener(any(NativeEventListener.class));
     }
 
     @Test
     public void constructor_shouldMergeMoPubClickTrackerWithBaseNativeAdClickTrackers() {
         reset(mockRequestQueue);
-        subject = new NativeAd(activity, "", "moPubClickTrackerUrl", "", mockBaseNativeAd,
-                mockRenderer);
+        subject = new NativeAd(activity, Collections.singletonList(""), "moPubClickTrackerUrl", "",
+                mockBaseNativeAd, mockRenderer);
 
         subject.handleClick(null);
 
@@ -157,7 +159,8 @@ public class NativeAdTest {
     @Test
     public void recordImpression_shouldRecordImpressionsOnce() {
         subject.recordImpression(mockView);
-        verify(mockRequestQueue).add(argThat(isUrl("moPubImpressionTrackerUrl")));
+        verify(mockRequestQueue).add(argThat(isUrl("moPubImpressionTrackerUrl1")));
+        verify(mockRequestQueue).add(argThat(isUrl("moPubImpressionTrackerUrl2")));
         verify(mockRequestQueue).add(argThat(isUrl("impUrl")));
         verify(mockEventListener).onImpression(mockView);
 

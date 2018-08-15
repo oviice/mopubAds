@@ -1,3 +1,13 @@
+## Version 5.3.0 (August 15, 2018)
+- This release includes the foundation work for SDK to receive optimized responses for multiple placements from the waterfall. This effort will reduce the number of server roundtrips and minimize the ad response latency.
+- Upgraded ExoPlayer dependency to 2.8.2.
+- Upgraded recommended Google Play Services dependency to 15.0.1.
+- Upgraded target sdk version to 27 and support libraries to 27.1.1.
+- Upgraded Gradle dependency to 4.4.
+- Upgraded Android Plugin dependency to 3.1.3.
+- Upgraded test dependencies Powermock to 1.6.6 and Robolectric to 3.8.
+- Bug Fixes.
+
 ## Version 5.2.0 (July 9, 2018)
 - SDK initialization is required for ads to load. Ad requests will fail unless MoPub is initialized.
 - `MoPub#isSdkInitialized()` now more accurately reflects whether or not MoPub is initialized. This method now returns true after the `SdkInitializationListener#onInitializationFinished()` callback instead of immediately.

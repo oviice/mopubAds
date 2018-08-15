@@ -35,6 +35,12 @@ public abstract class CustomEventNative {
             @NonNull final Map<String, Object> localExtras,
             @NonNull final Map<String, String> serverExtras);
 
+    /*
+     * Called when a Custom Event is being invalidated or destroyed. Perform any final cleanup here.
+     */
+    protected void onInvalidate() {
+    }
+
     public interface CustomEventNativeListener {
         /**
          * Your custom event subclass must call this method when it successfully loads a native ad.

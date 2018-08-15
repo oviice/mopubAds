@@ -27,12 +27,17 @@ import static com.mopub.common.util.Numbers.parseDouble;
 import static com.mopub.nativeads.NativeImageHelper.preCacheImages;
 
 public class MoPubCustomEventNative extends CustomEventNative {
+    private MoPubStaticNativeAd moPubStaticNativeAd;
 
     @Override
     protected void loadNativeAd(@NonNull final Context context,
-            @NonNull final CustomEventNativeListener customEventNativeListener,
-            @NonNull final Map<String, Object> localExtras,
-            @NonNull final Map<String, String> serverExtras) {
+                                @NonNull final CustomEventNativeListener customEventNativeListener,
+                                @NonNull final Map<String, Object> localExtras,
+                                @NonNull final Map<String, String> serverExtras) {
+
+        if (moPubStaticNativeAd != null && !moPubStaticNativeAd.isInvalidated()) {
+            return;
+        }
 
         Object json = localExtras.get(JSON_BODY_KEY);
         // null or non-JSONObjects should not be passed in localExtras as JSON_BODY_KEY
@@ -41,7 +46,7 @@ public class MoPubCustomEventNative extends CustomEventNative {
             return;
         }
 
-        final MoPubStaticNativeAd moPubStaticNativeAd =
+        moPubStaticNativeAd =
                 new MoPubStaticNativeAd(context,
                         (JSONObject) json,
                         new ImpressionTracker(context),
@@ -85,6 +90,14 @@ public class MoPubCustomEventNative extends CustomEventNative {
         }
     }
 
+    @Override
+    protected void onInvalidate() {
+        if (moPubStaticNativeAd == null) {
+            return;
+        }
+        moPubStaticNativeAd.invalidate();
+    }
+
     static class MoPubStaticNativeAd extends StaticNativeAd {
         enum Parameter {
             IMPRESSION_TRACKER("imptracker", true),
@@ -103,7 +116,8 @@ public class MoPubCustomEventNative extends CustomEventNative {
             PRIVACY_INFORMATION_ICON_IMAGE_URL("privacyicon", false),
             PRIVACY_INFORMATION_ICON_CLICKTHROUGH_URL("privacyclkurl", false);
 
-            @NonNull final String name;
+            @NonNull
+            final String name;
             final boolean required;
 
             Parameter(@NonNull final String name, final boolean required) {
@@ -125,6 +139,7 @@ public class MoPubCustomEventNative extends CustomEventNative {
             @NonNull
             @VisibleForTesting
             static final Set<String> requiredKeys = new HashSet<String>();
+
             static {
                 for (final Parameter parameter : values()) {
                     if (parameter.required) {
@@ -137,17 +152,23 @@ public class MoPubCustomEventNative extends CustomEventNative {
         @VisibleForTesting
         static final String PRIVACY_INFORMATION_CLICKTHROUGH_URL = "https://www.mopub.com/optout";
 
-        @NonNull private final Context mContext;
-        @NonNull private final CustomEventNativeListener mCustomEventNativeListener;
-        @NonNull private final JSONObject mJsonObject;
-        @NonNull private final ImpressionTracker mImpressionTracker;
-        @NonNull private final NativeClickHandler mNativeClickHandler;
+        @NonNull
+        private final Context mContext;
+        @NonNull
+        private final CustomEventNativeListener mCustomEventNativeListener;
+        @NonNull
+        private final JSONObject mJsonObject;
+        @NonNull
+        private final ImpressionTracker mImpressionTracker;
+        @NonNull
+        private final NativeClickHandler mNativeClickHandler;
+
 
         MoPubStaticNativeAd(@NonNull final Context context,
-                @NonNull final JSONObject jsonBody,
-                @NonNull final ImpressionTracker impressionTracker,
-                @NonNull final NativeClickHandler nativeClickHandler,
-                @NonNull final CustomEventNativeListener customEventNativeListener) {
+                            @NonNull final JSONObject jsonBody,
+                            @NonNull final ImpressionTracker impressionTracker,
+                            @NonNull final NativeClickHandler nativeClickHandler,
+                            @NonNull final CustomEventNativeListener customEventNativeListener) {
             mJsonObject = jsonBody;
             mContext = context.getApplicationContext();
             mImpressionTracker = impressionTracker;
@@ -182,11 +203,17 @@ public class MoPubCustomEventNative extends CustomEventNative {
             preCacheImages(mContext, getAllImageUrls(), new ImageListener() {
                 @Override
                 public void onImagesCached() {
+                    if (isInvalidated()) {
+                        return;
+                    }
                     mCustomEventNativeListener.onNativeAdLoaded(MoPubStaticNativeAd.this);
                 }
 
                 @Override
                 public void onImagesFailedToCache(final NativeErrorCode errorCode) {
+                    if (isInvalidated()) {
+                        return;
+                    }
                     mCustomEventNativeListener.onNativeAdFailed(errorCode);
                 }
             });
@@ -203,7 +230,7 @@ public class MoPubCustomEventNative extends CustomEventNative {
         }
 
         private void addInstanceVariable(@NonNull final Parameter key,
-                @Nullable final Object value) throws ClassCastException {
+                                         @Nullable final Object value) throws ClassCastException {
             try {
                 switch (key) {
                     case MAIN_IMAGE:
@@ -308,6 +335,7 @@ public class MoPubCustomEventNative extends CustomEventNative {
         @Override
         public void destroy() {
             mImpressionTracker.destroy();
+            super.destroy();
         }
 
         // Event Handlers

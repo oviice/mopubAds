@@ -16,7 +16,7 @@ import java.lang.reflect.Method;
 import static com.mopub.common.ExternalViewabilitySessionManager.ViewabilityVendor;
 
 public class MoPub {
-    public static final String SDK_VERSION = "5.2.0";
+    public static final String SDK_VERSION = "5.3.0";
 
     public enum LocationAwareness { NORMAL, TRUNCATED, DISABLED }
 

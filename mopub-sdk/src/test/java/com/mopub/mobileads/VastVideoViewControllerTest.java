@@ -92,7 +92,7 @@ import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class, shadows = {ShadowVastVideoView.class})
+@Config(constants = BuildConfig.class, qualifiers = "w800dp-h480dp", shadows = {ShadowVastVideoView.class})
 public class VastVideoViewControllerTest {
     public static final int NETWORK_DELAY = 100;
 

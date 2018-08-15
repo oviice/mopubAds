@@ -2,7 +2,7 @@ apply from: '../shared-build.gradle'
 
 dependencies {
     api project(':mopub-sdk:mopub-sdk-base')
-    api 'com.android.support:recyclerview-v7:26.1.0'
+    api 'com.android.support:recyclerview-v7:27.1.1'
 }
 
 project.description = 'MoPub Android SDK - Native Static'

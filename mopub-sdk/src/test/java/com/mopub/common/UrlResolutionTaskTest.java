@@ -192,7 +192,7 @@ public class UrlResolutionTaskTest {
     private void setupMockHttpUrlConnection(final int responseCode,
             @Nullable final String absolutePathUrl) throws IOException {
         when(mockHttpUrlConnection.getResponseCode()).thenReturn(responseCode);
-        when(mockHttpUrlConnection.getHeaderField("Location")).thenReturn(absolutePathUrl);
+        when(mockHttpUrlConnection.getHeaderField("location")).thenReturn(absolutePathUrl);
     }
 
 }

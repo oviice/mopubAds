@@ -16,6 +16,7 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 
 import com.mopub.common.test.support.SdkTestRunner;
+import com.mopub.common.util.ResponseHeader;
 import com.mopub.common.util.test.support.ShadowAsyncTasks;
 import com.mopub.common.util.test.support.ShadowMoPubHttpUrlConnection;
 import com.mopub.mobileads.BuildConfig;
@@ -53,7 +54,6 @@ import static android.content.DialogInterface.BUTTON_NEGATIVE;
 import static android.content.DialogInterface.BUTTON_POSITIVE;
 import static android.os.Environment.MEDIA_MOUNTED;
 import static com.mopub.mraid.MraidNativeCommandHandler.ANDROID_CALENDAR_CONTENT_TYPE;
-import static com.mopub.mraid.MraidNativeCommandHandler.MIME_TYPE_HEADER;
 import static java.io.File.separator;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -62,7 +62,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.stub;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -174,7 +173,7 @@ public class MraidNativeCommandHandlerTest {
     @Test
     public void downloadImageAsyncTask_doInBackground_shouldReturnTrueAndCreateFile() throws Exception {
         ShadowMoPubHttpUrlConnection.addPendingResponse(200, FAKE_IMAGE_DATA,
-                createHeaders(new Pair<String, String>("Content-Type", "image/jpg")));
+                createHeaders(new Pair<String, String>("content-type", "image/jpg")));
 
         final DownloadImageAsyncTask downloadImageAsyncTask =
                 new DownloadImageAsyncTask(context, mockDownloadImageAsyncTaskListener);
@@ -191,8 +190,8 @@ public class MraidNativeCommandHandlerTest {
     public void downloadImageAsyncTask_doInBackground_withLocationHeaderSet_shouldUseLocationHeaderAsFilename() throws Exception {
         ShadowMoPubHttpUrlConnection.addPendingResponse(200, FAKE_IMAGE_DATA,
                 createHeaders(
-                        new Pair<String, String>("Content-Type", "image/jpg"),
-                        new Pair<String, String>("Location", "https://www.newhost.com/images/blah/file.wow")
+                        new Pair<>("content-type", "image/jpg"),
+                        new Pair<>("location", "https://www.newhost.com/images/blah/file.wow")
                 )
         );
 
@@ -225,7 +224,7 @@ public class MraidNativeCommandHandlerTest {
     @Test
     public void downloadImageAsyncTask_doInBackground_withNullArray_shouldReturnFalseAndNotCreateFile() throws Exception {
         ShadowMoPubHttpUrlConnection.addPendingResponse(200, FAKE_IMAGE_DATA,
-                createHeaders(new Pair<String, String>("Content-Type", "image/jpg")));
+                createHeaders(new Pair<String, String>("content-type", "image/jpg")));
 
         final DownloadImageAsyncTask downloadImageAsyncTask =
                 new DownloadImageAsyncTask(context, mockDownloadImageAsyncTaskListener);
@@ -240,7 +239,7 @@ public class MraidNativeCommandHandlerTest {
     @Test
     public void downloadImageAsyncTask_doInBackground_withEmptyArray_shouldReturnFalseAndNotCreateFile() throws Exception {
         ShadowMoPubHttpUrlConnection.addPendingResponse(200, FAKE_IMAGE_DATA,
-                createHeaders(new Pair<String, String>("Content-Type", "image/jpg")));
+                createHeaders(new Pair<String, String>("content-type", "image/jpg")));
 
         final DownloadImageAsyncTask downloadImageAsyncTask =
                 new DownloadImageAsyncTask(context, mockDownloadImageAsyncTaskListener);
@@ -255,7 +254,7 @@ public class MraidNativeCommandHandlerTest {
     @Test
     public void downloadImageAsyncTask_doInBackground_withArrayContainingNull_shouldReturnFalseAndNotCreateFile() throws Exception {
         ShadowMoPubHttpUrlConnection.addPendingResponse(200, FAKE_IMAGE_DATA,
-                createHeaders(new Pair<String, String>("Content-Type", "image/jpg")));
+                createHeaders(new Pair<String, String>("content-type", "image/jpg")));
 
         final DownloadImageAsyncTask downloadImageAsyncTask =
                 new DownloadImageAsyncTask(context, mockDownloadImageAsyncTaskListener);
@@ -709,7 +708,7 @@ public class MraidNativeCommandHandlerTest {
         List<ResolveInfo> resolveInfos = new ArrayList<ResolveInfo>();
         resolveInfos.add(new ResolveInfo());
 
-        stub(context.getPackageManager()).toReturn(packageManager);
+        when(context.getPackageManager()).thenReturn(packageManager);
 
         BaseMatcher intentWithSpecificData = new BaseMatcher() {
             // check that the specific intent has the special data, i.e. "tel:", or a component name, or string type, based on a particular data
@@ -753,7 +752,7 @@ public class MraidNativeCommandHandlerTest {
         };
 
         // It is okay to query with specific intent or nothing, because by default, none of the query would normally any resolveInfo anyways
-        stub(packageManager.queryIntentActivities((Intent) argThat(intentWithSpecificData), eq(0))).toReturn(resolveInfos);
+        when(packageManager.queryIntentActivities((Intent) argThat(intentWithSpecificData), eq(0))).thenReturn(resolveInfos);
         return context;
     }
 
@@ -777,7 +776,7 @@ public class MraidNativeCommandHandlerTest {
         expectedFile = new File(pictureDirectory, expectedFileName);
 
         ShadowMoPubHttpUrlConnection.addPendingResponse(200, FAKE_IMAGE_DATA,
-                createHeaders(new Pair<String, String>(MIME_TYPE_HEADER, contentType)));
+                createHeaders(new Pair<String, String>(ResponseHeader.CONTENT_TYPE.getKey(), contentType)));
 
         final DownloadImageAsyncTask downloadImageAsyncTask =
                 new DownloadImageAsyncTask(context, mockDownloadImageAsyncTaskListener);

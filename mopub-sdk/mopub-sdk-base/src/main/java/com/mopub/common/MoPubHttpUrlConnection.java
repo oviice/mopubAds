@@ -42,7 +42,7 @@ public abstract class MoPubHttpUrlConnection extends HttpURLConnection {
 
         final HttpURLConnection urlConnection =
                 (HttpURLConnection) new URL(getUrl).openConnection();
-        urlConnection.setRequestProperty("User-Agent", Networking.getCachedUserAgent());
+        urlConnection.setRequestProperty("user-agent", Networking.getCachedUserAgent());
         urlConnection.setConnectTimeout(CONNECT_TIMEOUT);
         urlConnection.setReadTimeout(READ_TIMEOUT);
 

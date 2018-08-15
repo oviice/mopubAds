@@ -11,6 +11,7 @@ import android.view.WindowManager;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
+import com.mopub.common.Constants;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mraid.MraidBridge;
 import com.mopub.mraid.MraidBridge.MraidWebView;
@@ -96,7 +97,7 @@ public class MraidActivityTest {
                 mockMraidWebView, testBroadcastIdentifier);
 
         verify(mockMraidWebView).loadDataWithBaseURL(
-                "http://ads.mopub.com/",
+                "http://" + Constants.HOST + "/",
                 HTML_DATA,
                 "text/html",
                 "UTF-8",

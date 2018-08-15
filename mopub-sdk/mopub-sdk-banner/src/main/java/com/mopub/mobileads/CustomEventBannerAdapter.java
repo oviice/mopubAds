@@ -34,7 +34,7 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
     private boolean mInvalidated;
     private MoPubView mMoPubView;
     private Context mContext;
-    private CustomEventBanner mCustomEventBanner;
+    @Nullable private CustomEventBanner mCustomEventBanner;
     private Map<String, Object> mLocalExtras;
     private Map<String, String> mServerExtras;
 
@@ -167,13 +167,11 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
     }
 
     private int getTimeoutDelayMilliseconds() {
-        if (mMoPubView == null
-                || mMoPubView.getAdTimeoutDelay() == null
-                || mMoPubView.getAdTimeoutDelay() < 0) {
+        if (mMoPubView == null) {
             return DEFAULT_BANNER_TIMEOUT_DELAY;
         }
 
-        return mMoPubView.getAdTimeoutDelay() * 1000;
+        return mMoPubView.getAdTimeoutDelay(DEFAULT_BANNER_TIMEOUT_DELAY);
     }
 
     private void parseBannerImpressionTrackingHeaders() {
@@ -216,7 +214,7 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
         cancelTimeout();
 
         if (mMoPubView != null) {
-            mMoPubView.nativeAdLoaded();
+            mMoPubView.creativeDownloaded();
 
             // If visibility impression tracking is enabled for banners, fire all impression
             // tracking URLs (AdServer, MPX, 3rd-party) for both HTML and MRAID banner types when
@@ -224,7 +222,9 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
             //
             // Else, retain old behavior of firing AdServer impression tracking URL if and only if
             // banner is not HTML.
-            if (mIsVisibilityImpressionTrackingEnabled) {
+            if (mIsVisibilityImpressionTrackingEnabled &&
+                    mCustomEventBanner != null &&
+                    mCustomEventBanner.isAutomaticImpressionAndClickTrackingEnabled()) {
                 // Disable autorefresh temporarily until an impression happens.
                 mMoPubView.pauseAutorefresh();
                 // Set up visibility tracker and listener if in experiment
@@ -246,7 +246,9 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
             mMoPubView.setAdContentView(bannerView);
 
             // Old behavior
-            if (!mIsVisibilityImpressionTrackingEnabled) {
+            if (!mIsVisibilityImpressionTrackingEnabled &&
+                    mCustomEventBanner != null &&
+                    mCustomEventBanner.isAutomaticImpressionAndClickTrackingEnabled()) {
                 if (!(bannerView instanceof HtmlBannerWebView)) {
                     mMoPubView.trackNativeImpression();
                 }
@@ -297,6 +299,22 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
 
         if (mMoPubView != null) {
             mMoPubView.registerClick();
+        }
+    }
+
+    @Override
+    public void onBannerImpression() {
+        if (isInvalidated()) {
+            return;
+        }
+
+        if (mMoPubView != null &&
+                mCustomEventBanner != null &&
+                !mCustomEventBanner.isAutomaticImpressionAndClickTrackingEnabled()) {
+            mMoPubView.trackNativeImpression();
+            if (mIsVisibilityImpressionTrackingEnabled) {
+                mCustomEventBanner.trackMpxAndThirdPartyImpressions();
+            }
         }
     }
 

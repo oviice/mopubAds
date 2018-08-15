@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 
 import com.mopub.TestSdkHelper;
 import com.mopub.common.AdReport;
+import com.mopub.common.Constants;
 import com.mopub.common.test.support.SdkTestRunner;
 
 import org.junit.Before;
@@ -96,7 +97,7 @@ public class BaseHtmlWebViewTest {
         subject.loadHtmlResponse(htmlResponse);
 
         ShadowWebView.LoadDataWithBaseURL lastLoadData = Shadows.shadowOf(subject).getLastLoadDataWithBaseURL();
-        assertThat(lastLoadData.baseUrl).isEqualTo("http://ads.mopub.com/");
+        assertThat(lastLoadData.baseUrl).isEqualTo("http://" + Constants.HOST + "/");
         assertThat(lastLoadData.data).isEqualTo(htmlResponse);
         assertThat(lastLoadData.mimeType).isEqualTo("text/html");
         assertThat(lastLoadData.encoding).isEqualTo("utf-8");

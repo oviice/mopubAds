@@ -257,7 +257,9 @@ public abstract class StaticNativeAd extends BaseNativeAd implements ImpressionI
     public void clear(@NonNull final View view) { }
 
     @Override
-    public void destroy() { }
+    public void destroy() {
+        invalidate();
+    }
 
     // Event Handlers
     /**

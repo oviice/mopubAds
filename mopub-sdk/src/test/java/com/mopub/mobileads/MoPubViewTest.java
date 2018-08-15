@@ -167,10 +167,10 @@ public class MoPubViewTest {
     }
     
     @Test
-    public void nativeAdLoaded_shouldScheduleRefreshTimer() throws Exception {
-        subject.nativeAdLoaded();
+    public void creativeDownloaded_shouldCreativeDownloadSuccess() {
+        subject.creativeDownloaded();
 
-        verify(adViewController).scheduleRefreshTimerIfEnabled();
+        verify(adViewController).creativeDownloadSuccess();
     }
 
     @Test

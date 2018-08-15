@@ -9,7 +9,7 @@ import com.mopub.mobileads.factories.HtmlBannerWebViewFactory;
 
 import static com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.when;
 
 public class TestHtmlBannerWebViewFactory extends HtmlBannerWebViewFactory {
     private HtmlBannerWebView mockHtmlBannerWebView = mock(HtmlBannerWebView.class);
@@ -21,8 +21,8 @@ public class TestHtmlBannerWebViewFactory extends HtmlBannerWebViewFactory {
 
     public TestHtmlBannerWebViewFactory() {
         WebSettings webSettings = mock(WebSettings.class);
-        stub(mockHtmlBannerWebView.getSettings()).toReturn(webSettings);
-        stub(webSettings.getUserAgentString()).toReturn("Mozilla/5.0 (Linux; U; Android 4.0.3; ko-kr; LG-L160L Build/IML74K) AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30");
+        when(mockHtmlBannerWebView.getSettings()).thenReturn(webSettings);
+        when(webSettings.getUserAgentString()).thenReturn("Mozilla/5.0 (Linux; U; Android 4.0.3; ko-kr; LG-L160L Build/IML74K) AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30");
     }
 
     public static HtmlBannerWebView getSingletonMock() {

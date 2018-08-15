@@ -115,7 +115,7 @@ public class MoPubNativeTest {
 
     @Test
     public void requestNativeAd_shouldFireNetworkRequest() {
-        subject.requestNativeAd("https://www.mopub.com");
+        subject.requestNativeAd("https://www.mopub.com", null);
 
         verify(mockNetworkListener, never()).onNativeFail(any(NativeErrorCode.class));
         verify(mockRequestQueue).add(argThat(isUrl("https://www.mopub.com")));
@@ -132,7 +132,7 @@ public class MoPubNativeTest {
                         return null;
                     }
                 });
-        subject.requestNativeAd("//\\//\\::::");
+        subject.requestNativeAd("//\\//\\::::", null);
 
         verify(mockNetworkListener).onNativeFail(any(NativeErrorCode.class));
     }
@@ -141,7 +141,7 @@ public class MoPubNativeTest {
     public void requestNativeAd_withNullUrl_shouldFireNativeFail() {
         Robolectric.getForegroundThreadScheduler().pause();
 
-        subject.requestNativeAd(null);
+        subject.requestNativeAd(null, null);
 
         verify(mockNetworkListener).onNativeFail(any(NativeErrorCode.class));
         verify(mockRequestQueue, never()).add(any(Request.class));

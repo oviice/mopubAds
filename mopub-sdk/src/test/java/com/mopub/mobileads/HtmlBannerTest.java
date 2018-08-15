@@ -30,7 +30,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 
 @RunWith(SdkTestRunner.class)
@@ -130,7 +130,7 @@ public class HtmlBannerTest {
     public void loadBanner_shouldCauseServerDimensionsToBeHonoredWhenLayingOutView() throws Exception {
         subject.loadBanner(context, customEventBannerListener, localExtras, serverExtras);
         MoPubView moPubView = TestMoPubViewFactory.getSingletonMock();
-        stub(moPubView.getContext()).toReturn(context);
+        when(moPubView.getContext()).thenReturn(context);
         AdViewController adViewController = new AdViewController(context, moPubView);
 
 

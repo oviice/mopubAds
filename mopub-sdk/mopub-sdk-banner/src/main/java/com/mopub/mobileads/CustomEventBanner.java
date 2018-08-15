@@ -14,7 +14,9 @@ import java.util.Map;
  * and invoke its loadAd() method.
  */
 public abstract class CustomEventBanner {
-    
+
+    private boolean mAutomaticImpressionAndClickTracking = true;
+
     /*
      * When the MoPub SDK receives a response indicating it should load a custom event, it will send
      * this message to your custom event class. Your implementation of this method can either load
@@ -42,6 +44,20 @@ public abstract class CustomEventBanner {
      * Fire MPX impression trackers and 3rd-party impression trackers from JS.
      */
     protected void trackMpxAndThirdPartyImpressions() {
+    }
+
+    /**
+     * Enables or disables automatic impression and click tracking. This is enabled by default.
+     *
+     * @param autoTrack True to use automatic impression and click tracking. False to use manual
+     *                  impression and click tracking.
+     */
+    protected void setAutomaticImpressionAndClickTracking(final boolean autoTrack) {
+        mAutomaticImpressionAndClickTracking = autoTrack;
+    }
+
+    boolean isAutomaticImpressionAndClickTrackingEnabled() {
+        return mAutomaticImpressionAndClickTracking;
     }
 
     public interface CustomEventBannerListener {
@@ -74,6 +90,12 @@ public abstract class CustomEventBanner {
          * This method is optional.
          */
         void onBannerClicked();
+
+        /*
+         * Your custom event subclass should call this method when an impression happens if you
+         * set automatic impression and click tracking to false. Otherwise, this method is optional.
+         */
+        void onBannerImpression();
 
         /*
          * This is an alias for onBannerClicked().

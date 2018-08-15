@@ -18,8 +18,8 @@ import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.ManifestUtils;
 import com.mopub.mobileads.MoPubConversionTracker;
 import com.mopub.mobileads.MoPubErrorCode;
-import com.mopub.network.AdRequest;
 import com.mopub.network.MoPubNetworkError;
+import com.mopub.network.MultiAdResponse;
 import com.mopub.network.Networking;
 import com.mopub.volley.VolleyError;
 
@@ -45,7 +45,7 @@ public class PersonalInfoManager {
     @NonNull private final ConsentDialogController mConsentDialogController;
     @NonNull private final MoPubConversionTracker mConversionTracker;
     @NonNull private final SyncRequest.Listener mSyncRequestListener;
-    @NonNull private AdRequest.ServerOverrideListener mServerOverrideListener;
+    @NonNull private MultiAdResponse.ServerOverrideListener mServerOverrideListener;
     @Nullable private SdkInitializationListener mSdkInitializationListener;
 
     private long mSyncDelayMs = MINIMUM_SYNC_DELAY;
@@ -66,7 +66,7 @@ public class PersonalInfoManager {
                 new HashSet<ConsentStatusChangeListener>());
         mSyncRequestListener = new PersonalInfoSyncRequestListener();
         mServerOverrideListener = new PersonalInfoServerOverrideListener();
-        AdRequest.setServerOverrideListener(mServerOverrideListener);
+        MultiAdResponse.setServerOverrideListener(mServerOverrideListener);
 
         mConsentDialogController = new ConsentDialogController(mAppContext);
 
@@ -659,7 +659,7 @@ public class PersonalInfoManager {
         }
     }
 
-    private class PersonalInfoServerOverrideListener implements AdRequest.ServerOverrideListener {
+    private class PersonalInfoServerOverrideListener implements MultiAdResponse.ServerOverrideListener {
         @Override
         public void onForceExplicitNo(@Nullable final String consentChangeReason) {
             if (TextUtils.isEmpty(consentChangeReason)) {
@@ -705,7 +705,7 @@ public class PersonalInfoManager {
     @NonNull
     @Deprecated
     @VisibleForTesting
-    AdRequest.ServerOverrideListener getServerOverrideListener() {
+    MultiAdResponse.ServerOverrideListener getServerOverrideListener() {
         return mServerOverrideListener;
     }
 }

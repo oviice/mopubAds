@@ -1051,7 +1051,7 @@ public class WebViewAdUrlGeneratorTest {
                     (TextUtils.isEmpty(latLon) ? "" :
                             "&ll=" + latLon + "&lla=" + locationAccuracy + "&llf=" + latLonLastUpdated) +
                     "&z=-0700" +
-                    "&o=u" +
+                    "&o=p" +
                     "&w=" + TEST_SCREEN_WIDTH +
                     "&h=" + TEST_SCREEN_HEIGHT +
                     "&sc=1.0" +

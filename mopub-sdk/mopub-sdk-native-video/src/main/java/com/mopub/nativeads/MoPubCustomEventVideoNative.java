@@ -36,6 +36,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import static com.mopub.common.DataKeys.EVENT_DETAILS;
 import static com.mopub.common.DataKeys.IMPRESSION_MIN_VISIBLE_PERCENT;
 import static com.mopub.common.DataKeys.IMPRESSION_MIN_VISIBLE_PX;
 import static com.mopub.common.DataKeys.IMPRESSION_VISIBLE_MS;
@@ -48,7 +49,7 @@ import static com.mopub.nativeads.NativeImageHelper.preCacheImages;
 import static com.mopub.nativeads.NativeVideoController.VisibilityTrackingEvent;
 
 public class MoPubCustomEventVideoNative extends CustomEventNative {
-
+    private MoPubVideoNativeAd videoNativeAd;
     @Override
     protected void loadNativeAd(@NonNull final Context context,
             @NonNull final CustomEventNativeListener customEventNativeListener,
@@ -60,6 +61,8 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
             customEventNativeListener.onNativeAdFailed(NativeErrorCode.INVALID_RESPONSE);
             return;
         }
+
+        final Object eventDetailsObject = localExtras.get(EVENT_DETAILS);
 
         final VideoResponseHeaders videoResponseHeaders = new VideoResponseHeaders(serverExtras);
         if (!videoResponseHeaders.hasValidHeaders()) {
@@ -77,7 +80,7 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
         }
 
         final String clickTrackingUrlFromHeader = (String) clickTrackingUrlFromHeaderObject;
-        final MoPubVideoNativeAd videoNativeAd = new MoPubVideoNativeAd(context, (JSONObject) json,
+        videoNativeAd = new MoPubVideoNativeAd(context, (JSONObject) json,
                 customEventNativeListener, videoResponseHeaders,
                 clickTrackingUrlFromHeader);
         try {
@@ -85,6 +88,14 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
         } catch (IllegalArgumentException e) {
             customEventNativeListener.onNativeAdFailed(NativeErrorCode.UNSPECIFIED);
         }
+    }
+
+    @Override
+    protected void onInvalidate(){
+        if (videoNativeAd == null) {
+            return;
+        }
+        videoNativeAd.invalidate();
     }
 
     public static class MoPubVideoNativeAd extends VideoNativeAd
@@ -265,6 +276,9 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
             preCacheImages(mContext, getAllImageUrls(), new NativeImageHelper.ImageListener() {
                 @Override
                 public void onImagesCached() {
+                    if(isInvalidated()) {
+                        return;
+                    }
                     mVastManager.prepareVastVideoConfiguration(getVastVideo(),
                             MoPubVideoNativeAd.this,
                             null,
@@ -273,6 +287,9 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
 
                 @Override
                 public void onImagesFailedToCache(final NativeErrorCode errorCode) {
+                    if(isInvalidated()) {
+                        return;
+                    }
                     mCustomEventNativeListener.onNativeAdFailed(errorCode);
                 }
             });
@@ -550,6 +567,7 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
 
         @Override
         public void destroy() {
+            invalidate();
             cleanUpMediaLayout();
             mNativeVideoController.setPlayWhenReady(false);
             mNativeVideoController.release(this);
@@ -674,6 +692,7 @@ public class MoPubCustomEventVideoNative extends CustomEventNative {
                     mVastVideoConfig.handleError(mContext, null, 0);
                     mNativeVideoController.setAppAudioEnabled(false);
                     mMediaLayout.setMode(MediaLayout.Mode.IMAGE);
+                    // Only log the failed to play event when the video has not started
                     break;
                 case CREATED:
                 case LOADING:
