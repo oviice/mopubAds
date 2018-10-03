@@ -1,3 +1,7 @@
+// Copyright 2018 Twitter, Inc.
+// Licensed under the MoPub SDK License Agreement
+// http://www.mopub.com/legal/sdk-license-agreement/
+
 package com.mopub.mobileads.test.support;
 
 import android.content.Context;
@@ -14,8 +18,6 @@ import static org.mockito.Mockito.when;
 public class TestHtmlBannerWebViewFactory extends HtmlBannerWebViewFactory {
     private HtmlBannerWebView mockHtmlBannerWebView = mock(HtmlBannerWebView.class);
     private CustomEventBannerListener latestListener;
-    private boolean latestIsScrollable;
-    private String latestRedirectUrl;
     private String latestClickthroughUrl;
     private AdReport latestAdReport;
 
@@ -38,12 +40,8 @@ public class TestHtmlBannerWebViewFactory extends HtmlBannerWebViewFactory {
             Context context,
             AdReport adReport,
             CustomEventBannerListener customEventBannerListener,
-            boolean isScrollable,
-            String redirectUrl,
             String clickthroughUrl) {
         latestListener = customEventBannerListener;
-        latestIsScrollable = isScrollable;
-        latestRedirectUrl = redirectUrl;
         latestClickthroughUrl = clickthroughUrl;
         latestAdReport = adReport;
         return mockHtmlBannerWebView;
@@ -51,14 +49,6 @@ public class TestHtmlBannerWebViewFactory extends HtmlBannerWebViewFactory {
 
     public static CustomEventBannerListener getLatestListener() {
         return getTestFactory().latestListener;
-    }
-
-    public static boolean getLatestIsScrollable() {
-        return getTestFactory().latestIsScrollable;
-    }
-
-    public static String getLatestRedirectUrl() {
-        return getTestFactory().latestRedirectUrl;
     }
 
     public static String getLatestClickthroughUrl() {

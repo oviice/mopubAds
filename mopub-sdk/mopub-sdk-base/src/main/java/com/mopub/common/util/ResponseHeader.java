@@ -1,3 +1,7 @@
+// Copyright 2018 Twitter, Inc.
+// Licensed under the MoPub SDK License Agreement
+// http://www.mopub.com/legal/sdk-license-agreement/
+
 package com.mopub.common.util;
 
 public enum ResponseHeader {
@@ -13,12 +17,10 @@ public enum ResponseHeader {
     HEIGHT("x-height"),
     IMPRESSION_URL("x-imptracker"),
     IMPRESSION_URLS("imptrackers"),
-    REDIRECT_URL("x-launchpage"),
     NATIVE_PARAMS("x-nativeparams"),
     NETWORK_TYPE("x-networktype"),
     ORIENTATION("x-orientation"),
     REFRESH_TIME("x-refreshtime"),
-    SCROLLABLE("x-scrollable"),
     WARMUP("x-warmup"),
     WIDTH("x-width"),
     BACKFILL("x-backfill"),
@@ -61,10 +63,6 @@ public enum ResponseHeader {
     VIDEO_VIEWABILITY_TRACKERS("x-video-viewability-trackers"),
     DISABLE_VIEWABILITY("x-disable-viewability"),
 
-    // Advanced bidding fields
-    AD_RESPONSE_TYPE("x-ad-response-type"),
-    
-
     // Client-side Waterfall
     AD_RESPONSES("ad-responses"),
     CONTENT("content"),
@@ -72,8 +70,8 @@ public enum ResponseHeader {
 
     BEFORE_LOAD_URL("x-before-load-url"),
     AFTER_LOAD_URL("x-after-load-url"),
-
-    @Deprecated CUSTOM_SELECTOR("x-customselector"),
+    AFTER_LOAD_SUCCESS_URL("x-after-load-success-url"),
+    AFTER_LOAD_FAIL_URL("x-after-load-fail-url"),
 
     // Consent fields
     INVALIDATE_CONSENT("invalidate_consent"),

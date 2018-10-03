@@ -1,3 +1,7 @@
+// Copyright 2018 Twitter, Inc.
+// Licensed under the MoPub SDK License Agreement
+// http://www.mopub.com/legal/sdk-license-agreement/
+
 package com.mopub.mobileads;
 
 import android.content.Context;
@@ -74,7 +78,7 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
         }
 
         // Attempt to load the JSON extras into mServerExtras.
-        mServerExtras = new TreeMap<String, String>(serverExtras);
+        mServerExtras = new TreeMap<>(serverExtras);
 
         // Parse banner impression tracking headers to determine if we are in visibility experiment
         parseBannerImpressionTrackingHeaders();
@@ -125,6 +129,7 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
             } catch (Exception e) {
                 MoPubLog.d("Destroying a banner visibility tracker threw an exception", e);
             }
+            mVisibilityTracker = null;
         }
         mContext = null;
         mCustomEventBanner = null;
@@ -262,11 +267,12 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
             return;
         }
 
+        cancelTimeout();
+
         if (mMoPubView != null) {
             if (errorCode == null) {
                 errorCode = UNSPECIFIED;
             }
-            cancelTimeout();
             mMoPubView.loadFailUrl(errorCode);
         }
     }

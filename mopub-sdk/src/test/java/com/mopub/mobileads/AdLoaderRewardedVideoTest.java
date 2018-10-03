@@ -1,3 +1,7 @@
+// Copyright 2018 Twitter, Inc.
+// Licensed under the MoPub SDK License Agreement
+// http://www.mopub.com/legal/sdk-license-agreement/
+
 package com.mopub.mobileads;
 
 import android.app.Activity;
@@ -223,7 +227,6 @@ public class AdLoaderRewardedVideoTest {
                 "        \"x-creativeid\": \"4652bd83d89a40c5a4e276dbf101499f\",\n" +
                 "        \"x-custom-event-class-data\": \"\",\n" +
                 "        \"x-custom-event-class-name\": \"\",\n" +
-                "        \"x-customselector\": \"\",\n" +
                 "        \"x-disable-viewability\": 3,\n" +
                 "        \"x-dspcreativeid\": \"\",\n" +
                 "        \"x-format\": \"\",\n" +
@@ -231,7 +234,6 @@ public class AdLoaderRewardedVideoTest {
                 "        \"x-height\": -1,\n" +
                 "        \"x-imptracker\": \"impression_tracking_url\",\n" +
                 "        \"x-interceptlinks\": \"\",\n" +
-                "        \"x-launchpage\": \"\",\n" +
                 "        \"x-nativeparams\": \"\",\n" +
                 "        \"x-networktype\": \"\",\n" +
                 "        \"x-orientation\": \"l\",\n" +
@@ -243,7 +245,6 @@ public class AdLoaderRewardedVideoTest {
                 "        \"x-rewarded-video-completion-url\": \"\",\n" +
                 "        \"x-rewarded-video-currency-amount\": 10,\n" +
                 "        \"x-rewarded-video-currency-name\": \"Coins\",\n" +
-                "        \"x-scrollable\": \"\",\n" +
                 "        \"x-vastvideoplayer\": \"\",\n" +
                 "        \"x-video-trackers\": \"\",\n" +
                 "        \"x-video-viewability-trackers\": \"\",\n" +

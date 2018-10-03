@@ -1,3 +1,7 @@
+// Copyright 2018 Twitter, Inc.
+// Licensed under the MoPub SDK License Agreement
+// http://www.mopub.com/legal/sdk-license-agreement/
+
 package com.mopub.common.util;
 
 import android.app.Activity;
@@ -267,6 +271,64 @@ public class IntentsTest {
         makeUrlResolvable(url);
 
         Intents.launchApplicationUrl(activityContext, Uri.parse(url));
+        final Intent startedActivity = ShadowApplication.getInstance().peekNextStartedActivity();
+
+        assertThat(startedActivity).isNotNull();
+    }
+
+    @Test
+    public void launchApplicationUrl_withUnresolvableMarketUrl_shouldResolveToPlayStoreURLandOpenActivity() throws Exception {
+        // unresolvable "market://" intent url
+        final String marketUrl = "market://details?id=com.mopub.simpleadsdemo";
+
+        // resolvable Play Store url
+        final String playStoreUrl = "https://play.google.com/store/apps/details?id=com.mopub.simpleadsdemo";
+        makeUrlResolvable(playStoreUrl);
+
+        // use unresolvable "market://" url, but should start browser activity with resolvable Play Store url
+        Intents.launchApplicationUrl(activityContext, Uri.parse(marketUrl));
+        final Intent startedActivity = ShadowApplication.getInstance().peekNextStartedActivity();
+
+        assertThat(startedActivity).isNotNull();
+    }
+
+    @Test
+    public void launchApplicationUrl_withResolvableMarketUrl_shouldOpenPlayStoreActivity() throws Exception {
+        final String marketUrl = "market://details?id=com.mopub.simpleadsdemo";
+        makeUrlResolvable(marketUrl);
+        // unresolvable equivalent Play Store url ("https://play.google.com/store/apps/details?id=com.mopub.simpleadsdemo")
+
+        // use resolvable "market://" url
+        Intents.launchApplicationUrl(activityContext, Uri.parse(marketUrl));
+        final Intent startedActivity = ShadowApplication.getInstance().peekNextStartedActivity();
+
+        assertThat(startedActivity).isNotNull();
+    }
+
+    @Test
+    public void launchApplicationUrl_withUnresolvableMarketUrl_shouldResolveToAmazonStoreURLandOpenActivity() throws Exception {
+        // unresolvable "amzn://" intent url
+        final String storeUrl = "amzn://apps/android?p=com.mopub.simpleadsdemo";
+
+        // resolvable Amazon Store url
+        final String amazonStoreUrl = "http://www.amazon.com/gp/mas/dl/android?p=com.mopub.simpleadsdemo";
+        makeUrlResolvable(amazonStoreUrl);
+
+        // use unresolvable "market://" url, but should start browser activity with resolvable Play Store url
+        Intents.launchApplicationUrl(activityContext, Uri.parse(storeUrl));
+        final Intent startedActivity = ShadowApplication.getInstance().peekNextStartedActivity();
+
+        assertThat(startedActivity).isNotNull();
+    }
+
+    @Test
+    public void launchApplicationUrl_withResolvableMarketUrl_shouldOpenAmazonStoreActivity() throws Exception {
+        final String storeUrl = "amzn://apps/android?p=com.mopub.simpleadsdemo";
+        makeUrlResolvable(storeUrl);
+        // unresolvable equivalent Play Store url ("https://play.google.com/store/apps/details?id=com.mopub.simpleadsdemo")
+
+        // use resolvable "market://" url
+        Intents.launchApplicationUrl(activityContext, Uri.parse(storeUrl));
         final Intent startedActivity = ShadowApplication.getInstance().peekNextStartedActivity();
 
         assertThat(startedActivity).isNotNull();

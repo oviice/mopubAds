@@ -1,3 +1,7 @@
+// Copyright 2018 Twitter, Inc.
+// Licensed under the MoPub SDK License Agreement
+// http://www.mopub.com/legal/sdk-license-agreement/
+
 package com.mopub.network;
 
 import android.app.Activity;
@@ -43,6 +47,8 @@ public class AdLoaderTest {
     private static final String IMPTRACKER_URL = "imptracker_url";
     private static final String BEFORE_LOAD_URL = "before_load_url";
     private static final String AFTER_LOAD_URL = "after_load_url";
+    private static final String AFTER_LOAD_SUCCESS_URL = "after_load_success_url";
+    private static final String AFTER_LOAD_FAIL_URL = "after_load_fail_url";
     private static final int REFRESH_TIME = 15;
     private static final int HEIGHT = 50;
     private static final int WIDTH = 320;
@@ -279,6 +285,8 @@ public class AdLoaderTest {
         metadata.put(ResponseHeader.IMPRESSION_URL.getKey(), IMPTRACKER_URL);
         metadata.put(ResponseHeader.BEFORE_LOAD_URL.getKey(), BEFORE_LOAD_URL);
         metadata.put(ResponseHeader.AFTER_LOAD_URL.getKey(), AFTER_LOAD_URL);
+        metadata.put(ResponseHeader.AFTER_LOAD_SUCCESS_URL.getKey(), AFTER_LOAD_SUCCESS_URL);
+        metadata.put(ResponseHeader.AFTER_LOAD_FAIL_URL.getKey(), AFTER_LOAD_FAIL_URL);
         metadata.put(ResponseHeader.REFRESH_TIME.getKey(), REFRESH_TIME);
         metadata.put(ResponseHeader.HEIGHT.getKey(), HEIGHT);
         metadata.put(ResponseHeader.WIDTH.getKey(), WIDTH);

@@ -1,3 +1,7 @@
+// Copyright 2018 Twitter, Inc.
+// Licensed under the MoPub SDK License Agreement
+// http://www.mopub.com/legal/sdk-license-agreement/
+
 package com.mopub.network;
 
 
@@ -210,6 +214,7 @@ public class AdLoader {
         }
 
         mDownloadTracker.reportAfterLoad(context, null);
+        mDownloadTracker.reportAfterLoadSuccess(context);
     }
 
     private void creativeDownloadFailed(@Nullable final MoPubError errorCode) {
@@ -226,6 +231,7 @@ public class AdLoader {
 
         if (mDownloadTracker != null) {
             mDownloadTracker.reportAfterLoad(context, errorCode);
+            mDownloadTracker.reportAfterLoadFail(context, errorCode);
         }
     }
 

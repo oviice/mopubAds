@@ -1,3 +1,7 @@
+// Copyright 2018 Twitter, Inc.
+// Licensed under the MoPub SDK License Agreement
+// http://www.mopub.com/legal/sdk-license-agreement/
+
 package com.mopub.network;
 
 import android.content.Context;
@@ -8,6 +12,11 @@ import android.text.TextUtils;
 
 import com.mopub.common.Preconditions;
 import com.mopub.mobileads.MoPubError;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import static android.os.SystemClock.uptimeMillis;
 
@@ -51,7 +60,7 @@ class ContentDownloadAnalytics {
         }
 
         mBeforeLoadTime = uptimeMillis();
-        makeHttpRequest(url, context);
+        TrackingRequest.makeTrackingHttpRequest(url, context);
     }
 
     void reportAfterLoad(@Nullable Context context, @Nullable final MoPubError errorCode) {
@@ -60,33 +69,49 @@ class ContentDownloadAnalytics {
         }
 
         DownloadResult result = errorCodeToDownloadResult(errorCode);
-        String url = generateAfterLoadUrl(mAdResponse.getAfterLoadUrl(), result.value);
-        if (TextUtils.isEmpty(url)) {
+        List<String> urls = generateAfterLoadUrls(mAdResponse.getAfterLoadUrls(), result.value);
+
+        TrackingRequest.makeTrackingHttpRequest(urls, context);
+    }
+
+    void reportAfterLoadSuccess(@Nullable Context context) {
+        if (context == null || mBeforeLoadTime == null) {
             return;
         }
 
-        makeHttpRequest(url, context);
+        List<String> urls = generateAfterLoadUrls(mAdResponse.getAfterLoadSuccessUrls(), DownloadResult.AD_LOADED.value);
+
+        TrackingRequest.makeTrackingHttpRequest(urls, context);
+    }
+
+    void reportAfterLoadFail(@Nullable Context context, @Nullable final MoPubError errorCode) {
+        if (context == null || mBeforeLoadTime == null) {
+            return;
+        }
+
+        DownloadResult result = errorCodeToDownloadResult(errorCode);
+        List<String> urls = generateAfterLoadUrls(mAdResponse.getAfterLoadFailUrls(), result.value);
+
+        TrackingRequest.makeTrackingHttpRequest(urls, context);
     }
 
     @Nullable
-    private String generateAfterLoadUrl(@Nullable String url, @NonNull String loadResult) {
-        if (TextUtils.isEmpty(url) || mBeforeLoadTime == null) {
+    private List<String> generateAfterLoadUrls(@Nullable List<String> urls, @NonNull String loadResult) {
+        if (urls == null || urls.isEmpty() || mBeforeLoadTime == null) {
             return null;
         }
 
-        if (!url.contains(LOAD_DURATION_MS_MACRO) || !url.contains(LOAD_RESULT_MACRO)) {
-            return null;
+        List<String> newUrls = new ArrayList<>();
+
+        for (String url : urls) {
+            url = url.replace(LOAD_DURATION_MS_MACRO, String.valueOf(uptimeMillis() - mBeforeLoadTime));
+            url = url.replace(LOAD_RESULT_MACRO, Uri.encode(loadResult));
+            newUrls.add(url);
         }
-
-        url = url.replace(LOAD_DURATION_MS_MACRO, String.valueOf(uptimeMillis() - mBeforeLoadTime));
-        return url.replace(LOAD_RESULT_MACRO, Uri.encode(loadResult));
+        return newUrls;
     }
 
-    private void makeHttpRequest(@Nullable final String url, @Nullable final Context context) {
-        TrackingRequest.makeTrackingHttpRequest(url, context);
-    }
-
-        @NonNull
+    @NonNull
     private DownloadResult errorCodeToDownloadResult(@Nullable final MoPubError errorCode) {
         if (null == errorCode) {
             return DownloadResult.AD_LOADED;

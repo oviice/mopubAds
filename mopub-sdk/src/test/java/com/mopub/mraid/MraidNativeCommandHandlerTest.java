@@ -1,3 +1,7 @@
+// Copyright 2018 Twitter, Inc.
+// Licensed under the MoPub SDK License Agreement
+// http://www.mopub.com/legal/sdk-license-agreement/
+
 package com.mopub.mraid;
 
 import android.Manifest;
@@ -7,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
 import android.os.Environment;
 import android.provider.CalendarContract;
 import android.support.annotation.NonNull;
@@ -16,9 +21,11 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 
 import com.mopub.common.test.support.SdkTestRunner;
+import com.mopub.common.util.Drawables;
 import com.mopub.common.util.ResponseHeader;
 import com.mopub.common.util.test.support.ShadowAsyncTasks;
 import com.mopub.common.util.test.support.ShadowMoPubHttpUrlConnection;
+import com.mopub.common.util.test.support.TestDrawables;
 import com.mopub.mobileads.BuildConfig;
 import com.mopub.mobileads.test.support.FileUtils;
 import com.mopub.mraid.MraidNativeCommandHandler.DownloadImageAsyncTask;
@@ -44,6 +51,7 @@ import org.robolectric.shadows.ShadowEnvironment;
 import org.robolectric.shadows.ShadowLog;
 import org.robolectric.shadows.ShadowToast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -90,7 +98,10 @@ public class MraidNativeCommandHandlerTest {
         subject = new MraidNativeCommandHandler();
         context = Robolectric.buildActivity(Activity.class).create().get();
 
-        FileUtils.copyFile("etc/expectedFile.jpg", "/tmp/expectedFile.jpg");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        TestDrawables.EXPECTED_FILE.getBitmap().compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        FileUtils.writeBytesToFile(baos.toByteArray(), "/tmp/expectedFile.jpg");
+
         expectedFile = new File(Environment.getExternalStorageDirectory(), "Pictures" + separator + "expectedFile.jpg");
         pictureDirectory = new File(Environment.getExternalStorageDirectory(), "Pictures");
         fileWithoutExtension = new File(pictureDirectory, "file");

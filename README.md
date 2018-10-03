@@ -39,7 +39,7 @@ The MoPub SDK is available via:
     }
 
     dependencies {
-        implementation('com.mopub:mopub-sdk:5.3.0@aar') {
+        implementation('com.mopub:mopub-sdk:5.4.0@aar') {
             transitive = true
         }
     }
@@ -61,27 +61,27 @@ The MoPub SDK is available via:
         // ... other project dependencies
 
         // For banners
-        implementation('com.mopub:mopub-sdk-banner:5.3.0@aar') {
+        implementation('com.mopub:mopub-sdk-banner:5.4.0@aar') {
             transitive = true
         }
         
         // For interstitials
-        implementation('com.mopub:mopub-sdk-interstitial:5.3.0@aar') {
+        implementation('com.mopub:mopub-sdk-interstitial:5.4.0@aar') {
             transitive = true
         }
 
         // For rewarded videos. This will automatically also include interstitials
-        implementation('com.mopub:mopub-sdk-rewardedvideo:5.3.0@aar') {
+        implementation('com.mopub:mopub-sdk-rewardedvideo:5.4.0@aar') {
             transitive = true
         }
 
         // For native static (images).
-        implementation('com.mopub:mopub-sdk-native-static:5.3.0@aar') {
+        implementation('com.mopub:mopub-sdk-native-static:5.4.0@aar') {
             transitive = true
         }
 
         // For native video. This will automatically also include native static
-        implementation('com.mopub:mopub-sdk-native-video:5.3.0@aar') {
+        implementation('com.mopub:mopub-sdk-native-video:5.4.0@aar') {
             transitive = true
         }
     }
@@ -109,20 +109,17 @@ The MoPub SDK is available via:
 ## New in this Version
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the latest release.
 
-- This release includes the foundation work for SDK to receive optimized responses for multiple placements from the waterfall. This effort will reduce the number of server roundtrips and minimize the ad response latency.
-- Upgraded ExoPlayer dependency to 2.8.2.
-- Upgraded recommended Google Play Services dependency to 15.0.1.
-- Upgraded target sdk version to 27 and support libraries to 27.1.1.
-- Upgraded Gradle dependency to 4.4.
-- Upgraded Android Plugin dependency to 3.1.3.
-- Upgraded test dependencies Powermock to 1.6.6 and Robolectric to 3.8.
+- Upgraded target SDK version to 28 and support libraries to 28.0.0.
+- Upgraded ExoPlayer dependency to 2.8.3.
+- Moved `AdvancedBiddingInitializationAsyncTask` and `RefreshAdvertisingInfoAsyncTask` to the parallel executor.
+- MRAID `isViewable` now more closely follows our impression tracking instead of the ad being marked viewable as soon as it loads.
 
 ## Requirements
 
 - Android 4.1 (API Version 16) and up (**Updated in 4.12.0**)
-- android-support-v4.jar, r27 (**Updated in 5.3.0**)
-- android-support-annotations.jar, r27 (**Updated in 5.3.0**)
-- android-support-v7-recyclerview.jar, r27 (**Updated in 5.3.0**)
+- android-support-v4.jar, r28 (**Updated in 5.4.0**)
+- android-support-annotations.jar, r28 (**Updated in 5.4.0**)
+- android-support-v7-recyclerview.jar, r28 (**Updated in 5.4.0**)
 - MoPub Volley Library (mopub-volley-2.0.0.jar - available on JCenter) (**Updated in 5.0.0**)
 - **Recommended** Google Play Services 15.0.1
 
@@ -144,7 +141,7 @@ Normally, to add the MoPub SDK to your app via JCenter, your `build.gradle` woul
 
 ```	
 dependencies {
-    implementation('com.mopub:mopub-sdk:5.3.0@aar') {
+    implementation('com.mopub:mopub-sdk:5.4.0@aar') {
         transitive = true
     }
 }
@@ -153,7 +150,7 @@ Update to the following to exclude one or both viewability vendors:
 
 ```
 dependencies {
-    implementation('com.mopub:mopub-sdk:5.3.0@aar') {
+    implementation('com.mopub:mopub-sdk:5.4.0@aar') {
         transitive = true
         exclude module: 'libAvid-mopub' // To exclude AVID
         exclude module: 'moat-mobile-app-kit' // To exclude Moat

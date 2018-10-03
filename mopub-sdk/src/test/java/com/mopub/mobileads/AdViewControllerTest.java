@@ -1,3 +1,7 @@
+// Copyright 2018 Twitter, Inc.
+// Licensed under the MoPub SDK License Agreement
+// http://www.mopub.com/legal/sdk-license-agreement/
+
 package com.mopub.mobileads;
 
 import android.Manifest;
@@ -112,8 +116,6 @@ public class AdViewControllerTest {
                 .setCustomEventClassName("customEvent")
                 .setClickTrackingUrl("clickUrl")
                 .setImpressionTrackingUrls(Arrays.asList("impressionUrl1", "impressionUrl2"))
-                .setRedirectUrl("redirectUrl")
-                .setScrollable(false)
                 .setDimensions(320, 50)
                 .setAdType("html")
                 .setFailoverUrl("failUrl")

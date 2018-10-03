@@ -1,3 +1,7 @@
+// Copyright 2018 Twitter, Inc.
+// Licensed under the MoPub SDK License Agreement
+// http://www.mopub.com/legal/sdk-license-agreement/
+
 package com.mopub.network;
 
 
@@ -231,9 +235,6 @@ public class MultiAdResponse implements Iterator<AdResponse> {
         String networkType = extractHeader(jsonHeaders, ResponseHeader.NETWORK_TYPE);
         builder.setNetworkType(networkType);
 
-        String redirectUrl = extractHeader(jsonHeaders, ResponseHeader.REDIRECT_URL);
-        builder.setRedirectUrl(redirectUrl);
-
         // X-Clickthrough is parsed into the AdResponse as the click tracker
         // Used by AdViewController, Rewarded Video, Native Adapter, MoPubNative
         String clickTrackingUrl = extractHeader(jsonHeaders, ResponseHeader.CLICK_TRACKING_URL);
@@ -250,12 +251,29 @@ public class MultiAdResponse implements Iterator<AdResponse> {
         builder.setImpressionTrackingUrls(impressionUrls);
 
         builder.setBeforeLoadUrl(extractHeader(jsonHeaders, ResponseHeader.BEFORE_LOAD_URL));
-        builder.setAfterLoadUrl(extractHeader(jsonHeaders, ResponseHeader.AFTER_LOAD_URL));
+
+        final List<String> afterLoadUrls = extractStringArray(jsonHeaders,
+                ResponseHeader.AFTER_LOAD_URL);
+        if (afterLoadUrls.isEmpty()) {
+            afterLoadUrls.add(extractHeader(jsonHeaders, ResponseHeader.AFTER_LOAD_URL));
+        }
+        builder.setAfterLoadUrls(afterLoadUrls);
+
+        final List<String> afterLoadSuccessUrls = extractStringArray(jsonHeaders,
+                ResponseHeader.AFTER_LOAD_SUCCESS_URL);
+        if (afterLoadSuccessUrls.isEmpty()) {
+            afterLoadSuccessUrls.add(extractHeader(jsonHeaders, ResponseHeader.AFTER_LOAD_SUCCESS_URL));
+        }
+        builder.setAfterLoadSuccessUrls(afterLoadSuccessUrls);
+
+        final List<String> afterLoadFailUrls = extractStringArray(jsonHeaders,
+                ResponseHeader.AFTER_LOAD_FAIL_URL);
+        if (afterLoadFailUrls.isEmpty()) {
+            afterLoadFailUrls.add(extractHeader(jsonHeaders, ResponseHeader.AFTER_LOAD_FAIL_URL));
+        }
+        builder.setAfterLoadFailUrls(afterLoadFailUrls);
 
         builder.setRequestId(requestId);
-
-        boolean isScrollable = extractBooleanHeader(jsonHeaders, ResponseHeader.SCROLLABLE, false);
-        builder.setScrollable(isScrollable);
 
         Integer width = extractIntegerHeader(jsonHeaders, ResponseHeader.WIDTH);
         Integer height = extractIntegerHeader(jsonHeaders, ResponseHeader.HEIGHT);
@@ -309,9 +327,6 @@ public class MultiAdResponse implements Iterator<AdResponse> {
                     e, MoPubNetworkError.Reason.BAD_BODY);
         }
 
-        if (!TextUtils.isEmpty(redirectUrl)) {
-            serverExtras.put(DataKeys.REDIRECT_URL_KEY, redirectUrl);
-        }
         if (!TextUtils.isEmpty(clickTrackingUrl)) {
             // X-Clickthrough parsed into serverExtras
             // Used by Banner, Interstitial
@@ -320,7 +335,6 @@ public class MultiAdResponse implements Iterator<AdResponse> {
         if (eventDataIsInResponseBody(adTypeString, fullAdTypeString)) {
             // Some MoPub-specific custom events get their serverExtras from the response itself:
             serverExtras.put(DataKeys.HTML_RESPONSE_BODY_KEY, content);
-            serverExtras.put(DataKeys.SCROLLABLE_KEY, Boolean.toString(isScrollable));
             serverExtras.put(DataKeys.CREATIVE_ORIENTATION_KEY, extractHeader(jsonHeaders, ResponseHeader.ORIENTATION));
         }
         if (AdType.STATIC_NATIVE.equals(adTypeString) || AdType.VIDEO_NATIVE.equals(adTypeString)) {

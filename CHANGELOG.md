@@ -1,3 +1,10 @@
+## Version 5.4.0 (October 3, 2018)
+- Upgraded target SDK version to 28 and support libraries to 28.0.0.
+- Upgraded ExoPlayer dependency to 2.8.3.
+- Moved `AdvancedBiddingInitializationAsyncTask` and `RefreshAdvertisingInfoAsyncTask` to the parallel executor.
+- MRAID `isViewable` now more closely follows our impression tracking instead of the ad being marked viewable as soon as it loads.
+- Bug fixes.
+
 ## Version 5.3.0 (August 15, 2018)
 - This release includes the foundation work for SDK to receive optimized responses for multiple placements from the waterfall. This effort will reduce the number of server roundtrips and minimize the ad response latency.
 - Upgraded ExoPlayer dependency to 2.8.2.
