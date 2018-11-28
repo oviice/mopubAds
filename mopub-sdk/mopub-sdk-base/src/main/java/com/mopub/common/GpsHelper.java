@@ -19,10 +19,7 @@ import static com.mopub.common.util.Reflection.classFound;
 
 public class GpsHelper {
     static public final int GOOGLE_PLAY_SUCCESS_CODE = 0;
-    static public final int SERVICE_VERSION_UPDATE_REQUIRED = 2;
-    static public final String ADVERTISING_ID_KEY = "advertisingId";
     static public final String IS_LIMIT_AD_TRACKING_ENABLED_KEY = "isLimitAdTrackingEnabled";
-    private static String sPlayServicesUtilClassName = "com.google.android.gms.common.GooglePlayServicesUtil";
     private static String sAdvertisingIdClientClassName = "com.google.android.gms.ads.identifier.AdvertisingIdClient";
 
     public static class AdvertisingInfo {
@@ -39,48 +36,13 @@ public class GpsHelper {
         void onFetchAdInfoCompleted();
     }
 
-    public static boolean isPlayServicesAvailable(final Context context) {
-        try {
-            MethodBuilder methodBuilder = MethodBuilderFactory.create(null, "isGooglePlayServicesAvailable")
-                    .setStatic(Class.forName(sPlayServicesUtilClassName))
-                    .addParam(Context.class, context);
-
-            Object result = methodBuilder.execute();
-
-            Integer intResult = (Integer) result;
-            return (intResult != null && (intResult == GOOGLE_PLAY_SUCCESS_CODE || intResult == SERVICE_VERSION_UPDATE_REQUIRED));
-        } catch (Exception exception) {
-            return false;
-        }
-    }
-
     static public boolean isLimitAdTrackingEnabled(Context context) {
-        final boolean defaultValue = false;
-        if (isPlayServicesAvailable(context)) {
-            return SharedPreferencesHelper.getSharedPreferences(context)
-                    .getBoolean(IS_LIMIT_AD_TRACKING_ENABLED_KEY, defaultValue);
-        } else {
-            return defaultValue;
-        }
+        return SharedPreferencesHelper.getSharedPreferences(context)
+                .getBoolean(IS_LIMIT_AD_TRACKING_ENABLED_KEY, false); // default to disabled
     }
 
     static public void fetchAdvertisingInfoAsync(final Context context, final GpsHelperListener gpsHelperListener) {
-        // This method guarantees that the Google Play Services (GPS) advertising info will
-        // be populated if GPS is available and the ad info is not already cached
-        // The above will happen before the callback is run
-        boolean playServicesIsAvailable = isPlayServicesAvailable(context);
-        if (playServicesIsAvailable ) {
-            internalFetchAdvertisingInfoAsync(context, gpsHelperListener);
-        }
-        else {
-            if (gpsHelperListener != null) {
-                gpsHelperListener.onFetchAdInfoCompleted();
-            }
-            if (playServicesIsAvailable) {
-                // Kick off a request to update the ad information in the background.
-                internalFetchAdvertisingInfoAsync(context, null);
-            }
-        }
+        internalFetchAdvertisingInfoAsync(context, gpsHelperListener);
     }
 
     @Nullable
@@ -89,19 +51,21 @@ public class GpsHelper {
             return null;
         }
         Object adInfo = null;
+        String advertisingId = null;
+        boolean isLimitAdTrackingEnabled = false;
+
         try {
             MethodBuilder methodBuilder = MethodBuilderFactory.create(null, "getAdvertisingIdInfo")
                     .setStatic(Class.forName(sAdvertisingIdClientClassName))
                     .addParam(Context.class, context);
 
             adInfo = methodBuilder.execute();
+            advertisingId = reflectedGetAdvertisingId(adInfo, advertisingId);
+            isLimitAdTrackingEnabled = reflectedIsLimitAdTrackingEnabled(adInfo, isLimitAdTrackingEnabled);
         } catch (Exception e) {
             MoPubLog.d("Unable to obtain Google AdvertisingIdClient.Info via reflection.");
             return null;
         }
-
-        String advertisingId = reflectedGetAdvertisingId(adInfo, null);
-        boolean isLimitAdTrackingEnabled = reflectedIsLimitAdTrackingEnabled(adInfo, false);
 
         return new AdvertisingInfo(advertisingId, isLimitAdTrackingEnabled);
     }
@@ -182,16 +146,6 @@ public class GpsHelper {
         } catch (Exception exception) {
             return defaultValue;
         }
-    }
-
-    @Deprecated
-    static public void setClassNamesForTesting() {
-        // This method is used for testing only to help alleviate pain with testing
-        // unlinked libraries via reflection
-        // Set class names to something that is linked so Class.forName method doesn't throw
-        String className = "java.lang.Class";
-        sPlayServicesUtilClassName = className;
-        sAdvertisingIdClientClassName = className;
     }
 }
 

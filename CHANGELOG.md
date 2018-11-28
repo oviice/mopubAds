@@ -1,3 +1,13 @@
+## Version 5.4.1 (November 28, 2018)
+- **Bug Fixes**
+  - Fixed bug with the internal state of rewarded video when the video fails to play.
+  - Fixed bug where initialization complete is called multiple times.
+  - Fixed Google Advertising ID fetching logic.
+  - Marked `gdprApplies` as nullable
+  - Added cleartextTrafficPermitted="true" to Android Sample App.
+  - Fixed bug where `rewardedAdsLoaders.markPlayed()` was fired before `onRewardedVideoClosed()`.
+  - Added `adDidFail` callback to `!isNetworkAvailable()` in `AdViewController`.
+
 ## Version 5.4.0 (October 3, 2018)
 - Upgraded target SDK version to 28 and support libraries to 28.0.0.
 - Upgraded ExoPlayer dependency to 2.8.3.

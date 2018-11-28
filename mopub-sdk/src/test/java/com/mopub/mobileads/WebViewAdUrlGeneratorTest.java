@@ -277,6 +277,7 @@ public class WebViewAdUrlGeneratorTest {
         SdkConfiguration sdkConfiguration = new SdkConfiguration.Builder(
                 INIT_ADUNIT).withAdvancedBidder(WebViewAdvancedBidder.class).build();
         MoPub.initializeSdk(context, sdkConfiguration, null);
+        ShadowLooper.runUiThreadTasks();
         new Reflection.MethodBuilder(null, "setPersonalInfoManager")
                 .setStatic(MoPub.class)
                 .setAccessible()
@@ -321,6 +322,7 @@ public class WebViewAdUrlGeneratorTest {
                 INIT_ADUNIT).withAdvancedBidder(
                 WebViewAdvancedBidder.class).build();
         MoPub.initializeSdk(context, sdkConfiguration, null);
+        ShadowLooper.runUiThreadTasks();
         MoPub.setAdvancedBiddingEnabled(false);
         new Reflection.MethodBuilder(null, "setPersonalInfoManager")
                 .setStatic(MoPub.class)
@@ -345,6 +347,7 @@ public class WebViewAdUrlGeneratorTest {
         SdkConfiguration sdkConfiguration = new SdkConfiguration.Builder(INIT_ADUNIT)
                 .withAdvancedBidder(WebViewAdvancedBidder.class).build();
         MoPub.initializeSdk(context, sdkConfiguration, null);
+        ShadowLooper.runUiThreadTasks();
         new Reflection.MethodBuilder(null, "setPersonalInfoManager")
                 .setStatic(MoPub.class)
                 .setAccessible()
@@ -397,6 +400,7 @@ public class WebViewAdUrlGeneratorTest {
                 "b195f8dd8ded45fe847ad89ed1d016da").withAdvancedBidder(
                 WebViewAdvancedBidder.class).build();
         MoPub.initializeSdk(context, sdkConfiguration, null);
+        ShadowLooper.runUiThreadTasks();
 
         when(mockPersonalInfoManager.canCollectPersonalInformation()).thenReturn(false);
 

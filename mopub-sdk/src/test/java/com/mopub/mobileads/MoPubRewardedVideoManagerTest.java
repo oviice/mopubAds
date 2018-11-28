@@ -116,6 +116,7 @@ public class
                 .setAccessible()
                 .execute();
         MoPub.initializeSdk(mActivity, new SdkConfiguration.Builder("adunit").build(), null);
+        Reflection.getPrivateField(MoPub.class, "sSdkInitialized").setBoolean(null, true);
 
         MoPubIdentifierTest.writeAdvertisingInfoToSharedPreferences(mActivity, false);
         MoPubRewardedVideoManager.init(mActivity);

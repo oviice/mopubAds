@@ -39,7 +39,7 @@ The MoPub SDK is available via:
     }
 
     dependencies {
-        implementation('com.mopub:mopub-sdk:5.4.0@aar') {
+        implementation('com.mopub:mopub-sdk:5.4.1@aar') {
             transitive = true
         }
     }
@@ -61,27 +61,27 @@ The MoPub SDK is available via:
         // ... other project dependencies
 
         // For banners
-        implementation('com.mopub:mopub-sdk-banner:5.4.0@aar') {
+        implementation('com.mopub:mopub-sdk-banner:5.4.1@aar') {
             transitive = true
         }
         
         // For interstitials
-        implementation('com.mopub:mopub-sdk-interstitial:5.4.0@aar') {
+        implementation('com.mopub:mopub-sdk-interstitial:5.4.1@aar') {
             transitive = true
         }
 
         // For rewarded videos. This will automatically also include interstitials
-        implementation('com.mopub:mopub-sdk-rewardedvideo:5.4.0@aar') {
+        implementation('com.mopub:mopub-sdk-rewardedvideo:5.4.1@aar') {
             transitive = true
         }
 
         // For native static (images).
-        implementation('com.mopub:mopub-sdk-native-static:5.4.0@aar') {
+        implementation('com.mopub:mopub-sdk-native-static:5.4.1@aar') {
             transitive = true
         }
 
         // For native video. This will automatically also include native static
-        implementation('com.mopub:mopub-sdk-native-video:5.4.0@aar') {
+        implementation('com.mopub:mopub-sdk-native-video:5.4.1@aar') {
             transitive = true
         }
     }
@@ -109,10 +109,14 @@ The MoPub SDK is available via:
 ## New in this Version
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the latest release.
 
-- Upgraded target SDK version to 28 and support libraries to 28.0.0.
-- Upgraded ExoPlayer dependency to 2.8.3.
-- Moved `AdvancedBiddingInitializationAsyncTask` and `RefreshAdvertisingInfoAsyncTask` to the parallel executor.
-- MRAID `isViewable` now more closely follows our impression tracking instead of the ad being marked viewable as soon as it loads.
+- **Bug Fixes**
+  - Fixed bug with the internal state of rewarded video when the video fails to play.
+  - Fixed bug where initialization complete is called multiple times.
+  - Fixed Google Advertising ID fetching logic.
+  - Marked `gdprApplies` as nullable
+  - Added cleartextTrafficPermitted="true" to Android Sample App.
+  - Fixed bug where `rewardedAdsLoaders.markPlayed()` was fired before `onRewardedVideoClosed()`.
+  - Added `adDidFail` callback to `!isNetworkAvailable()` in `AdViewController`.
 
 ## Requirements
 
@@ -141,7 +145,7 @@ Normally, to add the MoPub SDK to your app via JCenter, your `build.gradle` woul
 
 ```	
 dependencies {
-    implementation('com.mopub:mopub-sdk:5.4.0@aar') {
+    implementation('com.mopub:mopub-sdk:5.4.1@aar') {
         transitive = true
     }
 }
@@ -150,7 +154,7 @@ Update to the following to exclude one or both viewability vendors:
 
 ```
 dependencies {
-    implementation('com.mopub:mopub-sdk:5.4.0@aar') {
+    implementation('com.mopub:mopub-sdk:5.4.1@aar') {
         transitive = true
         exclude module: 'libAvid-mopub' // To exclude AVID
         exclude module: 'moat-mobile-app-kit' // To exclude Moat

@@ -55,7 +55,6 @@ public class PlayServicesUrlRewriterTest {
                 .execute();
 
         ClientMetadata.getInstance(context);
-        GpsHelper.setClassNamesForTesting();
         subject = new PlayServicesUrlRewriter();
     }
 

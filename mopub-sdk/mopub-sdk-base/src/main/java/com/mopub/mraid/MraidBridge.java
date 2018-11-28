@@ -258,6 +258,13 @@ public class MraidBridge {
         public MraidWebView(Context context) {
             super(context);
 
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                // Android 22 and lower has a bug where onVisibilityChanged is not called all
+                // the time when views are attached.
+                mMraidViewable = getVisibility() == View.VISIBLE;
+                return;
+            }
+
             mVisibilityTracker = new VisibilityTracker(context);
             final VisibilityTracker.VisibilityTrackerListener visibilityTrackerListener = new VisibilityTracker.VisibilityTrackerListener() {
                 @Override

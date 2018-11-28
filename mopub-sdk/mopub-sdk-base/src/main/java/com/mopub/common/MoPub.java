@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
 import static com.mopub.common.ExternalViewabilitySessionManager.ViewabilityVendor;
 
 public class MoPub {
-    public static final String SDK_VERSION = "5.4.0";
+    public static final String SDK_VERSION = "5.4.1";
 
     public enum LocationAwareness { NORMAL, TRUNCATED, DISABLED }
 
@@ -164,7 +164,7 @@ public class MoPub {
         // This also initializes MoPubLog
         MoPubLog.d("Initializing MoPub with ad unit: " + sdkConfiguration.getAdUnitId());
 
-        if (context instanceof Activity && Reflection.classFound(MOPUB_REWARDED_VIDEO_MANAGER)) {
+        if (context instanceof Activity) {
             final Activity activity = (Activity) context;
             initializeRewardedVideo(activity, sdkConfiguration);
         }
@@ -375,6 +375,7 @@ public class MoPub {
         sAdvancedBiddingTokens = null;
         sPersonalInfoManager = null;
         sSdkInitialized = false;
+        sSdkInitializing = false;
     }
 
     @Deprecated

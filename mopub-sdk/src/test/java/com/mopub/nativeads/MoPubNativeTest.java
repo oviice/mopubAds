@@ -75,6 +75,7 @@ public class MoPubNativeTest {
         AsyncTasks.setExecutor(new RoboExecutorService());
         MoPub.initializeSdk(context, new SdkConfiguration.Builder("adunit").build(), null);
         ShadowLooper.runUiThreadTasks();
+        Reflection.getPrivateField(MoPub.class, "sSdkInitialized").setBoolean(null, true);
 
         MoPubIdentifierTest.writeAdvertisingInfoToSharedPreferences(context, false);
         Shadows.shadowOf(context).grantPermissions(ACCESS_NETWORK_STATE);

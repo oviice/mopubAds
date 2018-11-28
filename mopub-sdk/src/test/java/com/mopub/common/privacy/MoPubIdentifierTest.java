@@ -266,18 +266,6 @@ public class MoPubIdentifierTest {
     }
 
     @Test
-    public void isPlayServiceAvailable_whenGoogleAvailable_shouldCallGpsHelper_shouldReturnTrue() {
-        subject = new MoPubIdentifier(context, idChangeListener);
-        assertThat(subject.isPlayServicesAvailable()).isFalse();
-
-        setupGooglePlayService(context, false);
-
-        assertThat(subject.isPlayServicesAvailable()).isTrue();
-        verifyStatic();
-        GpsHelper.isPlayServicesAvailable(any(Context.class));
-    }
-
-    @Test
     public void setAdvertisingInfo_whenCalledTwice_shouldCallInitializationListenerOnce_validateSavedAdvertisingIds() throws Exception {
         final AdvertisingId adId1 = new AdvertisingId("ifa1", "mopub1", false, Calendar.getInstance().getTimeInMillis());
         final AdvertisingId adId2 = new AdvertisingId("ifa2", "mopub2", false, Calendar.getInstance().getTimeInMillis());
@@ -449,7 +437,6 @@ public class MoPubIdentifierTest {
     // Unit tests utility functions
     public static void setupGooglePlayService(Context context, boolean limitAdTracking) {
         PowerMockito.mockStatic(GpsHelper.class);
-        PowerMockito.when(GpsHelper.isPlayServicesAvailable(context)).thenReturn(true);
         PowerMockito.when(GpsHelper.isLimitAdTrackingEnabled(context)).thenReturn(limitAdTracking);
         PowerMockito.when(GpsHelper.fetchAdvertisingInfoSync(context)).thenReturn(new GpsHelper.AdvertisingInfo(GOOGLE_AD_ID, limitAdTracking));
     }
