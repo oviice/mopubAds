@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -43,6 +43,8 @@ import java.util.TreeMap;
 import java.util.WeakHashMap;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.LOAD_FAILED;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class AdViewController {
     static final int DEFAULT_REFRESH_TIME_MILLISECONDS = 60000;  // 1 minute
@@ -183,7 +185,7 @@ public class AdViewController {
         Preconditions.checkNotNull(serverExtras);
 
         if (moPubView == null) {
-            MoPubLog.d("Can't load an ad in this ad view because it was destroyed.");
+            MoPubLog.log(CUSTOM, "Can't load an ad in this ad view because it was destroyed.");
             return;
         }
 
@@ -235,14 +237,15 @@ public class AdViewController {
     private void internalLoadAd() {
         mAdWasLoaded = true;
         if (TextUtils.isEmpty(mAdUnitId)) {
-            MoPubLog.d("Can't load an ad in this ad view because the ad unit ID is not set. " +
+            MoPubLog.log(CUSTOM, "Can't load an ad in this ad view because the ad unit ID is not set. " +
                     "Did you forget to call setAdUnitId()?");
+            adDidFail(MoPubErrorCode.MISSING_AD_UNIT_ID);
             return;
         }
 
         if (!isNetworkAvailable()) {
-            MoPubLog.d("Can't load an ad because there is no network connectivity.");
-            scheduleRefreshTimerIfEnabled();
+            MoPubLog.log(CUSTOM, "Can't load an ad because there is no network connectivity.");
+            adDidFail(MoPubErrorCode.NO_CONNECTION);
             return;
         }
 
@@ -257,12 +260,12 @@ public class AdViewController {
         }
 
         if (!url.startsWith("javascript:")) {
-            MoPubLog.d("Loading url: " + url);
+            MoPubLog.log(CUSTOM, "Loading url: " + url);
         }
 
         if (mActiveRequest != null) {
             if (!TextUtils.isEmpty(mAdUnitId)) {  // This shouldn't be able to happen?
-                MoPubLog.i("Already loading an ad for " + mAdUnitId + ", wait to finish.");
+                MoPubLog.log(CUSTOM, "Already loading an ad for " + mAdUnitId + ", wait to finish.");
             }
             return;
         }
@@ -279,7 +282,13 @@ public class AdViewController {
      * Returns true if continuing to load the failover url, false if the ad actually did not fill.
      */
     boolean loadFailUrl(MoPubErrorCode errorCode) {
-        Log.v("MoPub", "MoPubErrorCode: " + (errorCode == null ? "" : errorCode.toString()));
+        if (errorCode == null) {
+            MoPubLog.log(LOAD_FAILED,
+                    MoPubErrorCode.UNSPECIFIED.getIntCode(),
+                    MoPubErrorCode.UNSPECIFIED);
+        } else {
+            MoPubLog.log(LOAD_FAILED, errorCode.getIntCode(), errorCode);
+        }
 
         if (mAdLoader != null && mAdLoader.hasMoreAds()) {
             loadNonJavascript("", errorCode);
@@ -305,7 +314,7 @@ public class AdViewController {
         scheduleRefreshTimerIfEnabled();
 
         if (mAdLoader == null) {
-            MoPubLog.w("mAdLoader is not supposed to be null");
+            MoPubLog.log(CUSTOM, "mAdLoader is not supposed to be null");
             return;
         }
         mAdLoader.creativeDownloadSuccess();
@@ -415,7 +424,7 @@ public class AdViewController {
                 (mCurrentAutoRefreshStatus != newAutoRefreshStatus);
         if (autoRefreshStatusChanged) {
             final String enabledString = (newAutoRefreshStatus) ? "enabled" : "disabled";
-            MoPubLog.d("Refresh " + enabledString + " for ad unit (" + mAdUnitId + ").");
+            MoPubLog.log(CUSTOM, "Refresh " + enabledString + " for ad unit (" + mAdUnitId + ").");
         }
 
         mCurrentAutoRefreshStatus = newAutoRefreshStatus;
@@ -506,7 +515,7 @@ public class AdViewController {
     void fetchAd(@NonNull String url, @Nullable final MoPubError moPubError) {
         MoPubView moPubView = getMoPubView();
         if (moPubView == null || mContext == null) {
-            MoPubLog.d("Can't load an ad in this ad view because it was destroyed.");
+            MoPubLog.log(CUSTOM, "Can't load an ad in this ad view because it was destroyed.");
             setNotLoading();
             return;
         }
@@ -542,7 +551,7 @@ public class AdViewController {
     }
 
     void adDidFail(MoPubErrorCode errorCode) {
-        MoPubLog.i("Ad failed to load.");
+        MoPubLog.log(CUSTOM, "Ad failed to load.");
         setNotLoading();
 
         MoPubView moPubView = getMoPubView();
@@ -550,7 +559,10 @@ public class AdViewController {
             return;
         }
 
-        scheduleRefreshTimerIfEnabled();
+        if (!TextUtils.isEmpty(mAdUnitId)) {
+            scheduleRefreshTimerIfEnabled();
+        }
+
         moPubView.adFailed(errorCode);
     }
 

@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -175,10 +175,10 @@ class VastXmlManager {
     }
 
     /**
-     * Gets the orientation that this ad should be forced in. This returns UNDEFINED if not
+     * Gets the orientation that this ad should be forced in. This returns DEVICE if not
      * specified.
      *
-     * @return {@code ForceOrientation} orientation or {@code UNDEFINED}
+     * @return {@code ForceOrientation} orientation or {@code DEVICE}
      */
     @NonNull
     ForceOrientation getCustomForceOrientation() {

@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 import static com.mopub.simpleadsdemo.MoPubSQLiteHelper.COLUMN_AD_TYPE;
 import static com.mopub.simpleadsdemo.MoPubSQLiteHelper.COLUMN_AD_UNIT_ID;
 import static com.mopub.simpleadsdemo.MoPubSQLiteHelper.COLUMN_DESCRIPTION;
@@ -81,7 +82,7 @@ class AdUnitDataSource {
         database.close();
 
         if (newAdConfiguration != null) {
-            MoPubLog.d("Ad configuration added with id: " + newAdConfiguration.getId());
+            MoPubLog.log(CUSTOM, "Ad configuration added with id: " + newAdConfiguration.getId());
         }
         return newAdConfiguration;
     }
@@ -90,7 +91,7 @@ class AdUnitDataSource {
         final long id = adConfiguration.getId();
         SQLiteDatabase database = mDatabaseHelper.getWritableDatabase();
         database.delete(TABLE_AD_CONFIGURATIONS, COLUMN_ID + " = " + id, null);
-        MoPubLog.d("Ad Configuration deleted with id: " + id);
+        MoPubLog.log(CUSTOM, "Ad Configuration deleted with id: " + id);
         database.close();
     }
 
@@ -104,7 +105,7 @@ class AdUnitDataSource {
                 COLUMN_AD_UNIT_ID + " = '" + adUnitId +
                 "' AND " + COLUMN_USER_GENERATED + " = 1 AND " +
                 COLUMN_AD_TYPE + " = '" + adType + "'", null);
-        MoPubLog.d(numDeletedRows + " rows deleted with adUnitId: " + adUnitId);
+        MoPubLog.log(CUSTOM, numDeletedRows + " rows deleted with adUnitId: " + adUnitId);
         database.close();
     }
 

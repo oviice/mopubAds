@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -16,6 +16,8 @@ import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.DeviceUtils;
 import com.mopub.common.util.Dips;
 import com.mopub.mobileads.resource.DrawableConstants;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class VastVideoGradientStripWidget extends ImageView {
     @NonNull DeviceUtils.ForceOrientation mForceOrientation;
@@ -87,15 +89,15 @@ public class VastVideoGradientStripWidget extends ImageView {
                     setVisibility(View.INVISIBLE);
                     break;
                 case Configuration.ORIENTATION_UNDEFINED:
-                    MoPubLog.d("Screen orientation undefined: do not show gradient strip widget");
+                    MoPubLog.log(CUSTOM, "Screen orientation undefined: do not show gradient strip widget");
                     setVisibility(View.INVISIBLE);
                     break;
                 case Configuration.ORIENTATION_SQUARE:
-                    MoPubLog.d("Screen orientation is deprecated ORIENTATION_SQUARE: do not show gradient strip widget");
+                    MoPubLog.log(CUSTOM, "Screen orientation is deprecated ORIENTATION_SQUARE: do not show gradient strip widget");
                     setVisibility(View.INVISIBLE);
                     break;
                 default:
-                    MoPubLog.d("Unrecognized screen orientation: do not show gradient strip widget");
+                    MoPubLog.log(CUSTOM, "Unrecognized screen orientation: do not show gradient strip widget");
                     setVisibility(View.INVISIBLE);
                     break;
             }

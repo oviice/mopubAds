@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -20,11 +20,17 @@ import java.util.Map;
 
 import static com.mopub.common.DataKeys.AD_REPORT_KEY;
 import static com.mopub.common.DataKeys.BANNER_IMPRESSION_PIXEL_COUNT_ENABLED;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.CUSTOM;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_ATTEMPTED;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_FAILED;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.SHOW_ATTEMPTED;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.SHOW_SUCCESS;
 import static com.mopub.common.util.JavaScriptWebViewCallbacks.WEB_VIEW_DID_APPEAR;
 import static com.mopub.mobileads.MoPubErrorCode.INTERNAL_ERROR;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
 
 public class HtmlBanner extends CustomEventBanner {
+    public static final String ADAPTER_NAME = HtmlBanner.class.getSimpleName();
     @Nullable private HtmlBannerWebView mHtmlBannerWebView;
     @Nullable private ExternalViewabilitySessionManager mExternalViewabilitySessionManager;
     private boolean mBannerImpressionPixelCountEnabled = false;
@@ -36,6 +42,7 @@ public class HtmlBanner extends CustomEventBanner {
             CustomEventBannerListener customEventBannerListener,
             Map<String, Object> localExtras,
             Map<String, String> serverExtras) {
+        MoPubLog.log(LOAD_ATTEMPTED, ADAPTER_NAME);
         final Object bannerImpressionPixelCountEnabledObject = localExtras.get(
                 BANNER_IMPRESSION_PIXEL_COUNT_ENABLED);
         if (bannerImpressionPixelCountEnabledObject instanceof Boolean) {
@@ -52,11 +59,16 @@ public class HtmlBanner extends CustomEventBanner {
             try {
                 adReport = (AdReport) localExtras.get(AD_REPORT_KEY);
             } catch (ClassCastException e) {
-                MoPubLog.e("LocalExtras contained an incorrect type.");
+                MoPubLog.log(LOAD_FAILED, ADAPTER_NAME,
+                        INTERNAL_ERROR.getIntCode(),
+                        INTERNAL_ERROR);
                 customEventBannerListener.onBannerFailed(INTERNAL_ERROR);
                 return;
             }
         } else {
+            MoPubLog.log(LOAD_FAILED, ADAPTER_NAME,
+                    NETWORK_INVALID_STATE.getIntCode(),
+                    NETWORK_INVALID_STATE);
             customEventBannerListener.onBannerFailed(NETWORK_INVALID_STATE);
             return;
         }
@@ -67,17 +79,20 @@ public class HtmlBanner extends CustomEventBanner {
         // We only measure viewability when we have an activity context. This sets up a delayed
         // viewability session if we have the new pixel-counting banner impression tracking enabled.
         // Otherwise, set up a regular display session.
+
+        MoPubLog.log(SHOW_ATTEMPTED, ADAPTER_NAME);
         if (context instanceof Activity) {
             final Activity activity = (Activity) context;
-            mWeakActivity = new WeakReference<Activity>(activity);
+            mWeakActivity = new WeakReference<>(activity);
             mExternalViewabilitySessionManager = new ExternalViewabilitySessionManager(activity);
             mExternalViewabilitySessionManager.createDisplaySession(activity, mHtmlBannerWebView,
                     mBannerImpressionPixelCountEnabled);
         } else {
-            MoPubLog.d("Unable to start viewability session for HTML banner: Context provided was not an Activity.");
+            MoPubLog.log(CUSTOM, ADAPTER_NAME, "Unable to start viewability session for HTML banner: Context provided was not an Activity.");
         }
 
         mHtmlBannerWebView.loadHtmlResponse(htmlData);
+        MoPubLog.log(SHOW_SUCCESS, ADAPTER_NAME);
     }
 
     @Override
@@ -111,7 +126,7 @@ public class HtmlBanner extends CustomEventBanner {
             if (activity != null) {
                 mExternalViewabilitySessionManager.startDeferredDisplaySession(activity);
             } else {
-                MoPubLog.d("Lost the activity for deferred Viewability tracking. Dropping session.");
+                MoPubLog.log(CUSTOM, ADAPTER_NAME, "Lost the activity for deferred Viewability tracking. Dropping session.");
             }
         }
     }

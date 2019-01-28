@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -14,7 +14,6 @@ import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.Reflection;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
-import com.mopub.mobileads.BuildConfig;
 import com.mopub.mobileads.MoPubErrorCode;
 import com.mopub.nativeads.MoPubNative.MoPubNativeNetworkListener;
 import com.mopub.network.MoPubNetworkError;
@@ -34,7 +33,6 @@ import org.mockito.stubbing.Answer;
 import org.robolectric.Robolectric;
 import org.robolectric.Shadows;
 import org.robolectric.android.util.concurrent.RoboExecutorService;
-import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLog;
 import org.robolectric.shadows.ShadowLooper;
 
@@ -57,7 +55,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class)
 public class MoPubNativeTest {
     private MoPubNative subject;
     private MethodBuilder methodBuilder;
@@ -73,7 +70,9 @@ public class MoPubNativeTest {
     public void setup() throws Exception {
         context = Robolectric.buildActivity(Activity.class).create().get();
         AsyncTasks.setExecutor(new RoboExecutorService());
-        MoPub.initializeSdk(context, new SdkConfiguration.Builder("adunit").build(), null);
+        MoPub.initializeSdk(context, new SdkConfiguration.Builder("adunit")
+                .withLogLevel(MoPubLog.LogLevel.DEBUG)
+                .build(), null);
         ShadowLooper.runUiThreadTasks();
         Reflection.getPrivateField(MoPub.class, "sSdkInitialized").setBoolean(null, true);
 
@@ -173,7 +172,7 @@ public class MoPubNativeTest {
 
     @Test
     public void onAdError_withVolleyErrorWarmingUp_shouldLogMoPubErrorCodeWarmup_shouldNotifyListener() {
-        MoPubLog.setSdkHandlerLevel(Level.ALL);
+        MoPubLog.setLogLevel(MoPubLog.LogLevel.DEBUG);
 
         subject.onAdError(new MoPubNetworkError(MoPubNetworkError.Reason.WARMING_UP));
 
@@ -181,13 +180,15 @@ public class MoPubNativeTest {
         final ShadowLog.LogItem latestLogMessage = allLogMessages.get(allLogMessages.size() - 1);
 
         // All log messages end with a newline character.
-        assertThat(latestLogMessage.msg.trim()).isEqualTo(MoPubErrorCode.WARMUP.toString());
+        assertThat(latestLogMessage.msg.trim()).isEqualTo(
+                "[com.mopub.nativeads.MoPubNativeTest][onAdError_withVolleyErrorWarmingUp_shouldLogMoPubErrorCodeWarmup_shouldNotifyListener] Ad Log - "
+                + MoPubErrorCode.WARMUP.toString());
         verify(mockNetworkListener).onNativeFail(eq(NativeErrorCode.EMPTY_AD_RESPONSE));
     }
 
     @Test
     public void onAdError_withNoConnection_shouldLogMoPubErrorCodeNoConnection_shouldNotifyListener() {
-        MoPubLog.setSdkHandlerLevel(Level.ALL);
+        MoPubLog.setLogLevel(MoPubLog.LogLevel.DEBUG);
         Shadows.shadowOf(context).denyPermissions(INTERNET);
 
         subject.onAdError(new NoConnectionError());
@@ -196,7 +197,9 @@ public class MoPubNativeTest {
         final ShadowLog.LogItem latestLogMessage = allLogMessages.get(allLogMessages.size() - 1);
 
         // All log messages end with a newline character.
-        assertThat(latestLogMessage.msg.trim()).isEqualTo(MoPubErrorCode.NO_CONNECTION.toString());
+        assertThat(latestLogMessage.msg.trim()).isEqualTo(
+                "[com.mopub.nativeads.MoPubNativeTest][onAdError_withNoConnection_shouldLogMoPubErrorCodeNoConnection_shouldNotifyListener] Ad Log - "
+                + MoPubErrorCode.NO_CONNECTION.toString());
         verify(mockNetworkListener).onNativeFail(eq(NativeErrorCode.CONNECTION_ERROR));
     }
 }

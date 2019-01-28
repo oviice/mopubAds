@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -96,7 +96,7 @@ import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class, qualifiers = "w800dp-h480dp", shadows = {ShadowVastVideoView.class})
+@Config(qualifiers = "w800dp-h480dp", shadows = {ShadowVastVideoView.class})
 public class VastVideoViewControllerTest {
     public static final int NETWORK_DELAY = 100;
 

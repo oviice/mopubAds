@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -25,6 +25,8 @@ import com.mopub.volley.VolleyError;
 import com.mopub.volley.toolbox.ImageLoader;
 
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.ERROR;
 
 public class VastVideoCloseButtonWidget extends RelativeLayout {
     @NonNull private TextView mTextView;
@@ -114,13 +116,13 @@ public class VastVideoCloseButtonWidget extends RelativeLayout {
                 if (bitmap != null) {
                     mImageView.setImageBitmap(bitmap);
                 } else {
-                    MoPubLog.d(String.format("%s returned null bitmap", imageUrl));
+                    MoPubLog.log(CUSTOM, String.format("%s returned null bitmap", imageUrl));
                 }
             }
 
             @Override
             public void onErrorResponse(final VolleyError volleyError) {
-                MoPubLog.d("Failed to load image.", volleyError);
+                MoPubLog.log(ERROR, "Failed to load image.", volleyError);
             }
         });
     }

@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -17,6 +17,7 @@ import com.mopub.exceptions.IntentNotResolvableException;
 import java.util.EnumSet;
 
 import static com.mopub.common.UrlResolutionTask.UrlResolutionListener;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.ERROR;
 import static com.mopub.network.TrackingRequest.makeTrackingHttpRequest;
 
 /**
@@ -323,7 +324,7 @@ public class UrlHandler {
                     }
                     return true;
                 } catch (IntentNotResolvableException e) {
-                    MoPubLog.d(e.getMessage(), e);
+                    MoPubLog.log(ERROR, e.getMessage(), e);
                     lastFailedUrlAction = urlAction;
                     // continue trying to match...
                 }
@@ -341,7 +342,7 @@ public class UrlHandler {
             urlAction = UrlAction.NOOP;
         }
 
-        MoPubLog.d(message, throwable);
+        MoPubLog.log(ERROR, message, throwable);
         mResultActions.urlHandlingFailed(url, urlAction);
     }
 

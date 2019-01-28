@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -10,6 +10,8 @@ import android.os.Looper;
 import com.mopub.common.logging.MoPubLog;
 
 import java.util.IllegalFormatException;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 /**
  * Simple static methods to be called at the start of your own methods to verify correct arguments
@@ -245,7 +247,7 @@ public final class Preconditions {
         if (allowThrow) {
             throw new IllegalArgumentException(errorMessage);
         }
-        MoPubLog.e(errorMessage);
+        MoPubLog.log(CUSTOM, errorMessage);
         return false;
     }
 
@@ -258,7 +260,7 @@ public final class Preconditions {
         if (allowThrow) {
             throw new IllegalStateException(errorMessage);
         }
-        MoPubLog.e(errorMessage);
+        MoPubLog.log(CUSTOM, errorMessage);
         return false;
     }
 
@@ -271,7 +273,7 @@ public final class Preconditions {
         if (allowThrow) {
             throw new NullPointerException(errorMessage);
         }
-        MoPubLog.e(errorMessage);
+        MoPubLog.log(CUSTOM, errorMessage);
         return false;
     }
 
@@ -285,7 +287,7 @@ public final class Preconditions {
         if (allowThrow) {
             throw new IllegalStateException(errorMessage);
         }
-        MoPubLog.e(errorMessage);
+        MoPubLog.log(CUSTOM, errorMessage);
         return false;
     }
 
@@ -299,7 +301,7 @@ public final class Preconditions {
         try {
             return String.format(template, args);
         } catch (IllegalFormatException exception) {
-            MoPubLog.e("MoPub preconditions had a format exception: " + exception.getMessage());
+            MoPubLog.log(CUSTOM, "MoPub preconditions had a format exception: " + exception.getMessage());
             return template;
         }
     }

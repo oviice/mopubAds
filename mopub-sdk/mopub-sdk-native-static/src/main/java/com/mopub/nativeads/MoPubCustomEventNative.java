@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -27,10 +27,16 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.mopub.common.DataKeys.JSON_BODY_KEY;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.CLICKED;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.CUSTOM;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_ATTEMPTED;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_FAILED;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_SUCCESS;
 import static com.mopub.common.util.Numbers.parseDouble;
 import static com.mopub.nativeads.NativeImageHelper.preCacheImages;
 
 public class MoPubCustomEventNative extends CustomEventNative {
+    public static final String ADAPTER_NAME = MoPubCustomEventNative.class.getSimpleName();
     private MoPubStaticNativeAd moPubStaticNativeAd;
 
     @Override
@@ -38,6 +44,7 @@ public class MoPubCustomEventNative extends CustomEventNative {
                                 @NonNull final CustomEventNativeListener customEventNativeListener,
                                 @NonNull final Map<String, Object> localExtras,
                                 @NonNull final Map<String, String> serverExtras) {
+        MoPubLog.log(LOAD_ATTEMPTED, ADAPTER_NAME);
 
         if (moPubStaticNativeAd != null && !moPubStaticNativeAd.isInvalidated()) {
             return;
@@ -46,6 +53,9 @@ public class MoPubCustomEventNative extends CustomEventNative {
         Object json = localExtras.get(JSON_BODY_KEY);
         // null or non-JSONObjects should not be passed in localExtras as JSON_BODY_KEY
         if (!(json instanceof JSONObject)) {
+            MoPubLog.log(LOAD_FAILED, ADAPTER_NAME,
+                    NativeErrorCode.INVALID_RESPONSE.getIntCode(),
+                    NativeErrorCode.INVALID_RESPONSE);
             customEventNativeListener.onNativeAdFailed(NativeErrorCode.INVALID_RESPONSE);
             return;
         }
@@ -62,7 +72,7 @@ public class MoPubCustomEventNative extends CustomEventNative {
                 moPubStaticNativeAd.setImpressionMinPercentageViewed(Integer.parseInt(
                         serverExtras.get(DataKeys.IMPRESSION_MIN_VISIBLE_PERCENT)));
             } catch (final NumberFormatException e) {
-                MoPubLog.d("Unable to format min visible percent: " +
+                MoPubLog.log(CUSTOM, ADAPTER_NAME, "Unable to format min visible percent: " +
                         serverExtras.get(DataKeys.IMPRESSION_MIN_VISIBLE_PERCENT));
             }
         }
@@ -72,7 +82,7 @@ public class MoPubCustomEventNative extends CustomEventNative {
                 moPubStaticNativeAd.setImpressionMinTimeViewed(
                         Integer.parseInt(serverExtras.get(DataKeys.IMPRESSION_VISIBLE_MS)));
             } catch (final NumberFormatException e) {
-                MoPubLog.d("Unable to format min time: " +
+                MoPubLog.log(CUSTOM, ADAPTER_NAME, "Unable to format min time: " +
                         serverExtras.get(DataKeys.IMPRESSION_VISIBLE_MS));
             }
         }
@@ -82,14 +92,18 @@ public class MoPubCustomEventNative extends CustomEventNative {
                 moPubStaticNativeAd.setImpressionMinVisiblePx(Integer.parseInt(
                         serverExtras.get(DataKeys.IMPRESSION_MIN_VISIBLE_PX)));
             } catch (final NumberFormatException e) {
-                MoPubLog.d("Unable to format min visible px: " +
+                MoPubLog.log(CUSTOM, ADAPTER_NAME, "Unable to format min visible px: " +
                         serverExtras.get(DataKeys.IMPRESSION_MIN_VISIBLE_PX));
             }
         }
 
         try {
             moPubStaticNativeAd.loadAd();
+            MoPubLog.log(LOAD_SUCCESS, ADAPTER_NAME);
         } catch (IllegalArgumentException e) {
+            MoPubLog.log(LOAD_FAILED, ADAPTER_NAME,
+                    NativeErrorCode.UNSPECIFIED.getIntCode(),
+                    NativeErrorCode.UNSPECIFIED);
             customEventNativeListener.onNativeAdFailed(NativeErrorCode.UNSPECIFIED);
         }
     }
@@ -271,12 +285,12 @@ public class MoPubCustomEventNative extends CustomEventNative {
                         setPrivacyInformationIconClickThroughUrl((String) value);
                         break;
                     default:
-                        MoPubLog.d("Unable to add JSON key to internal mapping: " + key.name);
+                        MoPubLog.log(CUSTOM, ADAPTER_NAME, "Unable to add JSON key to internal mapping: " + key.name);
                         break;
                 }
             } catch (ClassCastException e) {
                 if (!key.required) {
-                    MoPubLog.d("Ignoring class cast exception for optional key: " + key.name);
+                    MoPubLog.log(CUSTOM, ADAPTER_NAME, "Ignoring class cast exception for optional key: " + key.name);
                 } else {
                     throw e;
                 }
@@ -350,6 +364,7 @@ public class MoPubCustomEventNative extends CustomEventNative {
 
         @Override
         public void handleClick(@Nullable final View view) {
+            MoPubLog.log(CLICKED, ADAPTER_NAME);
             notifyAdClicked();
             mNativeClickHandler.openClickDestinationUrl(getClickDestinationUrl(), view);
         }

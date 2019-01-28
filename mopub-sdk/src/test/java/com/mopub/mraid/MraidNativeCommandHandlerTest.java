@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -21,12 +21,10 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.common.util.Drawables;
 import com.mopub.common.util.ResponseHeader;
 import com.mopub.common.util.test.support.ShadowAsyncTasks;
 import com.mopub.common.util.test.support.ShadowMoPubHttpUrlConnection;
 import com.mopub.common.util.test.support.TestDrawables;
-import com.mopub.mobileads.BuildConfig;
 import com.mopub.mobileads.test.support.FileUtils;
 import com.mopub.mraid.MraidNativeCommandHandler.DownloadImageAsyncTask;
 import com.mopub.mraid.MraidNativeCommandHandler.DownloadImageAsyncTask.DownloadImageAsyncTaskListener;
@@ -74,7 +72,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class, shadows = {ShadowAsyncTasks.class, ShadowMoPubHttpUrlConnection.class})
+@Config(shadows = {ShadowAsyncTasks.class, ShadowMoPubHttpUrlConnection.class})
 public class MraidNativeCommandHandlerTest {
     private static final String IMAGE_URI_VALUE = "file://tmp/expectedFile.jpg";
     private static final String REMOTE_IMAGE_URL = "https://www.mopub.com/expectedFile.jpg";
@@ -682,7 +680,7 @@ public class MraidNativeCommandHandlerTest {
     }
 
     @Test
-    public void isInlineVideoAvailable_whenViewsAreNotHardwareAccelerated_whenWindowIsHardwareAccelerated_shouldReturnFalse() throws Exception {
+    public void isInlineVideoAvailable_whenViewsAreNotHardwareAccelerated_whenWindowIsHardwareAccelerated_shouldReturnTrue() throws Exception {
         Activity activity = Robolectric.buildActivity(Activity.class).create().get();
         activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
 
@@ -690,11 +688,11 @@ public class MraidNativeCommandHandlerTest {
         when(mockView.isHardwareAccelerated()).thenReturn(false);
         when(mockView.getLayerType()).thenReturn(View.LAYER_TYPE_HARDWARE);
 
-        assertThat(subject.isInlineVideoAvailable(activity, mockView)).isFalse();
+        assertThat(subject.isInlineVideoAvailable(activity, mockView)).isTrue();
     }
 
     @Test
-    public void isInlineVideoAvailable_whenViewParentIsNotHardwareAccelerated_whenWindowIsHardwareAccelerated_shouldReturnFalse() throws Exception {
+    public void isInlineVideoAvailable_whenViewParentIsNotHardwareAccelerated_whenWindowIsHardwareAccelerated_shouldReturnTrue() throws Exception {
         Activity activity = Robolectric.buildActivity(Activity.class).create().get();
         activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
 
@@ -709,7 +707,7 @@ public class MraidNativeCommandHandlerTest {
         when(mockView.getLayerType()).thenReturn(View.LAYER_TYPE_HARDWARE);
         when(mockView.getParent()).thenReturn(mockLinearLayout);
 
-        assertThat(subject.isInlineVideoAvailable(activity, mockView)).isFalse();
+        assertThat(subject.isInlineVideoAvailable(activity, mockView)).isTrue();
     }
 
     private static Context createMockContextWithSpecificIntentData(final String scheme, final String componentName, final String type, final String action) {
@@ -811,7 +809,7 @@ public class MraidNativeCommandHandlerTest {
                 if (!(invocation.getArguments()[0] instanceof Intent)) {
                     throw new ClassCastException("For some reason you are not passing the calendar intent properly");
                 }
-                Context shadowContext = ShadowApplication.getInstance().getApplicationContext();
+                Context shadowContext = context;
                 shadowContext.startActivity((Intent) invocation.getArguments()[0]);
                 return null;
             }

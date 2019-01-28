@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -19,6 +19,8 @@ import android.widget.VideoView;
 import com.mopub.common.IntentActions;
 import com.mopub.common.Preconditions;
 import com.mopub.common.logging.MoPubLog;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public abstract class BaseVideoViewController {
     private final Context mContext;
@@ -84,7 +86,7 @@ public abstract class BaseVideoViewController {
     }
 
     protected void videoError(boolean shouldFinish) {
-        MoPubLog.e("Video cannot be played.");
+        MoPubLog.log(CUSTOM, "Video cannot be played.");
         broadcastAction(IntentActions.ACTION_INTERSTITIAL_FAIL);
         if (shouldFinish) {
            mBaseVideoViewControllerListener.onFinish();
@@ -101,7 +103,7 @@ public abstract class BaseVideoViewController {
         if (mBroadcastIdentifier != null) {
             BaseBroadcastReceiver.broadcastAction(mContext, mBroadcastIdentifier, action);
         } else {
-            MoPubLog.w("Tried to broadcast a video event without a broadcast identifier to send to.");
+            MoPubLog.log(CUSTOM, "Tried to broadcast a video event without a broadcast identifier to send to.");
         }
     }
 }

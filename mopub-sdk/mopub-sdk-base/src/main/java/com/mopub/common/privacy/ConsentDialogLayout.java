@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -6,7 +6,6 @@ package com.mopub.common.privacy;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -26,6 +25,7 @@ import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Intents;
 import com.mopub.exceptions.IntentNotResolvableException;
 
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 import static com.mopub.common.privacy.ConsentStatus.EXPLICIT_NO;
 import static com.mopub.common.privacy.ConsentStatus.EXPLICIT_YES;
 
@@ -164,7 +164,7 @@ class ConsentDialogLayout extends CloseableLayout {
                     Intents.launchActionViewIntent(getContext(), Uri.parse(url), "Cannot open native browser for " + url);
                     return true;
                 } catch (IntentNotResolvableException e) {
-                    MoPubLog.e(e.getMessage());
+                    MoPubLog.log(CUSTOM, e.getMessage());
                 }
             }
             return super.shouldOverrideUrlLoading(view, url);

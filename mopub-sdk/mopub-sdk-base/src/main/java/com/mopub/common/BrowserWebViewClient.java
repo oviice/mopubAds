@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -15,6 +15,7 @@ import com.mopub.common.logging.MoPubLog;
 
 import java.util.EnumSet;
 
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 import static com.mopub.common.util.Drawables.LEFT_ARROW;
 import static com.mopub.common.util.Drawables.RIGHT_ARROW;
 import static com.mopub.common.util.Drawables.UNLEFT_ARROW;
@@ -41,7 +42,7 @@ class BrowserWebViewClient extends WebViewClient {
     @Override
     public void onReceivedError(WebView view, int errorCode, String description,
             String failingUrl) {
-        MoPubLog.d("MoPubBrowser error: " + description);
+        MoPubLog.log(CUSTOM, "MoPubBrowser error: " + description);
     }
 
     @Override

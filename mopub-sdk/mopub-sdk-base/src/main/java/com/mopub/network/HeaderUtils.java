@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -19,6 +19,8 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class HeaderUtils {
 
@@ -64,7 +66,7 @@ public class HeaderUtils {
             try {
                 stringArray.add(jsonArray.getString(i));
             } catch (JSONException e) {
-                MoPubLog.d("Unable to parse item " + i + " from " + responseHeader.getKey());
+                MoPubLog.log(CUSTOM, "Unable to parse item " + i + " from " + responseHeader.getKey());
             }
         }
 

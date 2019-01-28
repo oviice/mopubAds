@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -22,6 +22,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 /**
  * Used to manage the mapping between MoPub ad unit ids and third-party ad network ids for rewarded ads.
@@ -78,7 +80,7 @@ class RewardedAdData {
             @Nullable String currencyAmount) {
         Preconditions.checkNotNull(moPubId);
         if (currencyName == null || currencyAmount == null) {
-            MoPubLog.e(String.format(Locale.US, "Currency name and amount cannot be null: " +
+            MoPubLog.log(CUSTOM, String.format(Locale.US, "Currency name and amount cannot be null: " +
                     "name = %s, amount = %s", currencyName, currencyAmount));
             return;
         }
@@ -87,13 +89,13 @@ class RewardedAdData {
         try {
             intCurrencyAmount = Integer.parseInt(currencyAmount);
         } catch(NumberFormatException e) {
-            MoPubLog.e(String.format(Locale.US, "Currency amount must be an integer: %s",
+            MoPubLog.log(CUSTOM, String.format(Locale.US, "Currency amount must be an integer: %s",
                     currencyAmount));
             return;
         }
 
         if (intCurrencyAmount < 0) {
-            MoPubLog.e(String.format(Locale.US, "Currency amount cannot be negative: %s",
+            MoPubLog.log(CUSTOM, String.format(Locale.US, "Currency amount cannot be negative: %s",
                     currencyAmount));
             return;
         }
@@ -121,13 +123,13 @@ class RewardedAdData {
 
         Set<MoPubReward> availableRewards = mAdUnitToAvailableRewardsMap.get(moPubId);
         if (availableRewards == null || availableRewards.isEmpty()) {
-            MoPubLog.e(String.format(
+            MoPubLog.log(CUSTOM, String.format(
                     Locale.US, "AdUnit %s does not have any rewards.", moPubId));
             return;
         }
 
         if (!availableRewards.contains(selectedReward)) {
-            MoPubLog.e(String.format(
+            MoPubLog.log(CUSTOM, String.format(
                     Locale.US, "Selected reward is invalid for AdUnit %s.", moPubId));
             return;
         }
@@ -208,13 +210,13 @@ class RewardedAdData {
         try {
             intCurrencyAmount = Integer.parseInt(currencyAmount);
         } catch(NumberFormatException e) {
-            MoPubLog.e(String.format(Locale.US, "Currency amount must be an integer: %s",
+            MoPubLog.log(CUSTOM, String.format(Locale.US, "Currency amount must be an integer: %s",
                     currencyAmount));
             return;
         }
 
         if (intCurrencyAmount < 0) {
-            MoPubLog.e(String.format(Locale.US, "Currency amount cannot be negative: %s",
+            MoPubLog.log(CUSTOM, String.format(Locale.US, "Currency amount cannot be negative: %s",
                     currencyAmount));
             return;
         }

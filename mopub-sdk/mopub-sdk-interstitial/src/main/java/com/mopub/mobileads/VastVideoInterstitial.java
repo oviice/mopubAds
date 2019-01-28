@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -18,7 +18,14 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_FAILED;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_SUCCESS;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.SHOW_ATTEMPTED;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.CUSTOM;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.ERROR;
+
 class VastVideoInterstitial extends ResponseBodyInterstitial implements VastManager.VastManagerListener {
+    public static final String ADAPTER_NAME = VastVideoInterstitial.class.getSimpleName();
     private CustomEventInterstitialListener mCustomEventInterstitialListener;
     private String mVastResponse;
     private VastManager mVastManager;
@@ -35,7 +42,7 @@ class VastVideoInterstitial extends ResponseBodyInterstitial implements VastMana
         try {
             mExternalViewabilityTrackers = Json.jsonStringToMap(externalViewabilityTrackers);
         } catch (JSONException e) {
-            MoPubLog.d("Failed to parse video viewability trackers to JSON: " +
+            MoPubLog.log(CUSTOM, "Failed to parse video viewability trackers to JSON: " +
                     externalViewabilityTrackers);
         }
 
@@ -46,7 +53,7 @@ class VastVideoInterstitial extends ResponseBodyInterstitial implements VastMana
         try {
             mVideoTrackers = new JSONObject(videoTrackers);
         } catch (JSONException e) {
-            MoPubLog.d("Failed to parse video trackers to JSON: " + videoTrackers, e);
+            MoPubLog.log(ERROR, "Failed to parse video trackers to JSON: " + videoTrackers, e);
             mVideoTrackers = null;
         }
     }
@@ -56,6 +63,9 @@ class VastVideoInterstitial extends ResponseBodyInterstitial implements VastMana
         mCustomEventInterstitialListener = customEventInterstitialListener;
 
         if (!CacheService.initializeDiskCache(mContext)) {
+            MoPubLog.log(LOAD_FAILED, ADAPTER_NAME,
+                    MoPubErrorCode.VIDEO_CACHE_ERROR.getIntCode(),
+                    MoPubErrorCode.VIDEO_CACHE_ERROR);
             mCustomEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.VIDEO_CACHE_ERROR);
             return;
         }
@@ -63,10 +73,12 @@ class VastVideoInterstitial extends ResponseBodyInterstitial implements VastMana
         mVastManager = VastManagerFactory.create(mContext);
         mVastManager.prepareVastVideoConfiguration(mVastResponse, this,
                 mAdReport.getDspCreativeId(), mContext);
+        MoPubLog.log(LOAD_SUCCESS, ADAPTER_NAME);
     }
 
     @Override
     public void showInterstitial() {
+        MoPubLog.log(SHOW_ATTEMPTED, ADAPTER_NAME);
         MraidVideoPlayerActivity.startVast(mContext, mVastVideoConfig, mBroadcastIdentifier);
     }
 

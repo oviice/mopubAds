@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -6,14 +6,14 @@ package com.mopub.simpleadsdemo;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.logging.MoPubLogger;
 import com.mopub.mobileads.MoPubErrorCode;
 
-import java.util.logging.Handler;
-import java.util.logging.LogManager;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
+import static com.mopub.common.logging.MoPubLog.LogLevel.INFO;
 
 /**
  * Used to intercept logs so that we can view logs at a lower level
@@ -37,50 +37,23 @@ public class LoggingUtils {
             return;
         }
 
-        final Handler handler = new SampleAppLogHandler(context.getApplicationContext());
-        MoPubLog.c("Setting up MoPubLog");
-        final Logger logger = getLogger();
-        logger.addHandler(handler);
+        MoPubLog.addLogger(new MoPubLogger() {
+            @Override
+            public void log(@Nullable String className, @Nullable String methodName,
+                            @Nullable String identifier, @Nullable String message) {
+                if (MoPubErrorCode.WARMUP.toString().equals(message)) {
+                    Utils.logToast(context, MoPubErrorCode.WARMUP.toString());
+                }
+                // Toasts the no connection message if a native ad failed due to no internet
+                if (MoPubErrorCode.NO_CONNECTION.toString().equals(message)) {
+                    Utils.logToast(context, MoPubErrorCode.NO_CONNECTION.toString());
+                }
+            }
+        }, INFO);
+
+        MoPubLog.log(CUSTOM, "Setting up MoPubLog");
 
         sEnabled = true;
-    }
-
-    private static Logger getLogger() {
-        return LogManager.getLogManager().getLogger(MoPubLog.LOGGER_NAMESPACE);
-    }
-
-    private static class SampleAppLogHandler extends Handler {
-
-        @NonNull
-        private final Context mContext;
-
-        protected SampleAppLogHandler(@NonNull final Context context) {
-            super();
-            mContext = context;
-        }
-
-        @Override
-        public void publish(final LogRecord logRecord) {
-            if (logRecord == null) {
-                return;
-            }
-            // Toasts the warmup message if X-Warmup flag is set to 1
-            if (MoPubErrorCode.WARMUP.toString().equals(logRecord.getMessage())) {
-                Utils.logToast(mContext, MoPubErrorCode.WARMUP.toString());
-            }
-            // Toasts the no connection message if a native ad failed due to no internet
-            if (MoPubErrorCode.NO_CONNECTION.toString().equals(logRecord.getMessage())) {
-                Utils.logToast(mContext, MoPubErrorCode.NO_CONNECTION.toString());
-            }
-        }
-
-        @Override
-        public void flush() {
-        }
-
-        @Override
-        public void close() throws SecurityException {
-        }
     }
 }
 

@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -15,6 +15,8 @@ import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 
 import java.util.concurrent.Executor;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class AsyncTasks {
     private static Executor sExecutor;
@@ -46,7 +48,7 @@ public class AsyncTasks {
         if (Looper.getMainLooper() == Looper.myLooper()) {
             asyncTask.executeOnExecutor(sExecutor, params);
         } else {
-            MoPubLog.d("Posting AsyncTask to main thread for execution.");
+            MoPubLog.log(CUSTOM, "Posting AsyncTask to main thread for execution.");
             sUiThreadHandler.post(new Runnable() {
                 @Override
                 public void run() {

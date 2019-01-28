@@ -7,6 +7,10 @@ One line summary of the issue here
 
 #### MoPub SDK Version:
 
+#### Android Studio Version:
+
+#### Gradle Version:
+
 #### Device model and OS Version:
 
 #### Ad Unit IDs used in reproducing the issue:

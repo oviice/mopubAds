@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -17,6 +17,7 @@ import com.mopub.common.MoPub;
 import com.mopub.common.MoPubReward;
 import com.mopub.common.SdkConfiguration;
 import com.mopub.common.SharedPreferencesHelper;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.privacy.ConsentStatus;
 import com.mopub.common.privacy.MoPubIdentifierTest;
 import com.mopub.common.privacy.PersonalInfoManager;
@@ -49,12 +50,10 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.Robolectric;
-import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLog;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -73,7 +72,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class)
 public class
         MoPubRewardedVideoManagerTest {
 
@@ -115,7 +113,9 @@ public class
                 .setStatic(MoPub.class)
                 .setAccessible()
                 .execute();
-        MoPub.initializeSdk(mActivity, new SdkConfiguration.Builder("adunit").build(), null);
+        MoPub.initializeSdk(mActivity, new SdkConfiguration.Builder("adunit")
+                .withLogLevel(MoPubLog.LogLevel.DEBUG)
+                .build(), null);
         Reflection.getPrivateField(MoPub.class, "sSdkInitialized").setBoolean(null, true);
 
         MoPubIdentifierTest.writeAdvertisingInfoToSharedPreferences(mActivity, false);
@@ -177,105 +177,6 @@ public class
                 .setStatic(MoPub.class)
                 .setAccessible()
                 .execute();
-    }
-
-    @Test
-    public void initNetworks_withEmptySharedPrefs_shouldNotInitAnyNetworks() {
-        List<Class<? extends CustomEventRewardedVideo>> networksToInit =
-                Arrays.asList(
-                        CustomEventRewardedVideo.class,
-                        TestCustomEvent.class,
-                        NoVideoCustomEvent.class
-                );
-
-        List<CustomEventRewardedVideo> initializedNetworksList =
-                MoPubRewardedVideoManager.initNetworks(mActivity, networksToInit);
-
-        // Verify that no networks got initialized.
-        assertThat(initializedNetworksList.size()).isEqualTo(0);
-    }
-
-    @Test
-    public void initNetworks_shouldOnlyInitNetworksWithSettingsSavedInSharedPrefs() {
-        // Only TestCustomEvent has settings saved in SharedPrefs.
-        mTestCustomEventSharedPrefs.edit().putString(
-                TestCustomEvent.class.getName(),
-                "{\"k1\":\"v1\",\"k2\":\"v2\"}").commit();
-
-        List<Class<? extends CustomEventRewardedVideo>> networksToInit =
-                Arrays.asList(
-                        CustomEventRewardedVideo.class,
-                        TestCustomEvent.class,
-                        NoVideoCustomEvent.class
-                );
-
-        List<CustomEventRewardedVideo> networksInitialized =
-                MoPubRewardedVideoManager.initNetworks(mActivity, networksToInit);
-
-        // Verify that only TestCustomEvent got initialized.
-        assertThat(networksInitialized.size()).isEqualTo(1);
-        assertThat(networksInitialized.get(0).getClass().getName())
-                .isEqualTo(TestCustomEvent.class.getName());
-    }
-
-    @Test
-    public void initNetworks_withDuplicatedNetworks_shouldOnlyInitDedupedNetworks() {
-        // Only TestCustomEvent has settings saved in SharedPrefs.
-        mTestCustomEventSharedPrefs.edit().putString(
-                TestCustomEvent.class.getName(),
-                "{\"k1\":\"v1\",\"k2\":\"v2\"}").commit();
-
-        // All networks are duplicated.
-        List<Class<? extends CustomEventRewardedVideo>> networksToInit =
-                Arrays.asList(
-                        CustomEventRewardedVideo.class,
-                        TestCustomEvent.class,
-                        NoVideoCustomEvent.class,
-                        TestCustomEvent.class,
-                        NoVideoCustomEvent.class,
-                        CustomEventRewardedVideo.class
-                );
-
-        List<CustomEventRewardedVideo> networksInitialized =
-                MoPubRewardedVideoManager.initNetworks(mActivity, networksToInit);
-
-        // Verify that only TestCustomEvent got initialized, and only once.
-        assertThat(networksInitialized.size()).isEqualTo(1);
-        assertThat(networksInitialized.get(0).getClass().getName())
-                .isEqualTo(TestCustomEvent.class.getName());
-    }
-
-    @Test
-    public void initNetworks_shouldObeyOrderDuringInit() {
-        // Both TestCustomEvent and NoVideoCustomEvent have settings saved in SharedPrefs.
-        mTestCustomEventSharedPrefs.edit().putString(
-                TestCustomEvent.class.getName(),
-                "{\"k1\":\"v1\",\"k2\":\"v2\"}").commit();
-        mTestCustomEventSharedPrefs.edit().putString(
-                NoVideoCustomEvent.class.getName(),
-                "{\"k3\":\"v3\",\"k4\":\"v4\"}").commit();
-
-        // All networks are duplicated.
-        List<Class<? extends CustomEventRewardedVideo>> networksToInit =
-                Arrays.asList(
-                        NoVideoCustomEvent.class,
-                        TestCustomEvent.class,
-                        CustomEventRewardedVideo.class,
-                        TestCustomEvent.class,
-                        CustomEventRewardedVideo.class,
-                        NoVideoCustomEvent.class
-                );
-
-        List<CustomEventRewardedVideo> networksInitialized =
-                MoPubRewardedVideoManager.initNetworks(mActivity, networksToInit);
-
-        // Verify that only NoVideoCustomEvent and TestCustomEvent got initialized,
-        // in that order, and each only once.
-        assertThat(networksInitialized.size()).isEqualTo(2);
-        assertThat(networksInitialized.get(0).getClass().getName())
-                .isEqualTo(NoVideoCustomEvent.class.getName());
-        assertThat(networksInitialized.get(1).getClass().getName())
-                .isEqualTo(TestCustomEvent.class.getName());
     }
 
     @Test

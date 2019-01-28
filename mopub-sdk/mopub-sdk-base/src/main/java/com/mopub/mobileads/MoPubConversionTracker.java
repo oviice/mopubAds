@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -17,6 +17,8 @@ import com.mopub.common.privacy.ConsentData;
 import com.mopub.common.privacy.PersonalInfoManager;
 import com.mopub.network.TrackingRequest;
 import com.mopub.volley.VolleyError;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class MoPubConversionTracker {
     private static final String WANT_TO_TRACK = " wantToTrack";
@@ -55,13 +57,13 @@ public class MoPubConversionTracker {
     public void reportAppOpen(boolean sessionTracker) {
         final PersonalInfoManager infoManager = MoPub.getPersonalInformationManager();
         if (infoManager == null) {
-            MoPubLog.w("Cannot report app open until initialization is done");
+            MoPubLog.log(CUSTOM, "Cannot report app open until initialization is done");
             return;
         }
 
 
         if (!sessionTracker && isAlreadyTracked()) {
-            MoPubLog.d("Conversion already tracked");
+            MoPubLog.log(CUSTOM, "Conversion already tracked");
             return;
         }
 

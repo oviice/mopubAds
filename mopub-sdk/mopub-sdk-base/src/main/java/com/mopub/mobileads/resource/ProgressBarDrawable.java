@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -12,6 +12,8 @@ import android.support.annotation.NonNull;
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Dips;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class ProgressBarDrawable extends BaseWidgetDrawable {
     @NonNull private final Paint mBackgroundPaint;
@@ -91,7 +93,7 @@ public class ProgressBarDrawable extends BaseWidgetDrawable {
             mCurrentProgress = currentProgress;
             mLastProgress = currentProgress;
         } else if (currentProgress != 0) {
-            MoPubLog.d(String.format("Progress not monotonically increasing: last = %d, current = %d",
+            MoPubLog.log(CUSTOM, String.format("Progress not monotonically increasing: last = %d, current = %d",
                     mLastProgress,
                     currentProgress));
             forceCompletion();

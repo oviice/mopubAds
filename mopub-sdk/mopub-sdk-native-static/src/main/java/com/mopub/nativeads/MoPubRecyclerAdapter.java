@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -22,6 +22,7 @@ import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubServerPositioning;
 import java.util.List;
 import java.util.WeakHashMap;
 
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 import static com.mopub.nativeads.MoPubRecyclerAdapter.ContentChangeStrategy.INSERT_AT_END;
 import static com.mopub.nativeads.MoPubRecyclerAdapter.ContentChangeStrategy.KEEP_ADS_FIXED;
 
@@ -275,13 +276,13 @@ public final class MoPubRecyclerAdapter extends RecyclerView.Adapter<RecyclerVie
     public void refreshAds(@NonNull String adUnitId,
             @Nullable RequestParameters requestParameters) {
         if (mRecyclerView == null) {
-            MoPubLog.w("This adapter is not attached to a RecyclerView and cannot be refreshed.");
+            MoPubLog.log(CUSTOM, "This adapter is not attached to a RecyclerView and cannot be refreshed.");
             return;
         }
 
         final RecyclerView.LayoutManager layoutManager = mRecyclerView.getLayoutManager();
         if (layoutManager == null) {
-            MoPubLog.w("Can't refresh ads when there is no layout manager on a RecyclerView.");
+            MoPubLog.log(CUSTOM, "Can't refresh ads when there is no layout manager on a RecyclerView.");
             return;
         }
 
@@ -320,7 +321,7 @@ public final class MoPubRecyclerAdapter extends RecyclerView.Adapter<RecyclerVie
 
             loadAds(adUnitId, requestParameters);
         } else {
-            MoPubLog.w("This LayoutManager can't be refreshed.");
+            MoPubLog.log(CUSTOM, "This LayoutManager can't be refreshed.");
         }
     }
 
@@ -404,7 +405,7 @@ public final class MoPubRecyclerAdapter extends RecyclerView.Adapter<RecyclerVie
             // Create the view and a view holder.
             final MoPubAdRenderer adRenderer = mStreamAdPlacer.getAdRendererForViewType(viewType - NATIVE_AD_VIEW_TYPE_BASE);
             if (adRenderer == null) {
-                MoPubLog.w("No view binder was registered for ads in MoPubRecyclerAdapter.");
+                MoPubLog.log(CUSTOM, "No view binder was registered for ads in MoPubRecyclerAdapter.");
                 // This will cause a null pointer exception.
                 return null;
             }

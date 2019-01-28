@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -21,7 +21,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.robolectric.Robolectric;
-import org.robolectric.annotation.Config;
 import org.robolectric.shadows.httpclient.FakeHttp;
 import org.robolectric.shadows.support.v4.ShadowLocalBroadcastManager;
 
@@ -49,7 +48,6 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class)
 public class VastVideoInterstitialTest extends ResponseBodyInterstitialTest {
     private Context context;
     private CustomEventInterstitialListener customEventInterstitialListener;

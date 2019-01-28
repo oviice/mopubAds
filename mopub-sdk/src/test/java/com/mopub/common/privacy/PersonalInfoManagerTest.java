@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -11,7 +11,6 @@ import android.os.SystemClock;
 import com.mopub.common.ClientMetadata;
 import com.mopub.common.MoPub;
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.mobileads.BuildConfig;
 import com.mopub.network.MoPubRequestQueue;
 import com.mopub.network.MoPubRequestQueueTest;
 import com.mopub.network.Networking;
@@ -27,7 +26,6 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.robolectric.Robolectric;
-import org.robolectric.annotation.Config;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -38,7 +36,6 @@ import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
 @PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "org.json.*"})
-@Config(constants = BuildConfig.class)
 @PrepareForTest({ClientMetadata.class, Networking.class, AdvertisingId.class, MoPub.class})
 public class PersonalInfoManagerTest {
 
@@ -129,6 +126,24 @@ public class PersonalInfoManagerTest {
         final boolean actual = subject.shouldShowConsentDialog();
 
         assertThat(actual).isFalse();
+    }
+
+    @Test
+    public void shouldAllowLegitimateInterest_withLegitimateInterestAllowedFalse_shouldReturnFalse() {
+        subject.setAllowLegitimateInterest(false);
+
+        final boolean actual = subject.shouldAllowLegitimateInterest();
+
+        assertThat(actual).isFalse();
+    }
+
+    @Test
+    public void shouldAllowLegitimateInterest_withLegitimateInterestAllowedTrue_shouldReturnTrue() {
+        subject.setAllowLegitimateInterest(true);
+
+        final boolean actual = subject.shouldAllowLegitimateInterest();
+
+        assertThat(actual).isTrue();
     }
 
     @Test

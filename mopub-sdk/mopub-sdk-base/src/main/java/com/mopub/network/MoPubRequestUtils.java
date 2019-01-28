@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -21,6 +21,8 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 /**
  * Keeps utility methods regarding MoPubRequests in one place.
@@ -88,7 +90,7 @@ public class MoPubRequestUtils {
             try {
                 jsonBody.put(queryName, params.get(queryName));
             } catch (JSONException e) {
-                MoPubLog.d("Unable to add " + queryName + " to JSON body.");
+                MoPubLog.log(CUSTOM, "Unable to add " + queryName + " to JSON body.");
             }
         }
         return jsonBody.toString();

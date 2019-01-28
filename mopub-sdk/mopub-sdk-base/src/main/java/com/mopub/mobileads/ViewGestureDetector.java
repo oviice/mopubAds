@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -13,6 +13,8 @@ import android.view.View;
 
 import com.mopub.common.AdReport;
 import com.mopub.common.logging.MoPubLog;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class ViewGestureDetector extends GestureDetector {
     private final View mView;
@@ -45,7 +47,7 @@ public class ViewGestureDetector extends GestureDetector {
                 if (mUserClickListener != null) {
                     mUserClickListener.onUserClick();
                 } else {
-                    MoPubLog.d("View's onUserClick() is not registered.");
+                    MoPubLog.log(CUSTOM, "View's onUserClick() is not registered.");
                 }
                 mAdAlertGestureListener.finishGestureDetection();
                 break;

@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -19,7 +19,14 @@ import com.mopub.common.logging.MoPubLog;
 import java.util.Map;
 
 import static com.mopub.common.Constants.AD_EXPIRATION_DELAY;
-import static com.mopub.mobileads.MoPubErrorCode.EXPIRED;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.CLICKED;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.CUSTOM;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.EXPIRED;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.LOAD_SUCCESS;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.SHOW_FAILED;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.SHOW_SUCCESS;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.WILL_DISAPPEAR;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.WILL_LEAVE_APPLICATION;
 
 /**
  * Contains the common logic for rewarded ads.
@@ -59,7 +66,7 @@ public abstract class MoPubRewardedAd extends CustomEventRewardedAd {
         if (rewardedAdCurrencyName instanceof String) {
             mRewardedAdCurrencyName = (String) rewardedAdCurrencyName;
         } else {
-            MoPubLog.d("No currency name specified for rewarded video. Using the default name.");
+            MoPubLog.log(CUSTOM, "No currency name specified for rewarded video. Using the default name.");
             mRewardedAdCurrencyName = MoPubReward.NO_REWARD_LABEL;
         }
 
@@ -70,21 +77,21 @@ public abstract class MoPubRewardedAd extends CustomEventRewardedAd {
                 mRewardedAdCurrencyAmount = Integer.parseInt(
                         (String) rewardedAdCurrencyAmount);
             } catch (NumberFormatException e) {
-                MoPubLog.d(
+                MoPubLog.log(CUSTOM,
                         "Unable to convert currency amount: " + rewardedAdCurrencyAmount +
                                 ". Using the default reward amount: " +
                                 MoPubReward.DEFAULT_REWARD_AMOUNT);
                 mRewardedAdCurrencyAmount = MoPubReward.DEFAULT_REWARD_AMOUNT;
             }
         } else {
-            MoPubLog.d(
+            MoPubLog.log(CUSTOM,
                     "No currency amount specified for rewarded ad. Using the default reward amount: " +
                             MoPubReward.DEFAULT_REWARD_AMOUNT);
             mRewardedAdCurrencyAmount = MoPubReward.DEFAULT_REWARD_AMOUNT;
         }
 
         if (mRewardedAdCurrencyAmount < 0) {
-            MoPubLog.d(
+            MoPubLog.log(CUSTOM,
                     "Negative currency amount specified for rewarded ad. Using the default reward amount: " +
                             MoPubReward.DEFAULT_REWARD_AMOUNT);
             mRewardedAdCurrencyAmount = MoPubReward.DEFAULT_REWARD_AMOUNT;
@@ -94,7 +101,7 @@ public abstract class MoPubRewardedAd extends CustomEventRewardedAd {
         if (adUnitId instanceof String) {
             mAdUnitId = (String) adUnitId;
         } else {
-            MoPubLog.d("Unable to set ad unit for rewarded ad.");
+            MoPubLog.log(CUSTOM, "Unable to set ad unit for rewarded ad.");
         }
     }
 
@@ -125,8 +132,8 @@ public abstract class MoPubRewardedAd extends CustomEventRewardedAd {
             mAdExpiration = new Runnable() {
                 @Override
                 public void run() {
-                    MoPubLog.d("Expiring unused Rewarded ad.");
-                    onInterstitialFailed(EXPIRED);
+                    MoPubLog.log(EXPIRED, "time in seconds");
+                    onInterstitialFailed(MoPubErrorCode.EXPIRED);
                 }
             };
 
@@ -134,6 +141,7 @@ public abstract class MoPubRewardedAd extends CustomEventRewardedAd {
 
         @Override
         public void onInterstitialLoaded() {
+            MoPubLog.log(LOAD_SUCCESS);
             mIsLoaded = true;
             // Expire MoPub ads to synchronize with MoPub Ad Server tracking window
             if (AdTypeTranslator.CustomEventType.isMoPubSpecific(mCustomEventClass.getName())) {
@@ -145,6 +153,7 @@ public abstract class MoPubRewardedAd extends CustomEventRewardedAd {
 
         @Override
         public void onInterstitialFailed(final MoPubErrorCode errorCode) {
+            MoPubLog.log(SHOW_FAILED, errorCode.getIntCode(), errorCode);
             mHandler.removeCallbacks(mAdExpiration);
             switch (errorCode) {
                 case VIDEO_PLAYBACK_ERROR:
@@ -159,12 +168,14 @@ public abstract class MoPubRewardedAd extends CustomEventRewardedAd {
 
         @Override
         public void onInterstitialShown() {
+            MoPubLog.log(SHOW_SUCCESS);
             mHandler.removeCallbacks(mAdExpiration);
             MoPubRewardedVideoManager.onRewardedVideoStarted(mCustomEventClass, getAdNetworkId());
         }
 
         @Override
         public void onInterstitialClicked() {
+            MoPubLog.log(CLICKED);
             MoPubRewardedVideoManager.onRewardedVideoClicked(mCustomEventClass, getAdNetworkId());
         }
 
@@ -174,10 +185,12 @@ public abstract class MoPubRewardedAd extends CustomEventRewardedAd {
 
         @Override
         public void onLeaveApplication() {
+            MoPubLog.log(WILL_LEAVE_APPLICATION);
         }
 
         @Override
         public void onInterstitialDismissed() {
+            MoPubLog.log(WILL_DISAPPEAR);
             MoPubRewardedVideoManager.onRewardedVideoClosed(mCustomEventClass, getAdNetworkId());
             onInvalidate();
         }

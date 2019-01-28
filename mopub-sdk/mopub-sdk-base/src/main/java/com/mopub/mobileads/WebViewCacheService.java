@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -13,6 +13,7 @@ import com.mopub.common.ExternalViewabilitySessionManager;
 import com.mopub.common.Preconditions;
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.mraid.MraidController;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
@@ -21,6 +22,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import static com.mopub.common.Constants.FIFTEEN_MINUTES_MILLIS;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 /**
  * Holds WebViews in memory until they are used.
@@ -33,13 +35,17 @@ public class WebViewCacheService {
         private final WeakReference<Interstitial> mWeakInterstitial;
         @NonNull
         private final ExternalViewabilitySessionManager mViewabilityManager;
+        @Nullable
+        private final MraidController mController;
 
         Config(@NonNull final BaseWebView baseWebView,
                 @NonNull final Interstitial baseInterstitial,
-                @NonNull final ExternalViewabilitySessionManager viewabilityManager) {
+                @NonNull final ExternalViewabilitySessionManager viewabilityManager,
+                @Nullable final MraidController controller) {
             mWebView = baseWebView;
-            mWeakInterstitial = new WeakReference<Interstitial>(baseInterstitial);
+            mWeakInterstitial = new WeakReference<>(baseInterstitial);
             mViewabilityManager = viewabilityManager;
+            mController = controller;
         }
 
         @NonNull
@@ -56,6 +62,11 @@ public class WebViewCacheService {
         public ExternalViewabilitySessionManager getViewabilityManager() {
             return mViewabilityManager;
         }
+
+        @Nullable
+        public MraidController getController() {
+            return mController;
+        }
     }
 
     /**
@@ -68,7 +79,7 @@ public class WebViewCacheService {
     /**
      * Trim the cache at least this frequently. Trimming only removes a {@link Config}s when its
      * associated {@link Interstitial} is no longer in memory. The cache is also
-     * trimmed every time {@link #storeWebViewConfig(Long, Interstitial, BaseWebView, ExternalViewabilitySessionManager)} is called.
+     * trimmed every time {@link #storeWebViewConfig(Long, Interstitial, BaseWebView, ExternalViewabilitySessionManager, MraidController)} is called.
      */
     @VisibleForTesting
     static final long TRIM_CACHE_FREQUENCY_MILLIS = FIFTEEN_MINUTES_MILLIS;
@@ -101,7 +112,8 @@ public class WebViewCacheService {
     public static void storeWebViewConfig(@NonNull final Long broadcastIdentifier,
             @NonNull final Interstitial baseInterstitial,
             @NonNull final BaseWebView baseWebView,
-            @NonNull final ExternalViewabilitySessionManager viewabilityManager) {
+            @NonNull final ExternalViewabilitySessionManager viewabilityManager,
+            @Nullable final MraidController controller) {
         Preconditions.checkNotNull(broadcastIdentifier);
         Preconditions.checkNotNull(baseInterstitial);
         Preconditions.checkNotNull(baseWebView);
@@ -109,13 +121,13 @@ public class WebViewCacheService {
         trimCache();
         // Ignore request when max size is reached.
         if (sWebViewConfigs.size() >= MAX_SIZE) {
-            MoPubLog.w(
+            MoPubLog.log(CUSTOM,
                     "Unable to cache web view. Please destroy some via MoPubInterstitial#destroy() and try again.");
             return;
         }
 
         sWebViewConfigs.put(broadcastIdentifier,
-                new Config(baseWebView, baseInterstitial, viewabilityManager));
+                new Config(baseWebView, baseInterstitial, viewabilityManager, controller));
     }
 
     @Nullable

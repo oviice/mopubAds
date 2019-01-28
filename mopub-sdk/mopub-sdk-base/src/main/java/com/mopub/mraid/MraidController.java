@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -41,8 +41,8 @@ import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.DeviceUtils;
 import com.mopub.common.util.Dips;
 import com.mopub.common.util.Views;
+import com.mopub.mobileads.BaseWebView;
 import com.mopub.mobileads.MraidVideoPlayerActivity;
-import com.mopub.mobileads.WebViewCacheService;
 import com.mopub.mobileads.util.WebViews;
 import com.mopub.mraid.MraidBridge.MraidBridgeListener;
 import com.mopub.mraid.MraidBridge.MraidWebView;
@@ -52,6 +52,7 @@ import java.net.URI;
 
 import static android.content.pm.ActivityInfo.CONFIG_ORIENTATION;
 import static android.content.pm.ActivityInfo.CONFIG_SCREEN_SIZE;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 import static com.mopub.common.util.Utils.bitMaskContainsFlag;
 
 public class MraidController {
@@ -78,7 +79,7 @@ public class MraidController {
      * While this field is never null, the reference could become null. This reference starts out
      * null if the passed-in context is not an activity.
      */
-    @NonNull private final WeakReference<Activity> mWeakActivity;
+    @NonNull private WeakReference<Activity> mWeakActivity;
     @NonNull private final Context mContext;
     @NonNull private final PlacementType mPlacementType;
 
@@ -125,7 +126,7 @@ public class MraidController {
 
     private final MraidNativeCommandHandler mMraidNativeCommandHandler;
 
-    private boolean mIsPaused;
+    private boolean mIsPaused = true;
 
     public MraidController(@NonNull Context context, @Nullable AdReport adReport,
             @NonNull PlacementType placementType) {
@@ -190,6 +191,9 @@ public class MraidController {
         @Override
         public void onPageLoaded() {
             handlePageLoad();
+            if (mMraidListener != null) {
+                mMraidListener.onLoaded(mDefaultAdContainer);
+            }
         }
 
         @Override
@@ -337,68 +341,54 @@ public class MraidController {
     }
 
     /**
-     * Gets an MraidWebView and fills it with data. In the case that the MraidWebView is retrieved
-     * from the cache, this also notifies that the ad has been loaded. If the broadcast identifier
-     * is null or there is a cache miss, a new MraidWebView is created and is filled with htmlData.
-     * @param broadcastIdentifier The unique identifier of an interstitial. This can be null,
-     *                            especially when there is no interstitial.
+     * Creates an MraidWebView and fills it with data.
+     *
      * @param htmlData            The HTML of the ad. This will only be loaded if a cached WebView
      *                            is not found.
      * @param listener            Optional listener that (if non-null) is notified when an
      *                            MraidWebView is loaded from the cache or created.
      */
-    public void fillContent(@Nullable final Long broadcastIdentifier,
-            @NonNull final String htmlData,
+    public void fillContent(@NonNull final String htmlData,
             @Nullable final MraidWebViewCacheListener listener) {
         Preconditions.checkNotNull(htmlData, "htmlData cannot be null");
 
-        final boolean cacheHit = hydrateMraidWebView(broadcastIdentifier, listener);
-        Preconditions.NoThrow.checkNotNull(mMraidWebView, "mMraidWebView cannot be null");
+        mMraidWebView = new MraidWebView(mContext);
+        mMraidWebView.enablePlugins(true);
 
+        if (listener != null) {
+            listener.onReady(mMraidWebView,null);
+        }
         mMraidBridge.attachView(mMraidWebView);
         mDefaultAdContainer.addView(mMraidWebView,
                 new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
-        // If the WebView was retrieved from the cache, notify that the ad is already loaded.
-        if (cacheHit) {
-            handlePageLoad();
-        } else {
-            // Otherwise, load the content into the MraidWebView
-            mMraidBridge.setContentHtml(htmlData);
-        }
+        mMraidBridge.setContentHtml(htmlData);
+    }
+
+    public void onPreloadFinished(@NonNull final BaseWebView baseWebView) {
+        mMraidWebView = (MraidWebView) baseWebView;
+        mMraidWebView.enablePlugins(true);
+        mMraidBridge.attachView(mMraidWebView);
+        mDefaultAdContainer.addView(mMraidWebView,
+                new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        handlePageLoad();
     }
 
     /**
-     * Gets and sets the MraidWebView. Returns true if the MraidWebView was from the cache, and
-     * false if a new one was created. If the broadcast identifier is {@code null}, then this
-     * will always return false and create a new MraidWebView.
+     * Updates the activity and calls any onShow() callbacks when an ad is showing.
      *
-     * @param broadcastIdentifier The unique identifier associated with the MraidWebView in the cache.
-     * @param listener            Listener passed in from {@link #fillContent(Long, String, MraidWebViewCacheListener)}
-     * @return {@code true} if there was a cache hit, {@code false} if a new MraidWebView was created.
+     * @param activity The new activity associated with this mraid controller
      */
-    private boolean hydrateMraidWebView(@Nullable final Long broadcastIdentifier,
-            @Nullable final MraidWebViewCacheListener listener) {
-        if (broadcastIdentifier != null) {
-            final WebViewCacheService.Config config =
-                    WebViewCacheService.popWebViewConfig(broadcastIdentifier);
-            if (config != null && config.getWebView() instanceof MraidWebView) {
-                mMraidWebView = (MraidWebView) config.getWebView();
-                mMraidWebView.enablePlugins(true);
-
-                if (listener != null) {
-                    listener.onReady(mMraidWebView, config.getViewabilityManager());
-                }
-                return true;
-            }
+    public void onShow(@NonNull final Activity activity) {
+        mWeakActivity = new WeakReference<>(activity);
+        if (mOnCloseButtonListener != null) {
+            mOnCloseButtonListener.useCustomCloseChanged(isUsingCustomClose());
         }
-        MoPubLog.d("WebView cache miss. Creating a new MraidWebView.");
-        mMraidWebView = new MraidWebView(mContext);
-
-        if (listener != null) {
-            listener.onReady(mMraidWebView, null);
+        try {
+            applyOrientation();
+        } catch (MraidCommandException e) {
+            MoPubLog.d("Failed to apply orientation.");
         }
-        return false;
     }
 
     // onPageLoaded gets fired once the html is loaded into the webView.
@@ -505,11 +495,20 @@ public class MraidController {
         return mTwoPartBridge.isAttached() ? mTwoPartWebView : mMraidWebView;
     }
 
-    private boolean isInlineVideoAvailable() {
+    /**
+     * Checks that the hardware acceleration is enabled.
+     *
+     * Will always return true for PlacementType.INTERSTITIAL since those activities will always
+     * force hardware acceleration when created.
+     */
+    @VisibleForTesting
+    boolean isInlineVideoAvailable() {
         final Activity activity = mWeakActivity.get();
         //noinspection SimplifiableIfStatement
         if (activity == null || getCurrentWebView() == null) {
             return false;
+        } else if (mPlacementType != PlacementType.INLINE) {
+            return true;
         }
 
         return mMraidNativeCommandHandler.isInlineVideoAvailable(activity, getCurrentWebView());
@@ -517,25 +516,17 @@ public class MraidController {
 
     @VisibleForTesting
     void handlePageLoad() {
-        setViewState(ViewState.DEFAULT, new Runnable() {
-            @Override
-            public void run() {
-                mMraidBridge.notifySupports(
-                        mMraidNativeCommandHandler.isSmsAvailable(mContext),
-                        mMraidNativeCommandHandler.isTelAvailable(mContext),
-                        MraidNativeCommandHandler.isCalendarAvailable(mContext),
-                        MraidNativeCommandHandler.isStorePictureSupported(mContext),
-                        isInlineVideoAvailable());
-                mMraidBridge.notifyPlacementType(mPlacementType);
-                mMraidBridge.notifyViewability(mMraidBridge.isViewable());
-                mMraidBridge.notifyReady();
-            }
-        });
-
-        // Call onLoaded immediately. This causes the container to get added to the view hierarchy
-        if (mMraidListener != null) {
-            mMraidListener.onLoaded(mDefaultAdContainer);
-        }
+        mMraidBridge.notifySupports(
+                mMraidNativeCommandHandler.isSmsAvailable(mContext),
+                mMraidNativeCommandHandler.isTelAvailable(mContext),
+                MraidNativeCommandHandler.isCalendarAvailable(mContext),
+                MraidNativeCommandHandler.isStorePictureSupported(mContext),
+                isInlineVideoAvailable());
+        mMraidBridge.notifyPlacementType(mPlacementType);
+        mMraidBridge.notifyViewability(mMraidBridge.isViewable());
+        mMraidBridge.notifyScreenMetrics(mScreenMetrics);
+        setViewState(ViewState.DEFAULT);
+        mMraidBridge.notifyReady();
     }
 
     @VisibleForTesting
@@ -673,12 +664,8 @@ public class MraidController {
     }
 
     private void setViewState(@NonNull ViewState viewState) {
-        setViewState(viewState, null);
-    }
-
-    private void setViewState(@NonNull ViewState viewState, @Nullable Runnable successRunnable) {
         // Make sure this is a valid transition.
-        MoPubLog.d("MRAID state set to " + viewState);
+        MoPubLog.log(CUSTOM, "MRAID state set to " + viewState);
         final ViewState previousViewState = mViewState;
         mViewState = viewState;
         mMraidBridge.notifyViewState(viewState);
@@ -698,7 +685,7 @@ public class MraidController {
             }
         }
 
-        updateScreenMetricsAsync(successRunnable);
+        updateScreenMetricsAsync(null);
     }
 
     int clampInt(int min, int target, int max) {
@@ -1015,7 +1002,7 @@ public class MraidController {
 
     @VisibleForTesting
     protected void handleCustomClose(boolean useCustomClose) {
-        boolean wasUsingCustomClose = !mCloseableAdContainer.isCloseVisible();
+        boolean wasUsingCustomClose = isUsingCustomClose();
         if (useCustomClose == wasUsingCustomClose) {
             return;
         }
@@ -1024,6 +1011,10 @@ public class MraidController {
         if (mOnCloseButtonListener != null) {
             mOnCloseButtonListener.useCustomCloseChanged(useCustomClose);
         }
+    }
+
+    private boolean isUsingCustomClose() {
+        return !mCloseableAdContainer.isCloseVisible();
     }
 
     @NonNull
@@ -1099,7 +1090,8 @@ public class MraidController {
         mAllowOrientationChange = allowOrientationChange;
         mForceOrientation = forceOrientation;
 
-        if (mViewState == ViewState.EXPANDED || mPlacementType == PlacementType.INTERSTITIAL) {
+        if (mViewState == ViewState.EXPANDED ||
+                (mPlacementType == PlacementType.INTERSTITIAL && !mIsPaused)) {
             applyOrientation();
         }
     }

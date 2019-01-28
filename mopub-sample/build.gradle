@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -15,28 +15,30 @@ apply plugin: 'com.android.application'
 
 project.group = 'com.mopub'
 project.description = '''MoPub Sample App'''
-project.version = '5.4.1'
+project.version = '5.5.0'
 
 android {
     compileSdkVersion 28
     lintOptions { abortOnError false }
 
     defaultConfig {
-        versionCode 65
+        versionCode 66
         versionName version
         minSdkVersion 16
         targetSdkVersion 28
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
-      release {
-        minifyEnabled true
-        proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard.cfg'
-      }
-      debug {
-        minifyEnabled false
-        proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard.cfg'
-      }
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard.cfg'
+        }
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard.cfg'
+        }
     }
 
     sourceSets {
@@ -49,8 +51,6 @@ android {
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
         }
-
-        androidTest.setRoot('src/test')
     }
 
     // Note: You will also need a local.properties file to set the location of the SDK in the same 
@@ -62,8 +62,14 @@ android {
 dependencies {
     implementation 'com.android.support:customtabs:28.0.0'
     implementation 'com.android.support:support-v4:28.0.0'
-    implementation 'com.google.android.gms:play-services-ads-identifier:15.0.1'
-    implementation 'com.google.android.gms:play-services-base:15.0.1'
+    implementation 'com.google.android.gms:play-services-ads-identifier:16.0.0'
+    implementation 'com.google.android.gms:play-services-base:16.0.1'
     implementation 'com.android.support:recyclerview-v7:28.0.0'
     implementation project(':mopub-sdk')
+
+    // Instrumentation testing-only dependencies
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test:rules:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-intents:3.0.2'
 }

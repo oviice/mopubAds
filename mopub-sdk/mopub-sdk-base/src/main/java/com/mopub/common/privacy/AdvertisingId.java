@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -47,7 +47,7 @@ public class AdvertisingId implements Serializable {
                   boolean limitAdTrackingEnabled,
                   long rotationTime) {
         Preconditions.checkNotNull(ifaId);
-        Preconditions.checkNotNull(ifaId);
+        Preconditions.checkNotNull(mopubId);
 
         mAdvertisingId = ifaId;
         mMopubId = mopubId;

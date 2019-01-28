@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class LocationService {
     public enum LocationAwareness {
@@ -172,13 +173,13 @@ public class LocationService {
             // noinspection ResourceType
             return locationManager.getLastKnownLocation(provider.toString());
         } catch (SecurityException e) {
-            MoPubLog.d("Failed to retrieve location from " +
+            MoPubLog.log(CUSTOM, "Failed to retrieve location from " +
                     provider.toString() + " provider: access appears to be disabled.");
         } catch (IllegalArgumentException e) {
-            MoPubLog.d("Failed to retrieve location: device has no " +
+            MoPubLog.log(CUSTOM, "Failed to retrieve location: device has no " +
                     provider.toString() + " location provider.");
         } catch (NullPointerException e) { // This happens on 4.2.2 on a few Android TV devices
-            MoPubLog.d("Failed to retrieve location: device has no " +
+            MoPubLog.log(CUSTOM, "Failed to retrieve location: device has no " +
                     provider.toString() + " location provider.");
         }
 

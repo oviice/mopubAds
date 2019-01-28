@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -14,7 +14,10 @@ import com.mopub.common.factories.MethodBuilderFactory;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.DateAndTime;
 import com.mopub.common.util.test.support.ShadowAsyncTasks;
+import com.mopub.common.util.test.support.ShadowAvidAdSessionManager;
+import com.mopub.common.util.test.support.ShadowAvidManager;
 import com.mopub.common.util.test.support.ShadowMoPubHttpUrlConnection;
+import com.mopub.common.util.test.support.ShadowMoatFactory;
 import com.mopub.common.util.test.support.ShadowReflection;
 import com.mopub.common.util.test.support.TestDateAndTime;
 import com.mopub.common.util.test.support.TestMethodBuilderFactory;
@@ -88,6 +91,11 @@ public class SdkTestRunner extends RobolectricTestRunner {
             ShadowAsyncTasks.reset();
             ShadowMoPubHttpUrlConnection.reset();
             ShadowReflection.reset();
+
+            ShadowAvidAdSessionManager.reset();
+            ShadowAvidManager.reset();
+            ShadowMoatFactory.reset();
+
             MoPub.setLocationAwareness(LocationAwareness.NORMAL);
             MoPub.setLocationPrecision(6);
 

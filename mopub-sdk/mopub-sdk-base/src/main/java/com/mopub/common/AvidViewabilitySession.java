@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -15,9 +15,10 @@ import android.webkit.WebView;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Reflection;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 // API documentation: https://drive.google.com/drive/folders/0B8U0thTyT1GGZTdEWm03VTlfbm8
 class AvidViewabilitySession implements ExternalViewabilitySession {
@@ -48,7 +49,7 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
     private static boolean isViewabilityEnabledViaReflection() {
         if (sIsViewabilityEnabledViaReflection == null) {
             sIsViewabilityEnabledViaReflection = Reflection.classFound(AVID_AD_SESSION_MANAGER_PATH);
-            MoPubLog.d("Avid is "
+            MoPubLog.log(CUSTOM, "Avid is "
                     + (sIsViewabilityEnabledViaReflection ? "" : "un")
                     + "available via reflection.");
         }
@@ -69,7 +70,7 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
                         new Class[] {String.class, boolean.class},
                         new Object[] {MoPub.SDK_VERSION, true});
             } catch (Exception e) {
-                MoPubLog.d("Unable to generate Avid deferred ad session context: "
+                MoPubLog.log(CUSTOM, "Unable to generate Avid deferred ad session context: "
                         + e.getMessage());
             }
         }
@@ -90,7 +91,7 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
                         new Class[] {String.class},
                         new Object[] {MoPub.SDK_VERSION});
             } catch (Exception e) {
-                MoPubLog.d("Unable to generate Avid ad session context: "
+                MoPubLog.log(CUSTOM, "Unable to generate Avid ad session context: "
                         + e.getMessage());
             }
         }
@@ -166,7 +167,7 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
 
             return true;
         } catch (Exception e) {
-            MoPubLog.d("Unable to execute Avid start display session: " + e.getMessage());
+            MoPubLog.log(CUSTOM, "Unable to execute Avid start display session: " + e.getMessage());
             return false;
         }
     }
@@ -179,7 +180,7 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
         }
 
         if (mAvidDisplayAdSession == null) {
-            MoPubLog.d("Avid DisplayAdSession unexpectedly null.");
+            MoPubLog.log(CUSTOM, "Avid DisplayAdSession unexpectedly null.");
             return false;
         }
 
@@ -203,7 +204,7 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
                             "getAvidDeferredAdSessionListener").execute();
 
             if (deferredAdSessionListener == null) {
-                MoPubLog.d("Avid AdSessionListener unexpectedly null.");
+                MoPubLog.log(CUSTOM, "Avid AdSessionListener unexpectedly null.");
                 return false;
             }
 
@@ -212,7 +213,7 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
 
             return true;
         } catch (Exception e) {
-            MoPubLog.d("Unable to execute Avid record deferred session: "
+            MoPubLog.log(CUSTOM, "Unable to execute Avid record deferred session: "
                     + e.getMessage());
             return false;
         }
@@ -226,7 +227,7 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
         }
 
         if (mAvidDisplayAdSession == null) {
-            MoPubLog.d("Avid DisplayAdSession unexpectedly null.");
+            MoPubLog.log(CUSTOM, "Avid DisplayAdSession unexpectedly null.");
             return false;
         }
 
@@ -238,7 +239,7 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
 
             return true;
         } catch (Exception e) {
-            MoPubLog.d("Unable to execute Avid end session: " + e.getMessage());
+            MoPubLog.log(CUSTOM, "Unable to execute Avid end session: " + e.getMessage());
             return false;
         }
     }
@@ -298,7 +299,7 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
 
             return true;
         } catch (Exception e) {
-            MoPubLog.d("Unable to execute Avid start video session: " + e.getMessage());
+            MoPubLog.log(CUSTOM, "Unable to execute Avid start video session: " + e.getMessage());
             return false;
         }
     }
@@ -313,7 +314,7 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
         }
 
         if (mAvidVideoAdSession == null) {
-            MoPubLog.d("Avid VideoAdSession unexpectedly null.");
+            MoPubLog.log(CUSTOM, "Avid VideoAdSession unexpectedly null.");
             return false;
         }
 
@@ -327,7 +328,7 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
 
             return true;
         } catch (Exception e) {
-            MoPubLog.d("Unable to register Avid video obstructions: " + e.getMessage());
+            MoPubLog.log(CUSTOM, "Unable to register Avid video obstructions: " + e.getMessage());
             return false;
         }
     }
@@ -355,7 +356,7 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
         }
 
         if (mAvidVideoAdSession == null) {
-            MoPubLog.d("Avid VideoAdSession unexpectedly null.");
+            MoPubLog.log(CUSTOM, "Avid VideoAdSession unexpectedly null.");
             return false;
         }
 
@@ -381,11 +382,11 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
                     return true;
 
                 default:
-                    MoPubLog.d("Unexpected video event type: " + event);
+                    MoPubLog.log(CUSTOM, "Unexpected video event type: " + event);
                     return false;
             }
         } catch (Exception e) {
-            MoPubLog.d("Unable to execute Avid video event for "
+            MoPubLog.log(CUSTOM, "Unable to execute Avid video event for "
                     + event.getAvidMethodName() + ": " + e.getMessage());
             return false;
         }
@@ -399,7 +400,7 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
         }
 
         if (mAvidVideoAdSession == null) {
-            MoPubLog.d("Avid VideoAdSession unexpectedly null.");
+            MoPubLog.log(CUSTOM, "Avid VideoAdSession unexpectedly null.");
             return false;
         }
 
@@ -411,7 +412,7 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
 
             return true;
         } catch (Exception e) {
-            MoPubLog.d("Unable to execute Avid end video session: " + e.getMessage());
+            MoPubLog.log(CUSTOM, "Unable to execute Avid end video session: " + e.getMessage());
             return false;
         }
     }
@@ -437,5 +438,13 @@ class AvidViewabilitySession implements ExternalViewabilitySession {
         }
 
         methodBuilder.execute();
+    }
+
+    @VisibleForTesting
+    static void resetStaticState() {
+        sIsVendorDisabled = false;
+        sIsViewabilityEnabledViaReflection = null;
+        sAvidAdSessionContextDeferred = null;
+        sAvidAdSessionContextNonDeferred = null;
     }
 }

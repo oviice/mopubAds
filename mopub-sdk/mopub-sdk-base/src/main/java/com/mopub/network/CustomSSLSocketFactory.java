@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -11,6 +11,7 @@ import android.support.annotation.Nullable;
 
 import com.mopub.common.Preconditions;
 import com.mopub.common.VisibleForTesting;
+
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Reflection;
 
@@ -25,6 +26,8 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 /**
  * An {@link javax.net.ssl.SSLSocketFactory} that supports TLS settings for the MoPub ad servers.
@@ -187,7 +190,7 @@ public class CustomSSLSocketFactory extends SSLSocketFactory {
                         .addParam(String.class, host)
                         .execute();
             } catch (Exception e) {
-                MoPubLog.d("Unable to call setHostname() on the socket");
+                MoPubLog.log(CUSTOM, "Unable to call setHostname() on the socket");
             }
         }
     }

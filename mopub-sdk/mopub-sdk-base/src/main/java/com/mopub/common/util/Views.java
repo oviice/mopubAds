@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -11,7 +11,10 @@ import android.support.v4.view.ViewCompat;
 import android.view.View;
 import android.view.ViewGroup;
 
+
 import com.mopub.common.logging.MoPubLog;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class Views {
     public static void removeFromParent(@Nullable View view) {
@@ -64,7 +67,7 @@ public class Views {
         }
 
         if (!ViewCompat.isAttachedToWindow(view)) {
-            MoPubLog.d("Attempting to call View#getRootView() on an unattached View.");
+            MoPubLog.log(CUSTOM, "Attempting to call View#getRootView() on an unattached View.");
         }
 
         final View rootView = view.getRootView();

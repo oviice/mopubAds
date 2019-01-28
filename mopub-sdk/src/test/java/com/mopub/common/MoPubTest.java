@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -14,7 +14,6 @@ import com.mopub.common.privacy.SyncRequest;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.Reflection;
-import com.mopub.mobileads.BuildConfig;
 import com.mopub.mobileads.CustomEventRewardedVideo;
 import com.mopub.mobileads.MoPubRewardedVideoListener;
 import com.mopub.mobileads.MoPubRewardedVideoManager;
@@ -40,8 +39,7 @@ import org.robolectric.android.util.concurrent.RoboExecutorService;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLooper;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -57,7 +55,7 @@ import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 // JDK version 7u79 or later. Go to File > Project Structure > [Platform Settings] > SDK to
 // change the JDK version.
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 21)
+@Config(sdk = 21)
 @PowerMockIgnore({ "org.mockito.*", "org.robolectric.*", "android.*", "org.json.*", "com.mopub.network.CustomSSLSocketFactory" })
 @PrepareForTest({MoPubRewardedVideoManager.class})
 public class MoPubTest {
@@ -181,36 +179,6 @@ public class MoPubTest {
     }
 
     @Test
-    public void initializeSdk_withRewardedVideo_withNetworksToInit_shouldCallMoPubRewardedVideoManager() throws Exception {
-        List<String> stringClassList = new ArrayList<>();
-        // This class does not extend from CustomEventRewardedVideo
-        stringClassList.add("com.mopub.common.MoPubTest");
-        // This class is one that works.
-        stringClassList.add("com.mopub.common.MoPubTest$TestCustomEventRewardedVideo");
-        // Not a real class, so not added to the list.
-        stringClassList.add("not.a.real.Classname");
-        // This class is two subclasses from CustomEventRewardedVideo, but it should still be added.
-        stringClassList.add("com.mopub.common.MoPubTest$TestInheritedCustomEventRewardedVideo");
-
-        MoPub.initializeSdk(mActivity,
-                new SdkConfiguration.Builder(INIT_ADUNIT)
-                        .withNetworksToInit(stringClassList)
-                        .withMediationSettings(mMediationSettings)
-                        .build(),
-                mockInitializationListener);
-
-        ShadowLooper.runUiThreadTasks();
-        verify(mockInitializationListener).onInitializationFinished();
-        List<Class<? extends CustomEventRewardedVideo>> classList = new ArrayList<>();
-        classList.add(TestCustomEventRewardedVideo.class);
-        classList.add(TestInheritedCustomEventRewardedVideo.class);
-        verifyStatic();
-        MoPubRewardedVideoManager.init(mActivity, mMediationSettings);
-        verifyStatic();
-        MoPubRewardedVideoManager.initNetworks(mActivity, classList);
-    }
-
-    @Test
     public void initializeSdk_withRewardedVideo_withoutActivity_shouldNotCallMoPubRewardedVideoManager() throws Exception {
         // Since we can't verifyStatic with 0 times, we expect this to call the rewarded video
         // manager exactly twice instead of three times since one of the times is with the
@@ -269,8 +237,8 @@ public class MoPubTest {
     @Test
     public void initializeSdk_withOneAdvancedBidder_shouldSetAdvancedBiddingTokens() throws Exception {
         SdkConfiguration sdkConfiguration = new SdkConfiguration.Builder(
-                INIT_ADUNIT).withAdvancedBidder(
-                        AdvancedBidderTestClass.class).build();
+                INIT_ADUNIT).withAdditionalNetwork(
+                AdapterConfigurationTestClass.class.getName()).build();
 
         MoPub.initializeSdk(mActivity, sdkConfiguration, null);
 
@@ -282,8 +250,8 @@ public class MoPubTest {
     @Test
     public void initializeSdk_withMultipleInitializations_shouldSetAdvancedBiddingTokensOnce() throws Exception {
         SdkConfiguration sdkConfiguration = new SdkConfiguration.Builder
-                (INIT_ADUNIT).withAdvancedBidder(
-                        AdvancedBidderTestClass.class).build();
+                (INIT_ADUNIT).withAdditionalNetwork(
+                AdapterConfigurationTestClass.class.getName()).build();
 
         MoPub.initializeSdk(mActivity, sdkConfiguration, null);
 
@@ -293,7 +261,7 @@ public class MoPubTest {
 
         // Attempting to initialize twice
         sdkConfiguration = new SdkConfiguration.Builder(INIT_ADUNIT)
-                .withAdvancedBidder(SecondAdvancedBidderTestClass.class).build();
+                .withAdditionalNetwork(SecondAdapterConfigurationTestClass.class.getName()).build();
         MoPub.initializeSdk(mActivity, sdkConfiguration, null);
 
         // This should not do anything, and getAdvancedBiddingTokensJson() should return the
@@ -311,29 +279,124 @@ public class MoPubTest {
         verify(mockInitializationListener).onInitializationFinished();
     }
 
-    private static class AdvancedBidderTestClass implements MoPubAdvancedBidder {
+    @Test
+    public void initializeSdk_withNoLegitimateInterestAllowedValue_shouldCallPersonalInfoManagerSetAllowLegitimateInterest_withLegitimateInterestAllowedFalse() throws Exception {
+        MoPub.initializeSdk(mActivity, new SdkConfiguration.Builder(
+                INIT_ADUNIT).build(), null);
+        ShadowLooper.runUiThreadTasks();
 
+        final boolean actual = MoPub.shouldAllowLegitimateInterest();
+
+        assertThat(actual).isFalse();
+    }
+
+    @Test
+    public void initializeSdk_withLegitimateInterestAllowedFalse_shouldCallPersonalInfoManagerSetAllowLegitimateInterest_withLegitimateInterestAllowedFalse() throws Exception {
+        MoPub.initializeSdk(mActivity, new SdkConfiguration.Builder(
+                INIT_ADUNIT).withLegitimateInterestAllowed(false).build(), null);
+        ShadowLooper.runUiThreadTasks();
+
+        final boolean actual = MoPub.shouldAllowLegitimateInterest();
+
+        assertThat(actual).isFalse();
+    }
+
+    @Test
+    public void initializeSdk_withLegitimateInterestAllowedTrue_shouldCallPersonalInfoManagerSetAllowLegitimateInterest_withLegitimateInterestAllowedTrue() throws Exception {
+        MoPub.initializeSdk(mActivity, new SdkConfiguration.Builder(
+                INIT_ADUNIT).withLegitimateInterestAllowed(true).build(), null);
+        ShadowLooper.runUiThreadTasks();
+
+        final boolean actual = MoPub.shouldAllowLegitimateInterest();
+
+        assertThat(actual).isTrue();
+    }
+
+    private static class AdapterConfigurationTestClass extends BaseAdapterConfiguration {
+        @NonNull
         @Override
-        public String getToken(final Context context) {
+        public String getAdapterVersion() {
+            return "adapterVersion";
+        }
+
+        @Nullable
+        @Override
+        public String getBiddingToken(@NonNull final Context context) {
             return "AdvancedBidderTestClassToken";
         }
 
+        @NonNull
         @Override
-        public String getCreativeNetworkName() {
+        public String getMoPubNetworkName() {
             return "AdvancedBidderTestClassName";
+        }
+
+        @NonNull
+        @Override
+        public String getNetworkSdkVersion() {
+            return "networkVersion";
+        }
+
+        @Override
+        public void initializeNetwork(@NonNull final Context context,
+                @Nullable final Map<String, String> configuration,
+                @NonNull final OnNetworkInitializationFinishedListener listener) {
+
         }
     }
 
-    private static class SecondAdvancedBidderTestClass implements MoPubAdvancedBidder {
-
+    private static class SecondAdapterConfigurationTestClass implements AdapterConfiguration {
+        @NonNull
         @Override
-        public String getToken(final Context context) {
+        public String getAdapterVersion() {
+            return "adapterVersion";
+        }
+
+        @Nullable
+        @Override
+        public String getBiddingToken(@NonNull final Context context) {
             return "SecondAdvancedBidderTestClassToken";
         }
 
+        @NonNull
         @Override
-        public String getCreativeNetworkName() {
+        public String getMoPubNetworkName() {
             return "SecondAdvancedBidderTestClassName";
+        }
+
+        @Nullable
+        @Override
+        public Map<String, String> getMoPubRequestOptions() {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public String getNetworkSdkVersion() {
+            return "networkVersion";
+        }
+
+        @Override
+        public void initializeNetwork(@NonNull final Context context,
+                @Nullable final Map<String, String> configuration,
+                @NonNull final OnNetworkInitializationFinishedListener listener) {
+        }
+
+        @Override
+        public void setCachedInitializationParameters(@NonNull final Context context,
+                @Nullable final Map<String, String> configuration) {
+        }
+
+        @NonNull
+        @Override
+        public Map<String, String> getCachedInitializationParameters(
+                @NonNull final Context context) {
+            return new HashMap<>();
+        }
+
+        @Override
+        public void setMoPubRequestOptions(
+                @Nullable final Map<String, String> moPubRequestOptions) {
         }
     }
 

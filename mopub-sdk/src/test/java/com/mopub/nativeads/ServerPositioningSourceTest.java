@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -11,7 +11,6 @@ import android.content.pm.PackageManager;
 import com.mopub.common.ClientMetadata;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.mobileads.BuildConfig;
 import com.mopub.mobileads.MoPubErrorCode;
 import com.mopub.nativeads.MoPubNativeAdPositioning.MoPubClientPositioning;
 import com.mopub.nativeads.PositioningSource.PositioningListener;
@@ -28,7 +27,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.robolectric.Robolectric;
-import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLog;
 
 import java.util.HashSet;
@@ -47,7 +45,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class)
 public class ServerPositioningSourceTest {
     @Mock PositioningListener mockPositioningListener;
     @Captor ArgumentCaptor<PositioningRequest> positionRequestCaptor;
@@ -68,6 +65,7 @@ public class ServerPositioningSourceTest {
         subject = new ServerPositioningSource(spyActivity);
         setupClientMetadata();
         Networking.setRequestQueueForTesting(mockRequestQueue);
+//        MoPubLog.setLogLevel(MoPubLog.LogLevel.DEBUG);
     }
 
     private void setupClientMetadata() {
@@ -172,7 +170,7 @@ public class ServerPositioningSourceTest {
 
     @Test
     public void loadPositions_withNoConnection_shouldLogMoPubErrorCodeNoConnection_shouldCallFailureHandler() {
-        MoPubLog.setSdkHandlerLevel(Level.ALL);
+        MoPubLog.setLogLevel(MoPubLog.LogLevel.DEBUG);
 
         when(mockContext.checkCallingOrSelfPermission(anyString()))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
@@ -196,6 +194,7 @@ public class ServerPositioningSourceTest {
             allLogMessages.add(logItem.msg.trim());
         }
 
-        assertThat(allLogMessages).contains(MoPubErrorCode.NO_CONNECTION.toString());
+        assertThat(allLogMessages).contains("[com.mopub.nativeads.ServerPositioningSource]" +
+                "[access$300] SDK Log - Error downloading positioning information");
     }
 }

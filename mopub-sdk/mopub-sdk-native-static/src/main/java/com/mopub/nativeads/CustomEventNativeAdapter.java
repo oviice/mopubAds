@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -13,10 +13,14 @@ import com.mopub.common.Constants;
 import com.mopub.common.DataKeys;
 import com.mopub.common.Preconditions;
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.mobileads.MoPubErrorCode;
 import com.mopub.nativeads.factories.CustomEventNativeFactory;
 import com.mopub.network.AdResponse;
 
 import java.util.Map;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
+import static com.mopub.mobileads.MoPubErrorCode.NETWORK_TIMEOUT;
 
 final class CustomEventNativeAdapter {
 
@@ -44,7 +48,8 @@ final class CustomEventNativeAdapter {
                 if (mCompleted) {
                     return;
                 }
-                MoPubLog.d("Timeout loading native ad content. " + CustomEventNativeAdapter.this.toString());
+                MoPubLog.log(CUSTOM, "CustomEventNativeAdapter() failed with code " +
+                        NETWORK_TIMEOUT.getIntCode() + " and message " + NETWORK_TIMEOUT);
                 stopLoading();
                 mExternalListener.onNativeAdFailed(NativeErrorCode.NETWORK_TIMEOUT);
             }
@@ -60,11 +65,13 @@ final class CustomEventNativeAdapter {
 
         String customEventNativeClassName = adResponse.getCustomEventClassName();
 
-        MoPubLog.d("Attempting to invoke custom event: " + customEventNativeClassName);
+        MoPubLog.log(CUSTOM, adResponse.getDspCreativeId());
         try {
             customEventNative = CustomEventNativeFactory.create(customEventNativeClassName);
         } catch (Exception e) {
-            MoPubLog.e("Failed to load Custom Event Native class: " + customEventNativeClassName);
+            MoPubLog.log(CUSTOM, "loadNativeAd() failed with code " +
+                    MoPubErrorCode.ADAPTER_NOT_FOUND.getIntCode() + " and message " +
+                    MoPubErrorCode.ADAPTER_NOT_FOUND);
             mExternalListener.onNativeAdFailed(NativeErrorCode.NATIVE_ADAPTER_NOT_FOUND);
             return;
         }
@@ -86,7 +93,9 @@ final class CustomEventNativeAdapter {
             long timeoutMS = adResponse.getAdTimeoutMillis(Constants.THIRTY_SECONDS_MILLIS);
             mHandler.postDelayed(mTimeout, timeoutMS);
         } catch (Exception e) {
-            MoPubLog.w("Loading custom event native threw an error.", e);
+            MoPubLog.log(CUSTOM, "loadNativeAd() failed with code " +
+                    MoPubErrorCode.ADAPTER_NOT_FOUND.getIntCode() + " and message " +
+                    MoPubErrorCode.ADAPTER_NOT_FOUND);
             mExternalListener.onNativeAdFailed(NativeErrorCode.NATIVE_ADAPTER_NOT_FOUND);
         }
     }
@@ -99,6 +108,7 @@ final class CustomEventNativeAdapter {
                 if (mCompleted) {
                     return;
                 }
+                MoPubLog.log(CUSTOM, "onNativeAdLoaded");
                 invalidate();
                 mExternalListener.onNativeAdLoaded(nativeAd);
             }
@@ -108,6 +118,8 @@ final class CustomEventNativeAdapter {
                 if (mCompleted) {
                     return;
                 }
+                MoPubLog.log(CUSTOM, "onNativeAdFailed with code " +
+                        errorCode.getIntCode() + " and message " + errorCode);
                 invalidate();
                 mExternalListener.onNativeAdFailed(errorCode);
             }
@@ -119,7 +131,7 @@ final class CustomEventNativeAdapter {
             if (customEventNative != null)
                 customEventNative.onInvalidate();
         } catch (Exception e) {
-            MoPubLog.e(e.toString());
+            MoPubLog.log(CUSTOM,  e.toString());
         }
         invalidate();
     }

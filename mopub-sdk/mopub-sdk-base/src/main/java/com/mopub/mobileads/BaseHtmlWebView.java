@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -16,6 +16,7 @@ import com.mopub.common.Constants;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.network.Networking;
 
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 import static com.mopub.mobileads.ViewGestureDetector.UserClickListener;
 
 public class BaseHtmlWebView extends BaseWebView implements UserClickListener {
@@ -50,19 +51,19 @@ public class BaseHtmlWebView extends BaseWebView implements UserClickListener {
             return;
         }
 
-        MoPubLog.d("Loading url: " + url);
+        MoPubLog.log(CUSTOM, "Loading url: " + url);
     }
 
     @Override
     public void stopLoading() {
         if (mIsDestroyed) {
-            MoPubLog.w(BaseHtmlWebView.class.getSimpleName() + "#stopLoading() called after destroy()");
+            MoPubLog.log(CUSTOM, BaseHtmlWebView.class.getSimpleName() + "#stopLoading() called after destroy()");
             return;
         }
 
         final WebSettings webSettings = getSettings();
         if (webSettings == null) {
-            MoPubLog.w(BaseHtmlWebView.class.getSimpleName() + "#getSettings() returned null");
+            MoPubLog.log(CUSTOM, BaseHtmlWebView.class.getSimpleName() + "#getSettings() returned null");
             return;
         }
 

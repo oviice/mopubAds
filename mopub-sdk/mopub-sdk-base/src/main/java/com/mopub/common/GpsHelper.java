@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -14,6 +14,8 @@ import com.mopub.common.util.AsyncTasks;
 
 import java.lang.ref.WeakReference;
 
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.ERROR;
 import static com.mopub.common.util.Reflection.MethodBuilder;
 import static com.mopub.common.util.Reflection.classFound;
 
@@ -63,7 +65,7 @@ public class GpsHelper {
             advertisingId = reflectedGetAdvertisingId(adInfo, advertisingId);
             isLimitAdTrackingEnabled = reflectedIsLimitAdTrackingEnabled(adInfo, isLimitAdTrackingEnabled);
         } catch (Exception e) {
-            MoPubLog.d("Unable to obtain Google AdvertisingIdClient.Info via reflection.");
+            MoPubLog.log(CUSTOM, "Unable to obtain Google AdvertisingIdClient.Info via reflection.");
             return null;
         }
 
@@ -81,7 +83,7 @@ public class GpsHelper {
         try {
             AsyncTasks.safeExecuteOnExecutor(new FetchAdvertisingInfoTask(context, gpsHelperListener));
         } catch (Exception exception) {
-            MoPubLog.d("Error executing FetchAdvertisingInfoTask", exception);
+            MoPubLog.log(ERROR, "Error executing FetchAdvertisingInfoTask", exception);
 
             if (gpsHelperListener != null) {
                 gpsHelperListener.onFetchAdInfoCompleted();
@@ -116,7 +118,7 @@ public class GpsHelper {
                     // updateClientMetadata(context, adInfo);
                 }
             } catch (Exception exception) {
-                MoPubLog.d("Unable to obtain Google AdvertisingIdClient.Info via reflection.");
+                MoPubLog.log(CUSTOM, "Unable to obtain Google AdvertisingIdClient.Info via reflection.");
             }
 
             return null;

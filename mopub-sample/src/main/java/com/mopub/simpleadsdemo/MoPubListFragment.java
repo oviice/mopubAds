@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -34,6 +34,7 @@ import com.mopub.common.logging.MoPubLog;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.ERROR;
 import static com.mopub.simpleadsdemo.MoPubSampleAdUnit.AdType;
 import static com.mopub.simpleadsdemo.Utils.logToast;
 
@@ -128,10 +129,10 @@ public class MoPubListFragment extends ListFragment implements TrashCanClickList
         try {
             fragment = fragmentClass.newInstance();
         } catch (java.lang.InstantiationException e) {
-            MoPubLog.e("Error creating fragment for class " + fragmentClass, e);
+            MoPubLog.log(ERROR, "Error creating fragment for class " + fragmentClass, e);
             return;
         } catch (IllegalAccessException e) {
-            MoPubLog.e("Error creating fragment for class " + fragmentClass, e);
+            MoPubLog.log(ERROR, "Error creating fragment for class " + fragmentClass, e);
             return;
         }
 

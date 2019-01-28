@@ -1,19 +1,18 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
 package com.mopub.common;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
-import com.mopub.common.util.MoPubCollections;
-
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import static com.mopub.common.logging.MoPubLog.LogLevel;
 
 /**
  * Data object holding any SDK initialization parameters.
@@ -26,9 +25,9 @@ public class SdkConfiguration {
     @NonNull private final String mAdUnitId;
 
     /**
-     * List of the class names of advanced bidders to initialize.
+     * List of the class names of adapter configurations to initialize.
      */
-    @NonNull private final List<Class<? extends MoPubAdvancedBidder>> mAdvancedBidders;
+    @NonNull private final Set<String> mAdapterConfigurationClasses;
 
     /**
      * Used for rewarded video initialization. This holds each custom event's unique settings.
@@ -36,25 +35,49 @@ public class SdkConfiguration {
     @NonNull private final MediationSettings[] mMediationSettings;
 
     /**
-     * List of class names of rewarded video custom events to initialize. These classes must
-     * extend CustomEventRewardedVideo.
+     * Adapter configuration options used in initialization of networks. This is keyed on the
+     * {@link AdapterConfiguration} class and the values are maps of initialization parameters.
      */
-    @Nullable private final List<String> mNetworksToInit;
+    @NonNull private final Map<String, Map<String, String>> mMediatedNetworkConfigurations;
+
+    /**
+     * Adapter configuration options passed to the adserver. This is keyed on the
+     * {@link AdapterConfiguration} class and the values are maps of request options.
+     */
+    @NonNull private final Map<String, Map<String, String>> mMoPubRequestOptions;
+
+    /**
+     * The log level that will be used to determine which events are printed or thrown out.
+     */
+    @NonNull private final LogLevel mLogLevel;
+
+    /**
+     * Whether or not legitimate interest is allowed for the collection of personally identifiable information.
+     */
+    private final boolean mLegitimateInterestAllowed;
 
     /**
      * Holds data for SDK initialization. Do not call this constructor directly; use the Builder.
      */
     private SdkConfiguration(@NonNull final String adUnitId,
-            @NonNull final List<Class<? extends MoPubAdvancedBidder>> advancedBidders,
+            @NonNull final Set<String> adapterConfigurationClasses,
             @NonNull final MediationSettings[] mediationSettings,
-            @Nullable final List<String> networksToInit) {
+            @NonNull final LogLevel logLevel,
+            @NonNull final Map<String, Map<String, String>> mediatedNetworkConfigurations,
+            @NonNull final Map<String, Map<String, String>> moPubRequestOptions,
+            final boolean legitimateInterestAllowed) {
         Preconditions.checkNotNull(adUnitId);
-        Preconditions.checkNotNull(advancedBidders);
+        Preconditions.checkNotNull(adapterConfigurationClasses);
+        Preconditions.checkNotNull(mediatedNetworkConfigurations);
+        Preconditions.checkNotNull(moPubRequestOptions);
 
         mAdUnitId = adUnitId;
-        mAdvancedBidders = advancedBidders;
+        mAdapterConfigurationClasses = adapterConfigurationClasses;
         mMediationSettings = mediationSettings;
-        mNetworksToInit = networksToInit;
+        mLogLevel = logLevel;
+        mMediatedNetworkConfigurations = mediatedNetworkConfigurations;
+        mMoPubRequestOptions = moPubRequestOptions;
+        mLegitimateInterestAllowed = legitimateInterestAllowed;
     }
 
     @NonNull
@@ -63,8 +86,8 @@ public class SdkConfiguration {
     }
 
     @NonNull
-    public List<Class<? extends MoPubAdvancedBidder>> getAdvancedBidders() {
-        return Collections.unmodifiableList(mAdvancedBidders);
+    public Set<String> getAdapterConfigurationClasses() {
+        return Collections.unmodifiableSet(mAdapterConfigurationClasses);
     }
 
     @NonNull
@@ -72,19 +95,32 @@ public class SdkConfiguration {
         return Arrays.copyOf(mMediationSettings, mMediationSettings.length);
     }
 
-    @Nullable
-    public List<String> getNetworksToInit() {
-        if (mNetworksToInit == null) {
-            return null;
-        }
-        return Collections.unmodifiableList(mNetworksToInit);
+    @NonNull
+    LogLevel getLogLevel() {
+        return mLogLevel;
+    }
+
+    public Map<String, Map<String, String>> getMediatedNetworkConfigurations() {
+        return Collections.unmodifiableMap(mMediatedNetworkConfigurations);
+    }
+
+    @NonNull
+    public Map<String, Map<String, String>> getMoPubRequestOptions() {
+        return Collections.unmodifiableMap(mMoPubRequestOptions);
+    }
+
+    public boolean getLegitimateInterestAllowed() {
+        return mLegitimateInterestAllowed;
     }
 
     public static class Builder {
         @NonNull private String adUnitId;
-        @NonNull private final List<Class<? extends MoPubAdvancedBidder>> advancedBidders;
+        @NonNull private final Set<String> adapterConfigurations;
         @NonNull private MediationSettings[] mediationSettings;
-        @Nullable private List<String> networksToInit;
+        @NonNull private LogLevel logLevel = LogLevel.NONE;
+        @NonNull private final Map<String, Map<String, String>> mediatedNetworkConfigurations;
+        @NonNull private final Map<String, Map<String, String>> moPubRequestOptions;
+        private boolean legitimateInterestAllowed;
 
         /**
          * Use this builder instead of creating a new SdkConfiguration. This Builder needs any ad
@@ -94,35 +130,26 @@ public class SdkConfiguration {
          */
         public Builder(@NonNull final String adUnitId) {
             this.adUnitId = adUnitId;
-            advancedBidders = new ArrayList<Class<? extends MoPubAdvancedBidder>>();
+            adapterConfigurations = DefaultAdapterClasses.getClassNamesSet();
             mediationSettings = new MediationSettings[0];
+            mediatedNetworkConfigurations = new HashMap<>();
+            moPubRequestOptions = new HashMap<>();
+            legitimateInterestAllowed = false;
         }
 
         /**
-         * Adds a single advanced bidder class to be initialized.
+         * Specifies an additional custom adapter configuration to attempt to initialize. MoPub
+         * automatically adds MoPub-supported networks' adapter configurations.
          *
-         * @param advancedBidder The advanced bidder class. Cannot be null.
+         * @param adapterConfigurationClass {@link Class#getName()} of an adapter configuration
+         *                                  class. This should not be the simple name or the
+         *                                  canonical name.
          * @return The builder.
          */
-        public Builder withAdvancedBidder(
-                @NonNull final Class<? extends MoPubAdvancedBidder> advancedBidder) {
-            Preconditions.checkNotNull(advancedBidder);
+        public Builder withAdditionalNetwork(@NonNull final String adapterConfigurationClass) {
+            Preconditions.checkNotNull(adapterConfigurationClass);
 
-            this.advancedBidders.add(advancedBidder);
-            return this;
-        }
-
-        /**
-         * Adds a collection of advanced bidder classes to be initialized.
-         *
-         * @param advancedBidders Collection of advanced bidder classes. Cannot be null.
-         * @return The builder.
-         */
-        public Builder withAdvancedBidders(
-                @NonNull final Collection<Class<? extends MoPubAdvancedBidder>> advancedBidders) {
-            Preconditions.NoThrow.checkNotNull(advancedBidders);
-
-            MoPubCollections.addAllNonNull(this.advancedBidders, advancedBidders);
+            adapterConfigurations.add(adapterConfigurationClass);
             return this;
         }
 
@@ -140,24 +167,69 @@ public class SdkConfiguration {
         }
 
         /**
-         * Adds a list of rewarded video custom events to initialize.
+         * Adds a log level to be used by MoPubLog.
          *
-         * @param networksToInit List of full class names as Strings to initialize for rewarded video.
+         * @param logLevel A MoPubLog.LogLevel. Cannot be null.
          * @return The builder.
          */
-        public Builder withNetworksToInit(@Nullable final List<String> networksToInit) {
-            if (networksToInit == null) {
-                return this;
-            }
+        public Builder withLogLevel(@NonNull LogLevel logLevel) {
+            Preconditions.checkNotNull(logLevel);
 
-            this.networksToInit = new ArrayList<>();
-            MoPubCollections.addAllNonNull(this.networksToInit, networksToInit);
+            this.logLevel = logLevel;
+            return this;
+        }
+
+        /**
+         * Adds a single mediated network configuration keyed by the AdapterConfiguration class.
+         * This is used by ad networks' initialization.
+         *
+         * @param adapterConfigurationClass    The class name to key on.
+         * @param mediatedNetworkConfiguration A Map of network configurations.
+         * @return The builder.
+         */
+        public Builder withMediatedNetworkConfiguration(
+                @NonNull final String adapterConfigurationClass,
+                @NonNull final Map<String, String> mediatedNetworkConfiguration) {
+            Preconditions.checkNotNull(adapterConfigurationClass);
+            Preconditions.checkNotNull(mediatedNetworkConfiguration);
+
+            mediatedNetworkConfigurations.put(adapterConfigurationClass,
+                    mediatedNetworkConfiguration);
+            return this;
+        }
+
+        /**
+         * Adds a single MopubRequestOption keyed by the AdapterConfiguration class.
+         *
+         * @param adapterConfigurationClass The class name to key on.
+         * @param mopubRequestOptions       A Map of options.
+         * @return The builder.
+         */
+        public Builder withMoPubRequestOptions(
+                @NonNull final String adapterConfigurationClass,
+                @NonNull final Map<String, String> mopubRequestOptions) {
+            Preconditions.checkNotNull(adapterConfigurationClass);
+            Preconditions.checkNotNull(mopubRequestOptions);
+
+            this.moPubRequestOptions.put(adapterConfigurationClass, mopubRequestOptions);
+            return this;
+        }
+
+        /**
+         * Sets whether or not legitimate interest is allowed for the collection of personally identifiable information.
+         * This API can be used if you want to allow supported SDK networks to collect user information on the basis of legitimate interest.
+         *
+         * @param legitimateInterestAllowed should be true if legitimate interest is allowed. False if it isn't allowed.
+         * @return The builder.
+         */
+        public Builder withLegitimateInterestAllowed(final boolean legitimateInterestAllowed) {
+            this.legitimateInterestAllowed = legitimateInterestAllowed;
             return this;
         }
 
         public SdkConfiguration build() {
-            return new SdkConfiguration(adUnitId, advancedBidders, mediationSettings,
-                    networksToInit);
+            return new SdkConfiguration(adUnitId, adapterConfigurations, mediationSettings,
+                    logLevel, mediatedNetworkConfigurations, moPubRequestOptions, legitimateInterestAllowed);
         }
     }
 }

@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -16,6 +16,8 @@ import org.w3c.dom.Node;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 /**
  * This XML manager handles Vast 3.0 icons.
@@ -80,7 +82,7 @@ public class VastIconXmlManager {
         try {
             iconOffset = Strings.parseAbsoluteOffset(iconOffsetStr);
         } catch (NumberFormatException e) {
-            MoPubLog.d(String.format("Invalid VAST icon offset format: %s:", iconOffsetStr));
+            MoPubLog.log(CUSTOM, String.format("Invalid VAST icon offset format: %s:", iconOffsetStr));
         }
         return iconOffset;
     }
@@ -100,7 +102,7 @@ public class VastIconXmlManager {
         try {
             iconDuration = Strings.parseAbsoluteOffset(iconDurationStr);
         } catch (NumberFormatException e) {
-            MoPubLog.d(String.format("Invalid VAST icon duration format: %s:", iconDurationStr));
+            MoPubLog.log(CUSTOM, String.format("Invalid VAST icon duration format: %s:", iconDurationStr));
         }
         return iconDuration;
     }

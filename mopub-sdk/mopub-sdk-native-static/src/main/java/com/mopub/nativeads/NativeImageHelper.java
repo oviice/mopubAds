@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -20,6 +20,9 @@ import com.mopub.volley.toolbox.ImageLoader;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.ERROR;
 
 /**
  * Collection of helper methods to assist with image downloading and displaying
@@ -70,7 +73,7 @@ public class NativeImageHelper {
 
             @Override
             public void onErrorResponse(final VolleyError volleyError) {
-                MoPubLog.d("Failed to download a native ads image:", volleyError);
+                MoPubLog.log(ERROR, "Failed to download a native ads image:", volleyError);
                 boolean anyPreviousErrors = anyFailures.getAndSet(true);
                 imageCounter.decrementAndGet();
                 if (!anyPreviousErrors) {
@@ -111,14 +114,14 @@ public class NativeImageHelper {
             public void onResponse(final ImageLoader.ImageContainer imageContainer,
                     final boolean isImmediate) {
                 if (!isImmediate) {
-                    MoPubLog.d("Image was not loaded immediately into your ad view. You should call preCacheImages as part of your custom event loading process.");
+                    MoPubLog.log(CUSTOM, "Image was not loaded immediately into your ad view. You should call preCacheImages as part of your custom event loading process.");
                 }
                 imageView.setImageBitmap(imageContainer.getBitmap());
             }
 
             @Override
             public void onErrorResponse(final VolleyError volleyError) {
-                MoPubLog.d("Failed to load image.", volleyError);
+                MoPubLog.log(CUSTOM, "Failed to load image.", volleyError);
                 imageView.setImageDrawable(null);
             }
         });

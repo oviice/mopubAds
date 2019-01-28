@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -12,7 +12,6 @@ import android.webkit.WebView;
 import com.mopub.TestSdkHelper;
 import com.mopub.common.MoPub;
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.mobileads.BuildConfig;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -34,7 +33,6 @@ import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class)
 @PrepareForTest({MoPub.class, CookieManager.class})
 public class WebViewsTest {
 

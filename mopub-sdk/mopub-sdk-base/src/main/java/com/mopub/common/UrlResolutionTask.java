@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -18,6 +18,8 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 @VisibleForTesting
 public class UrlResolutionTask extends AsyncTask<String, Void, String> {
@@ -103,7 +105,7 @@ public class UrlResolutionTask extends AsyncTask<String, Void, String> {
                     try {
                         is.close();
                     } catch (IOException e) {
-                        MoPubLog.d("IOException when closing httpUrlConnection. Ignoring.");
+                        MoPubLog.log(CUSTOM, "IOException when closing httpUrlConnection. Ignoring.");
                     }
                 }
                 httpUrlConnection.disconnect();
@@ -127,10 +129,10 @@ public class UrlResolutionTask extends AsyncTask<String, Void, String> {
                 result =  baseUri.resolve(redirectUrl).toString();
             } catch (IllegalArgumentException e) {
                 // Ensure the request is cancelled instead of resolving an intermediary URL
-                MoPubLog.d("Invalid URL redirection. baseUrl=" + baseUrl + "\n redirectUrl=" + redirectUrl);
+                MoPubLog.log(CUSTOM, "Invalid URL redirection. baseUrl=" + baseUrl + "\n redirectUrl=" + redirectUrl);
                 throw new URISyntaxException(redirectUrl, "Unable to parse invalid URL");
             } catch (NullPointerException e) {
-                MoPubLog.d("Invalid URL redirection. baseUrl=" + baseUrl + "\n redirectUrl=" + redirectUrl);
+                MoPubLog.log(CUSTOM, "Invalid URL redirection. baseUrl=" + baseUrl + "\n redirectUrl=" + redirectUrl);
                 throw e;
             }
         }

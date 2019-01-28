@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -9,14 +9,12 @@ import android.content.Context;
 import android.webkit.WebView;
 
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.mobileads.BuildConfig;
 import com.mopub.network.Networking;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
-import org.robolectric.annotation.Config;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -26,7 +24,6 @@ import static com.mopub.common.MoPubHttpUrlConnection.urlEncode;
 import static org.fest.assertions.api.Assertions.assertThat;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class)
 public class MoPubHttpUrlConnectionTest {
     private static final String url = "https://www.mopub.com";
     private String userAgent;

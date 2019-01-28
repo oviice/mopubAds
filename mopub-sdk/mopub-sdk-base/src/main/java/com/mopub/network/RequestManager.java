@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -13,6 +13,8 @@ import com.mopub.common.Preconditions;
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.volley.Request;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 /**
  * This class is responsible for managing the lifecycle of a request with a backoff policy. This
@@ -81,7 +83,7 @@ public abstract class RequestManager<T extends RequestManager.RequestFactory> {
         mCurrentRequest = createRequest();
         MoPubRequestQueue requestQueue = Networking.getRequestQueue();
         if (requestQueue == null) {
-            MoPubLog.d("MoPubRequest queue is null. Clearing request.");
+            MoPubLog.log(CUSTOM, "MoPubRequest queue is null. Clearing request.");
             clearRequest();
             return;
         }

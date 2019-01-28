@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -17,6 +17,13 @@ import com.mopub.mobileads.MoPubErrorCode;
 import com.mopub.network.MoPubNetworkError;
 import com.mopub.network.Networking;
 import com.mopub.volley.VolleyError;
+
+import static com.mopub.common.logging.MoPubLog.ConsentLogEvent.LOAD_ATTEMPTED;
+import static com.mopub.common.logging.MoPubLog.ConsentLogEvent.LOAD_FAILED;
+import static com.mopub.common.logging.MoPubLog.ConsentLogEvent.LOAD_SUCCESS;
+import static com.mopub.common.logging.MoPubLog.ConsentLogEvent.SHOW_ATTEMPTED;
+import static com.mopub.common.logging.MoPubLog.ConsentLogEvent.SHOW_FAILED;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class ConsentDialogController implements ConsentDialogRequest.Listener {
     @NonNull
@@ -42,10 +49,14 @@ public class ConsentDialogController implements ConsentDialogRequest.Listener {
         if (TextUtils.isEmpty(mHtmlBody)) {
             mReady = false;
             if (mExtListener != null) {
+                MoPubLog.log(LOAD_FAILED, MoPubErrorCode.INTERNAL_ERROR.getIntCode(),
+                        MoPubErrorCode.INTERNAL_ERROR);
                 mExtListener.onConsentDialogLoadFailed(MoPubErrorCode.INTERNAL_ERROR);
             }
             return;
         }
+
+        MoPubLog.log(LOAD_SUCCESS);
 
         mReady = true;
         if (mExtListener != null) {
@@ -65,9 +76,13 @@ public class ConsentDialogController implements ConsentDialogRequest.Listener {
         if (volleyError instanceof MoPubNetworkError) {
             switch(((MoPubNetworkError) volleyError).getReason()) {
                 case BAD_BODY:
+                    MoPubLog.log(LOAD_FAILED, MoPubErrorCode.INTERNAL_ERROR.getIntCode(),
+                            MoPubErrorCode.INTERNAL_ERROR);
                     loadListener.onConsentDialogLoadFailed(MoPubErrorCode.INTERNAL_ERROR);
                     return;
                 default:
+                    MoPubLog.log(LOAD_FAILED, MoPubErrorCode.UNSPECIFIED.getIntCode(),
+                            MoPubErrorCode.UNSPECIFIED);
                     break;
             }
         }
@@ -85,13 +100,14 @@ public class ConsentDialogController implements ConsentDialogRequest.Listener {
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
+                        MoPubLog.log(LOAD_SUCCESS);
                         listener.onConsentDialogLoaded();
                     }
                 });
             }
             return;
         } else if (mRequestInFlight) {
-            MoPubLog.d("Already making a consent dialog load request.");
+            MoPubLog.log(CUSTOM, "Already making a consent dialog load request.");
             return;
         }
 
@@ -110,7 +126,10 @@ public class ConsentDialogController implements ConsentDialogRequest.Listener {
     }
 
     boolean showConsentDialog() {
+        MoPubLog.log(SHOW_ATTEMPTED);
         if (!mReady || TextUtils.isEmpty(mHtmlBody)) {
+            MoPubLog.log(SHOW_FAILED, MoPubErrorCode.INTERNAL_ERROR.getIntCode(),
+                    MoPubErrorCode.INTERNAL_ERROR);
             return false;
         }
 

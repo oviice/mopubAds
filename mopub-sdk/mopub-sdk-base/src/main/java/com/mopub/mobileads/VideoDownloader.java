@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -23,6 +23,9 @@ import java.net.HttpURLConnection;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.ERROR;
+
 public class VideoDownloader {
     private static final int MAX_VIDEO_SIZE = 25 * 1024 * 1024; // 25 MiB
     private static final Deque<WeakReference<VideoDownloaderTask>> sDownloaderTasks =
@@ -39,7 +42,7 @@ public class VideoDownloader {
         Preconditions.checkNotNull(listener);
 
         if (url == null) {
-            MoPubLog.d("VideoDownloader attempted to cache video with null url.");
+            MoPubLog.log(CUSTOM, "VideoDownloader attempted to cache video with null url.");
             listener.onComplete(false);
             return;
         }
@@ -105,7 +108,7 @@ public class VideoDownloader {
         @Override
         protected Boolean doInBackground(final String... params) {
             if (params == null || params.length == 0 || params[0] == null) {
-                MoPubLog.d("VideoDownloader task tried to execute null or empty url.");
+                MoPubLog.log(CUSTOM, "VideoDownloader task tried to execute null or empty url.");
                 return false;
             }
 
@@ -120,7 +123,7 @@ public class VideoDownloader {
                 int statusCode = urlConnection.getResponseCode();
                 if (statusCode < HttpURLConnection.HTTP_OK
                         || statusCode >= HttpURLConnection.HTTP_MULT_CHOICE) {
-                    MoPubLog.d("VideoDownloader encountered unexpected statusCode: " +
+                    MoPubLog.log(CUSTOM, "VideoDownloader encountered unexpected statusCode: " +
                             statusCode);
                     return false;
                 }
@@ -128,7 +131,7 @@ public class VideoDownloader {
                 // Check video size below maximum
                 int contentLength = urlConnection.getContentLength();
                 if (contentLength > MAX_VIDEO_SIZE) {
-                    MoPubLog.d(String.format(
+                    MoPubLog.log(CUSTOM, String.format(
                             "VideoDownloader encountered video larger than disk cap. " +
                                     "(%d bytes / %d maximum).",
                             contentLength,
@@ -139,7 +142,7 @@ public class VideoDownloader {
                 boolean diskPutResult = CacheService.putToDiskCache(videoUrl, inputStream);
                 return diskPutResult;
             } catch (Exception e) {
-                MoPubLog.d("VideoDownloader task threw an internal exception.", e);
+                MoPubLog.log(ERROR, "VideoDownloader task threw an internal exception.", e);
                 return false;
             } finally {
                 Streams.closeStream(inputStream);
@@ -168,7 +171,7 @@ public class VideoDownloader {
 
         @Override
         protected void onCancelled() {
-            MoPubLog.d("VideoDownloader task was cancelled.");
+            MoPubLog.log(CUSTOM, "VideoDownloader task was cancelled.");
             sDownloaderTasks.remove(mWeakSelf);
             mListener.onComplete(false);
         }

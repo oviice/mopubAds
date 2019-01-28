@@ -1,3 +1,15 @@
+## Version 5.5.0 (January 28, 2019)
+- **Features**
+  - Advanced Bidding automatically initializes. See [https://developers.mopub.com/docs/android/initialization/] for more information about initialization.
+  - GDPR legitimate interest API now available; publishers may opt into allowing supported networks to collect user information on the basis of legitimate interest.
+  - Improved logging from the SDK. Set the log level with `SdkConfiguration.Builder#withLogLevel(LogLevel)` in initialization to change the logging granularity.
+  - Upgraded Gradle dependency to 4.8
+  - Upgraded Android Plugin dependency to 3.2.0
+
+- **Bug Fixes**
+  - Addresses an ANR when requesting an ad immediately after initialization.
+  - MRAID isReady is now called after the load is finished instead of when the ad is shown.
+
 ## Version 5.4.1 (November 28, 2018)
 - **Bug Fixes**
   - Fixed bug with the internal state of rewarded video when the video fails to play.

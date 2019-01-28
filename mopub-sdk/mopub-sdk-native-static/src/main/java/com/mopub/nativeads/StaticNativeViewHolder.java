@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -12,6 +12,8 @@ import android.widget.TextView;
 
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.ERROR;
 
 class StaticNativeViewHolder {
     @Nullable View mainView;
@@ -46,7 +48,7 @@ class StaticNativeViewHolder {
                     (ImageView) view.findViewById(viewBinder.privacyInformationIconImageId);
             return staticNativeViewHolder;
         } catch (ClassCastException exception) {
-            MoPubLog.w("Could not cast from id in ViewBinder to expected View type", exception);
+            MoPubLog.log(ERROR, "Could not cast from id in ViewBinder to expected View type", exception);
             return EMPTY_VIEW_HOLDER;
         }
     }

@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -13,6 +13,8 @@ import com.mopub.common.util.Strings;
 import com.mopub.mobileads.util.XmlUtils;
 
 import org.w3c.dom.Node;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 /**
  * Data Object for the MoPubViewabilityTracker VAST Custom Extension.
@@ -52,14 +54,14 @@ public class VideoViewabilityTrackerXmlManager {
             try {
                 viewablePlaytimeMS = Strings.parseAbsoluteOffset(viewablePlaytimeStr);
             } catch (NumberFormatException e) {
-                MoPubLog.d(String.format("Invalid VAST viewablePlaytime format " +
+                MoPubLog.log(CUSTOM, String.format("Invalid VAST viewablePlaytime format " +
                         "for \"HH:MM:SS[.mmm]\": %s:", viewablePlaytimeStr));
             }
         } else {
             try {
                 viewablePlaytimeMS = (int) (Float.parseFloat(viewablePlaytimeStr) * 1000);
             } catch (NumberFormatException e) {
-                MoPubLog.d(String.format("Invalid VAST viewablePlaytime format" +
+                MoPubLog.log(CUSTOM, String.format("Invalid VAST viewablePlaytime format" +
                         " for \"SS[.mmm]\": %s:", viewablePlaytimeStr));
             }
         }
@@ -92,7 +94,7 @@ public class VideoViewabilityTrackerXmlManager {
         try {
             percentViewable = (int) (Float.parseFloat(percentViewableStr.replace("%", "")));
         } catch (NumberFormatException e) {
-            MoPubLog.d(String.format("Invalid VAST percentViewable format for \"d{1,3}%%\": %s:",
+            MoPubLog.log(CUSTOM, String.format("Invalid VAST percentViewable format for \"d{1,3}%%\": %s:",
                     percentViewableStr));
         }
 

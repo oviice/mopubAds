@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -41,6 +41,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultAllocator;
 import com.google.android.exoplayer2.video.MediaCodecVideoRenderer;
+
 import com.mopub.common.Preconditions;
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
@@ -56,6 +57,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 /**
  * Wrapper class around the {@link ExoPlayer} to provide a nice interface into the player along
@@ -303,7 +306,7 @@ public class NativeVideoController extends ExoPlayer.DefaultEventListener implem
     public void onPlayerStateChanged(final boolean playWhenReady, final int newState) {
         if (newState == STATE_ENDED && mFinalFrame == null) {
             if (mExoPlayer == null || mSurface == null || mTextureView == null) {
-                MoPubLog.w("onPlayerStateChanged called afer view has been recycled.");
+                MoPubLog.log(CUSTOM, "onPlayerStateChanged called afer view has been recycled.");
                 return;
             }
 
@@ -459,7 +462,7 @@ public class NativeVideoController extends ExoPlayer.DefaultEventListener implem
         final PlayerMessage playerMessage =  exoPlayer.createMessage(audioRenderer);
 
         if (playerMessage == null) {
-            MoPubLog.d("ExoPlayer.createMessage returned null.");
+            MoPubLog.log(CUSTOM, "ExoPlayer.createMessage returned null.");
             return;
         }
 
@@ -479,7 +482,7 @@ public class NativeVideoController extends ExoPlayer.DefaultEventListener implem
         final PlayerMessage playerMessage =  exoPlayer.createMessage(videoRenderer);
 
         if (playerMessage == null) {
-            MoPubLog.d("ExoPlayer.createMessage returned null.");
+            MoPubLog.log(CUSTOM, "ExoPlayer.createMessage returned null.");
             return;
         }
 

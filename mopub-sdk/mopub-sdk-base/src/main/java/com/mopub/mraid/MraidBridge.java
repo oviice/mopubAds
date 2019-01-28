@@ -1,15 +1,12 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
 package com.mopub.mraid;
 
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Rect;
-import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -40,11 +37,15 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class MraidBridge {
     private final AdReport mAdReport;
@@ -77,6 +78,8 @@ public class MraidBridge {
 
         void onPlayVideo(URI uri);
     }
+
+    static final String MRAID_OPEN = "mraid://open?url=";
 
     @NonNull private final PlacementType mPlacementType;
 
@@ -119,7 +122,7 @@ public class MraidBridge {
         mMraidWebView.setScrollContainer(false);
         mMraidWebView.setVerticalScrollBarEnabled(false);
         mMraidWebView.setHorizontalScrollBarEnabled(false);
-        mMraidWebView.setBackgroundColor(Color.BLACK);
+        mMraidWebView.setBackgroundColor(Color.TRANSPARENT);
 
         mMraidWebView.setWebViewClient(mMraidWebViewClient);
 
@@ -202,7 +205,7 @@ public class MraidBridge {
 
     public void setContentHtml(@NonNull String htmlData) {
         if (mMraidWebView == null) {
-            MoPubLog.d("MRAID bridge called setContentHtml before WebView was attached");
+            MoPubLog.log(CUSTOM, "MRAID bridge called setContentHtml before WebView was attached");
             return;
         }
 
@@ -213,7 +216,7 @@ public class MraidBridge {
 
     public void setContentUrl(String url) {
         if (mMraidWebView == null) {
-            MoPubLog.d("MRAID bridge called setContentHtml while WebView was not attached");
+            MoPubLog.log(CUSTOM, "MRAID bridge called setContentHtml while WebView was not attached");
             return;
         }
 
@@ -223,11 +226,11 @@ public class MraidBridge {
 
     void injectJavaScript(@NonNull String javascript) {
         if (mMraidWebView == null) {
-            MoPubLog.d("Attempted to inject Javascript into MRAID WebView while was not "
+            MoPubLog.log(CUSTOM, "Attempted to inject Javascript into MRAID WebView while was not "
                     + "attached:\n\t" + javascript);
             return;
         }
-        MoPubLog.d("Injecting Javascript into MRAID WebView:\n\t" + javascript);
+        MoPubLog.log(CUSTOM, "Injecting Javascript into MRAID WebView:\n\t" + javascript);
         mMraidWebView.loadUrl("javascript:" + javascript);
     }
 
@@ -335,7 +338,7 @@ public class MraidBridge {
         @Override
         public void onReceivedError(@NonNull WebView view, int errorCode,
                 @NonNull String description, @NonNull String failingUrl) {
-            MoPubLog.d("Error: " + description);
+            MoPubLog.log(CUSTOM, "Error: " + description);
             super.onReceivedError(view, errorCode, description, failingUrl);
         }
     };
@@ -346,7 +349,7 @@ public class MraidBridge {
         try {
             uri = new URI(url);
         } catch (URISyntaxException e) {
-            MoPubLog.d("Invalid MRAID URL: " + url);
+            MoPubLog.log(CUSTOM, "Invalid MRAID URL: " + url);
             fireErrorEvent(MraidJavascriptCommand.UNSPECIFIED, "Mraid command sent an invalid URL");
             return true;
         }
@@ -364,41 +367,33 @@ public class MraidBridge {
             return true;
         }
 
+        // This block converts all other URLs, including sms://, tel:// into MRAID URL. It checks for
+        // 'clicked' in order to avoid interfering with automatic browser redirects.
+        if (mIsClicked && !"mraid".equals(scheme)) {
+            try {
+                uri = new URI(MRAID_OPEN + URLEncoder.encode(url, "UTF-8"));
+                host = uri.getHost();
+                scheme = uri.getScheme();
+            } catch (URISyntaxException | UnsupportedEncodingException e) {
+                MoPubLog.log(CUSTOM, "Invalid MRAID URL encoding: " + url);
+                fireErrorEvent(MraidJavascriptCommand.OPEN, "Non-mraid URL is invalid");
+                return false;
+            }
+        }
+
         if ("mraid".equals(scheme)) {
-            Map<String, String> params = new HashMap<String, String>();
+            Map<String, String> params = new HashMap<>();
             for (NameValuePair pair : URLEncodedUtils.parse(uri, "UTF-8")) {
                 params.put(pair.getName(), pair.getValue());
             }
             MraidJavascriptCommand command = MraidJavascriptCommand.fromJavascriptString(host);
             try {
                 runCommand(command, params);
-            } catch (MraidCommandException exception) {
+            } catch (MraidCommandException | IllegalArgumentException exception) {
                 fireErrorEvent(command, exception.getMessage());
             }
             fireNativeCommandCompleteEvent(command);
             return true;
-        }
-
-        // This block handles all other URLs, including sms://, tel://,
-        // clicking a hyperlink, or setting window.location directly in Javascript. It checks for
-        // clicked in order to avoid interfering with automatically browser redirects.
-        if (mIsClicked) {
-            Intent intent = new Intent();
-            intent.setAction(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(url));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            try {
-                if (mMraidWebView == null) {
-                    MoPubLog.d("WebView was detached. Unable to load a URL");
-                    return true;
-                }
-                mMraidWebView.getContext().startActivity(intent);
-                return true;
-            } catch (ActivityNotFoundException e) {
-                MoPubLog.d("No activity found to handle this URL " + url);
-                return false;
-            }
         }
 
         return false;

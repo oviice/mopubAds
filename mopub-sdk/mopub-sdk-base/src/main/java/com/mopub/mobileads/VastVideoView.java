@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -16,6 +16,8 @@ import com.mopub.common.Preconditions;
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.AsyncTasks;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.ERROR;
 
 /**
  * Custom VideoView dedicated for VAST videos. This primarily deals with the blurring of the last
@@ -55,7 +57,7 @@ public class VastVideoView extends VideoView {
                         diskMediaFileUrl
                 );
             } catch (Exception e) {
-                MoPubLog.d("Failed to blur last video frame", e);
+                MoPubLog.log(ERROR, "Failed to blur last video frame", e);
             }
         }
     }

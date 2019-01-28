@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -32,7 +32,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class, shadows = {ShadowAsyncTasks.class, ShadowMoPubHttpUrlConnection.class})
+@Config(shadows = {ShadowAsyncTasks.class, ShadowMoPubHttpUrlConnection.class})
 public class VideoDownloaderTest {
     @Mock VideoDownloaderListener mockListener;
     private final static String expectedUrl1 = "https://video_url";

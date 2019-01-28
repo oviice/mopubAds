@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 import static com.mopub.network.TrackingRequest.makeVastTrackingHttpRequest;
 
 public class VastVideoConfig implements Serializable {
@@ -253,7 +254,7 @@ public class VastVideoConfig implements Serializable {
                     break;
                 case UNKNOWN:
                 default:
-                    MoPubLog.d("Encountered unknown video tracking event: " + eventName);
+                    MoPubLog.log(CUSTOM, "Encountered unknown video tracking event: " + eventName);
             }
         }
     }
@@ -641,10 +642,10 @@ public class VastVideoConfig implements Serializable {
                                     Intents.startActivity(context, intent);
                                 }
                             } catch (ActivityNotFoundException e) {
-                                MoPubLog.d("Activity " + clazz.getName() + " not found. Did you " +
+                                MoPubLog.log(CUSTOM, "Activity " + clazz.getName() + " not found. Did you " +
                                         "declare it in your AndroidManifest.xml?");
                             } catch (IntentNotResolvableException e) {
-                                MoPubLog.d("Activity " + clazz.getName() + " not found. Did you " +
+                                MoPubLog.log(CUSTOM, "Activity " + clazz.getName() + " not found. Did you " +
                                         "declare it in your AndroidManifest.xml?");
                             }
                         }
@@ -824,7 +825,7 @@ public class VastVideoConfig implements Serializable {
                     float percentage = Float.parseFloat(mSkipOffset.replace("%", "")) / 100f;
                     skipOffsetMilliseconds = Math.round(videoDuration * percentage);
                 } else {
-                    MoPubLog.d(
+                    MoPubLog.log(CUSTOM,
                             String.format("Invalid VAST skipoffset format: %s", mSkipOffset));
                     return null;
                 }
@@ -837,7 +838,7 @@ public class VastVideoConfig implements Serializable {
                     }
                 }
             } catch (NumberFormatException e) {
-                MoPubLog.d(String.format("Failed to parse skipoffset %s", mSkipOffset));
+                MoPubLog.log(CUSTOM, String.format("Failed to parse skipoffset %s", mSkipOffset));
             }
         }
         return null;

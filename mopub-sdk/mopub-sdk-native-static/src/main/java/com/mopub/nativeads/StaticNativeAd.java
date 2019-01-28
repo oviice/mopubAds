@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -13,6 +13,8 @@ import com.mopub.common.logging.MoPubLog;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.CUSTOM;
 
 /**
  * This the base class for implementations of the static native ad format.
@@ -187,7 +189,7 @@ public abstract class StaticNativeAd extends BaseNativeAd implements ImpressionI
         } else if (starRating >= MIN_STAR_RATING && starRating <= MAX_STAR_RATING) {
             mStarRating = starRating;
         } else {
-            MoPubLog.d("Ignoring attempt to set invalid star rating (" + starRating + "). Must be "
+            MoPubLog.log(CUSTOM, "Ignoring attempt to set invalid star rating (" + starRating + "). Must be "
                     + "between " + MIN_STAR_RATING + " and " + MAX_STAR_RATING + ".");
         }
     }
@@ -219,7 +221,7 @@ public abstract class StaticNativeAd extends BaseNativeAd implements ImpressionI
         if (impressionMinTimeViewed > 0) {
             mImpressionMinTimeViewed = impressionMinTimeViewed;
         } else {
-            MoPubLog.d("Ignoring non-positive impressionMinTimeViewed: " + impressionMinTimeViewed);
+            MoPubLog.log(CUSTOM, "Ignoring non-positive impressionMinTimeViewed: " + impressionMinTimeViewed);
         }
     }
 
@@ -233,7 +235,7 @@ public abstract class StaticNativeAd extends BaseNativeAd implements ImpressionI
         if (impressionMinPercentageViewed >= 0 && impressionMinPercentageViewed <= 100) {
             mImpressionMinPercentageViewed = impressionMinPercentageViewed;
         } else {
-            MoPubLog.d("Ignoring impressionMinTimeViewed that's not a percent [0, 100]: " +
+            MoPubLog.log(CUSTOM, "Ignoring impressionMinTimeViewed that's not a percent [0, 100]: " +
                     impressionMinPercentageViewed);
         }
     }
@@ -248,7 +250,7 @@ public abstract class StaticNativeAd extends BaseNativeAd implements ImpressionI
         if (impressionMinVisiblePx != null && impressionMinVisiblePx > 0) {
             mImpressionMinVisiblePx = impressionMinVisiblePx;
         } else {
-            MoPubLog.d("Ignoring null or non-positive impressionMinVisiblePx: " +
+            MoPubLog.log(CUSTOM, "Ignoring null or non-positive impressionMinVisiblePx: " +
                     impressionMinVisiblePx);
         }
     }

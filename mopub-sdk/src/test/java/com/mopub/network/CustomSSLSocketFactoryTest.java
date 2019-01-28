@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -11,7 +11,6 @@ import android.os.Build;
 import android.support.annotation.Nullable;
 
 import com.mopub.TestSdkHelper;
-import com.mopub.mobileads.BuildConfig;
 
 import org.junit.After;
 import org.junit.Before;
@@ -21,7 +20,6 @@ import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.robolectric.annotation.Config;
 
 import java.net.InetAddress;
 import java.net.Socket;
@@ -44,7 +42,6 @@ import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 @PrepareForTest(InetAddressUtils.class)
 @RunWith(PowerMockRunner.class)
-@Config(constants = BuildConfig.class)
 public class CustomSSLSocketFactoryTest {
 
     private CustomSSLSocketFactory subject;

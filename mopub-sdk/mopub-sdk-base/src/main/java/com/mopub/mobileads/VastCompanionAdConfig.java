@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -23,6 +23,7 @@ import com.mopub.common.util.Intents;
 import java.io.Serializable;
 import java.util.List;
 
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 import static com.mopub.network.TrackingRequest.makeVastTrackingHttpRequest;
 
 public class VastCompanionAdConfig implements Serializable {
@@ -171,7 +172,7 @@ public class VastCompanionAdConfig implements Serializable {
                             try {
                                 ((Activity) context).startActivityForResult(intent, requestCode);
                             } catch (ActivityNotFoundException e) {
-                                MoPubLog.d("Activity " + clazz.getName() + " not found. Did you " +
+                                MoPubLog.log(CUSTOM, "Activity " + clazz.getName() + " not found. Did you " +
                                         "declare it in your AndroidManifest.xml?");
                             }
                         }

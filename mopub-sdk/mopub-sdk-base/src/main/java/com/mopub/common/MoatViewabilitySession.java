@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 // API documentation: https://drive.google.com/drive/folders/0B8U0thTyT1GGLUlweWRVMXk1Qlk
 class MoatViewabilitySession implements ExternalViewabilitySession {
@@ -69,7 +71,7 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
     private static boolean isViewabilityEnabledViaReflection() {
         if (sIsViewabilityEnabledViaReflection == null) {
             sIsViewabilityEnabledViaReflection = Reflection.classFound(MOAT_FACTORY_PATH);
-            MoPubLog.d("Moat is "
+            MoPubLog.log(CUSTOM, "Moat is "
                     + (sIsViewabilityEnabledViaReflection ? "" : "un")
                     + "available via reflection.");
         }
@@ -103,7 +105,7 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
             try {
                 application = (Application) context.getApplicationContext();
             } catch (ClassCastException e) {
-                MoPubLog.d("Unable to initialize Moat, error obtaining application context.");
+                MoPubLog.log(CUSTOM, "Unable to initialize Moat, error obtaining application context.");
                 return false;
             }
         }
@@ -136,7 +138,7 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
             sWasInitialized = true;
             return true;
         } catch (Exception e) {
-            MoPubLog.d("Unable to initialize Moat: " + e.getMessage());
+            MoPubLog.log(CUSTOM, "Unable to initialize Moat: " + e.getMessage());
             return false;
         }
     }
@@ -187,7 +189,7 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
 
             return true;
         } catch (Exception e) {
-            MoPubLog.d("Unable to execute Moat start display session: "
+            MoPubLog.log(CUSTOM, "Unable to execute Moat start display session: "
                     + e.getMessage());
             return false;
         }
@@ -201,7 +203,7 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
         }
 
         if (mMoatWebAdTracker == null) {
-            MoPubLog.d("MoatWebAdTracker unexpectedly null.");
+            MoPubLog.log(CUSTOM, "MoatWebAdTracker unexpectedly null.");
             return false;
         }
 
@@ -213,7 +215,7 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
 
             return true;
         } catch (Exception e) {
-            MoPubLog.d("Unable to record deferred display session for Moat: " + e.getMessage());
+            MoPubLog.log(CUSTOM, "Unable to record deferred display session for Moat: " + e.getMessage());
             return false;
         }
     }
@@ -226,7 +228,7 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
         }
 
         if (mMoatWebAdTracker == null) {
-            MoPubLog.d("Moat WebAdTracker unexpectedly null.");
+            MoPubLog.log(CUSTOM, "Moat WebAdTracker unexpectedly null.");
             return false;
         }
 
@@ -238,7 +240,7 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
 
             return true;
         } catch (Exception e) {
-            MoPubLog.d("Unable to execute Moat end session: " + e.getMessage());
+            MoPubLog.log(CUSTOM, "Unable to execute Moat end session: " + e.getMessage());
         }
 
         return false;
@@ -263,7 +265,7 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
 
         String partnerCode = mAdIds.get(PARTNER_CODE_KEY);
         if (TextUtils.isEmpty(partnerCode)) {
-            MoPubLog.d("partnerCode was empty when starting Moat video session");
+            MoPubLog.log(CUSTOM, "partnerCode was empty when starting Moat video session");
             return false;
         }
 
@@ -286,7 +288,7 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
 
             return true;
         } catch (Exception e) {
-            MoPubLog.d("Unable to execute Moat start video session: " + e.getMessage());
+            MoPubLog.log(CUSTOM, "Unable to execute Moat start video session: " + e.getMessage());
             return false;
         }
     }
@@ -314,7 +316,7 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
         }
 
         if (mMoatVideoTracker == null) {
-            MoPubLog.d("Moat VideoAdTracker unexpectedly null.");
+            MoPubLog.log(CUSTOM, "Moat VideoAdTracker unexpectedly null.");
             return false;
         }
 
@@ -334,7 +336,7 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
             mWasVideoPrepared = true;
             return true;
         } catch (Exception e) {
-            MoPubLog.d("Unable to execute Moat onVideoPrepared: " + e.getMessage());
+            MoPubLog.log(CUSTOM, "Unable to execute Moat onVideoPrepared: " + e.getMessage());
             return false;
         }
     }
@@ -349,7 +351,7 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
         }
 
         if (mMoatVideoTracker == null) {
-            MoPubLog.d("Moat VideoAdTracker unexpectedly null.");
+            MoPubLog.log(CUSTOM, "Moat VideoAdTracker unexpectedly null.");
             return false;
         }
 
@@ -375,11 +377,11 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
                     return null;
 
                 default:
-                    MoPubLog.d("Unexpected video event: " + event.getMoatEnumName());
+                    MoPubLog.log(CUSTOM, "Unexpected video event: " + event.getMoatEnumName());
                     return false;
             }
         } catch (Exception e) {
-            MoPubLog.d("Video event " + event.getMoatEnumName() + " failed. "
+            MoPubLog.log(CUSTOM, "Video event " + event.getMoatEnumName() + " failed. "
                     + e.getMessage());
             return false;
         }
@@ -393,7 +395,7 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
         }
 
         if (mMoatVideoTracker == null) {
-            MoPubLog.d("Moat VideoAdTracker unexpectedly null.");
+            MoPubLog.log(CUSTOM, "Moat VideoAdTracker unexpectedly null.");
             return false;
         }
 
@@ -405,7 +407,7 @@ class MoatViewabilitySession implements ExternalViewabilitySession {
 
             return true;
         } catch (Exception e) {
-            MoPubLog.d("Unable to execute Moat end video session: " + e.getMessage());
+            MoPubLog.log(CUSTOM, "Unable to execute Moat end video session: " + e.getMessage());
             return false;
         }
     }

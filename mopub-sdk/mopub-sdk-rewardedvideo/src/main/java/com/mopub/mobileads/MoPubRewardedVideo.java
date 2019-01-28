@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -13,6 +13,8 @@ import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 
 import java.util.Map;
+
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.CUSTOM;
 
 /**
  * A custom event for showing MoPub rewarded videos.
@@ -49,7 +51,7 @@ public class MoPubRewardedVideo extends MoPubRewardedAd {
         super.loadWithSdkInitialized(activity, localExtras, serverExtras);
 
         if (mRewardedVastVideoInterstitial == null) {
-            MoPubLog.w("mRewardedVastVideoInterstitial is null. Has this class been invalidated?");
+            MoPubLog.log(CUSTOM, "mRewardedVastVideoInterstitial is null. Has this class been invalidated?");
             return;
         }
         mRewardedVastVideoInterstitial.loadInterstitial(activity,
@@ -60,10 +62,10 @@ public class MoPubRewardedVideo extends MoPubRewardedAd {
     @Override
     protected void show() {
         if (isReady() && mRewardedVastVideoInterstitial != null) {
-            MoPubLog.d("Showing MoPub rewarded video.");
+            MoPubLog.log(CUSTOM, "Showing MoPub rewarded video.");
             mRewardedVastVideoInterstitial.showInterstitial();
         } else {
-            MoPubLog.d("Unable to show MoPub rewarded video");
+            MoPubLog.log(CUSTOM, "Unable to show MoPub rewarded video");
         }
     }
 
@@ -77,7 +79,7 @@ public class MoPubRewardedVideo extends MoPubRewardedAd {
         @Override
         public void onVideoComplete() {
             if (getRewardedAdCurrencyName() == null) {
-                MoPubLog.d("No rewarded video was loaded, so no reward is possible");
+                MoPubLog.log(CUSTOM, "No rewarded video was loaded, so no reward is possible");
             } else {
                 MoPubRewardedVideoManager.onRewardedVideoCompleted(mCustomEventClass,
                         getAdNetworkId(),

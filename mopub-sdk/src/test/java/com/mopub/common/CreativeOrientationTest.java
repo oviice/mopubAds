@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -11,37 +11,47 @@ import static org.fest.assertions.api.Assertions.assertThat;
 public class CreativeOrientationTest {
 
     @Test
-    public void fromHeader_nullParam_shouldBeUndefined() {
-        assertThat(CreativeOrientation.fromHeader(null)).isEqualTo(CreativeOrientation.UNDEFINED);
+    public void fromString_nullParam_shouldBeDevice() {
+        assertThat(CreativeOrientation.fromString(null)).isEqualTo(CreativeOrientation.DEVICE);
     }
 
     @Test
-    public void fromHeader_emptyParam_shouldBeUndefined() {
-        assertThat(CreativeOrientation.fromHeader("")).isEqualTo(CreativeOrientation.UNDEFINED);
+    public void fromString_emptyParam_shouldBeDevice() {
+        assertThat(CreativeOrientation.fromString("")).isEqualTo(CreativeOrientation.DEVICE);
     }
 
     @Test
-    public void fromHeader_withGarbage_shouldBeUndefined() {
-        assertThat(CreativeOrientation.fromHeader("p0rtr41t")).isEqualTo(CreativeOrientation.UNDEFINED);
+    public void fromString_withGarbage_shouldBeDevice() {
+        assertThat(CreativeOrientation.fromString("p0rtr41t")).isEqualTo(CreativeOrientation.DEVICE);
     }
 
     @Test
-    public void fromHeader_lParam_shouldBeLandscape() {
-        assertThat(CreativeOrientation.fromHeader("l")).isEqualTo(CreativeOrientation.LANDSCAPE);
+    public void fromString_lParam_shouldBeLandscape() {
+        assertThat(CreativeOrientation.fromString("l")).isEqualTo(CreativeOrientation.LANDSCAPE);
     }
 
     @Test
-    public void fromHeader_uppercaseL_shouldBeLandscape() {
-        assertThat(CreativeOrientation.fromHeader("L")).isEqualTo(CreativeOrientation.LANDSCAPE);
+    public void fromString_uppercaseL_shouldBeLandscape() {
+        assertThat(CreativeOrientation.fromString("L")).isEqualTo(CreativeOrientation.LANDSCAPE);
     }
 
     @Test
-    public void fromHeader_pParam_shouldBePortrait() {
-        assertThat(CreativeOrientation.fromHeader("p")).isEqualTo(CreativeOrientation.PORTRAIT);
+    public void fromString_pParam_shouldBePortrait() {
+        assertThat(CreativeOrientation.fromString("p")).isEqualTo(CreativeOrientation.PORTRAIT);
     }
 
     @Test
-    public void fromHeader_uppercaseP_shouldBePortrait() {
-        assertThat(CreativeOrientation.fromHeader("P")).isEqualTo(CreativeOrientation.PORTRAIT);
+    public void fromString_uppercaseP_shouldBePortrait() {
+        assertThat(CreativeOrientation.fromString("P")).isEqualTo(CreativeOrientation.PORTRAIT);
+    }
+
+    @Test
+    public void fromString_dParam_shouldBeDevice() {
+        assertThat(CreativeOrientation.fromString("d")).isEqualTo(CreativeOrientation.DEVICE);
+    }
+
+    @Test
+    public void fromString_uppercaseD_shouldBeDevice() {
+        assertThat(CreativeOrientation.fromString("D")).isEqualTo(CreativeOrientation.DEVICE);
     }
 }

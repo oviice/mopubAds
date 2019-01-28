@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mobileads.test.support.TestAdViewControllerFactory;
 import com.mopub.mobileads.test.support.TestCustomEventInterstitialAdapterFactory;
@@ -18,10 +19,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.robolectric.Robolectric;
-import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowLog;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.mopub.common.Constants.FOUR_HOURS_MILLIS;
@@ -46,7 +48,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class)
 public class MoPubInterstitialTest {
 
     private static final String KEYWORDS_VALUE = "expected_keywords";
@@ -70,6 +71,7 @@ public class MoPubInterstitialTest {
         interstitialAdListener = mock(MoPubInterstitial.InterstitialAdListener.class);
         subject.setInterstitialAdListener(interstitialAdListener);
         subject.setHandler(mockHandler);
+        MoPubLog.setLogLevel(MoPubLog.LogLevel.DEBUG);
 
         interstitialView = mock(MoPubInterstitial.MoPubInterstitialView.class);
 
@@ -176,9 +178,26 @@ public class MoPubInterstitialTest {
     }
 
     @Test
-    public void onCustomEventInterstitialLoaded_shouldNotifyListener() throws Exception {
+    public void onCustomEventInterstitialLoaded_withoutLoad_shouldNotNotifyListener() throws Exception {
         subject.setInterstitialView(interstitialView);
 
+        subject.onCustomEventInterstitialLoaded();
+        final List<ShadowLog.LogItem> allLogMessages = ShadowLog.getLogs();
+        final ShadowLog.LogItem latestLogMessage = allLogMessages.get(allLogMessages.size() - 1);
+
+        // All log messages end with a newline character.
+        assertThat(latestLogMessage.msg.trim())
+                .isEqualTo("[com.mopub.mobileads.MoPubInterstitial][attemptStateTransition] Ad Log " +
+                        "- Attempted transition from IDLE to READY failed due to no known load call.");
+
+        verify(interstitialView, never()).trackImpression();
+    }
+
+    @Test
+    public void onCustomEventInterstitialLoaded_withLoad_shouldNotifyListener() throws Exception {
+        subject.setInterstitialView(interstitialView);
+
+        subject.load();
         subject.onCustomEventInterstitialLoaded();
         verify(interstitialAdListener).onInterstitialLoaded(eq(subject));
 

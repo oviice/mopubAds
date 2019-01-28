@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -25,6 +25,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.TreeSet;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.ERROR;
 
 /**
  * This data source caches data on disk as it is read from an {@link HttpDataSource}. This expects
@@ -170,7 +173,7 @@ public class HttpDiskCompositeDataSource implements DataSource {
 
             // It's not in the cache, but we expected it to be there.
             if (mDataRequestStartPoint > mStartInFile) {
-                MoPubLog.d("Cache segment " + mSegment + " was evicted. Invalidating cache");
+                MoPubLog.log(CUSTOM, "Cache segment " + mSegment + " was evicted. Invalidating cache");
                 mIntervals.clear();
                 mDataRequestStartPoint = (int) dataSpec.absoluteStreamPosition;
             }
@@ -233,10 +236,10 @@ public class HttpDiskCompositeDataSource implements DataSource {
                             jsonInterval.getInt(LENGTH)));
                 }
             } catch (JSONException e) {
-                MoPubLog.d("clearing cache since invalid json intervals found", e);
+                MoPubLog.log(ERROR, "clearing cache since invalid json intervals found", e);
                 intervals.clear();
             } catch (ClassCastException e) {
-                MoPubLog.d("clearing cache since unable to read json data");
+                MoPubLog.log(CUSTOM, "clearing cache since unable to read json data");
                 intervals.clear();
             }
         }
@@ -296,16 +299,16 @@ public class HttpDiskCompositeDataSource implements DataSource {
     @Override
     public int read(final byte[] buffer, final int offset, final int length) throws IOException {
         if (length > BLOCK_SIZE) {
-            MoPubLog.d(
+            MoPubLog.log(CUSTOM,
                     "Reading more than the block size (" + BLOCK_SIZE + " bytes) at once is not possible. length = " + length);
             return -1;
         }
         if (mDataSpec == null) {
-            MoPubLog.d("Unable to read from data source when no spec provided");
+            MoPubLog.log(CUSTOM, "Unable to read from data source when no spec provided");
             return -1;
         }
         if (mCachedBytes == null) {
-            MoPubLog.d("No cache set up. Call open before read.");
+            MoPubLog.log(CUSTOM, "No cache set up. Call open before read.");
             return -1;
         }
 
@@ -345,7 +348,7 @@ public class HttpDiskCompositeDataSource implements DataSource {
                     // If there is a mismatch between expected bytes available in the cache and what
                     // is actually in the cache, this is an unrecoverable problem. Reset the cache
                     // and clear the data and open a new HTTP connection starting at the current position.
-                    MoPubLog.d("Unexpected cache miss. Invalidating cache");
+                    MoPubLog.log(CUSTOM, "Unexpected cache miss. Invalidating cache");
                     mIntervals.clear();
                     mCachedBytes = new byte[BLOCK_SIZE];
                     mHttpDataSource.close();
@@ -376,7 +379,7 @@ public class HttpDiskCompositeDataSource implements DataSource {
 
         // This should never happen, but if we lose network or something, this might happen
         if (!mIsHttpSourceOpen) {
-            MoPubLog.d("end of cache reached. No http source open");
+            MoPubLog.log(CUSTOM, "end of cache reached. No http source open");
             return -1;
         }
 

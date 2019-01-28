@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -60,6 +60,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
@@ -71,7 +72,7 @@ import static org.mockito.Mockito.when;
 
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class, shadows = {MoPubShadowTelephonyManager.class, MoPubShadowConnectivityManager.class})
+@Config(shadows = {MoPubShadowTelephonyManager.class, MoPubShadowConnectivityManager.class})
 public class AdViewControllerTest {
 
     private static final int[] HTML_ERROR_CODES = new int[]{400, 401, 402, 403, 404, 405, 407, 408,
@@ -200,6 +201,7 @@ public class AdViewControllerTest {
         ShadowLooper.pauseMainLooper();
         assertThat(Robolectric.getForegroundThreadScheduler().size()).isEqualTo(0);
 
+        subject.setAdUnitId("abc123");
         subject.adDidFail(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
 
         assertThat(Robolectric.getForegroundThreadScheduler().size()).isEqualTo(1);
@@ -343,19 +345,19 @@ public class AdViewControllerTest {
     @Test
     public void enablingAutoRefresh_afterLoadAd_shouldScheduleNewRefreshTimer() {
 
-        final AdViewController adViewControllerSpy = spy(subject);
+        final AdViewController spyAdViewController = spy(subject);
 
-        adViewControllerSpy.loadAd();
-        adViewControllerSpy.setShouldAllowAutoRefresh(true);
-        verify(adViewControllerSpy).scheduleRefreshTimerIfEnabled();
+        spyAdViewController.loadAd();
+        spyAdViewController.setShouldAllowAutoRefresh(true);
+        verify(spyAdViewController).scheduleRefreshTimerIfEnabled();
     }
 
     @Test
     public void enablingAutoRefresh_withoutCallingLoadAd_shouldNotScheduleNewRefreshTimer() {
-        final AdViewController adViewControllerSpy = spy(subject);
+        final AdViewController spyAdViewController = spy(subject);
 
-        adViewControllerSpy.setShouldAllowAutoRefresh(true);
-        verify(adViewControllerSpy, never()).scheduleRefreshTimerIfEnabled();
+        spyAdViewController.setShouldAllowAutoRefresh(true);
+        verify(spyAdViewController, never()).scheduleRefreshTimerIfEnabled();
     }
 
     @Test
@@ -421,9 +423,41 @@ public class AdViewControllerTest {
 
     @Test
     public void loadAd_shouldNotLoadUrlIfAdUnitIdIsNull() {
+        // mAdUnitId is null at initialization
         subject.loadAd();
 
         verifyZeroInteractions(mockRequestQueue);
+    }
+
+    @Test
+    public void loadAd_withNullAdUnitId_shouldCallAdDidFail_withMissingAdUnitIdError() {
+        final AdViewController spyAdViewController = spy(subject);
+        // mAdUnitId is null at initialization
+        spyAdViewController.loadAd();
+
+        verify(spyAdViewController, atLeastOnce()).adDidFail(any(MoPubErrorCode.class));
+    }
+
+    @Test
+    public void loadAd_withEmptyAdUnitId_shouldCallAdDidFail_withMissingAdUnitIdError() {
+        final AdViewController spyAdViewController = spy(subject);
+        spyAdViewController.setAdUnitId("");
+        spyAdViewController.loadAd();
+
+        verify(spyAdViewController, atLeastOnce()).adDidFail(MoPubErrorCode.MISSING_AD_UNIT_ID);
+    }
+
+    @Test
+    public void loadAd_withoutNetworkConnection_shouldCallAdDidFail_withNoConnectionError() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) RuntimeEnvironment.application.getSystemService(Context.CONNECTIVITY_SERVICE);
+        Shadows.shadowOf(connectivityManager.getActiveNetworkInfo()).setConnectionStatus(false);
+
+        final AdViewController spyAdViewController = spy(subject);
+
+        spyAdViewController.setAdUnitId("abc123");
+        spyAdViewController.loadAd();
+
+        verify(spyAdViewController, atLeastOnce()).adDidFail(MoPubErrorCode.NO_CONNECTION);
     }
 
     @Test
@@ -470,6 +504,7 @@ public class AdViewControllerTest {
 
     @Test
     public void loadFailUrl_whenFailUrlIsNull_shouldCallAdDidFail() {
+        subject.setAdUnitId("abc123");
         response.toBuilder().setFailoverUrl(null).build();
         subject.loadFailUrl(MoPubErrorCode.INTERNAL_ERROR);
 
@@ -633,6 +668,7 @@ public class AdViewControllerTest {
         final VolleyError expectedInternalError = new MoPubNetworkError(
                 MoPubNetworkError.Reason.WARMING_UP);
 
+        subject.setAdUnitId("abc123");
         subject.onAdLoadError(expectedInternalError);
 
         verify(mockMoPubView).adFailed(MoPubErrorCode.WARMUP);
@@ -640,6 +676,7 @@ public class AdViewControllerTest {
 
     @Test
     public void onAdLoadError_whenNoNetworkConnection_shouldReturnErrorCodeNoConnection_shouldCallMoPubViewAdFailed() {
+        subject.setAdUnitId("abc123");
         subject.onAdLoadError(new NoConnectionError());
 
         // DeviceUtils#isNetworkAvailable conveniently returns false due to
@@ -649,6 +686,7 @@ public class AdViewControllerTest {
 
     @Test
     public void onAdLoadError_withInvalidServerResponse_shouldReturnErrorCodeServerError_shouldCallMoPubViewAdFailed_shouldIncrementBackoffPower() {
+        subject.setAdUnitId("abc123");
         for (int htmlErrorCode : HTML_ERROR_CODES) {
             final int oldBackoffPower = subject.mBackoffPower;
             final NetworkResponse errorNetworkResponse = new NetworkResponse(htmlErrorCode, null,

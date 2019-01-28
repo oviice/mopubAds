@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.ERROR;
 import static com.mopub.network.TrackingRequest.makeVastTrackingHttpRequest;
 
 
@@ -125,7 +126,7 @@ public class VastXmlManagerAggregator extends AsyncTask<String, Void, VastVideoC
             final String vastXml = strings[0];
             return evaluateVastXmlManager(vastXml, new ArrayList<VastTracker>());
         } catch (Exception e) {
-            MoPubLog.d("Unable to generate VastVideoConfig.", e);
+            MoPubLog.log(ERROR, "Unable to generate VastVideoConfig.", e);
             return null;
         }
     }
@@ -175,7 +176,7 @@ public class VastXmlManagerAggregator extends AsyncTask<String, Void, VastVideoC
         try {
             xmlManager.parseVastXml(vastXml);
         } catch (Exception e) {
-            MoPubLog.d("Failed to parse VAST XML", e);
+            MoPubLog.log(ERROR, "Failed to parse VAST XML", e);
             makeVastTrackingHttpRequest(errorTrackers, VastErrorCode.XML_PARSING_ERROR, null,
                     null, mContext);
             return null;
@@ -407,7 +408,7 @@ public class VastXmlManagerAggregator extends AsyncTask<String, Void, VastVideoC
         try {
             vastRedirectXml = followVastRedirect(vastAdTagUri);
         } catch (Exception e) {
-            MoPubLog.d("Failed to follow VAST redirect", e);
+            MoPubLog.log(ERROR, "Failed to follow VAST redirect", e);
             if (!wrapperErrorTrackers.isEmpty()) {
                 makeVastTrackingHttpRequest(wrapperErrorTrackers, VastErrorCode.WRAPPER_TIMEOUT,
                                 null, null, mContext);

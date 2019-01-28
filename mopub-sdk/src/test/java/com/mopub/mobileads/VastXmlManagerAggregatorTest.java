@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -44,7 +44,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class, qualifiers = "w480dp-h800dp", shadows = {ShadowMoPubHttpUrlConnection.class})
+@Config(qualifiers = "w480dp-h800dp", shadows = {ShadowMoPubHttpUrlConnection.class})
 public class VastXmlManagerAggregatorTest {
     // Default portrait screen width is 480, height is 800
     private static final int DIM_SHORT = 480;

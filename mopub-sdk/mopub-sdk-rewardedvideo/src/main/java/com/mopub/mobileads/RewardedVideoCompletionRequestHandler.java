@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -19,6 +19,8 @@ import com.mopub.network.Networking;
 import com.mopub.volley.DefaultRetryPolicy;
 import com.mopub.volley.RequestQueue;
 import com.mopub.volley.VolleyError;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 /**
  * Handles the server-to-server rewarded video completion handshake.
@@ -102,7 +104,7 @@ public class RewardedVideoCompletionRequestHandler implements
         mRequestQueue.add(rewardedVideoCompletionRequest);
 
         if (mRetryCount >= MAX_RETRIES) {
-            MoPubLog.d("Exceeded number of retries for rewarded video completion request.");
+            MoPubLog.log(CUSTOM, "Exceeded number of retries for rewarded video completion request.");
             return;
         }
 

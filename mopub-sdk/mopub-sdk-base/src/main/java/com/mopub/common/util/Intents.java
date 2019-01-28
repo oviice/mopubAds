@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -22,6 +22,7 @@ import com.mopub.common.MoPubBrowser;
 import com.mopub.common.Preconditions;
 import com.mopub.common.UrlAction;
 import com.mopub.common.logging.MoPubLog;
+
 import com.mopub.exceptions.IntentNotResolvableException;
 import com.mopub.exceptions.UrlParseException;
 
@@ -32,6 +33,7 @@ import java.util.Map;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static com.mopub.common.MoPub.getBrowserAgent;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class Intents {
 
@@ -140,7 +142,7 @@ public class Intents {
         } catch (UnsupportedOperationException e) {
             // Accessing query parameters only makes sense for hierarchical URIs as per:
             // https://developer.android.com/reference/android/net/Uri.html#getQueryParameter(java.lang.String)
-            MoPubLog.w("Could not handle url: " + uri);
+            MoPubLog.log(CUSTOM, "Could not handle url: " + uri);
             throw new UrlParseException("Passed-in URL did not create a hierarchical URI.");
         }
 
@@ -190,7 +192,7 @@ public class Intents {
         } catch (UnsupportedOperationException e) {
             // Accessing query parameters only makes sense for hierarchical URIs as per:
             // https://developer.android.com/reference/android/net/Uri.html#getQueryParameter(java.lang.String)
-            MoPubLog.w("Could not handle url: " + uri);
+            MoPubLog.log(CUSTOM, "Could not handle url: " + uri);
             throw new UrlParseException("Passed-in URL did not create a hierarchical URI.");
         }
 
@@ -229,7 +231,7 @@ public class Intents {
         Preconditions.checkNotNull(context);
         Preconditions.checkNotNull(uri);
 
-        MoPubLog.d("Final URI to show in browser: " + uri);
+        MoPubLog.log(CUSTOM, "Final URI to show in browser: " + uri);
 
         final Bundle extras = new Bundle();
         extras.putString(MoPubBrowser.DESTINATION_URL_KEY, uri.toString());

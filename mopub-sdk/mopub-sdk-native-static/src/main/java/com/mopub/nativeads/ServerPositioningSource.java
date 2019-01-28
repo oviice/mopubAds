@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -20,6 +20,9 @@ import com.mopub.network.Networking;
 import com.mopub.volley.RequestQueue;
 import com.mopub.volley.Response;
 import com.mopub.volley.VolleyError;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.ERROR;
 
 /**
  * Requests positioning information from the MoPub ad server.
@@ -95,9 +98,9 @@ class ServerPositioningSource implements PositioningSource {
                 // Don't log a stack trace when we're just warming up.
                 if (!(error instanceof MoPubNetworkError) ||
                         ((MoPubNetworkError) error).getReason().equals(MoPubNetworkError.Reason.WARMING_UP)) {
-                    MoPubLog.e("Failed to load positioning data", error);
+                    MoPubLog.log(ERROR, "Failed to load positioning data", error);
                     if (error.networkResponse == null && !DeviceUtils.isNetworkAvailable(mContext)) {
-                        MoPubLog.c(String.valueOf(MoPubErrorCode.NO_CONNECTION.toString()));
+                        MoPubLog.log(CUSTOM, String.valueOf(MoPubErrorCode.NO_CONNECTION));
                     }
                 }
 
@@ -128,7 +131,7 @@ class ServerPositioningSource implements PositioningSource {
     }
 
     private void requestPositioningInternal() {
-        MoPubLog.d("Loading positioning from: " + mRetryUrl);
+        MoPubLog.log(CUSTOM, "Loading positioning from: " + mRetryUrl);
 
         mRequest = new PositioningRequest(mContext, mRetryUrl, mPositioningListener, mErrorListener);
         final RequestQueue requestQueue = Networking.getRequestQueue(mContext);
@@ -147,7 +150,7 @@ class ServerPositioningSource implements PositioningSource {
         double multiplier = Math.pow(EXPONENTIAL_BACKOFF_FACTOR, mRetryCount + 1);
         int delay = (int) (DEFAULT_RETRY_TIME_MILLISECONDS * multiplier);
         if (delay >= mMaximumRetryTimeMillis) {
-            MoPubLog.d("Error downloading positioning information");
+            MoPubLog.log(CUSTOM, "Error downloading positioning information");
             if (mListener != null) {
                 mListener.onFailed();
             }

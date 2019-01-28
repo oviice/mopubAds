@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -16,6 +16,8 @@ import org.json.JSONTokener;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class Json {
     public static Map<String, String> jsonStringToMap(String jsonParams) throws JSONException {
@@ -86,10 +88,10 @@ public class Json {
 
         final Object object = jsonObject.opt(key);
         if (object == null) {
-            MoPubLog.w("Tried to get Json value with key: " + key + ", but it was null");
+            MoPubLog.log(CUSTOM, "Tried to get Json value with key: " + key + ", but it was null");
             return null;
         } else if (!valueClass.isInstance(object)) {
-            MoPubLog.w("Tried to get Json value with key: " + key + ", of type: " + valueClass.toString() + ", its type did not match");
+            MoPubLog.log(CUSTOM, "Tried to get Json value with key: " + key + ", of type: " + valueClass.toString() + ", its type did not match");
             return null;
         }
 

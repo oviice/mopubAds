@@ -1,30 +1,28 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
 package com.mopub.nativeads;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.view.View.MeasureSpec;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.mobileads.BuildConfig;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.Robolectric;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class)
 public class MediaLayoutTest {
 
     MediaLayout spySubject;
@@ -32,7 +30,7 @@ public class MediaLayoutTest {
 
     @Before
     public void setup() {
-        context = ShadowApplication.getInstance().getApplicationContext();
+        context = Robolectric.buildActivity(Activity.class).create().get();
         spySubject = spy(new MediaLayout(context));
         spySubject.setLayoutParams(new RelativeLayout.LayoutParams(300, 300));
         when(spySubject.getMeasuredHeight()).thenReturn(300);

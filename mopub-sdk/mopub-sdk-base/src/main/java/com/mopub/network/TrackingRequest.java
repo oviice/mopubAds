@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -24,6 +24,8 @@ import com.mopub.volley.toolbox.HttpHeaderParser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class TrackingRequest extends MoPubRequest<Void> {
 
@@ -116,7 +118,7 @@ public class TrackingRequest extends MoPubRequest<Void> {
             final TrackingRequest.Listener internalListener = new TrackingRequest.Listener() {
                 @Override
                 public void onResponse(@NonNull String url) {
-                    MoPubLog.d("Successfully hit tracking endpoint: " + url);
+                    MoPubLog.log(CUSTOM, "Successfully hit tracking endpoint: " + url);
                     if (listener != null) {
                         listener.onResponse(url);
                     }
@@ -124,7 +126,7 @@ public class TrackingRequest extends MoPubRequest<Void> {
 
                 @Override
                 public void onErrorResponse(final VolleyError volleyError) {
-                    MoPubLog.d("Failed to hit tracking endpoint: " + url);
+                    MoPubLog.log(CUSTOM, "Failed to hit tracking endpoint: " + url);
                     if (listener != null) {
                         listener.onErrorResponse(volleyError);
                     }

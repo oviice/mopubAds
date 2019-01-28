@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -21,6 +21,15 @@ import com.mopub.mobileads.factories.CustomEventInterstitialAdapterFactory;
 import java.util.Map;
 
 import static com.mopub.common.Constants.AD_EXPIRATION_DELAY;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.CLICKED;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.CUSTOM;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.LOAD_ATTEMPTED;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.LOAD_FAILED;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.LOAD_SUCCESS;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.SHOW_ATTEMPTED;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.SHOW_FAILED;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.SHOW_SUCCESS;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.WILL_DISAPPEAR;
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;
 import static com.mopub.mobileads.MoPubErrorCode.EXPIRED;
 import static com.mopub.mobileads.MoPubInterstitial.InterstitialState.DESTROYED;
@@ -86,7 +95,7 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
         mAdExpiration = new Runnable() {
             @Override
             public void run() {
-                MoPubLog.d("Expiring unused Interstitial ad.");
+                MoPubLog.log(CUSTOM, "Expiring unused Interstitial ad.");
                 attemptStateTransition(IDLE, true);
                 if (!SHOWING.equals(mCurrentInterstitialState) &&
                         !DESTROYED.equals(mCurrentInterstitialState)) {
@@ -142,8 +151,12 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
                             mInterstitialView.loadAd();
                         }
                         return true;
+                    case READY:
+                        MoPubLog.log(CUSTOM, "Attempted transition from IDLE to " +
+                                "READY failed due to no known load call.");
+                        return false;
                     case SHOWING:
-                        MoPubLog.d("No interstitial loading or loaded.");
+                        MoPubLog.log(CUSTOM, "No interstitial loading or loaded.");
                         return false;
                     case DESTROYED:
                         setInterstitialStateDestroyed();
@@ -163,20 +176,27 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
                     case LOADING:
                         if (!force) {
                             // Cannot load more than one interstitial at a time
-                            MoPubLog.d("Already loading an interstitial.");
+                            MoPubLog.log(CUSTOM, "Already loading an interstitial.");
                         }
                         return false;
                     case READY:
                         // This is the usual load finished transition
+                        MoPubLog.log(LOAD_SUCCESS);
                         mCurrentInterstitialState = READY;
                         // Expire MoPub ads to synchronize with MoPub Ad Server tracking window
                         if (AdTypeTranslator.CustomEventType
                                 .isMoPubSpecific(mInterstitialView.getCustomEventClassName())) {
                             mHandler.postDelayed(mAdExpiration, AD_EXPIRATION_DELAY);
                         }
+                        if (mInterstitialView.mAdViewController != null) {
+                            mInterstitialView.mAdViewController.creativeDownloadSuccess();
+                        }
+                        if (mInterstitialAdListener != null) {
+                            mInterstitialAdListener.onInterstitialLoaded(this);
+                        }
                         return true;
                     case SHOWING:
-                        MoPubLog.d("Interstitial is not ready to be shown yet.");
+                        MoPubLog.log(CUSTOM, "Interstitial is not ready to be shown yet.");
                         return false;
                     case DESTROYED:
                         setInterstitialStateDestroyed();
@@ -196,7 +216,7 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
                         return false;
                     case LOADING:
                         // This is to prevent loading another interstitial while one is loaded.
-                        MoPubLog.d("Interstitial already loaded. Not loading another.");
+                        MoPubLog.log(CUSTOM, "Interstitial already loaded. Not loading another.");
                         // Let the ad listener know that there's already an ad loaded
                         if (mInterstitialAdListener != null) {
                             mInterstitialAdListener.onInterstitialLoaded(this);
@@ -218,7 +238,7 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
                 switch(endState) {
                     case IDLE:
                         if (force) {
-                            MoPubLog.d("Cannot force refresh while showing an interstitial.");
+                            MoPubLog.log(CUSTOM, "Cannot force refresh while showing an interstitial.");
                             return false;
                         }
                         // This is the usual transition when done showing this interstitial
@@ -227,11 +247,11 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
                         return true;
                     case LOADING:
                         if (!force) {
-                            MoPubLog.d("Interstitial already showing. Not loading another.");
+                            MoPubLog.log(CUSTOM, "Interstitial already showing. Not loading another.");
                         }
                         return false;
                     case SHOWING:
-                        MoPubLog.d("Already showing an interstitial. Cannot show it again.");
+                        MoPubLog.log(CUSTOM, "Already showing an interstitial. Cannot show it again.");
                         return false;
                     case DESTROYED:
                         setInterstitialStateDestroyed();
@@ -241,7 +261,7 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
                 }
             case DESTROYED:
                 // Once destroyed, MoPubInterstitial is no longer functional.
-                MoPubLog.d("MoPubInterstitial destroyed. Ignoring all requests.");
+                MoPubLog.log(CUSTOM, "MoPubInterstitial destroyed. Ignoring all requests.");
                 return false;
             default:
                 return false;
@@ -261,10 +281,12 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
     }
 
     public void load() {
+        MoPubLog.log(LOAD_ATTEMPTED);
         attemptStateTransition(LOADING);
     }
 
     public boolean show() {
+        MoPubLog.log(SHOW_ATTEMPTED);
         return attemptStateTransition(SHOWING);
     }
 
@@ -375,20 +397,18 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
         }
 
         attemptStateTransition(READY);
-
-        if (mInterstitialView.mAdViewController != null) {
-            mInterstitialView.mAdViewController.creativeDownloadSuccess();
-        }
-
-        if (mInterstitialAdListener != null) {
-            mInterstitialAdListener.onInterstitialLoaded(this);
-        }
     }
 
     @Override
     public void onCustomEventInterstitialFailed(@NonNull final MoPubErrorCode errorCode) {
         if (isDestroyed()) {
             return;
+        }
+
+        if (mCurrentInterstitialState == LOADING) {
+            MoPubLog.log(LOAD_FAILED, errorCode.getIntCode(), errorCode);
+        } else if (mCurrentInterstitialState == SHOWING) {
+            MoPubLog.log(SHOW_FAILED, errorCode.getIntCode(), errorCode);
         }
 
         if (!mInterstitialView.loadFailUrl(errorCode)) {
@@ -401,6 +421,8 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
         if (isDestroyed()) {
             return;
         }
+
+        MoPubLog.log(SHOW_SUCCESS);
 
         if (mCustomEventInterstitialAdapter == null ||
                 mCustomEventInterstitialAdapter.isAutomaticImpressionAndClickTrackingEnabled()) {
@@ -417,6 +439,7 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
         if (isDestroyed()) {
             return;
         }
+        MoPubLog.log(CLICKED);
 
         mInterstitialView.registerClick();
 
@@ -442,6 +465,7 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
         if (isDestroyed()) {
             return;
         }
+        MoPubLog.log(WILL_DISAPPEAR);
 
         attemptStateTransition(IDLE);
 
@@ -474,7 +498,7 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
             }
 
             if (TextUtils.isEmpty(customEventClassName)) {
-                MoPubLog.d("Couldn't invoke custom event because the server did not specify one.");
+                MoPubLog.log(CUSTOM, "Couldn't invoke custom event because the server did not specify one.");
                 loadFailUrl(ADAPTER_NOT_FOUND);
                 return;
             }
@@ -483,7 +507,7 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
                 mCustomEventInterstitialAdapter.invalidate();
             }
 
-            MoPubLog.d("Loading custom event interstitial adapter.");
+            MoPubLog.log(CUSTOM, "Loading custom event interstitial adapter.");
 
             mCustomEventInterstitialAdapter = CustomEventInterstitialAdapterFactory.create(
                     MoPubInterstitial.this,
@@ -496,7 +520,7 @@ public class MoPubInterstitial implements CustomEventInterstitialAdapter.CustomE
         }
 
         protected void trackImpression() {
-            MoPubLog.d("Tracking impression for interstitial.");
+            MoPubLog.log(CUSTOM, "Tracking impression for interstitial.");
             if (mAdViewController != null) mAdViewController.trackImpression();
         }
 

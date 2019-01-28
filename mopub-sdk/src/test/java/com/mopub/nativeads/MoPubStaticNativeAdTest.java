@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -9,7 +9,6 @@ import android.graphics.Bitmap;
 import android.view.View;
 
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.mobileads.BuildConfig;
 import com.mopub.nativeads.BaseNativeAd.NativeEventListener;
 import com.mopub.nativeads.CustomEventNative.CustomEventNativeListener;
 import com.mopub.nativeads.MoPubCustomEventNative.MoPubStaticNativeAd;
@@ -53,7 +52,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class, shadows={MoPubShadowBitmap.class, MoPubShadowDisplay.class})
+@Config(shadows={MoPubShadowBitmap.class, MoPubShadowDisplay.class})
 public class MoPubStaticNativeAdTest {
 
     private MoPubStaticNativeAd subject;

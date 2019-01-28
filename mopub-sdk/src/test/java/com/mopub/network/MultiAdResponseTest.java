@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -61,7 +61,6 @@ import com.mopub.common.DataKeys;
 import com.mopub.common.MoPub;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.ResponseHeader;
-import com.mopub.mobileads.BuildConfig;
 import com.mopub.mobileads.HtmlBanner;
 import com.mopub.mobileads.MoPubRewardedVideo;
 import com.mopub.nativeads.MoPubCustomEventNative;
@@ -77,7 +76,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
-import org.robolectric.annotation.Config;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -94,7 +92,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class)
 public class MultiAdResponseTest {
     private static final String CONTENT_TYPE = "text/html; charset=UTF-8";
     private static final String FAIL_URL = "fail_url";

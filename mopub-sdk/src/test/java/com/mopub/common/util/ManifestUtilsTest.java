@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -13,6 +13,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.ResolveInfo;
 
 import com.mopub.common.MoPubBrowser;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.MoPubActivity;
 import com.mopub.mobileads.MraidActivity;
 import com.mopub.mobileads.MraidVideoPlayerActivity;
@@ -58,6 +59,9 @@ public class ManifestUtilsTest {
         requiredNativeSdkActivities = ManifestUtils.getRequiredNativeSdkActivities();
 
         setDebugMode(false);
+        ShadowLog.clear();
+
+        MoPubLog.setLogLevel(MoPubLog.LogLevel.DEBUG);
     }
 
     @After

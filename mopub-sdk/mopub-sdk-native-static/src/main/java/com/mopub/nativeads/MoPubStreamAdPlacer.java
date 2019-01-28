@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -24,6 +24,8 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.WeakHashMap;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 /**
  * {@code MoPubStreamAdPlacer} facilitates loading ads and placing them into a content stream.
@@ -233,7 +235,7 @@ public class MoPubStreamAdPlacer {
         }
 
         if (mAdSource.getAdRendererCount() == 0) {
-            MoPubLog.w("You must register at least 1 ad renderer by calling registerAdRenderer " +
+            MoPubLog.log(CUSTOM, "You must register at least 1 ad renderer by calling registerAdRenderer " +
                     "before loading ads");
             return;
         }
@@ -253,7 +255,7 @@ public class MoPubStreamAdPlacer {
             @Override
             public void onFailed() {
                 // This will happen only if positions couldn't be loaded after several tries
-                MoPubLog.d("Unable to show ads because ad positions could not be loaded from " +
+                MoPubLog.log(CUSTOM, "Unable to show ads because ad positions could not be loaded from " +
                         "the MoPub ad server.");
             }
         });

@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -14,6 +14,8 @@ import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 
 import java.util.WeakHashMap;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 /**
  * Use {@link MoPubStaticNativeAdRenderer} instead
@@ -46,7 +48,7 @@ class NativeAdViewHelper {
         }
 
         if (nativeAd == null || nativeAd.isDestroyed()) {
-            MoPubLog.d("NativeAd null or invalid. Returning empty view");
+            MoPubLog.log(CUSTOM, "NativeAd null or invalid. Returning empty view");
             // Only create a view if one hasn't been created already
             if (convertView == null || !ViewType.EMPTY.equals(convertView.getTag())) {
                 convertView = new View(context);

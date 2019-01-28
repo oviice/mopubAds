@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -10,6 +10,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 // Copy for dependency reasons
 public class Streams {
@@ -68,7 +70,7 @@ public class Streams {
             stream.close();
         } catch (Exception e) {
             // Unable to close the stream
-            MoPubLog.d("Unable to close stream. Ignoring.");
+            MoPubLog.log(CUSTOM, "Unable to close stream. Ignoring.");
         }
     }
 }

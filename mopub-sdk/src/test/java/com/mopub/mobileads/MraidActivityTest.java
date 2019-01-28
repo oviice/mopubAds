@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -15,6 +15,7 @@ import android.view.WindowManager;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
+import com.mopub.common.AdReport;
 import com.mopub.common.Constants;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mraid.MraidBridge;
@@ -32,7 +33,6 @@ import org.mockito.Mock;
 import org.robolectric.Robolectric;
 import org.robolectric.Shadows;
 import org.robolectric.android.controller.ActivityController;
-import org.robolectric.annotation.Config;
 import org.robolectric.shadows.support.v4.ShadowLocalBroadcastManager;
 
 import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
@@ -51,7 +51,6 @@ import static org.mockito.Mockito.when;
 
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class)
 public class MraidActivityTest {
     static final String EXPECTED_SOURCE = "expected source";
     static final String HTML_DATA = "html_data";
@@ -63,6 +62,7 @@ public class MraidActivityTest {
             customEventInterstitialListener;
     @Mock BroadcastReceiver broadcastReceiver;
     @Mock ResponseBodyInterstitial mraidInterstitial;
+    @Mock AdReport adReport;
 
     Context context;
 
@@ -82,7 +82,7 @@ public class MraidActivityTest {
     @Test
     public void preRenderHtml_shouldEnableJavascriptCachingForDummyWebView() {
         MraidActivity.preRenderHtml(mraidInterstitial, customEventInterstitialListener, HTML_DATA,
-                mockMraidWebView, testBroadcastIdentifier);
+                mockMraidWebView, testBroadcastIdentifier, mraidController);
 
         verify(mockMraidWebView).enableJavascriptCaching();
     }
@@ -90,7 +90,7 @@ public class MraidActivityTest {
     @Test
     public void preRenderHtml_shouldDisablePluginsForDummyWebView() {
         MraidActivity.preRenderHtml(mraidInterstitial, customEventInterstitialListener, HTML_DATA,
-                mockMraidWebView, testBroadcastIdentifier);
+                mockMraidWebView, testBroadcastIdentifier, mraidController);
 
         verify(mockMraidWebView).enablePlugins(false);
     }
@@ -98,7 +98,7 @@ public class MraidActivityTest {
     @Test
     public void preRenderHtml_shouldLoadHtml() {
         MraidActivity.preRenderHtml(mraidInterstitial, customEventInterstitialListener, HTML_DATA,
-                mockMraidWebView, testBroadcastIdentifier);
+                mockMraidWebView, testBroadcastIdentifier, mraidController);
 
         verify(mockMraidWebView).loadDataWithBaseURL(
                 "http://" + Constants.HOST + "/",
@@ -113,7 +113,7 @@ public class MraidActivityTest {
     @Test
     public void preRenderHtml_shouldSetWebViewClient() throws Exception {
         MraidActivity.preRenderHtml(mraidInterstitial, subject, customEventInterstitialListener,
-                "3:27", testBroadcastIdentifier);
+                "3:27", testBroadcastIdentifier, adReport);
 
         verify(mockMraidWebView).enablePlugins(eq(false));
         verify(mraidController).setMraidListener(any(MraidListener.class));
@@ -125,7 +125,7 @@ public class MraidActivityTest {
     @Test
     public void preRenderHtml_shouldCallCustomEventInterstitialOnInterstitialLoaded_whenMraidListenerOnReady() throws Exception {
         MraidActivity.preRenderHtml(mraidInterstitial, subject, customEventInterstitialListener, "",
-                testBroadcastIdentifier);
+                testBroadcastIdentifier, adReport);
 
         ArgumentCaptor<MraidListener> mraidListenerArgumentCaptorr = ArgumentCaptor.forClass(MraidListener.class);
         verify(mraidController).setMraidListener(mraidListenerArgumentCaptorr.capture());
@@ -140,7 +140,7 @@ public class MraidActivityTest {
     @Test
     public void preRenderHtml_shouldCallCustomEventInterstitialOnInterstitialFailed_whenMraidListenerOnFailure() throws Exception {
         MraidActivity.preRenderHtml(mraidInterstitial, subject, customEventInterstitialListener, "",
-                testBroadcastIdentifier);
+                testBroadcastIdentifier, adReport);
 
         ArgumentCaptor<MraidListener> mraidListenerArgumentCaptorr = ArgumentCaptor.forClass(MraidListener.class);
         verify(mraidController).setMraidListener(mraidListenerArgumentCaptorr.capture());
@@ -155,7 +155,7 @@ public class MraidActivityTest {
     @Test
     public void preRenderHtml_whenWebViewClientShouldOverrideUrlLoading_shouldReturnTrue() throws Exception {
         MraidActivity.preRenderHtml(mraidInterstitial, subject, customEventInterstitialListener, "",
-                testBroadcastIdentifier);
+                testBroadcastIdentifier, adReport);
 
         ArgumentCaptor<WebViewClient> webViewClientArgumentCaptor = ArgumentCaptor.forClass(WebViewClient.class);
         verify(mockMraidWebView).setWebViewClient(webViewClientArgumentCaptor.capture());
@@ -173,7 +173,7 @@ public class MraidActivityTest {
     @Test
     public void preRenderHtml_shouldCallCustomEventInterstitialOnInterstitialLoaded_whenWebViewClientOnPageFinished() throws Exception {
         MraidActivity.preRenderHtml(mraidInterstitial, subject, customEventInterstitialListener, "",
-                testBroadcastIdentifier);
+                testBroadcastIdentifier, adReport);
 
         ArgumentCaptor<WebViewClient> webViewClientArgumentCaptor = ArgumentCaptor.forClass(WebViewClient.class);
         verify(mockMraidWebView).setWebViewClient(webViewClientArgumentCaptor.capture());

@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -10,7 +10,6 @@ import android.content.Context;
 import com.mopub.common.ClientMetadata;
 import com.mopub.common.Constants;
 import com.mopub.common.MoPub;
-import com.mopub.mobileads.BuildConfig;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -22,7 +21,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 
 import java.util.Map;
 
@@ -38,7 +36,6 @@ import static org.mockito.Matchers.any;
 
 @SuppressWarnings("ConstantConditions")
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class)
 @PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "org.json.*"})
 @PrepareForTest(ClientMetadata.class)
 public class ConsentDialogUrlGeneratorTest {

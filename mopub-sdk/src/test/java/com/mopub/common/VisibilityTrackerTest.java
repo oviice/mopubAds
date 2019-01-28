@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -15,7 +15,6 @@ import android.view.Window;
 
 import com.mopub.common.VisibilityTracker.TrackingInfo;
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.mobileads.BuildConfig;
 
 import org.fest.util.Lists;
 import org.junit.Before;
@@ -26,7 +25,6 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.Robolectric;
-import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowSystemClock;
 
 import java.util.ArrayList;
@@ -48,7 +46,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class)
 public class VisibilityTrackerTest {
     private static final int MIN_PERCENTAGE_VIEWED = 50;
     private static final Integer DEFAULT_MIN_VISIBLE_PX = 1;
@@ -84,7 +81,7 @@ public class VisibilityTrackerTest {
         subject.setVisibilityTrackerListener(proxyListener);
 
         // XXX We need this to ensure that our SystemClock starts
-        ShadowSystemClock.uptimeMillis();
+        ShadowSystemClock.currentTimeMillis();
     }
 
     @Test

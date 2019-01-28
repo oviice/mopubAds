@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -17,10 +17,12 @@ public enum MoPubErrorCode implements MoPubError {
     // Client ad load errors
     INTERNAL_ERROR("Unable to serve ad due to invalid internal state."),
     CANCELLED("Ad request was cancelled."),
+    MISSING_AD_UNIT_ID("Unable to serve ad due to missing or empty ad unit ID."),
     NO_CONNECTION("No internet connection detected."),
 
     ADAPTER_NOT_FOUND("Unable to find Native Network or Custom Event adapter."),
     ADAPTER_CONFIGURATION_ERROR("Native Network or Custom Event adapter was configured incorrectly."),
+    ADAPTER_INITIALIZATION_SUCCESS("AdapterConfiguration initialization success."),
 
     /** see {@link com.mopub.common.Constants#AD_EXPIRATION_DELAY } */
     EXPIRED("Ad expired since it was not shown within 4 hours."),

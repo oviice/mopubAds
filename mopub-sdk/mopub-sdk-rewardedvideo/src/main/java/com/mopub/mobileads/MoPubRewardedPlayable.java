@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -14,6 +14,8 @@ import com.mopub.common.logging.MoPubLog;
 import com.mopub.mraid.RewardedMraidInterstitial;
 
 import java.util.Map;
+
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.CUSTOM;
 
 /**
  * A custom event for showing MoPub rewarded playables.
@@ -34,7 +36,7 @@ public class MoPubRewardedPlayable extends MoPubRewardedAd {
         super.loadWithSdkInitialized(activity, localExtras, serverExtras);
 
         if (mRewardedMraidInterstitial == null) {
-            MoPubLog.w("mRewardedMraidInterstitial is null. Has this class been invalidated?");
+            MoPubLog.log(CUSTOM, "mRewardedMraidInterstitial is null. Has this class been invalidated?");
             return;
         }
         mRewardedMraidInterstitial.loadInterstitial(activity, new MoPubRewardedPlayableListener(),
@@ -59,10 +61,10 @@ public class MoPubRewardedPlayable extends MoPubRewardedAd {
     @Override
     protected void show() {
         if (isReady() && mRewardedMraidInterstitial != null) {
-            MoPubLog.d("Showing MoPub rewarded playable.");
+            MoPubLog.log(CUSTOM, "Showing MoPub rewarded playable.");
             mRewardedMraidInterstitial.showInterstitial();
         } else {
-            MoPubLog.d("MoPub rewarded playable not loaded. Unable to show playable.");
+            MoPubLog.log(CUSTOM, "MoPub rewarded playable not loaded. Unable to show playable.");
         }
     }
 
@@ -75,7 +77,7 @@ public class MoPubRewardedPlayable extends MoPubRewardedAd {
         @Override
         public void onMraidComplete() {
             if (getRewardedAdCurrencyName() == null) {
-                MoPubLog.d("No rewarded video was loaded, so no reward is possible");
+                MoPubLog.log(CUSTOM, "No rewarded video was loaded, so no reward is possible");
             } else {
                 MoPubRewardedVideoManager.onRewardedVideoCompleted(mCustomEventClass,
                         getAdNetworkId(),

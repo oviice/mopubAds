@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -30,6 +30,8 @@ import java.util.List;
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static com.mopub.common.Constants.UNUSED_REQUEST_CODE;
+import static com.mopub.common.logging.MoPubLog.LogLevel.DEBUG;
+import static com.mopub.common.logging.MoPubLog.LogLevel.INFO;
 
 public class MoPubSampleActivity extends FragmentActivity {
     private static final List<String> REQUIRED_DANGEROUS_PERMISSIONS = new ArrayList<>();
@@ -85,9 +87,13 @@ public class MoPubSampleActivity extends FragmentActivity {
             createMoPubListFragment(getIntent());
         }
 
-        SdkConfiguration sdkConfiguration = new SdkConfiguration.Builder("b195f8dd8ded45fe847ad89ed1d016da")
-                .build();
-        MoPub.initializeSdk(this, sdkConfiguration, initSdkListener());
+        final SdkConfiguration.Builder configBuilder = new SdkConfiguration.Builder("b195f8dd8ded45fe847ad89ed1d016da");
+        if (BuildConfig.DEBUG) {
+            configBuilder.withLogLevel(DEBUG);
+        } else {
+            configBuilder.withLogLevel(INFO);
+        }
+        MoPub.initializeSdk(this, configBuilder.build(), initSdkListener());
 
         mConsentStatusChangeListener = initConsentChangeListener();
         mPersonalInfoManager = MoPub.getPersonalInformationManager();

@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -22,6 +22,8 @@ import com.mopub.common.logging.MoPubLog;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 /**
  * This class maintains lists of required Activity permissions,
@@ -51,7 +53,7 @@ public class ManifestUtils {
             REQUIRED_WEB_VIEW_SDK_ACTIVITIES.add(mraidActivityClass);
             REQUIRED_WEB_VIEW_SDK_ACTIVITIES.add(rewardedMraidActivityClass);
         } catch (ClassNotFoundException e) {
-            MoPubLog.i("ManifestUtils running without interstitial module");
+            MoPubLog.log(CUSTOM, "ManifestUtils running without interstitial module");
         }
 
         REQUIRED_WEB_VIEW_SDK_ACTIVITIES.add(com.mopub.mobileads.MraidVideoPlayerActivity.class);
@@ -208,7 +210,7 @@ public class ManifestUtils {
         }
         stringBuilder.append("\n\nPlease update your manifest to include them.");
 
-        MoPubLog.w(stringBuilder.toString());
+        MoPubLog.log(CUSTOM, stringBuilder.toString());
     }
 
     private static void logMisconfiguredActivities(@NonNull Context context,
@@ -238,7 +240,7 @@ public class ManifestUtils {
 
         stringBuilder.append("\n\nPlease update your manifest to include them.");
 
-        MoPubLog.w(stringBuilder.toString());
+        MoPubLog.log(CUSTOM, stringBuilder.toString());
     }
 
     private static ActivityConfigChanges getActivityConfigChanges(@NonNull Context context,

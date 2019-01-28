@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -7,7 +7,6 @@ package com.mopub.mraid;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 import android.webkit.WebSettings;
 import android.webkit.WebViewClient;
@@ -15,7 +14,6 @@ import android.webkit.WebViewClient;
 import com.mopub.common.AdReport;
 import com.mopub.common.Constants;
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.mobileads.BuildConfig;
 import com.mopub.mraid.MraidBridge.MraidBridgeListener;
 import com.mopub.mraid.MraidBridge.MraidWebView;
 import com.mopub.mraid.MraidNativeCommandHandler.MraidCommandFailureListener;
@@ -29,9 +27,9 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowApplication;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,15 +48,21 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class)
 public class MraidBridgeTest {
-    @Mock MraidNativeCommandHandler mockNativeCommandHandler;
-    @Mock MraidBridgeListener mockBridgeListener;
-    @Mock AdReport mockAdReport;
-    @Mock(answer = Answers.RETURNS_DEEP_STUBS) MraidWebView mockBannerWebView;
-    @Mock(answer = Answers.RETURNS_DEEP_STUBS) MraidWebView mockInterstitialWebView;
-    @Mock WebSettings mockWebSettings;
-    @Captor ArgumentCaptor<WebViewClient> bannerWebViewClientCaptor;
+    @Mock
+    private MraidNativeCommandHandler mockNativeCommandHandler;
+    @Mock
+    private MraidBridgeListener mockBridgeListener;
+    @Mock
+    private AdReport mockAdReport;
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    private MraidWebView mockBannerWebView;
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    private MraidWebView mockInterstitialWebView;
+    @Mock
+    private WebSettings mockWebSettings;
+    @Captor
+    private ArgumentCaptor<WebViewClient> bannerWebViewClientCaptor;
 
     private Activity activity;
     private MraidBridge subjectBanner;
@@ -216,18 +220,54 @@ public class MraidBridgeTest {
     }
 
     @Test
-    public void handleShouldOverrideUrl_smsUrl_clicked_shouldStartActivity() {
+    public void handleShouldOverrideUrl_validUrl_clicked_shoulReturnTrue() throws URISyntaxException {
         attachWebViews();
         subjectBanner.setClicked(true);
         reset(mockBannerWebView);
         when(mockBannerWebView.getContext()).thenReturn(activity);
 
         boolean result = subjectBanner.handleShouldOverrideUrl("sms://123456789");
+        verify(mockBridgeListener).onOpen(new URI("sms://123456789"));
+        assertThat(result).isTrue();
 
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
-        assertThat(startedIntent).isNotNull();
-        assertThat(startedIntent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isNotEqualTo(0);
-        assertThat(startedIntent.getComponent()).isNull();
+        reset(mockBridgeListener);
+        result = subjectBanner.handleShouldOverrideUrl("tel:123456");
+        verify(mockBridgeListener).onOpen(new URI("tel:123456"));
+        assertThat(result).isTrue();
+
+        reset(mockBridgeListener);
+        result = subjectBanner.handleShouldOverrideUrl("http://www.mopub.com/");
+        verify(mockBridgeListener).onOpen(new URI("http://www.mopub.com/"));
+        assertThat(result).isTrue();
+
+        reset(mockBridgeListener);
+        result = subjectBanner.handleShouldOverrideUrl("mopubnativebrowser://navigate?url=https://www.mopub.com");
+        verify(mockBridgeListener).onOpen(new URI("mopubnativebrowser://navigate?url=https://www.mopub.com"));
+        assertThat(result).isTrue();
+
+        reset(mockBridgeListener);
+        result = subjectBanner.handleShouldOverrideUrl("market://details?id=com.fitbit.FitbitMobile");
+        verify(mockBridgeListener).onOpen(new URI("market://details?id=com.fitbit.FitbitMobile"));
+        assertThat(result).isTrue();
+
+        reset(mockBridgeListener);
+        result = subjectBanner.handleShouldOverrideUrl("deeplink+://navigate?primaryUrl=twitter://timeline");
+        verify(mockBridgeListener).onOpen(new URI("deeplink+://navigate?primaryUrl=twitter://timeline"));
+        assertThat(result).isTrue();
+
+        reset(mockBridgeListener);
+        result = subjectBanner.handleShouldOverrideUrl("geo:37.7767486,-122.416749?q=37.7767486%2C-122.416749");
+        verify(mockBridgeListener).onOpen(new URI("geo:37.7767486,-122.416749?q=37.7767486%2C-122.416749"));
+        assertThat(result).isTrue();
+
+        reset(mockBridgeListener);
+        result = subjectBanner.handleShouldOverrideUrl("intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end");
+        verify(mockBridgeListener).onOpen(new URI("intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end"));
+        assertThat(result).isTrue();
+
+        reset(mockBridgeListener);
+        result = subjectBanner.handleShouldOverrideUrl("mopubshare://tweet?screen_name=SpaceX&tweet_id=596026229536460802");
+        verify(mockBridgeListener).onOpen(new URI("mopubshare://tweet?screen_name=SpaceX&tweet_id=596026229536460802"));
         assertThat(result).isTrue();
     }
 
@@ -246,17 +286,18 @@ public class MraidBridgeTest {
         subjectBanner = new MraidBridge(mockAdReport, PlacementType.INLINE);
         subjectBanner.attachView(mockBannerWebView);
         subjectBanner.setClicked(false);
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put("uri", "https://valid-url");
 
         subjectBanner.runCommand(MraidJavascriptCommand.PLAY_VIDEO, params);
     }
 
+    @Test
     public void runCommand_requiresClick_clicked_shouldNotThrowException()
             throws MraidCommandException {
         attachWebViews();
         subjectBanner.setClicked(true);
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put("uri", "https://valid-url");
 
         subjectBanner.runCommand(MraidJavascriptCommand.PLAY_VIDEO, params);
@@ -267,7 +308,7 @@ public class MraidBridgeTest {
             throws MraidCommandException {
         attachWebViews();
         subjectInterstitial.setClicked(false);
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put("uri", "https://valid-url");
 
         subjectInterstitial.runCommand(MraidJavascriptCommand.OPEN, params);
@@ -278,7 +319,7 @@ public class MraidBridgeTest {
             throws MraidCommandException {
         attachWebViews();
         subjectInterstitial.setClicked(true);
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put("url", "https://valid-url");
 
         subjectInterstitial.runCommand(MraidJavascriptCommand.OPEN, params);
@@ -288,7 +329,7 @@ public class MraidBridgeTest {
     public void runCommand_close_shouldCallListener()
             throws MraidCommandException {
         attachWebViews();
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         
         subjectBanner.runCommand(MraidJavascriptCommand.CLOSE, params);
 
@@ -300,7 +341,7 @@ public class MraidBridgeTest {
             throws MraidCommandException {
         attachWebViews();
         subjectBanner.setClicked(true);
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put("shouldUseCustomClose", "true");
 
         subjectBanner.runCommand(MraidJavascriptCommand.EXPAND, params);
@@ -313,7 +354,7 @@ public class MraidBridgeTest {
             throws MraidCommandException {
         attachWebViews();
         subjectBanner.setClicked(true);
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put("url", "https://valid-url");
         params.put("shouldUseCustomClose", "true");
 
@@ -330,7 +371,7 @@ public class MraidBridgeTest {
             throws MraidCommandException {
         attachWebViews();
         subjectBanner.setClicked(true);
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put("uri", "https://valid-url");
 
         subjectBanner.runCommand(MraidJavascriptCommand.PLAY_VIDEO, params);
@@ -345,7 +386,7 @@ public class MraidBridgeTest {
             throws MraidCommandException {
         attachWebViews();
         subjectBanner.setClicked(true);
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put("uri", "https://valid-url");
 
         subjectBanner.runCommand(MraidJavascriptCommand.STORE_PICTURE, params);
@@ -359,7 +400,7 @@ public class MraidBridgeTest {
             throws MraidCommandException {
         attachWebViews();
         subjectBanner.setClicked(true);
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put("eventName", "Dinner at my house");
 
         subjectBanner.runCommand(MraidJavascriptCommand.CREATE_CALENDAR_EVENT, params);

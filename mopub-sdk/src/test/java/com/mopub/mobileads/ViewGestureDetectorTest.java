@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -17,7 +17,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.robolectric.Robolectric;
 import org.robolectric.Shadows;
-import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowGestureDetector;
 
 import static com.mopub.mobileads.ViewGestureDetector.UserClickListener;
@@ -29,7 +28,6 @@ import static org.mockito.Mockito.verify;
 
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class)
 public class ViewGestureDetectorTest {
     private Activity context;
     private ViewGestureDetector subject;

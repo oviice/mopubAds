@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -10,13 +10,11 @@ import android.support.annotation.Nullable;
 
 import com.mopub.common.MoPub.BrowserAgent;
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.mobileads.BuildConfig;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.annotation.Config;
 
 import static com.mopub.common.UrlAction.FOLLOW_DEEP_LINK;
 import static com.mopub.common.UrlAction.FOLLOW_DEEP_LINK_WITH_FALLBACK;
@@ -30,7 +28,6 @@ import static com.mopub.common.UrlAction.OPEN_NATIVE_BROWSER;
 import static org.fest.assertions.api.Assertions.assertThat;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class)
 public class UrlActionTest {
 
     @Before

@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -21,6 +21,10 @@ import com.mopub.volley.Response;
 import com.mopub.volley.VolleyError;
 
 import java.lang.ref.WeakReference;
+
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.REQUESTED;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.RESPONSE_RECEIVED;
+import static com.mopub.common.logging.MoPubLog.AdLogEvent.CUSTOM;
 
 /**
  * AdLoader implements several simple functions: communicate with Volley to download multiple ads
@@ -80,6 +84,8 @@ public class AdLoader {
         mAdListener = new MultiAdRequest.Listener() {
             @Override
             public void onErrorResponse(VolleyError volleyError) {
+                MoPubLog.log(RESPONSE_RECEIVED, volleyError.getMessage());
+
                 mFailed = true;
                 mRunning = false;
                 deliverError(volleyError);
@@ -149,6 +155,7 @@ public class AdLoader {
         }
 
         synchronized (lock) {
+
             // not running and not failed: start it for the first time
             if (mMultiAdResponse == null) {
                 return fetchAd(mMultiAdRequest, mContext.get());
@@ -203,13 +210,13 @@ public class AdLoader {
         mContentDownloaded = true;
 
         if (null == mDownloadTracker) {
-            MoPubLog.e("Response analytics should not be null here");
+            MoPubLog.log(CUSTOM, "Response analytics should not be null here");
             return;
         }
 
         Context context = mContext.get();
         if (null == context || null == mLastDeliveredResponse) {
-            MoPubLog.w("Cannot send 'x-after-load-url' analytics.");
+            MoPubLog.log(CUSTOM, "Cannot send 'x-after-load-url' analytics.");
             return;
         }
 
@@ -219,13 +226,13 @@ public class AdLoader {
 
     private void creativeDownloadFailed(@Nullable final MoPubError errorCode) {
         if (null == errorCode) {
-            MoPubLog.w("Must provide error code to report creative download error");
+            MoPubLog.log(CUSTOM, "Must provide error code to report creative download error");
             return;
         }
 
         Context context = mContext.get();
         if (null == context || null == mLastDeliveredResponse) {
-            MoPubLog.w("Cannot send creative mFailed analytics.");
+            MoPubLog.log(CUSTOM, "Cannot send creative mFailed analytics.");
             return;
         }
 
@@ -250,6 +257,12 @@ public class AdLoader {
         if (context == null) {
             return null;
         }
+
+        String bodyString = "<no body>";
+        if (request.getBody() != null) {
+            bodyString = new String(request.getBody());
+        }
+        MoPubLog.log(REQUESTED, request.getUrl(), bodyString);
 
         mRunning = true;
         RequestQueue requestQueue = Networking.getRequestQueue(context);

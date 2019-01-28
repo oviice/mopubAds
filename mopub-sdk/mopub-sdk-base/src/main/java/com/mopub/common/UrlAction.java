@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -23,6 +23,7 @@ import java.util.List;
 import static com.mopub.common.Constants.HTTP;
 import static com.mopub.common.Constants.HTTPS;
 import static com.mopub.common.MoPub.getBrowserAgent;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 import static com.mopub.network.TrackingRequest.makeTrackingHttpRequest;
 
 /**
@@ -78,7 +79,7 @@ public enum UrlAction {
                 @NonNull final UrlHandler urlHandler,
                 @Nullable String creativeId)
                 throws IntentNotResolvableException {
-            MoPubLog.d("Link to about page ignored.");
+            MoPubLog.log(CUSTOM, "Link to about page ignored.");
         }
     },
 
@@ -330,7 +331,7 @@ public enum UrlAction {
             final boolean fromUserInteraction,
             @Nullable String creativeId)
             throws IntentNotResolvableException {
-        MoPubLog.d("Ad event URL: " + destinationUri);
+        MoPubLog.log(CUSTOM, "Ad event URL: " + destinationUri);
         if (mRequiresUserInteraction && !fromUserInteraction) {
             throw new IntentNotResolvableException("Attempted to handle action without user " +
                     "interaction.");

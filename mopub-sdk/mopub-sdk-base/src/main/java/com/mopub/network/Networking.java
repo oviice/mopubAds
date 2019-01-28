@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -145,14 +145,19 @@ public class Networking {
                 userAgent = sUserAgent;
                 if (userAgent == null) {
                     try {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                            userAgent = WebSettings.getDefaultUserAgent(context);
-                        } else if (Looper.myLooper() == Looper.getMainLooper()) {
-                            // WebViews may only be instantiated on the UI thread. If anything goes
-                            // wrong with getting a user agent, use the system-specific user agent.
-                            userAgent = new WebView(context).getSettings().getUserAgentString();
+                        // WebViews may only be instantiated on the UI thread. If anything goes
+                        // wrong with getting a user agent, use the system-specific user agent.
+                        if (Looper.myLooper() == Looper.getMainLooper()) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                                userAgent = WebSettings.getDefaultUserAgent(context);
+                            } else {
+                                userAgent = new WebView(context).getSettings().getUserAgentString();
+                            }
                         } else {
-                            userAgent = DEFAULT_USER_AGENT;
+                            // Since we are not on the main thread, return the default user agent
+                            // for now. Defer to when this is run on the main thread to actually
+                            // set the user agent.
+                            return DEFAULT_USER_AGENT;
                         }
                     } catch (Exception e) {
                         // Some custom ROMs may fail to get a user agent. If that happens, return

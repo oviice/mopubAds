@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -14,10 +14,14 @@ import android.util.Log;
 import android.view.View;
 
 import com.mopub.common.AdReport;
+import com.mopub.common.ExternalViewabilitySessionManager;
+import com.mopub.common.Preconditions;
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Intents;
 import com.mopub.exceptions.IntentNotResolvableException;
+import com.mopub.mraid.MraidBridge;
+import com.mopub.mraid.MraidController;
 import com.mopub.mraid.MraidController.MraidListener;
 import com.mopub.mraid.MraidWebViewDebugListener;
 import com.mopub.mraid.PlacementType;
@@ -30,6 +34,7 @@ import static com.mopub.common.DataKeys.REWARDED_AD_DURATION_KEY;
 import static com.mopub.common.DataKeys.SHOULD_REWARD_ON_CLICK_KEY;
 import static com.mopub.common.IntentActions.ACTION_INTERSTITIAL_CLICK;
 import static com.mopub.common.IntentActions.ACTION_INTERSTITIAL_FAIL;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 import static com.mopub.common.util.JavaScriptWebViewCallbacks.WEB_VIEW_DID_APPEAR;
 import static com.mopub.common.util.JavaScriptWebViewCallbacks.WEB_VIEW_DID_CLOSE;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiver.broadcastAction;
@@ -37,6 +42,24 @@ import static com.mopub.mobileads.EventForwardingBroadcastReceiver.broadcastActi
 public class RewardedMraidActivity extends MraidActivity {
     @Nullable private RewardedMraidController mRewardedMraidController;
     @Nullable private MraidWebViewDebugListener mDebugListener;
+
+    public static void preRenderHtml(@NonNull final Interstitial mraidInterstitial,
+            @NonNull final Context context,
+            @NonNull final CustomEventInterstitial.CustomEventInterstitialListener customEventInterstitialListener,
+            @Nullable final String htmlData,
+            @NonNull final Long broadcastIdentifier,
+            @Nullable final AdReport adReport,
+            final int rewardedDuration) {
+        Preconditions.checkNotNull(mraidInterstitial);
+        Preconditions.checkNotNull(context);
+        Preconditions.checkNotNull(customEventInterstitialListener);
+        Preconditions.checkNotNull(broadcastIdentifier);
+
+        preRenderHtml(mraidInterstitial, customEventInterstitialListener, htmlData,
+                new MraidBridge.MraidWebView(context), broadcastIdentifier,
+                new RewardedMraidController(context, adReport, PlacementType.INTERSTITIAL,
+                        rewardedDuration, broadcastIdentifier));
+    }
 
     public static void start(@NonNull Context context, @Nullable AdReport adreport,
             @Nullable String htmlData, long broadcastIdentifier, int rewardedDuration,
@@ -69,11 +92,11 @@ public class RewardedMraidActivity extends MraidActivity {
         final Intent intent = getIntent();
         final String htmlData = intent.getStringExtra(HTML_RESPONSE_BODY_KEY);
         if (TextUtils.isEmpty(htmlData)) {
-            MoPubLog.w("RewardedMraidActivity received a null HTML body. Finishing the activity.");
+            MoPubLog.log(CUSTOM, "RewardedMraidActivity received a null HTML body. Finishing the activity.");
             finish();
             return new View(this);
         } else if (getBroadcastIdentifier() == null) {
-            MoPubLog.w("RewardedMraidActivity received a null broadcast id. Finishing the activity.");
+            MoPubLog.log(CUSTOM, "RewardedMraidActivity received a null broadcast id. Finishing the activity.");
             finish();
             return new View(this);
         }
@@ -83,9 +106,20 @@ public class RewardedMraidActivity extends MraidActivity {
         final boolean shouldRewardOnClick = intent.getBooleanExtra(SHOULD_REWARD_ON_CLICK_KEY,
                 RewardedMraidController.DEFAULT_PLAYABLE_SHOULD_REWARD_ON_CLICK);
 
-        mRewardedMraidController = new RewardedMraidController(
-                this, mAdReport, PlacementType.INTERSTITIAL, rewardedDurationInSeconds,
-                getBroadcastIdentifier());
+        boolean preloaded = false;
+        final Long broadcastIdentifier = getBroadcastIdentifier();
+        WebViewCacheService.Config config = null;
+        if (broadcastIdentifier != null) {
+            config = WebViewCacheService.popWebViewConfig(broadcastIdentifier);
+        }
+        if (config != null && config.getController() instanceof RewardedMraidController) {
+            preloaded = true;
+            mRewardedMraidController = (RewardedMraidController) config.getController();
+        } else {
+            mRewardedMraidController = new RewardedMraidController(
+                    this, mAdReport, PlacementType.INTERSTITIAL, rewardedDurationInSeconds,
+                    getBroadcastIdentifier());
+        }
 
         mRewardedMraidController.setDebugListener(mDebugListener);
         mRewardedMraidController.setMraidListener(new MraidListener() {
@@ -98,7 +132,7 @@ public class RewardedMraidActivity extends MraidActivity {
 
             @Override
             public void onFailedToLoad() {
-                MoPubLog.d("RewardedMraidActivity failed to load. Finishing the activity");
+                MoPubLog.log(CUSTOM, "RewardedMraidActivity failed to load. Finishing the activity");
                 broadcastAction(RewardedMraidActivity.this, getBroadcastIdentifier(),
                         ACTION_INTERSTITIAL_FAIL);
                 finish();
@@ -124,7 +158,27 @@ public class RewardedMraidActivity extends MraidActivity {
             }
         });
 
-        mRewardedMraidController.fillContent(getBroadcastIdentifier(), htmlData, null);
+        if (preloaded) {
+            mExternalViewabilitySessionManager = config.getViewabilityManager();
+        } else {
+            mRewardedMraidController.fillContent(htmlData,
+                    new MraidController.MraidWebViewCacheListener() {
+                        @Override
+                        public void onReady(@NonNull final MraidBridge.MraidWebView webView,
+                                @Nullable final ExternalViewabilitySessionManager viewabilityManager) {
+                            if (viewabilityManager != null) {
+                                mExternalViewabilitySessionManager = viewabilityManager;
+                            } else {
+                                mExternalViewabilitySessionManager = new ExternalViewabilitySessionManager(
+                                        RewardedMraidActivity.this);
+                                mExternalViewabilitySessionManager.createDisplaySession(
+                                        RewardedMraidActivity.this, webView, true);
+                            }
+                        }
+                    });
+        }
+
+        mRewardedMraidController.onShow(this);
         return mRewardedMraidController.getAdContainer();
     }
 

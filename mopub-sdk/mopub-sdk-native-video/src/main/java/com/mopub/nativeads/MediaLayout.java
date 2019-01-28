@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -25,6 +25,8 @@ import com.mopub.common.util.Drawables;
 import com.mopub.common.util.Utils;
 import com.mopub.mobileads.VastVideoProgressBarWidget;
 import com.mopub.mobileads.resource.DrawableConstants.GradientStrip;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class MediaLayout extends RelativeLayout {
     public enum Mode { IMAGE, PLAYING, LOADING, BUFFERING, PAUSED, FINISHED }
@@ -235,7 +237,7 @@ public class MediaLayout extends RelativeLayout {
 
         if (Math.abs(finalHeight - curHeight) >= 2
                 || Math.abs(finalWidth - curWidth) >= 2) {
-            MoPubLog.v(String.format("Resetting mediaLayout size to w: %d h: %d", finalWidth, finalHeight));
+            MoPubLog.log(CUSTOM, String.format("Resetting mediaLayout size to w: %d h: %d", finalWidth, finalHeight));
             getLayoutParams().width = finalWidth;
             getLayoutParams().height = finalHeight;
         }

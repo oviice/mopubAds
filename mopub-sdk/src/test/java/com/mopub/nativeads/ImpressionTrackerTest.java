@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -10,7 +10,6 @@ import android.view.View;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.VisibilityTracker;
 import com.mopub.common.VisibilityTrackerTest;
-import com.mopub.mobileads.BuildConfig;
 
 import org.fest.util.Lists;
 import org.junit.Before;
@@ -18,7 +17,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.robolectric.Robolectric;
-import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowSystemClock;
 
 import java.util.HashMap;
@@ -33,7 +31,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class)
 public class ImpressionTrackerTest {
     private ImpressionTracker subject;
     private TimestampWrapper<ImpressionInterface> timeStampWrapper;
@@ -68,7 +65,7 @@ public class ImpressionTrackerTest {
         when(impressionInterface2.getImpressionMinVisiblePx()).thenReturn(null);
 
         // XXX We need this to ensure that our SystemClock starts
-        ShadowSystemClock.uptimeMillis();
+        ShadowSystemClock.currentTimeMillis();
     }
 
     @Test

@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -24,10 +24,18 @@ import java.util.Map;
 import static com.mopub.common.DataKeys.AD_REPORT_KEY;
 import static com.mopub.common.DataKeys.BANNER_IMPRESSION_PIXEL_COUNT_ENABLED;
 import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.CLICKED;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.CUSTOM;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_ATTEMPTED;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_FAILED;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_SUCCESS;
+import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.SHOW_ATTEMPTED;
 import static com.mopub.common.util.JavaScriptWebViewCallbacks.WEB_VIEW_DID_APPEAR;
 import static com.mopub.mobileads.MoPubErrorCode.MRAID_LOAD_ERROR;
 
 class MraidBanner extends CustomEventBanner {
+    public static final String ADAPTER_NAME = MraidBanner.class.getSimpleName();
+
     @Nullable private MraidController mMraidController;
     @Nullable private CustomEventBannerListener mBannerListener;
     @Nullable private MraidWebViewDebugListener mDebugListener;
@@ -40,11 +48,15 @@ class MraidBanner extends CustomEventBanner {
                     @NonNull final Map<String, Object> localExtras,
                     @NonNull final Map<String, String> serverExtras) {
         mBannerListener = customEventBannerListener;
+        MoPubLog.log(LOAD_ATTEMPTED, ADAPTER_NAME);
 
         String htmlData;
         if (extrasAreValid(serverExtras)) {
             htmlData = serverExtras.get(HTML_RESPONSE_BODY_KEY);
         } else {
+            MoPubLog.log(LOAD_FAILED, ADAPTER_NAME,
+                    MRAID_LOAD_ERROR.getIntCode(),
+                    MRAID_LOAD_ERROR);
             mBannerListener.onBannerFailed(MRAID_LOAD_ERROR);
             return;
         }
@@ -60,7 +72,9 @@ class MraidBanner extends CustomEventBanner {
             mMraidController = MraidControllerFactory.create(
                     context, adReport, PlacementType.INLINE);
         } catch (ClassCastException e) {
-            MoPubLog.w("MRAID banner creating failed:", e);
+            MoPubLog.log(LOAD_FAILED, ADAPTER_NAME,
+                    MRAID_LOAD_ERROR.getIntCode(),
+                    MRAID_LOAD_ERROR);
             mBannerListener.onBannerFailed(MRAID_LOAD_ERROR);
             return;
         }
@@ -71,11 +85,16 @@ class MraidBanner extends CustomEventBanner {
             public void onLoaded(View view) {
                 // Honoring the server dimensions forces the WebView to be the size of the banner
                 AdViewController.setShouldHonorServerDimensions(view);
+                MoPubLog.log(LOAD_SUCCESS, ADAPTER_NAME);
+                MoPubLog.log(SHOW_ATTEMPTED, ADAPTER_NAME);
                 mBannerListener.onBannerLoaded(view);
             }
 
             @Override
             public void onFailedToLoad() {
+                MoPubLog.log(LOAD_FAILED, ADAPTER_NAME,
+                        MRAID_LOAD_ERROR.getIntCode(),
+                        MRAID_LOAD_ERROR);
                 mBannerListener.onBannerFailed(MRAID_LOAD_ERROR);
             }
 
@@ -87,6 +106,7 @@ class MraidBanner extends CustomEventBanner {
 
             @Override
             public void onOpen() {
+                MoPubLog.log(CLICKED, ADAPTER_NAME);
                 mBannerListener.onBannerClicked();
             }
 
@@ -96,7 +116,7 @@ class MraidBanner extends CustomEventBanner {
             }
         });
 
-        mMraidController.fillContent(null, htmlData, new MraidController.MraidWebViewCacheListener() {
+        mMraidController.fillContent(htmlData, new MraidController.MraidWebViewCacheListener() {
             @Override
             public void onReady(final @NonNull MraidBridge.MraidWebView webView,
                     final @Nullable ExternalViewabilitySessionManager viewabilityManager) {
@@ -145,7 +165,7 @@ class MraidBanner extends CustomEventBanner {
             if (activity != null) {
                 mExternalViewabilitySessionManager.startDeferredDisplaySession(activity);
             } else {
-                MoPubLog.d("Lost the activity for deferred Viewability tracking. Dropping session.");
+                MoPubLog.log(CUSTOM, ADAPTER_NAME, "Lost the activity for deferred Viewability tracking. Dropping session.");
             }
         }
     }

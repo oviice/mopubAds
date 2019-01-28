@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -21,6 +21,11 @@ import com.mopub.common.Preconditions;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.Intents;
 import com.mopub.exceptions.IntentNotResolvableException;
+import com.mopub.mobileads.MoPubErrorCode;
+
+import static com.mopub.common.logging.MoPubLog.ConsentLogEvent.SHOW_FAILED;
+import static com.mopub.common.logging.MoPubLog.ConsentLogEvent.SHOW_SUCCESS;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class ConsentDialogActivity extends Activity {
     private static final int CLOSE_BUTTON_DELAY_MS = 10000;
@@ -40,7 +45,9 @@ public class ConsentDialogActivity extends Activity {
         Preconditions.checkNotNull(context);
 
         if (TextUtils.isEmpty(htmlData)) {
-            MoPubLog.e("ConsentDialogActivity htmlData can't be empty string.");
+            MoPubLog.log(CUSTOM, "ConsentDialogActivity htmlData can't be empty string.");
+            MoPubLog.log(SHOW_FAILED, MoPubErrorCode.INTERNAL_ERROR.getIntCode(),
+                    MoPubErrorCode.INTERNAL_ERROR);
             return;
         }
 
@@ -48,7 +55,9 @@ public class ConsentDialogActivity extends Activity {
         try {
             Intents.startActivity(context, intent);
         } catch (ActivityNotFoundException | IntentNotResolvableException e) {
-            MoPubLog.e("ConsentDialogActivity not found - did you declare it in AndroidManifest.xml?");
+            MoPubLog.log(CUSTOM, "ConsentDialogActivity not found - did you declare it in AndroidManifest.xml?");
+            MoPubLog.log(SHOW_FAILED, MoPubErrorCode.INTERNAL_ERROR.getIntCode(),
+                    MoPubErrorCode.INTERNAL_ERROR);
         }
     }
 
@@ -69,7 +78,9 @@ public class ConsentDialogActivity extends Activity {
         Intent intent = getIntent();
         String htmlBody = intent.getStringExtra(KEY_HTML_PAGE);
         if (TextUtils.isEmpty(htmlBody)) {
-            MoPubLog.e("Web page for ConsentDialogActivity is empty");
+            MoPubLog.log(CUSTOM, "Web page for ConsentDialogActivity is empty");
+            MoPubLog.log(SHOW_FAILED, MoPubErrorCode.INTERNAL_ERROR.getIntCode(),
+                    MoPubErrorCode.INTERNAL_ERROR);
             finish();
             return;
         }
@@ -114,6 +125,12 @@ public class ConsentDialogActivity extends Activity {
         super.onStart();
         mCloseButtonHandler = new Handler();
         mCloseButtonHandler.postDelayed(mEnableCloseButtonRunnable, CLOSE_BUTTON_DELAY_MS);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        MoPubLog.log(SHOW_SUCCESS);
     }
 
     @Override

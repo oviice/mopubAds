@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -16,6 +16,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
+
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public abstract class MoPubHttpUrlConnection extends HttpURLConnection {
     private static final int CONNECT_TIMEOUT = 10000;
@@ -85,7 +87,7 @@ public abstract class MoPubHttpUrlConnection extends HttpURLConnection {
         try {
             URLDecoder.decode(url, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            MoPubLog.w("Url is improperly encoded: " + url);
+            MoPubLog.log(CUSTOM, "Url is improperly encoded: " + url);
             return true;
         }
         return false;
@@ -115,7 +117,7 @@ public abstract class MoPubHttpUrlConnection extends HttpURLConnection {
             uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(),
                     url.getPath(), url.getQuery(), url.getRef());
         } catch (Exception e) {
-            MoPubLog.w("Failed to encode url: " + urlString);
+            MoPubLog.log(CUSTOM, "Failed to encode url: " + urlString);
             throw e;
         }
         return uri;

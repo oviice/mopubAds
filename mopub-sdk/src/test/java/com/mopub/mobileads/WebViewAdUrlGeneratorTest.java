@@ -1,4 +1,4 @@
-// Copyright 2018 Twitter, Inc.
+// Copyright 2018-2019 Twitter, Inc.
 // Licensed under the MoPub SDK License Agreement
 // http://www.mopub.com/legal/sdk-license-agreement/
 
@@ -18,16 +18,19 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
+import com.mopub.common.BaseAdapterConfiguration;
 import com.mopub.common.ClientMetadata;
 import com.mopub.common.LocationService;
 import com.mopub.common.MoPub;
-import com.mopub.common.MoPubAdvancedBidder;
+import com.mopub.common.OnNetworkInitializationFinishedListener;
 import com.mopub.common.SdkConfiguration;
 import com.mopub.common.privacy.AdvertisingId;
 import com.mopub.common.privacy.ConsentData;
@@ -61,6 +64,8 @@ import org.robolectric.shadows.ShadowLocationManager;
 import org.robolectric.shadows.ShadowLooper;
 import org.robolectric.shadows.ShadowNetworkInfo;
 
+import java.util.Map;
+
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
@@ -82,7 +87,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
-@Config(constants = BuildConfig.class, shadows = {MoPubShadowTelephonyManager.class, MoPubShadowConnectivityManager.class})
+@Config(shadows = {MoPubShadowTelephonyManager.class, MoPubShadowConnectivityManager.class})
 public class WebViewAdUrlGeneratorTest {
 
     private static final String TEST_UDID = "20b013c721c";
@@ -215,11 +220,10 @@ public class WebViewAdUrlGeneratorTest {
     @Test
     public void generateAdUrl_shouldIncludeAllFields() throws Exception {
         SdkConfiguration sdkConfiguration = new SdkConfiguration.Builder(
-                INIT_ADUNIT).withAdvancedBidder(
-                WebViewAdvancedBidder.class).build();
+                INIT_ADUNIT).withAdditionalNetwork(
+                WebViewAdapterConfiguration.class.getName()).build();
         MoPub.initializeSdk(context, sdkConfiguration, null);
         ShadowLooper.runUiThreadTasks();
-        MoPub.setAdvancedBiddingEnabled(true);
         new Reflection.MethodBuilder(null, "setPersonalInfoManager")
                 .setStatic(MoPub.class)
                 .setAccessible()
@@ -275,7 +279,8 @@ public class WebViewAdUrlGeneratorTest {
     @Test
     public void generateAdUrl_shouldNotLocationFieldsWhenConsentIsFalse() throws Exception {
         SdkConfiguration sdkConfiguration = new SdkConfiguration.Builder(
-                INIT_ADUNIT).withAdvancedBidder(WebViewAdvancedBidder.class).build();
+                INIT_ADUNIT).withAdditionalNetwork(
+                WebViewAdapterConfiguration.class.getName()).build();
         MoPub.initializeSdk(context, sdkConfiguration, null);
         ShadowLooper.runUiThreadTasks();
         new Reflection.MethodBuilder(null, "setPersonalInfoManager")
@@ -317,13 +322,7 @@ public class WebViewAdUrlGeneratorTest {
     }
 
     @Test
-    public void generateAdUrl_withAdvancedBiddingDisabled_shouldNotIncludeAbt() throws Exception {
-        SdkConfiguration sdkConfiguration = new SdkConfiguration.Builder(
-                INIT_ADUNIT).withAdvancedBidder(
-                WebViewAdvancedBidder.class).build();
-        MoPub.initializeSdk(context, sdkConfiguration, null);
-        ShadowLooper.runUiThreadTasks();
-        MoPub.setAdvancedBiddingEnabled(false);
+    public void generateAdUrl_withNoInit_shouldNotIncludeAbt() throws Exception {
         new Reflection.MethodBuilder(null, "setPersonalInfoManager")
                 .setStatic(MoPub.class)
                 .setAccessible()
@@ -338,14 +337,12 @@ public class WebViewAdUrlGeneratorTest {
 
         String adUrl = subject.generateUrlString("ads.mopub.com");
         assertThat(adUrl).isEqualTo(expectedAdUrl);
-
-        MoPub.setAdvancedBiddingEnabled(true);
     }
 
     @Test
     public void generateAdUrl_withCollectUserDataDisabled_shouldNotIncludeKeywords() throws Exception {
         SdkConfiguration sdkConfiguration = new SdkConfiguration.Builder(INIT_ADUNIT)
-                .withAdvancedBidder(WebViewAdvancedBidder.class).build();
+                .withAdditionalNetwork(WebViewAdapterConfiguration.class.getName()).build();
         MoPub.initializeSdk(context, sdkConfiguration, null);
         ShadowLooper.runUiThreadTasks();
         new Reflection.MethodBuilder(null, "setPersonalInfoManager")
@@ -395,10 +392,9 @@ public class WebViewAdUrlGeneratorTest {
 
     @Test
     public void generateAdUrl_withAdvancedBiddingEnabled_shouldIncludeAbt() throws Exception {
-        MoPub.setAdvancedBiddingEnabled(true);
         SdkConfiguration sdkConfiguration = new SdkConfiguration.Builder(
-                "b195f8dd8ded45fe847ad89ed1d016da").withAdvancedBidder(
-                WebViewAdvancedBidder.class).build();
+                "b195f8dd8ded45fe847ad89ed1d016da").withAdditionalNetwork(
+                WebViewAdapterConfiguration.class.getName()).build();
         MoPub.initializeSdk(context, sdkConfiguration, null);
         ShadowLooper.runUiThreadTasks();
 
@@ -633,9 +629,8 @@ public class WebViewAdUrlGeneratorTest {
     @Test
     public void generateAdUrl_shouldTolerateNullActiveNetwork() throws Exception {
         SdkConfiguration sdkConfiguration = new SdkConfiguration.Builder(INIT_ADUNIT)
-                .withAdvancedBidder(WebViewAdvancedBidder.class).build();
+                .withAdditionalNetwork(WebViewAdapterConfiguration.class.getName()).build();
         MoPub.initializeSdk(context, sdkConfiguration, null);
-        MoPub.setAdvancedBiddingEnabled(false);
         new Reflection.MethodBuilder(null, "setPersonalInfoManager")
                 .setStatic(MoPub.class)
                 .setAccessible()
@@ -644,7 +639,9 @@ public class WebViewAdUrlGeneratorTest {
 
         when(mockPersonalInfoManager.canCollectPersonalInformation()).thenReturn(false);
 
-        AdUrlBuilder urlBuilder = new AdUrlBuilder(expectedUdid).withCurrentConsentStatus(ConsentStatus.UNKNOWN.getValue());
+        AdUrlBuilder urlBuilder = new AdUrlBuilder(expectedUdid)
+                .withCurrentConsentStatus(ConsentStatus.UNKNOWN.getValue())
+                .withAbt("{\"UrlGeneratorTest\":{\"token\":\"WebViewAdvancedBidderToken\"}}");
         shadowConnectivityManager.setActiveNetworkInfo(null);
 
         String adUrl = generateMinimumUrlString();
@@ -656,8 +653,6 @@ public class WebViewAdUrlGeneratorTest {
                 .setAccessible()
                 .execute();
     }
-
-
 
     @Test
     public void generateAdUrl_whenAdInfoIsCached_shouldUseAdInfoParams() throws Exception {
@@ -1182,16 +1177,36 @@ public class WebViewAdUrlGeneratorTest {
         }
     }
 
-    private static class WebViewAdvancedBidder implements MoPubAdvancedBidder {
+    private static class WebViewAdapterConfiguration extends BaseAdapterConfiguration {
 
+        @NonNull
         @Override
-        public String getToken(final Context context) {
+        public String getAdapterVersion() {
+            return "adapterVersion";
+        }
+
+        @Nullable
+        @Override
+        public String getBiddingToken(@NonNull final Context context) {
             return "WebViewAdvancedBidderToken";
         }
 
+        @NonNull
         @Override
-        public String getCreativeNetworkName() {
+        public String getMoPubNetworkName() {
             return "UrlGeneratorTest";
+        }
+
+        @NonNull
+        @Override
+        public String getNetworkSdkVersion() {
+            return "networkVersion";
+        }
+
+        @Override
+        public void initializeNetwork(@NonNull final Context context,
+                @Nullable final Map<String, String> configuration,
+                @NonNull final OnNetworkInitializationFinishedListener listener) {
         }
     }
 
