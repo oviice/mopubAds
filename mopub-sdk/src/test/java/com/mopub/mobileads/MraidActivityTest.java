@@ -113,7 +113,7 @@ public class MraidActivityTest {
     @Test
     public void preRenderHtml_shouldSetWebViewClient() throws Exception {
         MraidActivity.preRenderHtml(mraidInterstitial, subject, customEventInterstitialListener,
-                "3:27", testBroadcastIdentifier, adReport);
+                testBroadcastIdentifier, adReport);
 
         verify(mockMraidWebView).enablePlugins(eq(false));
         verify(mraidController).setMraidListener(any(MraidListener.class));
@@ -124,7 +124,7 @@ public class MraidActivityTest {
     @Ignore("Mraid 2.0")
     @Test
     public void preRenderHtml_shouldCallCustomEventInterstitialOnInterstitialLoaded_whenMraidListenerOnReady() throws Exception {
-        MraidActivity.preRenderHtml(mraidInterstitial, subject, customEventInterstitialListener, "",
+        MraidActivity.preRenderHtml(mraidInterstitial, subject, customEventInterstitialListener,
                 testBroadcastIdentifier, adReport);
 
         ArgumentCaptor<MraidListener> mraidListenerArgumentCaptorr = ArgumentCaptor.forClass(MraidListener.class);
@@ -139,7 +139,7 @@ public class MraidActivityTest {
     @Ignore("Mraid 2.0")
     @Test
     public void preRenderHtml_shouldCallCustomEventInterstitialOnInterstitialFailed_whenMraidListenerOnFailure() throws Exception {
-        MraidActivity.preRenderHtml(mraidInterstitial, subject, customEventInterstitialListener, "",
+        MraidActivity.preRenderHtml(mraidInterstitial, subject, customEventInterstitialListener,
                 testBroadcastIdentifier, adReport);
 
         ArgumentCaptor<MraidListener> mraidListenerArgumentCaptorr = ArgumentCaptor.forClass(MraidListener.class);
@@ -154,7 +154,7 @@ public class MraidActivityTest {
     @Ignore("Mraid 2.0")
     @Test
     public void preRenderHtml_whenWebViewClientShouldOverrideUrlLoading_shouldReturnTrue() throws Exception {
-        MraidActivity.preRenderHtml(mraidInterstitial, subject, customEventInterstitialListener, "",
+        MraidActivity.preRenderHtml(mraidInterstitial, subject, customEventInterstitialListener,
                 testBroadcastIdentifier, adReport);
 
         ArgumentCaptor<WebViewClient> webViewClientArgumentCaptor = ArgumentCaptor.forClass(WebViewClient.class);
@@ -172,7 +172,7 @@ public class MraidActivityTest {
     @Ignore("Mraid 2.0")
     @Test
     public void preRenderHtml_shouldCallCustomEventInterstitialOnInterstitialLoaded_whenWebViewClientOnPageFinished() throws Exception {
-        MraidActivity.preRenderHtml(mraidInterstitial, subject, customEventInterstitialListener, "",
+        MraidActivity.preRenderHtml(mraidInterstitial, subject, customEventInterstitialListener,
                 testBroadcastIdentifier, adReport);
 
         ArgumentCaptor<WebViewClient> webViewClientArgumentCaptor = ArgumentCaptor.forClass(WebViewClient.class);

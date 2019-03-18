@@ -29,7 +29,6 @@ import com.mopub.mraid.RewardedMraidController;
 
 import static com.mopub.common.DataKeys.AD_REPORT_KEY;
 import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
-import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.common.DataKeys.REWARDED_AD_DURATION_KEY;
 import static com.mopub.common.DataKeys.SHOULD_REWARD_ON_CLICK_KEY;
 import static com.mopub.common.IntentActions.ACTION_INTERSTITIAL_CLICK;
@@ -46,7 +45,6 @@ public class RewardedMraidActivity extends MraidActivity {
     public static void preRenderHtml(@NonNull final Interstitial mraidInterstitial,
             @NonNull final Context context,
             @NonNull final CustomEventInterstitial.CustomEventInterstitialListener customEventInterstitialListener,
-            @Nullable final String htmlData,
             @NonNull final Long broadcastIdentifier,
             @Nullable final AdReport adReport,
             final int rewardedDuration) {
@@ -55,16 +53,16 @@ public class RewardedMraidActivity extends MraidActivity {
         Preconditions.checkNotNull(customEventInterstitialListener);
         Preconditions.checkNotNull(broadcastIdentifier);
 
-        preRenderHtml(mraidInterstitial, customEventInterstitialListener, htmlData,
+        preRenderHtml(mraidInterstitial, customEventInterstitialListener, getResponseString(adReport),
                 new MraidBridge.MraidWebView(context), broadcastIdentifier,
                 new RewardedMraidController(context, adReport, PlacementType.INTERSTITIAL,
                         rewardedDuration, broadcastIdentifier));
     }
 
     public static void start(@NonNull Context context, @Nullable AdReport adreport,
-            @Nullable String htmlData, long broadcastIdentifier, int rewardedDuration,
-            boolean shouldRewardOnClick) {
-        final Intent intent = createIntent(context, adreport, htmlData, broadcastIdentifier,
+                             long broadcastIdentifier, int rewardedDuration,
+                             boolean shouldRewardOnClick) {
+        final Intent intent = createIntent(context, adreport, broadcastIdentifier,
                 rewardedDuration, shouldRewardOnClick);
         try {
             Intents.startActivity(context, intent);
@@ -76,10 +74,9 @@ public class RewardedMraidActivity extends MraidActivity {
 
     @VisibleForTesting
     protected static Intent createIntent(@NonNull Context context, @Nullable AdReport adReport,
-            @Nullable String htmlData, long broadcastIdentifier, int rewardedDuration,
-            boolean shouldRewardOnClick) {
+                                         long broadcastIdentifier, int rewardedDuration,
+                                         boolean shouldRewardOnClick) {
         Intent intent = new Intent(context, RewardedMraidActivity.class);
-        intent.putExtra(HTML_RESPONSE_BODY_KEY, htmlData);
         intent.putExtra(BROADCAST_IDENTIFIER_KEY, broadcastIdentifier);
         intent.putExtra(AD_REPORT_KEY, adReport);
         intent.putExtra(REWARDED_AD_DURATION_KEY, rewardedDuration);
@@ -90,7 +87,7 @@ public class RewardedMraidActivity extends MraidActivity {
     @Override
     public View getAdView() {
         final Intent intent = getIntent();
-        final String htmlData = intent.getStringExtra(HTML_RESPONSE_BODY_KEY);
+        final String htmlData = getResponseString();
         if (TextUtils.isEmpty(htmlData)) {
             MoPubLog.log(CUSTOM, "RewardedMraidActivity received a null HTML body. Finishing the activity.");
             finish();
@@ -145,6 +142,11 @@ public class RewardedMraidActivity extends MraidActivity {
 
             @Override
             public void onExpand() {
+                // No-op. The interstitial is always expanded.
+            }
+
+            @Override
+            public void onResize(final boolean toOriginalSize) {
                 // No-op. The interstitial is always expanded.
             }
 

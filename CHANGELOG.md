@@ -1,6 +1,19 @@
+## Version 5.6.0 (March 18, 2019)
+- **Features**
+  - Enabled debug logging when using a debug Google Advertising ID (one that ends with "10ca1ad1abe1").
+  - Upgraded ExoPlayer dependency to 2.9.5.
+  - Upgraded MoPub-Volley dependency to 2.1.0.
+
+- **Bug Fixes**
+  - Banners no longer refresh when they are expanded. They will resume refreshing when the expanded view is closed.
+  - Setting orientation on an expanded banner no longer locks the orientation after the expanded view is closed.
+  - Improved click detection.
+  - Catch `MissingWebViewPackageException` in `ConsentDialogLayoutWebView`.
+  - Reduce ANRs by removing synchronization from `Networking#getUserAgent(Context)`.
+
 ## Version 5.5.0 (January 28, 2019)
 - **Features**
-  - Advanced Bidding automatically initializes. See [https://developers.mopub.com/docs/android/initialization/] for more information about initialization.
+  - Advanced Bidding automatically initializes. See https://developers.mopub.com/docs/android/initialization/ for more information about initialization.
   - GDPR legitimate interest API now available; publishers may opt into allowing supported networks to collect user information on the basis of legitimate interest.
   - Improved logging from the SDK. Set the log level with `SdkConfiguration.Builder#withLogLevel(LogLevel)` in initialization to change the logging granularity.
   - Upgraded Gradle dependency to 4.8
@@ -272,11 +285,11 @@ If you would like to opt out of viewability measurement but do not want to modif
 
 ## Version 4.0.0 (October 6, 2015)
 
-Version 4.0.0 includes a number of improvements to our Native Ads systems under the hood. This means a few changes for publishers integrating the ads. The [Native Ads Integration Guide](https://github.com/mopub/mopub-android-sdk/wiki/Native-Ads-Integration) describes all the steps you'll need to integrate 4.0.0.
+Version 4.0.0 includes a number of improvements to our Native Ads systems under the hood. This means a few changes for publishers integrating the ads. The [Native Ads Integration Guide](https://developers.mopub.com/docs/android/native/) describes all the steps you'll need to integrate 4.0.0.
 
 **Native Ads Changes**
  - `MoPubNativeAdRenderer` has been replaced by `MoPubStaticNativeRenderer` 
- - When requesting ads using `MoPubNative`, you must instantiate and register a `MoPubStaticNativeAdRenderer`. See the [Integration Document](https://github.com/mopub/mopub-android-sdk/wiki/Manual-Integration-of-Native-Ads) for more details.
+ - When requesting ads using `MoPubNative`, you must instantiate and register a `MoPubStaticNativeAdRenderer`. See the [Integration Document](https://developers.mopub.com/docs/android/native/#method-3-manual-integration) for more details.
  - `NativeResponse` has been replaced with `NativeAd`
  - `NativeAd` has a new API that supports creating and rendering `View`s for Native Ads.
    - `#createAdView` returns a `View` that can hold data for the `NativeAd`
@@ -317,7 +330,7 @@ Version 4.0.0 includes a number of improvements to our Native Ads systems under 
 
 - Added **VAST 3.0** standard support for video ads.
 - Improved **video player UX**.
-- Added **RecyclerView** support for native ads. See the [integration guide](https://github.com/mopub/mopub-android-sdk/wiki/Native-Ads-with-Recycler-View).
+- Added **RecyclerView** support for native ads. See the [integration guide](https://developers.mopub.com/docs/android/native/).
 - Improved **deep link** handling.
 - Bug Fixes:
   - MRAID video interstitials now play automatically when displayed on Jellybean MR1 and newer.
@@ -359,7 +372,7 @@ Version 4.0.0 includes a number of improvements to our Native Ads systems under 
 
 ## Version 3.5.0 (March 10, 2015)
 
- - Dependency changes in Maven and Gradle. No new dependencies have been added, but your build script will need to change slightly to include JCenter. See our [Getting Started Guide](https://github.com/mopub/mopub-android-sdk/wiki/Getting-Started#adding-the-support-libraries-to-your-project) for complete instructions.
+ - Dependency changes in Maven and Gradle. No new dependencies have been added, but your build script will need to change slightly to include JCenter. See our [Getting Started Guide](https://developers.mopub.com/docs/android/getting-started/) for complete instructions.
  - Security Improvement: removed the @JavascriptInterface annotation for WebViews.
  - Fixed a bug where video playback would sometimes fail to stop when an ad was dismissed.
  - Fixed a bug where it was not possible to disable ad refresh; Fixes [issue #148](https://github.com/mopub/mopub-android-sdk/issues/148)
@@ -367,7 +380,7 @@ Version 4.0.0 includes a number of improvements to our Native Ads systems under 
 
 ## Version 3.4.0 (January 30, 2015)
 
-  - **Volley networking stack** MoPub for Android now uses Google's Volley library for HTTP requests. You will need to add our bundled Volley JAR (available at `mopub-sdk/libs/mopub-volley-1.0.0.jar`) as a compile-time dependency. See instructions in our [integration page](https://dev.twitter.com/mopub/android/getting-started).
+  - **Volley networking stack** MoPub for Android now uses Google's Volley library for HTTP requests. You will need to add our bundled Volley JAR (available at `mopub-sdk/libs/mopub-volley-1.0.0.jar`) as a compile-time dependency. See instructions in our [integration page](https://developers.mopub.com/docs/android/getting-started/).
   - **Updated Vungle Support** Certified the `VungleInterstitial` custom event against Vungle SDK 3.2.2
   - **VAST Video Bug Fixes**
     - Fixed inability to parse VAST tags referencing URLs that contain 3rd party macros
@@ -376,7 +389,7 @@ Version 4.0.0 includes a number of improvements to our Native Ads systems under 
 
 ## Version 3.3.0 (December 8, 2014)
 
-  - **MRAID 2.0 Support** - The MoPub SDK is now compliant with the MRAID 2.0 specification to enable rich media ads in banners and interstitial ad units. Learn more about MRAID from the [IAB](http://www.iab.net/MRAID#MRAID).
+  - **MRAID 2.0 Support** - The MoPub SDK is now compliant with the MRAID 2.0 specification to enable rich media ads in banners and interstitial ad units. Learn more about MRAID from the [IAB](https://www.iab.com/guidelines/mobile-rich-media-ad-interface-definitions-mraid/).
   - **Location Polling Updates** - Changed the interaction between application- and device-provided location data: more recent location data is now always used (in the past, application-provided location data was always preferred).
 
     As before, you may still disable MoPub SDK's location polling by calling `MoPub.setLocationAwareness(LocationAwareness.DISABLED)`.
@@ -425,7 +438,7 @@ Version 4.0.0 includes a number of improvements to our Native Ads systems under 
 ## Version 2.4.0 (August 28, 2014)
 
   - **Minimum Android version now at API Level 9.** To use the new SDK, your app must run on Android 2.3.1 (Version 9, Gingerbread) or higher.
-  - **Simplified APIs for inserting native ads.** See [Native Ads Integration](https://github.com/mopub/mopub-android-sdk/wiki/Native-Ads-Integration) for details.
+  - **Simplified APIs for inserting native ads.** See [Native Ads Integration](https://developers.mopub.com/docs/android/native/) for details.
   - **Automatic ad caching for smooth scrolling.** For native ads, the SDK will now automatically pre-load ads, resulting in smoother scrolling.
   - **Performance improvements** The SDK now makes more efficient use of memory for image caching and avoids allocating temporary objects while scrolling, resulting in fewer garbage collections.
   - **Sample app improvements.** An improved sample app allows saving ad unit IDs for testing.
@@ -435,7 +448,7 @@ Version 4.0.0 includes a number of improvements to our Native Ads systems under 
 ## Version 2.3 (July 17, 2014)
 
   - **Improved impression tracking for Native Ads** Impression tracking for native ads is now more accurate and more efficient.
-  - **Streamlined Maven Build and Dependencies** MoPub's Android SDK now depends on the Android v4 Support Library shipped with the Android Build tools. The MoPub Sample App also depends on Google Play Services to use the Android Advertising ID. We recommend building against Play Services in your app as well. For integration instructions, see the [wiki](https://github.com/mopub/mopub-android-sdk/wiki/Getting-Started).
+  - **Streamlined Maven Build and Dependencies** MoPub's Android SDK now depends on the Android v4 Support Library shipped with the Android Build tools. The MoPub Sample App also depends on Google Play Services to use the Android Advertising ID. We recommend building against Play Services in your app as well. For integration instructions, see the [getting started page](https://developers.mopub.com/docs/android/getting-started/).
   - **Removed AdMob Custom Events and JAR** AdMob's SDK is deprecated by Google and the APIs have been moved to Google Play Services. Existing AdMob adunits will now invoke the appropriate Google Play Services custom event. Developers must update their integration to use the Google Play Services custom events located in the extras folder by August 1.
   - **Updated Third-Party Network Compatibility** MoPub's provided Custom Events (included in the extras/ folder) are now compatible with the latest SDK releases from Millennial Media (5.3.0), Vungle (3.1.0), InMobi (4.4.1) and Google Play Services (5.0.77).
   - Fixed intermittent NullPointerException in MoPubNative#requestNativeAd; fixes [Github issue #97] (https://github.com/mopub/mopub-android-sdk/issues/97)
@@ -443,7 +456,7 @@ Version 4.0.0 includes a number of improvements to our Native Ads systems under 
 
 ## Version 2.2 (June 19, 2014)
 
-  - **Native ads mediation** release; integration instructions and documentation are available on the [GitHub wiki](https://github.com/mopub/mopub-android-sdk/wiki/Integrating-Native-Third-Party-Ad-Networks). Added custom event native implementations to the native extras directory of the SDK (`/extras/src/com/mopub/nativeads`), with initial support for the following networks:
+  - **Native ads mediation** release; integration instructions and documentation are available on our [help page](https://developers.mopub.com/docs/android/integrating-networks/). Added custom event native implementations to the native extras directory of the SDK (`/extras/src/com/mopub/nativeads`), with initial support for the following networks:
   	- Facebook Audience Network (`FacebookNative.java`)
   	- InMobi Native Ads (`InMobiNative.java`)
   - **Native ads content filtering**: Added the ability to specify which native ad elements you want to receive from the MoPub Marketplace to optimize bandwidth use and download only required assets, via `RequestParameters.Builder#desiredAssets(…)`. This feature only works for the six standard Marketplace assets, found in `RequestParameters.NativeAdAsset`. Any additional elements added in direct sold ads will always be sent down in the extras.
@@ -453,7 +466,7 @@ Version 4.0.0 includes a number of improvements to our Native Ads systems under 
 
 ## Version 2.1 (May 15, 2014)
 
-  - Added custom events for Facebook ads. `FacebookBanner` and `FacebookInterstitial` can be found in the extras directory of the SDK (`/extras/src/com/mopub/mobileads`). For more information, please see the [help page for Facebook custom events](http://help.mopub.com/customer/portal/articles/1552301-how-to-integrate-facebook-audience-network-using-custom-events).
+  - Added custom events for Facebook ads. `FacebookBanner` and `FacebookInterstitial` can be found in the extras directory of the SDK (`/extras/src/com/mopub/mobileads`). For more information, please see the [help page for integrating third party ad networks](https://developers.mopub.com/docs/android/integrating-networks/).
   - Significant improvements to video ads
     - Added overlay including a "Learn More" button, video length, and time left until the video may be skipped
     - Added support for companion banners (shown upon video completion)
@@ -466,7 +479,7 @@ Version 4.0.0 includes a number of improvements to our Native Ads systems under 
 
 ## Version 2.0 (April 22, 2014)
 
-  - **Native Ads** public release; integration instructions and documentation available on the [GitHub wiki](https://github.com/mopub/mopub-android-sdk/wiki/Native-Ads-Integration)
+  - **Native Ads** public release; integration instructions and documentation available on our [support website](https://developers.mopub.com/docs/android/native/)
   - Changed minimum supported Android version to Froyo (Android 2.2, API level 8)
   - Added support for Google Play Services advertising identifier
   - Renamed the `com.mopub.mobileads.MraidBrowser` Activity to `com.mopub.common.MoPubBrowser`.
@@ -573,7 +586,7 @@ Version 4.0.0 includes a number of improvements to our Native Ads systems under 
 
 ## Version 1.15 (August 21, 2013)
 
-Includes support for ads in the MRAID 2.0 format. MRAID 2.0 allows advertisers to create ads with rich media functionality, including adding calendar events, storing pictures and playing videos in the native video player. To learn more about MRAID 2.0, read our [help article](http://j.mp/16MKSci).
+Includes support for ads in the MRAID 2.0 format. MRAID 2.0 allows advertisers to create ads with rich media functionality, including adding calendar events, storing pictures and playing videos in the native video player. To learn more about MRAID 2.0, read our [help article](https://developers.mopub.com/docs/ad-formats/mraid/).
 
   - Added the following MRAID 2.0 features: `createCalendarEvent` (Android 4.0 and above), `playVideo`, `storePicture`, and `supports`
   - Hardware Acceleration is now enabled by default for `MraidInterstitial`s on Android 4.0 and above

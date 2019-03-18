@@ -48,6 +48,8 @@ import com.mopub.mobileads.test.support.MoPubShadowConnectivityManager;
 import com.mopub.mobileads.test.support.MoPubShadowTelephonyManager;
 import com.mopub.mraid.MraidNativeCommandHandler;
 import com.mopub.network.PlayServicesUrlRewriter;
+import com.mopub.network.RequestRateTracker;
+import com.mopub.network.RequestRateTrackerTest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -183,6 +185,7 @@ public class WebViewAdUrlGeneratorTest {
     public void tearDown() throws Exception {
         reset(methodBuilder);
         ClientMetadata.clearForTesting();
+        RequestRateTrackerTest.clearRequestRateTracker();
         MoPubIdentifierTest.clearPreferences(context);
         new Reflection.MethodBuilder(null, "clearAdvancedBidders")
                 .setStatic(MoPub.class)
@@ -233,6 +236,7 @@ public class WebViewAdUrlGeneratorTest {
         when(mockPersonalInfoManager.canCollectPersonalInformation()).thenReturn(true);
 
         ClientMetadata.clearForTesting();
+        RequestRateTrackerTest.prepareRequestRateTracker("adUnitId", 99, "some_reason");
 
         final String expectedAdUrl = new AdUrlBuilder(expectedUdid)
                 .withAdUnitId("adUnitId")
@@ -246,6 +250,8 @@ public class WebViewAdUrlGeneratorTest {
                 .withExternalStoragePermission(false)
                 .withAbt("{\"UrlGeneratorTest\":{\"token\":\"WebViewAdvancedBidderToken\"}}")
                 .withCurrentConsentStatus(ConsentStatus.UNKNOWN.getValue())
+                .withBackoffMs(99)
+                .withBackoffReason("some_reason")
                 .build();
 
         shadowTelephonyManager.setNetworkOperator("123456");
@@ -1042,6 +1048,8 @@ public class WebViewAdUrlGeneratorTest {
         private String forceGdprApplies = "0";
         private String consentedPrivacyPolicyVersion = "";
         private String consentedVendorListVersion = "";
+        private String backoffMs = "";
+        private String backoffReason = "";
 
         public AdUrlBuilder(String expectedUdid) {
             this.expectedUdid = expectedUdid;
@@ -1079,6 +1087,8 @@ public class WebViewAdUrlGeneratorTest {
                     paramIfNotEmpty("current_consent_status", currentConsentStatus) +
                     paramIfNotEmpty("consented_privacy_policy_version", consentedPrivacyPolicyVersion) +
                     paramIfNotEmpty("consented_vendor_list_version", consentedVendorListVersion) +
+                    paramIfNotEmpty("backoff_ms", backoffMs) +
+                    paramIfNotEmpty("backoff_reason", backoffReason) +
                     "&mr=1" +
                     "&android_perms_ext_storage=" + externalStoragePermission +
                     "&vv=3";
@@ -1165,6 +1175,18 @@ public class WebViewAdUrlGeneratorTest {
 
         public AdUrlBuilder withConsentedVendorListVersion(String consentedVendorListVersion) {
             this.consentedVendorListVersion = consentedVendorListVersion;
+            return this;
+        }
+
+        AdUrlBuilder withBackoffMs(@Nullable final Integer backoffMs) {
+            if (backoffMs != null) {
+                this.backoffMs = String.valueOf(backoffMs);
+            }
+            return this;
+        }
+
+        AdUrlBuilder withBackoffReason(@Nullable final String backoffReason) {
+            this.backoffReason = backoffReason;
             return this;
         }
 

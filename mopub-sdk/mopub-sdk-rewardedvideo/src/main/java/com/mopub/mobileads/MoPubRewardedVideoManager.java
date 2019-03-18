@@ -307,11 +307,6 @@ public class MoPubRewardedVideoManager {
                     "unit %s. A request is already pending.", adUnitId));
             return;
         }
-        if (rewardedAdsLoaders.isLoading(adUnitId)) {
-            MoPubLog.log(CUSTOM, String.format(Locale.US, "Did not queue rewarded ad request for ad " +
-                    "unit %s. A request is already pending.", adUnitId));
-            return;
-        }
 
         // Issue MoPub request
         MoPubLog.log(CUSTOM, String.format(Locale.US,
@@ -522,11 +517,10 @@ public class MoPubRewardedVideoManager {
                         "Updating init settings for custom event %s with params %s",
                         customEventClassName, serverExtrasJsonString));
 
-                // https://github.com/robolectric/robolectric/issues/3641
                 sCustomEventSharedPrefs
                         .edit()
                         .putString(customEventClassName, serverExtrasJsonString)
-                        .commit();
+                        .apply();
             }
 
             // Load custom event

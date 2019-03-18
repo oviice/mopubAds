@@ -90,6 +90,10 @@ public class MultiAdResponse implements Iterator<AdResponse> {
         mFailUrl = jsonObject.optString(ResponseHeader.FAIL_URL.getKey());
         String requestId = jsonObject.optString(ResponseHeader.REQUEST_ID.getKey());
 
+        final Integer backoffMs = extractIntegerHeader(jsonObject, ResponseHeader.BACKOFF_MS);
+        final String backoffReason = extractHeader(jsonObject, ResponseHeader.BACKOFF_REASON);
+        RequestRateTracker.getInstance().registerRateLimit(adUnitId, backoffMs, backoffReason);
+
         final boolean invalidateConsent = extractBooleanHeader(jsonObject,
                 ResponseHeader.INVALIDATE_CONSENT, false);
         final boolean forceExplicitNo = extractBooleanHeader(jsonObject,
@@ -111,6 +115,13 @@ public class MultiAdResponse implements Iterator<AdResponse> {
             } else if (reacquireConsent) {
                 sServerOverrideListener.onReacquireConsent(consentChangeReason);
             }
+        }
+
+        final boolean enableDebugLogging = extractBooleanHeader(jsonObject,
+                ResponseHeader.ENABLE_DEBUG_LOGGING, false);
+
+        if (enableDebugLogging) {
+            MoPubLog.setLogLevel(MoPubLog.LogLevel.DEBUG);
         }
 
         JSONArray adResponses = jsonObject.getJSONArray(ResponseHeader.AD_RESPONSES.getKey());
@@ -422,12 +433,6 @@ public class MultiAdResponse implements Iterator<AdResponse> {
             builder.setRewardedVideoCompletionUrl(rewardedVideoCompletionUrl);
             builder.setRewardedDuration(rewardedDuration);
             builder.setShouldRewardOnClick(shouldRewardOnClick);
-        }
-
-        // Enabled debug logging
-        if (extractBooleanHeader(jsonHeaders,
-                ResponseHeader.ENABLE_DEBUG_LOGGING, false)) {
-            MoPubLog.setLogLevel(MoPubLog.LogLevel.DEBUG);
         }
 
         return builder.build();

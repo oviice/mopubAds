@@ -66,9 +66,16 @@ public class MoPubRequestUtils {
         Preconditions.checkNotNull(context);
         Preconditions.checkNotNull(url);
 
-        final Map<String, String> params = new HashMap<>();
         HurlStack.UrlRewriter rewriter = Networking.getUrlRewriter(context);
         final Uri uri = Uri.parse(rewriter.rewriteUrl(url));
+        return getQueryParamMap(uri);
+    }
+
+    @NonNull
+    public static Map<String, String> getQueryParamMap(@NonNull final Uri uri) {
+        Preconditions.checkNotNull(uri);
+
+        final Map<String, String> params = new HashMap<>();
         for (final String queryParam : uri.getQueryParameterNames()) {
             params.put(queryParam, TextUtils.join(",", uri.getQueryParameters(queryParam)));
         }

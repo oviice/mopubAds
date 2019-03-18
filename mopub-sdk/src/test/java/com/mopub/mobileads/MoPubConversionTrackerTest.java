@@ -130,7 +130,7 @@ public class MoPubConversionTrackerTest {
         mSharedPreferences
                 .edit()
                 .putBoolean(mWantToTrack, true)
-                .commit();
+                .apply();
 
         assertThat(subject.shouldTrack()).isTrue();
     }

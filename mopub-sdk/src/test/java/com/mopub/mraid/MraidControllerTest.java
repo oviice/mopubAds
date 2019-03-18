@@ -57,6 +57,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
@@ -1032,13 +1033,22 @@ public class MraidControllerTest {
     }
 
     @Test
-    public void destroy_shouldCancelLastMetricsRequest_shouldUnregisterBroadcastReceiver_shouldDetachAllBridges() {
+    public void destroy_shouldCancelLastMetricsRequest_shouldUnregisterBroadcastReceiver_shouldDetachAllBridges_shouldUnapplyOrientation() throws Exception {
+        setMockActivityInfo(true, ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED,
+                ActivityInfo.CONFIG_ORIENTATION | ActivityInfo.CONFIG_SCREEN_SIZE);
+        subject.handleSetOrientationProperties(false, MraidOrientation.LANDSCAPE);
+        subject.applyOrientation();
+        assertThat(activity.getRequestedOrientation())
+                .isEqualTo(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
         subject.destroy();
 
         verify(mockScreenMetricsWaiter).cancelLastRequest();
         verify(mockOrientationBroadcastReceiver).unregister();
         verify(mockBridge).detach();
         verify(mockTwoPartBridge).detach();
+        assertThat(activity.getRequestedOrientation())
+                .isEqualTo(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 
     @Test
@@ -1105,6 +1115,195 @@ public class MraidControllerTest {
         subject.destroy();
 
         assertThat(rootView.getChildCount()).isEqualTo(0);
+    }
+
+    @Test
+    public void callMraidListenerCallbacks_withVariousStates_shouldCallCorrectMraidListenerCallback() {
+        // Previous state LOADING
+
+        ViewState previousViewState = ViewState.LOADING;
+        ViewState currentViewState = ViewState.LOADING;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verifyZeroInteractions(mockMraidListener);
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.LOADING;
+        currentViewState = ViewState.DEFAULT;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verifyZeroInteractions(mockMraidListener);
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.LOADING;
+        currentViewState = ViewState.RESIZED;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onResize(false);
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.LOADING;
+        currentViewState = ViewState.EXPANDED;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onExpand();
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.LOADING;
+        currentViewState = ViewState.HIDDEN;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onClose();
+
+
+        // Previous state DEFAULT
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.DEFAULT;
+        currentViewState = ViewState.LOADING;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verifyZeroInteractions(mockMraidListener);
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.DEFAULT;
+        currentViewState = ViewState.DEFAULT;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verifyZeroInteractions(mockMraidListener);
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.DEFAULT;
+        currentViewState = ViewState.RESIZED;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onResize(false);
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.DEFAULT;
+        currentViewState = ViewState.EXPANDED;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onExpand();
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.DEFAULT;
+        currentViewState = ViewState.HIDDEN;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onClose();
+
+
+        // Previous state RESIZED
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.RESIZED;
+        currentViewState = ViewState.LOADING;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verifyZeroInteractions(mockMraidListener);
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.RESIZED;
+        currentViewState = ViewState.DEFAULT;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onResize(true);
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.RESIZED;
+        currentViewState = ViewState.RESIZED;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onResize(false);
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.RESIZED;
+        currentViewState = ViewState.EXPANDED;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onExpand();
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.RESIZED;
+        currentViewState = ViewState.HIDDEN;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onClose();
+
+
+        // Previous state EXPANDED
+
+        previousViewState = ViewState.EXPANDED;
+        currentViewState = ViewState.LOADING;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verifyZeroInteractions(mockMraidListener);
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.EXPANDED;
+        currentViewState = ViewState.DEFAULT;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onClose();
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.EXPANDED;
+        currentViewState = ViewState.RESIZED;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onResize(false);
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.EXPANDED;
+        currentViewState = ViewState.EXPANDED;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onExpand();
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.EXPANDED;
+        currentViewState = ViewState.HIDDEN;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onClose();
+
+
+        // Previous state HIDDEN
+
+        previousViewState = ViewState.HIDDEN;
+        currentViewState = ViewState.LOADING;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verifyZeroInteractions(mockMraidListener);
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.HIDDEN;
+        currentViewState = ViewState.DEFAULT;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verifyZeroInteractions(mockMraidListener);
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.HIDDEN;
+        currentViewState = ViewState.RESIZED;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onResize(false);
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.HIDDEN;
+        currentViewState = ViewState.EXPANDED;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onExpand();
+
+        reset(mockMraidListener);
+        previousViewState = ViewState.HIDDEN;
+        currentViewState = ViewState.HIDDEN;
+        MraidController.callMraidListenerCallbacks(mockMraidListener, previousViewState,
+                currentViewState);
+        verify(mockMraidListener).onClose();
     }
 
     private void setMockActivityInfo(final boolean activityInfoFound, int screenOrientation,

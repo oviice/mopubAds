@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 
 import com.mopub.common.GpsHelper;
 import com.mopub.common.SdkInitializationListener;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.AsyncTasks;
 import com.mopub.common.util.Reflection;
 
@@ -39,7 +40,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 
 @RunWith(RobolectricTestRunner.class)
 @PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "org.json.*"})
@@ -58,6 +58,7 @@ public class MoPubIdentifierTest {
     private static final String AMAZON_AD_ID = "amazon_ad_id";
     private static final String TEST_IFA_ID = "test_ifa_id";
     public static final String TEST_MOPUB_ID = "test_mopub_id";
+    public static final String GOOGLE_AD_ID_DEBUG = "something_something_10ca1ad1abe1";
 
     @Before
     public void setup() {
@@ -431,11 +432,59 @@ public class MoPubIdentifierTest {
         assertThat(newId.isRotationRequired()).isFalse();
     }
 
+    @Test
+    public void rotateMoPubId_withDebugGAID_shouldSetLogLevelToDebug() throws Exception {
+        // Set log level to none and get value from MoPubLog
+        MoPubLog.setLogLevel(MoPubLog.LogLevel.NONE);
+        final MoPubLog.LogLevel beforeLogLevel = MoPubLog.getLogLevel();
+        setupGooglePlayServiceDebug(context, false);
+
+        ArgumentCaptor<AdvertisingId> oldIdClientCaptor = ArgumentCaptor.forClass(AdvertisingId.class);
+        ArgumentCaptor<AdvertisingId> newIdClientCaptor = ArgumentCaptor.forClass(AdvertisingId.class);
+
+        subject = new MoPubIdentifier(context, idChangeListener);
+
+        ShadowLooper.runUiThreadTasks();
+        verify(idChangeListener).onIdChanged(oldIdClientCaptor.capture(), newIdClientCaptor.capture());
+
+        // Get log level
+        final MoPubLog.LogLevel afterLogLevel = MoPubLog.getLogLevel();
+
+        assertThat(beforeLogLevel).isNotEqualTo(afterLogLevel);
+    }
+
+    @Test
+    public void rotateMoPubId_withoutDebugGAID_shouldNotSetLogLevel() throws Exception {
+        // Set log level to none and get value from MoPubLog
+        MoPubLog.setLogLevel(MoPubLog.LogLevel.NONE);
+        final MoPubLog.LogLevel beforeLogLevel = MoPubLog.getLogLevel();
+        setupGooglePlayService(context, false);
+
+        ArgumentCaptor<AdvertisingId> oldIdClientCaptor = ArgumentCaptor.forClass(AdvertisingId.class);
+        ArgumentCaptor<AdvertisingId> newIdClientCaptor = ArgumentCaptor.forClass(AdvertisingId.class);
+
+        subject = new MoPubIdentifier(context, idChangeListener);
+
+        ShadowLooper.runUiThreadTasks();
+        verify(idChangeListener).onIdChanged(oldIdClientCaptor.capture(), newIdClientCaptor.capture());
+
+        // Get log level
+        final MoPubLog.LogLevel afterLogLevel = MoPubLog.getLogLevel();
+
+        assertThat(beforeLogLevel).isEqualTo(afterLogLevel);
+    }
+
     // Unit tests utility functions
     public static void setupGooglePlayService(Context context, boolean limitAdTracking) {
         PowerMockito.mockStatic(GpsHelper.class);
         PowerMockito.when(GpsHelper.isLimitAdTrackingEnabled(context)).thenReturn(limitAdTracking);
         PowerMockito.when(GpsHelper.fetchAdvertisingInfoSync(context)).thenReturn(new GpsHelper.AdvertisingInfo(GOOGLE_AD_ID, limitAdTracking));
+    }
+
+    public static void setupGooglePlayServiceDebug(Context context, boolean limitAdTracking) {
+        PowerMockito.mockStatic(GpsHelper.class);
+        PowerMockito.when(GpsHelper.isLimitAdTrackingEnabled(context)).thenReturn(limitAdTracking);
+        PowerMockito.when(GpsHelper.fetchAdvertisingInfoSync(context)).thenReturn(new GpsHelper.AdvertisingInfo(GOOGLE_AD_ID_DEBUG, limitAdTracking));
     }
 
     public static void setupAmazonAdvertisingInfo(boolean limitAdTracking) {
@@ -464,7 +513,7 @@ public class MoPubIdentifierTest {
     }
 
     private static AdvertisingId writeExpiredAdvertisingInfoToSharedPreferences(Context context, boolean doNotTrack) throws Exception {
-        final long time = Calendar.getInstance().getTimeInMillis() - AdvertisingId.ROTATION_TIME_MS;
+        final long time = Calendar.getInstance().getTimeInMillis() - AdvertisingId.ONE_DAY_MS * 2;
         return writeAdvertisingInfoToSharedPreferences(context, doNotTrack, time);
     }
 

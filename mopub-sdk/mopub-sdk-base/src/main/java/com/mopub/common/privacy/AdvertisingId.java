@@ -11,10 +11,11 @@ import com.mopub.common.Preconditions;
 
 import java.io.Serializable;
 import java.util.Calendar;
+import java.util.TimeZone;
 import java.util.UUID;
 
 public class AdvertisingId implements Serializable {
-    static final long ROTATION_TIME_MS = 24 * 60 * 60 * 1000;
+    static final long ONE_DAY_MS = 24 * 60 * 60 * 1000;
     private static final String PREFIX_IFA = "ifa:";
     private static final String PREFIX_MOPUB = "mopub:";
 
@@ -100,7 +101,7 @@ public class AdvertisingId implements Serializable {
     static AdvertisingId generateExpiredAdvertisingId() {
         Calendar time = Calendar.getInstance();
         String mopubId = generateIdString();
-        return new AdvertisingId("", mopubId, false, time.getTimeInMillis() - ROTATION_TIME_MS - 1);
+        return new AdvertisingId("", mopubId, false, time.getTimeInMillis() - ONE_DAY_MS - 1);
     }
 
     @NonNull
@@ -116,8 +117,11 @@ public class AdvertisingId implements Serializable {
     }
 
     boolean isRotationRequired() {
-        Calendar now = Calendar.getInstance();
-        return now.getTimeInMillis() - mLastRotation.getTimeInMillis() >= ROTATION_TIME_MS;
+        final Calendar now = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        final Calendar lastRotation = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        lastRotation.setTimeInMillis(mLastRotation.getTimeInMillis());
+        return (now.get(Calendar.DAY_OF_YEAR) != lastRotation.get(Calendar.DAY_OF_YEAR)) ||
+                (now.get(Calendar.YEAR) != lastRotation.get(Calendar.YEAR));
     }
 
     @Override

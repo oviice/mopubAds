@@ -11,12 +11,14 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.LruCache;
+import android.text.TextUtils;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 import com.mopub.common.Constants;
 import com.mopub.common.Preconditions;
 import com.mopub.common.VisibleForTesting;
+import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.DeviceUtils;
 import com.mopub.volley.Cache;
 import com.mopub.volley.Network;
@@ -31,10 +33,22 @@ import java.io.File;
 
 import javax.net.ssl.SSLSocketFactory;
 
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
+
 public class Networking {
     @VisibleForTesting
     static final String CACHE_DIRECTORY_NAME = "mopub-volley-cache";
-    private static final String DEFAULT_USER_AGENT = System.getProperty("http.agent");
+    @NonNull private static final String DEFAULT_USER_AGENT;
+
+    static {
+        String userAgent = "";
+        try {
+            userAgent = System.getProperty("http.agent", "");
+        } catch (SecurityException e) {
+            MoPubLog.log(CUSTOM, "Unable to get system user agent.");
+        }
+        DEFAULT_USER_AGENT = userAgent;
+    }
 
     // These are volatile so that double-checked locking works.
     // See https://en.wikipedia.org/wiki/Double-checked_locking#Usage_in_Java
@@ -139,36 +153,34 @@ public class Networking {
     public static String getUserAgent(@NonNull Context context) {
         Preconditions.checkNotNull(context);
 
-        String userAgent = sUserAgent;
-        if (userAgent == null) {
-            synchronized (Networking.class) {
-                userAgent = sUserAgent;
-                if (userAgent == null) {
-                    try {
-                        // WebViews may only be instantiated on the UI thread. If anything goes
-                        // wrong with getting a user agent, use the system-specific user agent.
-                        if (Looper.myLooper() == Looper.getMainLooper()) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                                userAgent = WebSettings.getDefaultUserAgent(context);
-                            } else {
-                                userAgent = new WebView(context).getSettings().getUserAgentString();
-                            }
-                        } else {
-                            // Since we are not on the main thread, return the default user agent
-                            // for now. Defer to when this is run on the main thread to actually
-                            // set the user agent.
-                            return DEFAULT_USER_AGENT;
-                        }
-                    } catch (Exception e) {
-                        // Some custom ROMs may fail to get a user agent. If that happens, return
-                        // the Android system user agent.
-                        userAgent = DEFAULT_USER_AGENT;
-                    }
-                    sUserAgent = userAgent;
-                }
-            }
+        final String volatileUserAgentCopy = sUserAgent;
+        if (!TextUtils.isEmpty(volatileUserAgentCopy)) {
+            return volatileUserAgentCopy;
         }
 
+        // WebViews may only be instantiated on the UI thread. If anything goes
+        // wrong with getting a user agent, use the system-specific user agent.
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            // Since we are not on the main thread, return the default user agent
+            // for now. Defer to when this is run on the main thread to actually
+            // set the user agent.
+            return DEFAULT_USER_AGENT;
+        }
+
+        // Some custom ROMs may fail to get a user agent. If that happens, return
+        // the Android system user agent.
+        String userAgent = DEFAULT_USER_AGENT;
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                userAgent = WebSettings.getDefaultUserAgent(context);
+            } else {
+                userAgent = new WebView(context).getSettings().getUserAgentString();
+            }
+        } catch (Exception e) {
+            MoPubLog.log(CUSTOM,
+                    "Failed to get a user agent. Defaulting to the system user agent.");
+        }
+        sUserAgent = userAgent;
         return userAgent;
     }
 

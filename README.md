@@ -37,7 +37,7 @@ The MoPub SDK is available via:
     }
 
     dependencies {
-        implementation('com.mopub:mopub-sdk:5.5.0@aar') {
+        implementation('com.mopub:mopub-sdk:5.6.0@aar') {
             transitive = true
         }
     }
@@ -59,27 +59,27 @@ The MoPub SDK is available via:
         // ... other project dependencies
 
         // For banners
-        implementation('com.mopub:mopub-sdk-banner:5.5.0@aar') {
+        implementation('com.mopub:mopub-sdk-banner:5.6.0@aar') {
             transitive = true
         }
         
         // For interstitials
-        implementation('com.mopub:mopub-sdk-interstitial:5.5.0@aar') {
+        implementation('com.mopub:mopub-sdk-interstitial:5.6.0@aar') {
             transitive = true
         }
 
         // For rewarded videos. This will automatically also include interstitials
-        implementation('com.mopub:mopub-sdk-rewardedvideo:5.5.0@aar') {
+        implementation('com.mopub:mopub-sdk-rewardedvideo:5.6.0@aar') {
             transitive = true
         }
 
         // For native static (images).
-        implementation('com.mopub:mopub-sdk-native-static:5.5.0@aar') {
+        implementation('com.mopub:mopub-sdk-native-static:5.6.0@aar') {
             transitive = true
         }
 
         // For native video. This will automatically also include native static
-        implementation('com.mopub:mopub-sdk-native-video:5.5.0@aar') {
+        implementation('com.mopub:mopub-sdk-native-video:5.6.0@aar') {
             transitive = true
         }
     }
@@ -108,15 +108,16 @@ The MoPub SDK is available via:
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the latest release.
 
 - **Features**
-  - Advanced Bidding automatically initializes. See [https://developers.mopub.com/docs/android/initialization/] for more information about initialization.
-  - GDPR legitimate interest API now available; publishers may opt into allowing supported networks to collect user information on the basis of legitimate interest.
-  - Improved logging from the SDK. Set the log level with `SdkConfiguration.Builder#withLogLevel(LogLevel)` in initialization to change the logging granularity.
-  - Upgraded Gradle dependency to 4.8
-  - Upgraded Android Plugin dependency to 3.2.0
+  - Enabled debug logging when using a debug Google Advertising ID (one that ends with "10ca1ad1abe1").
+  - Upgraded ExoPlayer dependency to 2.9.5.
+  - Upgraded MoPub-Volley dependency to 2.1.0.
 
 - **Bug Fixes**
-  - Addresses an ANR when requesting an ad immediately after initialization.
-  - MRAID isReady is now called after the load is finished instead of when the ad is shown.
+  - Banners no longer refresh when they are expanded. They will resume refreshing when the expanded view is closed.
+  - Setting orientation on an expanded banner no longer locks the orientation after the expanded view is closed.
+  - Improved click detection.           
+  - Catch `MissingWebViewPackageException` in `ConsentDialogLayoutWebView`.
+  - Reduce ANRs by removing synchronization from `Networking#getUserAgent(Context)`.
 
 ## Requirements
 
@@ -124,8 +125,8 @@ Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/mast
 - android-support-v4.jar, r28 (**Updated in 5.4.0**)
 - android-support-annotations.jar, r28 (**Updated in 5.4.0**)
 - android-support-v7-recyclerview.jar, r28 (**Updated in 5.4.0**)
-- MoPub Volley Library (mopub-volley-2.0.0.jar - available on JCenter) (**Updated in 5.0.0**)
-- **Recommended** Google Play Services 15.0.1
+- MoPub Volley Library (mopub-volley-2.1.0.jar - available on JCenter) (**Updated in 5.6.0**)
+- **Recommended** Google Play Services (com.google.android.gms:play-services-ads-identifier:16.0.0 and com.google.android.gms:play-services-base:16.0.1) (**Updated in 5.6.0**)
 
 ## Upgrading to SDK 5.0
 
@@ -145,7 +146,7 @@ Normally, to add the MoPub SDK to your app via JCenter, your `build.gradle` woul
 
 ```	
 dependencies {
-    implementation('com.mopub:mopub-sdk:5.5.0@aar') {
+    implementation('com.mopub:mopub-sdk:5.6.0@aar') {
         transitive = true
     }
 }
@@ -154,7 +155,7 @@ Update to the following to exclude one or both viewability vendors:
 
 ```
 dependencies {
-    implementation('com.mopub:mopub-sdk:5.5.0@aar') {
+    implementation('com.mopub:mopub-sdk:5.6.0@aar') {
         transitive = true
         exclude module: 'libAvid-mopub' // To exclude AVID
         exclude module: 'moat-mobile-app-kit' // To exclude Moat

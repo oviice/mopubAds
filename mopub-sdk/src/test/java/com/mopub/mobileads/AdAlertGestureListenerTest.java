@@ -23,6 +23,7 @@ import static com.mopub.mobileads.AdAlertGestureListener.ZigZagState.GOING_LEFT;
 import static com.mopub.mobileads.AdAlertGestureListener.ZigZagState.GOING_RIGHT;
 import static com.mopub.mobileads.AdAlertGestureListener.ZigZagState.UNSET;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
@@ -317,6 +318,34 @@ public class AdAlertGestureListenerTest {
         assertZigZagState(UNSET);
     }
 
+    @Test
+    public void isClicked_initialStateIsFalse(){
+        assertThat(subject.isClicked()).isFalse();
+    }
+
+    @Test
+    public void isClicked_afterMotionEvent_isTrue(){
+        MotionEvent touchEvent = mock(MotionEvent.class);
+
+        subject.onSingleTapUp(touchEvent);
+
+        assertThat(subject.isClicked()).isTrue();
+    }
+
+    @Test
+    public void isClicked_afterMotionEvent_afterReset_isFalse(){
+        MotionEvent touchEvent = mock(MotionEvent.class);
+
+        subject.onSingleTapUp(touchEvent);
+        assertThat(subject.isClicked()).isTrue();
+
+        subject.onResetUserClick();
+        assertThat(subject.isClicked()).isFalse();
+    }
+
+    /*
+        Utils
+     */
     private void simulateScroll(float endX) {
         simulateScroll(endX, savedY);
     }

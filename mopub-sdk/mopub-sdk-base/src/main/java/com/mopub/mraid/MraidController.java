@@ -62,6 +62,7 @@ public class MraidController {
         void onLoaded(View view);
         void onFailedToLoad();
         void onExpand();
+        void onResize(final boolean toOriginalSize);
         void onOpen();
         void onClose();
     }
@@ -651,6 +652,7 @@ public class MraidController {
         // Calling destroy eliminates a memory leak on Gingerbread devices
         detachMraidWebView();
         detachTwoParWebView();
+        unApplyOrientation();
     }
 
     private void detachMraidWebView() {
@@ -676,16 +678,30 @@ public class MraidController {
         }
 
         if (mMraidListener != null) {
-            if (viewState == ViewState.EXPANDED) {
-                mMraidListener.onExpand();
-            } else if (previousViewState == ViewState.EXPANDED && viewState == ViewState.DEFAULT) {
-                mMraidListener.onClose();
-            } else if (viewState == ViewState.HIDDEN) {
-                mMraidListener.onClose();
-            }
+            callMraidListenerCallbacks(mMraidListener, previousViewState, viewState);
         }
 
         updateScreenMetricsAsync(null);
+    }
+
+    @VisibleForTesting
+    static void callMraidListenerCallbacks(@NonNull final MraidListener mraidListener,
+            @NonNull final ViewState previousViewState, @NonNull final ViewState currentViewState) {
+        Preconditions.checkNotNull(mraidListener);
+        Preconditions.checkNotNull(previousViewState);
+        Preconditions.checkNotNull(currentViewState);
+
+        if (currentViewState == ViewState.EXPANDED) {
+            mraidListener.onExpand();
+        } else if (previousViewState == ViewState.EXPANDED && currentViewState == ViewState.DEFAULT) {
+            mraidListener.onClose();
+        } else if (currentViewState == ViewState.HIDDEN) {
+            mraidListener.onClose();
+        } else if (previousViewState == ViewState.RESIZED && currentViewState == ViewState.DEFAULT) {
+            mraidListener.onResize(true);
+        } else if (currentViewState == ViewState.RESIZED) {
+            mraidListener.onResize(false);
+        }
     }
 
     int clampInt(int min, int target, int max) {

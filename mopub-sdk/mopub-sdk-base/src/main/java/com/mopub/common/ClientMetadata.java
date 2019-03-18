@@ -130,8 +130,7 @@ public class ClientMetadata {
         return result;
     }
 
-    // NEVER CALL THIS AS A USER. Get it from the Singletons class.
-    public ClientMetadata(@NonNull final Context context) {
+    private ClientMetadata(@NonNull final Context context) {
         Preconditions.checkNotNull(context);
 
         mContext = context.getApplicationContext();

@@ -10,20 +10,27 @@ import android.content.Intent;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import com.mopub.common.AdReport;
+import com.mopub.common.DataKeys;
 import com.mopub.common.test.support.SdkTestRunner;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.robolectric.Robolectric;
 
 import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
 public class BaseInterstitialActivityTest {
     private BaseInterstitialActivity subject;
     private long broadcastIdentifier;
+
+    @Mock
+    AdReport mockAdReport;
 
     // Make a concrete version of the abstract class for testing purposes.
     private static class TestInterstitialActivity extends BaseInterstitialActivity {
@@ -79,6 +86,49 @@ public class BaseInterstitialActivityTest {
                 .create().get();
 
         assertThat(subject.getBroadcastIdentifier()).isNull();
+    }
+
+    @Test
+    public void getResponseString_withNullAdReport_shouldReturnNull() {
+        Intent intent = new Intent()
+                .putExtra(DataKeys.AD_REPORT_KEY, mockAdReport)
+                .putExtra(BROADCAST_IDENTIFIER_KEY, broadcastIdentifier);
+
+        subject = Robolectric.buildActivity(TestInterstitialActivity.class, intent)
+                .create().get();
+
+        assertThat(subject.getResponseString()).isNull();
+    }
+
+    @Test
+    public void getResponseString_withNonNullAdReport_shouldReturnResponseString() {
+        final String responseString = "this is a response string";
+        when(mockAdReport.getResponseString()).thenReturn(responseString);
+
+        Intent intent = new Intent()
+                .putExtra(DataKeys.AD_REPORT_KEY, mockAdReport)
+                .putExtra(BROADCAST_IDENTIFIER_KEY, broadcastIdentifier);
+
+        subject = Robolectric.buildActivity(TestInterstitialActivity.class, intent)
+                .create().get();
+
+        assertThat(subject.getResponseString()).isEqualTo(responseString);
+    }
+
+    @Test
+    public void staticGetResponseString_withNullAdReport_shouldReturnNull() {
+        AdReport nullAdReport = null;
+
+        assertThat(BaseInterstitialActivity.getResponseString(nullAdReport)).isNull();
+    }
+
+    @Test
+    public void staticGetResponseString_withNonNullAdReport_shouldReturnResponseString() {
+        final String responseString = "this is a response string";
+        when(mockAdReport.getResponseString()).thenReturn(responseString);
+
+        assertThat(BaseInterstitialActivity.getResponseString(mockAdReport))
+                .isEqualTo(responseString);
     }
 
     protected FrameLayout getContentView(BaseInterstitialActivity subject) {

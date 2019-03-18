@@ -5,6 +5,8 @@
 package com.mopub.common.util;
 
 public enum ResponseHeader {
+    BACKOFF_REASON("backoff_reason"),
+    BACKOFF_MS("backoff_ms"),
     AD_TIMEOUT("x-ad-timeout-ms"),
     AD_TYPE("x-adtype"),
     CLICK_TRACKING_URL("x-clickthrough"),

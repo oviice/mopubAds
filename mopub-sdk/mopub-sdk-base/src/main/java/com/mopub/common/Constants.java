@@ -8,11 +8,15 @@ public class Constants {
 
     private Constants() {}
 
+    static {
+        HOST = "ads.mopub.com";
+    }
+
     public static final String HTTP = "http";
     public static final String HTTPS = "https";
     public static final String INTENT_SCHEME = "intent";
 
-    public static final String HOST = "ads.mopub.com";
+    public static final String HOST;
 
     public static final String AD_HANDLER = "/m/ad";
     public static final String CONVERSION_TRACKING_HANDLER = "/m/open";

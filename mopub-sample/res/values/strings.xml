@@ -28,4 +28,30 @@
     <string name="ad_unit_id_rewarded_rich_media">a96ae2ef41d44822af45c6328c4e1eb1</string>
     <string name="ad_unit_id_native">11a17b188668469fb0412708c3d16813</string>
     <string name="swipe_text"><![CDATA[< Swipe Left & Right >]]></string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">MoPub Sample App</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+    <string name="consent_whitelisted">Consent changed to Potentially whitelisted</string>
+    <string name="consent_denied">Consent changed to Denied</string>
+    <string name="close">Close</string>
+    <string name="no_network_adapters_found">No network adapters found</string>
+    <string name="mopub_logo_descr">Mopub logo</string>
+    <string name="consent_change_status">Consent change status</string>
+    <string name="donottrack_text">Do Not Track is on</string>
+    <string name="api_endpoint">API ENDPOINT</string>
+    <string name="production">Production</string>
+    <string name="staging">Staging</string>
+    <string name="privacy">PRIVACY</string>
+    <string name="information">Information</string>
+    <string name="grant_consent">Grant Consent</string>
+    <string name="revoke_consent">Revoke Consent</string>
+    <string name="force_gdpr_applicable">Force GDPR Applicable</string>
+    <string name="info">INFO</string>
+    <string name="network_adapters">Network Adapters</string>
+    <string name="pim_is_not_available">getPersonalInformationManager() returned null</string>
+    <string name="list_fragment_not_found">Can\'t find MoPubListFragment.</string>
 </resources>

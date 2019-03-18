@@ -143,6 +143,7 @@ public class AdLoader {
         if (mRunning) {
             return mMultiAdRequest;
         }
+
         if (mFailed) {
             // call back using handler to make sure it is always async.
             mHandler.post(new Runnable() {
@@ -158,7 +159,19 @@ public class AdLoader {
 
             // not running and not failed: start it for the first time
             if (mMultiAdResponse == null) {
-                return fetchAd(mMultiAdRequest, mContext.get());
+                if (RequestRateTracker.getInstance().isBlockedByRateLimit(mMultiAdRequest.mAdUnitId)) {
+                    // report no fill
+                    MoPubLog.log(MoPubLog.SdkLogEvent.CUSTOM, mMultiAdRequest.mAdUnitId + " is blocked by request rate limiting.");
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            deliverError(new MoPubNetworkError(MoPubNetworkError.Reason.NO_FILL));
+                        }
+                    });
+                    return null;
+                } else {
+                    return fetchAd(mMultiAdRequest, mContext.get()); // first request
+                }
             }
 
             // report creative download error to the server

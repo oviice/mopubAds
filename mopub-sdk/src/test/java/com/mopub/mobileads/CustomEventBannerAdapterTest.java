@@ -298,7 +298,7 @@ public class CustomEventBannerAdapterTest {
         verify(moPubView).creativeDownloaded();
         verify(moPubView).setAdContentView(eq(mockHtmlBannerWebView));
         verify(moPubView, never()).trackNativeImpression();
-        verify(moPubView).pauseAutorefresh();
+        verify(moPubView).pauseAutoRefresh();
     }
 
     @Test
@@ -320,7 +320,7 @@ public class CustomEventBannerAdapterTest {
         verify(moPubView).creativeDownloaded();
         verify(moPubView).setAdContentView(eq(view));
         verify(moPubView, never()).trackNativeImpression();
-        verify(moPubView).pauseAutorefresh();
+        verify(moPubView).pauseAutoRefresh();
     }
 
     @Test
@@ -341,7 +341,7 @@ public class CustomEventBannerAdapterTest {
     public void onBannerExpanded_shouldPauseRefreshAndCallAdPresentOverlay_shouldCallExpand() throws Exception {
         subject.onBannerExpanded();
 
-        verify(moPubView).expand();
+        verify(moPubView).engageOverlay();
         verify(moPubView).adPresentedOverlay();
     }
 
@@ -351,14 +351,14 @@ public class CustomEventBannerAdapterTest {
         subject.onBannerExpanded();
         reset(moPubView);
         subject.onBannerCollapsed();
-        verify(moPubView).collapse();
+        verify(moPubView).dismissOverlay();
         verify(moPubView).adClosed();
 
         when(moPubView.getAutorefreshEnabled()).thenReturn(false);
         subject.onBannerExpanded();
         reset(moPubView);
         subject.onBannerCollapsed();
-        verify(moPubView).collapse();
+        verify(moPubView).dismissOverlay();
         verify(moPubView).adClosed();
     }
 
@@ -392,6 +392,20 @@ public class CustomEventBannerAdapterTest {
         subject.onLeaveApplication();
 
         verify(moPubView).registerClick();
+    }
+
+    @Test
+    public void onPauseAutoRefresh_shouldEngageOverlay() {
+        subject.onPauseAutoRefresh();
+
+        verify(moPubView).engageOverlay();
+    }
+
+    @Test
+    public void onResumeAutoRefresh_shouldDismissOverlay() {
+        subject.onResumeAutoRefresh();
+
+        verify(moPubView).dismissOverlay();
     }
 
     @Test

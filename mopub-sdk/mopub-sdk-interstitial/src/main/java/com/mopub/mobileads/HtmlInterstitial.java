@@ -34,13 +34,13 @@ public class HtmlInterstitial extends ResponseBodyInterstitial {
     @Override
     protected void preRenderHtml(CustomEventInterstitialListener customEventInterstitialListener) {
         MoPubLog.log(LOAD_ATTEMPTED, ADAPTER_NAME);
-        MoPubActivity.preRenderHtml(this, mContext, mAdReport, customEventInterstitialListener, mHtmlData, mClickthroughUrl, mBroadcastIdentifier);
+        MoPubActivity.preRenderHtml(this, mContext, mAdReport, customEventInterstitialListener, mClickthroughUrl, mBroadcastIdentifier);
     }
 
     @Override
     public void showInterstitial() {
         MoPubLog.log(SHOW_ATTEMPTED, ADAPTER_NAME);
-        MoPubActivity.start(mContext, mHtmlData, mAdReport, mClickthroughUrl, mOrientation,
+        MoPubActivity.start(mContext, mAdReport, mClickthroughUrl, mOrientation,
                 mBroadcastIdentifier);
     }
 }

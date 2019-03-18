@@ -71,14 +71,14 @@ public class RewardedMraidInterstitial extends MraidInterstitial {
 
         }
         RewardedMraidActivity.preRenderHtml(this, mContext,
-                customEventInterstitialListener, mHtmlData, mBroadcastIdentifier, mAdReport,
+                customEventInterstitialListener, mBroadcastIdentifier, mAdReport,
                 mRewardedDuration);
     }
 
     @Override
     public void showInterstitial() {
         MoPubLog.log(SHOW_ATTEMPTED, ADAPTER_NAME);
-        RewardedMraidActivity.start(mContext, mAdReport, mHtmlData, mBroadcastIdentifier,
+        RewardedMraidActivity.start(mContext, mAdReport, mBroadcastIdentifier,
                 mRewardedDuration, mShouldRewardOnClick);
     }
 

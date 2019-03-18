@@ -115,6 +115,28 @@ public class AdReportTest {
         assertThat(subject.toString()).isEqualTo(expectedParameters);
     }
 
+    @Test
+    public void getResponseString_shouldReturnAdResponseStringBody() {
+        final String stringBody = "this is the ad response string body";
+        when(mockAdResponse.getStringBody()).thenReturn(stringBody);
+        when(mockClientMetadata.getMoPubIdentifier()).thenReturn(new MoPubIdentifier(context));
+
+        subject = new AdReport("testAdunit", mockClientMetadata, mockAdResponse);
+
+        assertThat(subject.getResponseString()).isEqualTo(stringBody);
+    }
+
+    @Test
+    public void getResponseString_withNullStringBody_shouldReturnNull() {
+        final String stringBody = null;
+        when(mockAdResponse.getStringBody()).thenReturn(stringBody);
+        when(mockClientMetadata.getMoPubIdentifier()).thenReturn(new MoPubIdentifier(context));
+
+        subject = new AdReport("testAdunit", mockClientMetadata, mockAdResponse);
+
+        assertThat(subject.getResponseString()).isNull();
+    }
+
     private String getCurrentDateTime() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("M/d/yy hh:mm:ss a z", Locale.US);
         return dateFormat.format(now);

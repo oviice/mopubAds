@@ -19,7 +19,6 @@ import org.robolectric.Robolectric;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowGestureDetector;
 
-import static com.mopub.mobileads.ViewGestureDetector.UserClickListener;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -60,35 +59,10 @@ public class ViewGestureDetectorTest {
     }
 
     @Test
-    public void onTouchEvent_whenActionUpAndClickListener_shouldNotifyClickListenerAndCheckReportAd() throws Exception {
-        MotionEvent expectedMotionEvent = createMotionEvent(MotionEvent.ACTION_UP);
-
-        UserClickListener userClickListener = mock(UserClickListener.class);
-        subject.setUserClickListener(userClickListener);
-
-        subject.sendTouchEvent(expectedMotionEvent);
-
-        verify(userClickListener).onUserClick();
-        verify(adAlertGestureListener).finishGestureDetection();
-    }
-
-    @Test
-    public void onTouchEvent_whenActionUpButNoClickListener_shouldNotNotifyClickListenerAndCheckReportAd() throws Exception {
-        MotionEvent expectedMotionEvent = createMotionEvent(MotionEvent.ACTION_UP);
-
-        UserClickListener userClickListener = mock(UserClickListener.class);
-
-        subject.sendTouchEvent(expectedMotionEvent);
-
-        verify(userClickListener, never()).onUserClick();
-        verify(adAlertGestureListener).finishGestureDetection();
-    }
-
-    @Test
     public void onTouchEvent_whenActionDown_shouldForwardOnTouchEvent() throws Exception {
         MotionEvent expectedMotionEvent = createMotionEvent(MotionEvent.ACTION_DOWN);
 
-        subject.sendTouchEvent(expectedMotionEvent);
+        subject.onTouchEvent(expectedMotionEvent);
 
         MotionEvent actualMotionEvent = Shadows.shadowOf(subject).getOnTouchEventMotionEvent();
 
@@ -98,36 +72,15 @@ public class ViewGestureDetectorTest {
     @Test
     public void onTouchEvent_whenActionMoveWithinView_shouldForwardOnTouchEvent() throws Exception {
         MotionEvent downEvent = createMotionEvent(MotionEvent.ACTION_DOWN);
-        subject.sendTouchEvent(downEvent);
+        subject.onTouchEvent(downEvent);
 
         MotionEvent expectedMotionEvent = createActionMove(160);
-        subject.sendTouchEvent(expectedMotionEvent);
+        subject.onTouchEvent(expectedMotionEvent);
 
         MotionEvent actualMotionEvent = Shadows.shadowOf(subject).getOnTouchEventMotionEvent();
 
         assertThat(actualMotionEvent).isEqualTo(expectedMotionEvent);
         verify(adAlertGestureListener, never()).reset();
-    }
-
-    @Test
-    public void sendTouchEvent_whenReceiveTouchEventOutsideOfViewInXDirection_shouldResetAlertState() throws Exception {
-        subject.sendTouchEvent(createActionMove(350));
-
-        MotionEvent actualMotionEvent = Shadows.shadowOf(subject).getOnTouchEventMotionEvent();
-
-        assertThat(actualMotionEvent).isNull();
-        verify(adAlertGestureListener).reset();
-    }
-
-    @Test
-    public void sendTouchEvent_whenReceiveTouchEventOutsideOfViewInYDirection_shouldResetAlertState() throws Exception {
-        MotionEvent verticalMotion = MotionEvent.obtain(0, 0, MotionEvent.ACTION_MOVE, 160, 200, 0);
-        subject.sendTouchEvent(verticalMotion);
-
-        MotionEvent actualMotionEvent = Shadows.shadowOf(subject).getOnTouchEventMotionEvent();
-
-        assertThat(actualMotionEvent).isNull();
-        verify(adAlertGestureListener).reset();
     }
 
     @Test

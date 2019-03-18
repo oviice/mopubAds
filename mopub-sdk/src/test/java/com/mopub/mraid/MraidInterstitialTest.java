@@ -113,7 +113,6 @@ public class MraidInterstitialTest extends ResponseBodyInterstitialTest {
 
         assertThat(intent.getComponent().getClassName())
                 .isEqualTo("com.mopub.mobileads.MraidActivity");
-        assertThat(intent.getExtras().get(HTML_RESPONSE_BODY_KEY)).isEqualTo(EXPECTED_HTML_DATA);
         assertThat(intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isNotEqualTo(0);
     }
 

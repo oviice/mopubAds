@@ -35,13 +35,13 @@ class MraidInterstitial extends ResponseBodyInterstitial {
     protected void preRenderHtml(@NonNull CustomEventInterstitialListener
             customEventInterstitialListener) {
         MoPubLog.log(LOAD_ATTEMPTED, ADAPTER_NAME);
-        MraidActivity.preRenderHtml(this, mContext, customEventInterstitialListener, mHtmlData,
+        MraidActivity.preRenderHtml(this, mContext, customEventInterstitialListener,
                 mBroadcastIdentifier, mAdReport);
     }
 
     @Override
     public void showInterstitial() {
         MoPubLog.log(SHOW_ATTEMPTED, ADAPTER_NAME);
-        MraidActivity.start(mContext, mAdReport, mHtmlData, mBroadcastIdentifier, mOrientation);
+        MraidActivity.start(mContext, mAdReport, mBroadcastIdentifier, mOrientation);
     }
 }

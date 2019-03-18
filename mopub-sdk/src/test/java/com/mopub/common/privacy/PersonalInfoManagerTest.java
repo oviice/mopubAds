@@ -82,6 +82,7 @@ public class PersonalInfoManagerTest {
         personalInfoData = subject.getPersonalInfoData();
         mockConsentStatusChangeListener = mock(ConsentStatusChangeListener.class);
         subject.subscribeConsentStatusChangeListener(mockConsentStatusChangeListener);
+        personalInfoData.setLastChangedMs("old_time");
     }
 
     @After
@@ -364,6 +365,7 @@ public class PersonalInfoManagerTest {
         assertThat(subject.getPersonalInfoConsentStatus()).isEqualTo(ConsentStatus.EXPLICIT_YES);
         assertThat(personalInfoData.getConsentChangeReason()).isEqualTo(
                 ConsentChangeReason.GRANTED_BY_USER.getReason());
+        assertThat(personalInfoData.getLastChangedMs()).isNotEqualTo("old_time");
         verify(mockConsentStatusChangeListener).onConsentStateChange(ConsentStatus.UNKNOWN,
                 ConsentStatus.EXPLICIT_YES, true);
     }
@@ -378,6 +380,7 @@ public class PersonalInfoManagerTest {
         assertThat(subject.getPersonalInfoConsentStatus()).isEqualTo(ConsentStatus.EXPLICIT_NO);
         assertThat(personalInfoData.getConsentChangeReason()).isEqualTo(
                 ConsentChangeReason.DENIED_BY_USER.getReason());
+        assertThat(personalInfoData.getLastChangedMs()).isNotEqualTo("old_time");
         verify(mockConsentStatusChangeListener).onConsentStateChange(ConsentStatus.UNKNOWN,
                 ConsentStatus.EXPLICIT_NO, false);
     }
@@ -748,6 +751,7 @@ public class PersonalInfoManagerTest {
         subject.attemptStateTransition(ConsentStatus.EXPLICIT_YES, "no reason");
         verifyZeroInteractions(mockConsentStatusChangeListener);
         assertThat(personalInfoData.getConsentedPrivacyPolicyVersion()).isEqualTo("1");
+        assertThat(personalInfoData.getLastChangedMs()).isEqualTo("old_time");
     }
 
     @Test
@@ -767,6 +771,7 @@ public class PersonalInfoManagerTest {
         assertThat(subject.getPersonalInfoConsentStatus()).isEqualTo(ConsentStatus.EXPLICIT_YES);
         verify(mockConsentStatusChangeListener).onConsentStateChange(ConsentStatus.UNKNOWN,
                 ConsentStatus.EXPLICIT_YES, true);
+        assertThat(personalInfoData.getLastChangedMs()).isNotEqualTo("old_time");
     }
 
     @Test
@@ -788,6 +793,7 @@ public class PersonalInfoManagerTest {
         verify(mockConsentStatusChangeListener).onConsentStateChange(
                 ConsentStatus.POTENTIAL_WHITELIST,
                 ConsentStatus.EXPLICIT_YES, true);
+        assertThat(personalInfoData.getLastChangedMs()).isNotEqualTo("old_time");
     }
 
     @Test
@@ -809,6 +815,7 @@ public class PersonalInfoManagerTest {
         assertThat(subject.getPersonalInfoConsentStatus()).isEqualTo(ConsentStatus.DNT);
         verify(mockConsentStatusChangeListener).onConsentStateChange(ConsentStatus.EXPLICIT_YES,
                 ConsentStatus.DNT, false);
+        assertThat(personalInfoData.getLastChangedMs()).isNotEqualTo("old_time");
     }
 
     @Test
@@ -829,6 +836,7 @@ public class PersonalInfoManagerTest {
         assertThat(subject.getPersonalInfoConsentStatus()).isEqualTo(ConsentStatus.DNT);
         verify(mockConsentStatusChangeListener).onConsentStateChange(ConsentStatus.EXPLICIT_YES,
                 ConsentStatus.DNT, false);
+        assertThat(personalInfoData.getLastChangedMs()).isNotEqualTo("old_time");
     }
 
     @Test
@@ -850,6 +858,7 @@ public class PersonalInfoManagerTest {
         assertThat(subject.getPersonalInfoConsentStatus()).isEqualTo(ConsentStatus.EXPLICIT_NO);
         verify(mockConsentStatusChangeListener).onConsentStateChange(ConsentStatus.EXPLICIT_YES,
                 ConsentStatus.EXPLICIT_NO, false);
+        assertThat(personalInfoData.getLastChangedMs()).isNotEqualTo("old_time");
     }
 
     @Test
@@ -870,5 +879,6 @@ public class PersonalInfoManagerTest {
                 ConsentStatus.POTENTIAL_WHITELIST);
         verify(mockConsentStatusChangeListener).onConsentStateChange(ConsentStatus.UNKNOWN,
                 ConsentStatus.POTENTIAL_WHITELIST, false);
+        assertThat(personalInfoData.getLastChangedMs()).isNotEqualTo("old_time");
     }
 }

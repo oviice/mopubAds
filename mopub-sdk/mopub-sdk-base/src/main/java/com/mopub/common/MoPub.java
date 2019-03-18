@@ -18,6 +18,7 @@ import com.mopub.network.Networking;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
 
 import static com.mopub.common.ExternalViewabilitySessionManager.ViewabilityVendor;
 import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
@@ -26,7 +27,7 @@ import static com.mopub.common.logging.MoPubLog.SdkLogEvent.INIT_STARTED;
 import static com.mopub.common.logging.MoPubLog.SdkLogEvent.INIT_FINISHED;
 
 public class MoPub {
-    public static final String SDK_VERSION = "5.5.0";
+    public static final String SDK_VERSION = "5.6.0";
 
     public enum LocationAwareness { NORMAL, TRUNCATED, DISABLED }
 
@@ -319,6 +320,15 @@ public class MoPub {
         vendor.disable();
     }
 
+    @Nullable
+    public static List<String> getAdapterConfigurationInfo() {
+        final AdapterConfigurationManager configurationManager = sAdapterConfigurationManager;
+        if (configurationManager != null) {
+            return configurationManager.getAdapterConfigurationInfo();
+        }
+        return null;
+    }
+
     private static void initializeRewardedVideo(@NonNull Activity activity, @NonNull SdkConfiguration sdkConfiguration) {
         Preconditions.checkNotNull(activity);
         Preconditions.checkNotNull(sdkConfiguration);
@@ -361,7 +371,10 @@ public class MoPub {
 
         @Override
         public void onInitializationFinished() {
-            MoPubLog.log(INIT_FINISHED, sAdapterConfigurationManager.getAdvancedBidderDetails());
+            final AdapterConfigurationManager adapterConfigurationManager = sAdapterConfigurationManager;
+            if (adapterConfigurationManager != null) {
+                MoPubLog.log(INIT_FINISHED, adapterConfigurationManager.getAdapterConfigurationInfo());
+            }
             initializationFinished(mSdkInitializationListener);
             mSdkInitializationListener = null;
         }

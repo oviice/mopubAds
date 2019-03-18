@@ -64,7 +64,6 @@ public class PersonalInfoManager {
     private long mSyncDelayMs = MINIMUM_SYNC_DELAY;
     @Nullable private Long mLastSyncRequestTimeUptimeMs;
     @Nullable private ConsentStatus mSyncRequestConsentStatus;
-    private long mSyncRequestEpochTime;
     private boolean mSyncRequestInFlight;
     private boolean mForceGdprAppliesChanged;
     private boolean mForceGdprAppliesChangedSending;
@@ -444,7 +443,6 @@ public class PersonalInfoManager {
         MoPubLog.log(SYNC_ATTEMPTED);
 
         mSyncRequestConsentStatus = mPersonalInfoData.getConsentStatus();
-        mSyncRequestEpochTime = Calendar.getInstance().getTimeInMillis();
         mSyncRequestInFlight = true;
 
         mLastSyncRequestTimeUptimeMs = SystemClock.uptimeMillis();
@@ -514,6 +512,7 @@ public class PersonalInfoManager {
             return;
         }
 
+        mPersonalInfoData.setLastChangedMs("" + Calendar.getInstance().getTimeInMillis());
         mPersonalInfoData.setConsentChangeReason(consentChangeReason);
         mPersonalInfoData.setConsentStatus(newConsentStatus);
         if (ConsentStatus.POTENTIAL_WHITELIST.equals(newConsentStatus) ||
@@ -623,7 +622,6 @@ public class PersonalInfoManager {
                 }
             }
 
-            mPersonalInfoData.setLastChangedMs("" + mSyncRequestEpochTime);
             mPersonalInfoData.setLastSuccessfullySyncedConsentStatus(mSyncRequestConsentStatus);
             mPersonalInfoData.setWhitelisted(response.isWhitelisted());
             mPersonalInfoData.setCurrentVendorListVersion(response.getCurrentVendorListVersion());

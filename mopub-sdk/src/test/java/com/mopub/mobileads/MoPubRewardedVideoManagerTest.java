@@ -171,7 +171,7 @@ public class
         ShadowLooper.unPauseMainLooper();
         MoPubRewardedVideoManager.getRewardedAdData().clear();
         MoPubRewardedVideoManager.getAdRequestStatusMapping().clearMapping();
-        mTestCustomEventSharedPrefs.edit().clear().commit();
+        mTestCustomEventSharedPrefs.edit().clear().apply();
         MoPubIdentifierTest.clearPreferences(mActivity);
         new Reflection.MethodBuilder(null, "clearAdvancedBidders")
                 .setStatic(MoPub.class)
@@ -698,7 +698,7 @@ public class
         // Put in {"k1":"v1","k2":"v2"} as existing init params.
         mTestCustomEventSharedPrefs.edit().putString(
                 TestCustomEvent.class.getName(),
-                "{\"k1\":\"v1\",\"k2\":\"v2\"}").commit();
+                "{\"k1\":\"v1\",\"k2\":\"v2\"}").apply();
 
         // New init params are {"k3":"v3"}.
         JSONObject jsonResponse = createRewardedJsonResponse();

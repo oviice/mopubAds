@@ -30,6 +30,8 @@ import android.widget.Toast;
 import com.mopub.common.MoPub;
 import com.mopub.common.Preconditions;
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.privacy.ConsentStatus;
+import com.mopub.common.privacy.PersonalInfoManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -222,6 +224,36 @@ public class MoPubListFragment extends ListFragment implements TrashCanClickList
         mAdUnitDataSource.deleteSampleAdUnit(moPubSampleAdUnit);
         mAdapter.remove(moPubSampleAdUnit);
         mAdapter.sort(MoPubSampleAdUnit.COMPARATOR);
+    }
+
+    /**
+     * Call this function to grant or revoke user consent
+     * @param consentGranted - true to grant consent, false to revoke
+     * @return - true successfully completed operation, false failed for some reason
+     */
+    boolean onChangeConsent(final boolean consentGranted) {
+        final PersonalInfoManager personalInfoManager = MoPub.getPersonalInformationManager();
+        final View view = getView();
+        if (personalInfoManager == null || view == null) {
+            MoPubLog.log(MoPubLog.SdkLogEvent.CUSTOM, getString(R.string.pim_is_not_available));
+            return false;
+        }
+
+        final EditText text = view.findViewById(R.id.status_change_notification);
+        text.setVisibility(View.VISIBLE);
+        if (consentGranted) {
+            personalInfoManager.grantConsent();
+            text.setText(R.string.consent_whitelisted);
+        } else {
+            if (personalInfoManager.getPersonalInfoConsentStatus().equals(ConsentStatus.DNT)) {
+                text.setText(R.string.donottrack_text);
+                return false;
+            }
+            personalInfoManager.revokeConsent();
+            text.setText(R.string.consent_denied);
+        }
+
+        return true;
     }
 
     public static class DeleteDialogFragment extends DialogFragment {

@@ -7,6 +7,7 @@ package com.mopub.mraid;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -29,23 +30,20 @@ import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.BaseWebView;
 import com.mopub.mobileads.ViewGestureDetector;
-import com.mopub.mobileads.ViewGestureDetector.UserClickListener;
 import com.mopub.mraid.MraidNativeCommandHandler.MraidCommandFailureListener;
 import com.mopub.network.Networking;
 
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
+import static com.mopub.network.MoPubRequestUtils.getQueryParamMap;
 
 public class MraidBridge {
     private final AdReport mAdReport;
@@ -89,7 +87,7 @@ public class MraidBridge {
 
     @Nullable private MraidWebView mMraidWebView;
 
-    private boolean mIsClicked;
+    @Nullable private ViewGestureDetector mGestureDetector;
 
     private boolean mHasLoaded;
 
@@ -150,29 +148,13 @@ public class MraidBridge {
             }
         });
 
-        final ViewGestureDetector gestureDetector = new ViewGestureDetector(
+        mGestureDetector = new ViewGestureDetector(
                 mMraidWebView.getContext(), mMraidWebView, mAdReport);
-        gestureDetector.setUserClickListener(new UserClickListener() {
-            @Override
-            public void onUserClick() {
-                mIsClicked = true;
-            }
-
-            @Override
-            public void onResetUserClick() {
-                mIsClicked = false;
-            }
-
-            @Override
-            public boolean wasClicked() {
-                return mIsClicked;
-            }
-        });
 
         mMraidWebView.setOnTouchListener(new OnTouchListener() {
             @Override
             public boolean onTouch(final View v, final MotionEvent event) {
-                gestureDetector.sendTouchEvent(event);
+                mGestureDetector.onTouchEvent(event);
 
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
@@ -345,14 +327,16 @@ public class MraidBridge {
 
     @VisibleForTesting
     boolean handleShouldOverrideUrl(@NonNull final String url) {
-        URI uri;
         try {
-            uri = new URI(url);
+            // This is purely for validating the URI before proceeding
+            final URI uri = new URI(url);
         } catch (URISyntaxException e) {
             MoPubLog.log(CUSTOM, "Invalid MRAID URL: " + url);
             fireErrorEvent(MraidJavascriptCommand.UNSPECIFIED, "Mraid command sent an invalid URL");
             return true;
         }
+
+        Uri uri = Uri.parse(url);
 
         // Note that scheme will be null when we are passed a relative Uri
         String scheme = uri.getScheme();
@@ -369,12 +353,12 @@ public class MraidBridge {
 
         // This block converts all other URLs, including sms://, tel:// into MRAID URL. It checks for
         // 'clicked' in order to avoid interfering with automatic browser redirects.
-        if (mIsClicked && !"mraid".equals(scheme)) {
+        if (isClicked() && !"mraid".equals(scheme)) {
             try {
-                uri = new URI(MRAID_OPEN + URLEncoder.encode(url, "UTF-8"));
+                uri = Uri.parse(MRAID_OPEN + URLEncoder.encode(url, "UTF-8"));
                 host = uri.getHost();
                 scheme = uri.getScheme();
-            } catch (URISyntaxException | UnsupportedEncodingException e) {
+            } catch (UnsupportedEncodingException e) {
                 MoPubLog.log(CUSTOM, "Invalid MRAID URL encoding: " + url);
                 fireErrorEvent(MraidJavascriptCommand.OPEN, "Non-mraid URL is invalid");
                 return false;
@@ -382,13 +366,9 @@ public class MraidBridge {
         }
 
         if ("mraid".equals(scheme)) {
-            Map<String, String> params = new HashMap<>();
-            for (NameValuePair pair : URLEncodedUtils.parse(uri, "UTF-8")) {
-                params.put(pair.getName(), pair.getValue());
-            }
             MraidJavascriptCommand command = MraidJavascriptCommand.fromJavascriptString(host);
             try {
-                runCommand(command, params);
+                runCommand(command, getQueryParamMap(uri));
             } catch (MraidCommandException | IllegalArgumentException exception) {
                 fireErrorEvent(command, exception.getMessage());
             }
@@ -419,7 +399,7 @@ public class MraidBridge {
     void runCommand(@NonNull final MraidJavascriptCommand command,
             @NonNull Map<String, String> params)
             throws MraidCommandException {
-        if (command.requiresClick(mPlacementType) && !mIsClicked) {
+        if (command.requiresClick(mPlacementType) && !isClicked()) {
             throw new MraidCommandException("Cannot execute this command unless the user clicks");
         }
 
@@ -639,7 +619,8 @@ public class MraidBridge {
     }
 
     boolean isClicked() {
-        return mIsClicked;
+        final ViewGestureDetector gDetector = mGestureDetector;
+        return gDetector != null && gDetector.isClicked();
     }
 
     boolean isViewable() {
@@ -662,6 +643,9 @@ public class MraidBridge {
 
     @VisibleForTesting
     void setClicked(boolean clicked) {
-        mIsClicked = clicked;
+        final ViewGestureDetector gDetector = mGestureDetector;
+        if (gDetector != null) {
+            gDetector.setClicked(clicked);
+        }
     }
 }

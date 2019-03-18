@@ -21,6 +21,7 @@ import org.robolectric.Robolectric;
 
 import static com.mopub.mraid.RewardedMraidController.MILLIS_IN_SECOND;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 @RunWith(SdkTestRunner.class)
 public class RewardedMraidActivityTest {
@@ -42,8 +43,9 @@ public class RewardedMraidActivityTest {
         broadcastIdentifier = 3333;
         shouldRewardOnClick = false;
 
+        when(mockAdReport.getResponseString()).thenReturn(HTML_DATA);
         Context context = Robolectric.buildActivity(Activity.class).create().get();
-        Intent intent = RewardedMraidActivity.createIntent(context, mockAdReport, HTML_DATA,
+        Intent intent = RewardedMraidActivity.createIntent(context, mockAdReport,
                 broadcastIdentifier, REWARDED_DURATION_IN_SECONDS, shouldRewardOnClick);
         subject = Robolectric.buildActivity(RewardedMraidActivity.class, intent)
                 .create().get();

@@ -114,30 +114,24 @@ public class BaseHtmlWebViewTest {
         subject.initializeOnTouchListener();
         View.OnTouchListener onTouchListener = Shadows.shadowOf(subject).getOnTouchListener();
 
+        onTouchListener.onTouch(subject, touchDown);
         onTouchListener.onTouch(subject, touchUp);
         assertThat(subject.wasClicked()).isTrue();
     }
 
     @Test
-    public void sendTouchEvent_withLotsOfRandomMotionEvents_shouldEventuallySetUserClicked() {
+    public void sendTouchEvent_withTouchDownAndTouchUp_shouldEventuallySetUserClicked() {
         subject.initializeOnTouchListener();
         View.OnTouchListener onTouchListener = Shadows.shadowOf(subject).getOnTouchListener();
 
         onTouchListener.onTouch(subject, touchDown);
         assertThat(subject.wasClicked()).isFalse();
-        onTouchListener.onTouch(subject, createMotionEvent(MotionEvent.ACTION_CANCEL));
-        assertThat(subject.wasClicked()).isFalse();
+        onTouchListener.onTouch(subject, createMotionEvent(MotionEvent.ACTION_MOVE));
+        onTouchListener.onTouch(subject, createMotionEvent(MotionEvent.ACTION_MOVE));
         onTouchListener.onTouch(subject, createMotionEvent(MotionEvent.ACTION_MOVE));
         assertThat(subject.wasClicked()).isFalse();
 
         onTouchListener.onTouch(subject, touchUp);
-        assertThat(subject.wasClicked()).isTrue();
-
-        onTouchListener.onTouch(subject, touchDown);
-        assertThat(subject.wasClicked()).isTrue();
-        onTouchListener.onTouch(subject, createMotionEvent(MotionEvent.ACTION_CANCEL));
-        assertThat(subject.wasClicked()).isTrue();
-        onTouchListener.onTouch(subject, createMotionEvent(MotionEvent.ACTION_MOVE));
         assertThat(subject.wasClicked()).isTrue();
     }
 

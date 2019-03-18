@@ -27,7 +27,7 @@ import static com.mopub.nativeads.MoPubNative.MoPubNativeNetworkListener;
  * To take an ad out of the cache, call {@link #dequeueAd}.
  *
  * The cache size may be automatically adjusted by the MoPub server based on an app's usage and
- * ad fill rate. Cached ads have a maximum TTL of 15 minutes before which they expire.
+ * ad fill rate. Cached ads have a maximum TTL of 4 hours before which they expire.
  *
  * The ad source also takes care of retrying failed ad requests, with a reasonable back-off to
  * avoid spamming the server.

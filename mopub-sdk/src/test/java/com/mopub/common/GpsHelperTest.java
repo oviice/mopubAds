@@ -138,7 +138,7 @@ public class GpsHelperTest {
         SharedPreferencesHelper.getSharedPreferences(context)
                 .edit()
                 .putBoolean(GpsHelper.IS_LIMIT_AD_TRACKING_ENABLED_KEY, adInfo.LIMIT_AD_TRACKING_ENABLED)
-                .commit();
+                .apply();
         assertThat(GpsHelper.isLimitAdTrackingEnabled(context)).isEqualTo(adInfo.LIMIT_AD_TRACKING_ENABLED);
     }
 

@@ -18,7 +18,6 @@ import com.mopub.common.Preconditions;
 import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.ReflectionTarget;
-import com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;
 import com.mopub.mobileads.factories.CustomEventBannerFactory;
 
 import java.util.Map;
@@ -35,7 +34,7 @@ import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_TIMEOUT;
 import static com.mopub.mobileads.MoPubErrorCode.UNSPECIFIED;
 
-public class CustomEventBannerAdapter implements CustomEventBannerListener {
+public class CustomEventBannerAdapter implements InternalCustomEventBannerListener {
     public static final int DEFAULT_BANNER_TIMEOUT_DELAY = Constants.TEN_SECONDS_MILLIS;
 
     private boolean mInvalidated;
@@ -239,8 +238,8 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
             if (mIsVisibilityImpressionTrackingEnabled &&
                     mCustomEventBanner != null &&
                     mCustomEventBanner.isAutomaticImpressionAndClickTrackingEnabled()) {
-                // Disable autorefresh temporarily until an impression happens.
-                mMoPubView.pauseAutorefresh();
+                // Disable autoRefresh temporarily until an impression happens.
+                mMoPubView.pauseAutoRefresh();
                 // Set up visibility tracker and listener if in experiment
                 mVisibilityTracker = new BannerVisibilityTracker(mContext, mMoPubView, bannerView,
                         mImpressionMinVisibleDips, mImpressionMinVisibleMs);
@@ -252,7 +251,7 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
                         if (mCustomEventBanner != null) {
                             mCustomEventBanner.trackMpxAndThirdPartyImpressions();
                         }
-                        mMoPubView.resumeAutorefresh();
+                        mMoPubView.resumeAutoRefresh();
                     }
                 });
             }
@@ -298,7 +297,7 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
             return;
         }
 
-        mMoPubView.expand();
+        mMoPubView.engageOverlay();
         mMoPubView.adPresentedOverlay();
     }
 
@@ -308,7 +307,7 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
             return;
         }
 
-        mMoPubView.collapse();
+        mMoPubView.dismissOverlay();
         mMoPubView.adClosed();
     }
 
@@ -342,5 +341,19 @@ public class CustomEventBannerAdapter implements CustomEventBannerListener {
     @Override
     public void onLeaveApplication() {
         onBannerClicked();
+    }
+
+    @Override
+    public void onPauseAutoRefresh() {
+        if (mMoPubView != null) {
+            mMoPubView.engageOverlay();
+        }
+    }
+
+    @Override
+    public void onResumeAutoRefresh() {
+        if (mMoPubView != null) {
+            mMoPubView.dismissOverlay();
+        }
     }
 }

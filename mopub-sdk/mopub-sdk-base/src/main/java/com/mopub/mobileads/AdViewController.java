@@ -13,7 +13,6 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -72,7 +71,7 @@ public class AdViewController {
 
     private boolean mIsDestroyed;
     private Handler mHandler;
-    private boolean mExpanded;
+    private boolean mHasOverlay;
 
     // This is the power of the exponential term in the exponential backoff calculation.
     @VisibleForTesting
@@ -409,7 +408,7 @@ public class AdViewController {
     }
 
     void resumeRefresh() {
-        if (mShouldAllowAutoRefresh && !mExpanded) {
+        if (mShouldAllowAutoRefresh && !mHasOverlay) {
             setAutoRefreshStatus(true);
         }
     }
@@ -435,13 +434,13 @@ public class AdViewController {
         }
     }
 
-    void expand() {
-        mExpanded = true;
+    void engageOverlay() {
+        mHasOverlay = true;
         pauseRefresh();
     }
 
-    void collapse() {
-        mExpanded = false;
+    void dismissOverlay() {
+        mHasOverlay = false;
         resumeRefresh();
     }
 

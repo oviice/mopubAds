@@ -42,7 +42,7 @@ public class BaseAdapterConfigurationTest {
     public void tearDown() {
         final SharedPreferences sharedPreferences = SharedPreferencesHelper.getSharedPreferences(
                 context, CUSTOM_EVENT_PREF_NAME);
-        sharedPreferences.edit().clear().commit();
+        sharedPreferences.edit().clear().apply();
     }
 
     @Test
@@ -66,7 +66,7 @@ public class BaseAdapterConfigurationTest {
         final SharedPreferences sharedPreferences = SharedPreferencesHelper.getSharedPreferences(
                 context, CUSTOM_EVENT_PREF_NAME);
         sharedPreferences.edit().putString(TestAdapterConfiguration.class.getName(),
-                "{\"key1\":\"value1\",\"key2\":\"value2\"}").commit();
+                "{\"key1\":\"value1\",\"key2\":\"value2\"}").apply();
 
         final Map<String, String> initializationParameters =
                 subject.getCachedInitializationParameters(context);
@@ -82,7 +82,7 @@ public class BaseAdapterConfigurationTest {
                 context, CUSTOM_EVENT_PREF_NAME);
         // missing the last curly brace
         sharedPreferences.edit().putString(TestAdapterConfiguration.class.getName(),
-                "{\"key1\":\"value1\",\"key2\":\"value2\"").commit();
+                "{\"key1\":\"value1\",\"key2\":\"value2\"").apply();
 
         final Map<String, String> initializationParameters =
                 subject.getCachedInitializationParameters(context);

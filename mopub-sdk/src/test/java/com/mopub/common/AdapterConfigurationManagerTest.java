@@ -103,7 +103,7 @@ public class AdapterConfigurationManagerTest {
                 context, CUSTOM_EVENT_PREF_NAME);
         sharedPreferences.edit().putString(
                 ACMTestAdapterConfiguration.class.getName(),
-                "{\"key1\":\"oldValue\",\"key5\":\"value5\"}").commit();
+                "{\"key1\":\"oldValue\",\"key5\":\"value5\"}").apply();
 
         subject.initialize(context, set, networkMediationConfigurations, moPubRequestOptions);
 

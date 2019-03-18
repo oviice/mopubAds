@@ -13,8 +13,10 @@ import android.text.TextUtils;
 import com.mopub.common.privacy.ConsentData;
 import com.mopub.common.privacy.PersonalInfoManager;
 import com.mopub.common.util.DateAndTime;
+import com.mopub.network.RequestRateTracker;
 
 import static com.mopub.common.ClientMetadata.MoPubNetworkType;
+import com.mopub.common.util.ResponseHeader;
 
 public abstract class AdUrlGenerator extends BaseUrlGenerator {
 
@@ -112,6 +114,16 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
      * The advanced bidding token for each MoPubAdvancedBidder in JSON format.
      */
     private static final String ADVANCED_BIDDING_TOKENS_KEY = "abt";
+
+    /**
+     * Value {@link ResponseHeader#BACKOFF_MS} from previous ad response for this ad unit id. Optional.
+     */
+    private static final String BACKOFF_TIME_MS_KEY = "backoff_ms";
+
+    /**
+     * Value {@link ResponseHeader#BACKOFF_REASON} from previous ad response for this ad unit id. Optional.
+     */
+    private static final String BACKOFF_REASON_KEY = "backoff_reason";
 
     protected Context mContext;
     protected String mAdUnitId;
@@ -338,6 +350,8 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
         setConsentedPrivacyPolicyVersion();
 
         setConsentedVendorListVersion();
+
+        addRequestRateParameters();
     }
 
     private void addParam(String key, MoPubNetworkType value) {
@@ -353,6 +367,17 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
         final long locationLastUpdatedInMillis = location.getTime();
         final long nowInMillis = System.currentTimeMillis();
         return (int) (nowInMillis - locationLastUpdatedInMillis);
+    }
+
+    private void addRequestRateParameters() {
+        final RequestRateTracker rateTracker = RequestRateTracker.getInstance();
+        final RequestRateTracker.TimeRecord record = rateTracker.getRecordForAdUnit(mAdUnitId);
+        if (record == null || record.mBlockIntervalMs < 1) {
+            return;
+        }
+
+        addParam(BACKOFF_TIME_MS_KEY, String.valueOf(record.mBlockIntervalMs));
+        addParam(BACKOFF_REASON_KEY, record.mReason);
     }
 
     /**

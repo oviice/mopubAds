@@ -124,6 +124,14 @@ public class MoPubRequestUtilsTest {
     }
 
     @Test
+    public void convertQueryToMap_withBadUriString_shouldReturnEmptyMap() {
+        final Map<String, String> result = MoPubRequestUtils.convertQueryToMap(context,
+                "https://*#&(%*$&");
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     public void generateBodyFromParams_withParamsMap_withMoPubUrl_shouldGenerateJsonString() {
         final String result = MoPubRequestUtils.generateBodyFromParams(params,
                 "https://ads.mopub.com/m/ad");

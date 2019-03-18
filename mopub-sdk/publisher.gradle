@@ -54,8 +54,8 @@ publish {
     groupId = project.group
     artifactId = project.ext.projectName
     uploadName = project.ext.uploadName
-    version = project.version
-    description = project.description
+    publishVersion = project.version
+    desc = project.description
     website = siteUrl
     repository = gitUrl
 

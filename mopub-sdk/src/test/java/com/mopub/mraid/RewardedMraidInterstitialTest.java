@@ -22,6 +22,7 @@ import org.robolectric.shadows.support.v4.ShadowLocalBroadcastManager;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.mopub.common.DataKeys.AD_REPORT_KEY;
 import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
 import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.common.DataKeys.REWARDED_AD_DURATION_KEY;
@@ -128,11 +129,12 @@ public class RewardedMraidInterstitialTest extends ResponseBodyInterstitialTest 
 
         assertThat(intent.getComponent().getClassName())
                 .isEqualTo("com.mopub.mobileads.RewardedMraidActivity");
-        assertThat(intent.getExtras().get(HTML_RESPONSE_BODY_KEY)).isEqualTo(EXPECTED_HTML_DATA);
         assertThat(intent.getExtras().get(REWARDED_AD_DURATION_KEY)).isEqualTo(
                 EXPECTED_REWARDED_DURATION_SECONDS);
         assertThat(intent.getExtras().get(SHOULD_REWARD_ON_CLICK_KEY)).isEqualTo(
                 EXPECTED_SHOULD_REWARD_ON_CLICK);
+        assertThat(intent.getExtras().get(AD_REPORT_KEY)).isEqualTo(
+                localExtras.get(AD_REPORT_KEY));
     }
 
     @Test

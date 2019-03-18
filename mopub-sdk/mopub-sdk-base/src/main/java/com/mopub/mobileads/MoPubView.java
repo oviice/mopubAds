@@ -356,27 +356,27 @@ public class MoPubView extends FrameLayout {
         }
     }
 
-    void pauseAutorefresh() {
+    void pauseAutoRefresh() {
         if (mAdViewController != null) {
             mAdViewController.pauseRefresh();
         }
     }
 
-    void resumeAutorefresh() {
+    void resumeAutoRefresh() {
         if (mAdViewController != null) {
             mAdViewController.resumeRefresh();
         }
     }
 
-    void expand() {
+    void engageOverlay() {
         if (mAdViewController != null) {
-            mAdViewController.expand();
+            mAdViewController.engageOverlay();
         }
     }
 
-    void collapse() {
+    void dismissOverlay() {
         if (mAdViewController != null) {
-            mAdViewController.collapse();
+            mAdViewController.dismissOverlay();
         }
     }
 

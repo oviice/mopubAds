@@ -86,7 +86,6 @@ public class HtmlInterstitialTest extends ResponseBodyInterstitialTest {
         subject.showInterstitial();
 
         Intent nextStartedActivity = ShadowApplication.getInstance().getNextStartedActivity();
-        assertThat(nextStartedActivity.getStringExtra(HTML_RESPONSE_BODY_KEY)).isEqualTo(expectedResponse);
         assertThat(nextStartedActivity.getStringExtra(CLICKTHROUGH_URL_KEY)).isNull();
         assertThat(nextStartedActivity.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isNotEqualTo(0);
         assertThat(nextStartedActivity.getComponent().getClassName()).isEqualTo("com.mopub.mobileads.MoPubActivity");
@@ -100,7 +99,6 @@ public class HtmlInterstitialTest extends ResponseBodyInterstitialTest {
         subject.showInterstitial();
 
         Intent nextStartedActivity = ShadowApplication.getInstance().getNextStartedActivity();
-        assertThat(nextStartedActivity.getStringExtra(HTML_RESPONSE_BODY_KEY)).isEqualTo(expectedResponse);
         assertThat(nextStartedActivity.getStringExtra(CLICKTHROUGH_URL_KEY)).isEqualTo("clickthroughUrl");
         assertThat(nextStartedActivity.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK).isNotEqualTo(0);
         assertThat(nextStartedActivity.getComponent().getClassName()).isEqualTo("com.mopub.mobileads.MoPubActivity");
