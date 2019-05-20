@@ -15,7 +15,6 @@ import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -46,6 +45,8 @@ public class AdResponse implements Serializable {
     private final Integer mRewardedDuration;
     private final boolean mShouldRewardOnClick;
 
+    @Nullable
+    private final ImpressionData mImpressionData;
     @Nullable
     private final String mClickTrackingUrl;
     @NonNull
@@ -102,6 +103,7 @@ public class AdResponse implements Serializable {
         mRewardedDuration = builder.rewardedDuration;
         mShouldRewardOnClick = builder.shouldRewardOnClick;
 
+        mImpressionData = builder.impressionData;
         mClickTrackingUrl = builder.clickTrackingUrl;
         mImpressionTrackingUrls = builder.impressionTrackingUrls;
         mFailoverUrl = builder.failoverUrl;
@@ -184,6 +186,11 @@ public class AdResponse implements Serializable {
 
     public boolean shouldRewardOnClick() {
         return mShouldRewardOnClick;
+    }
+
+    @Nullable
+    public ImpressionData getImpressionData() {
+        return mImpressionData;
     }
 
     @Nullable
@@ -283,6 +290,7 @@ public class AdResponse implements Serializable {
                 .setRewardedVideoCompletionUrl(mRewardedVideoCompletionUrl)
                 .setRewardedDuration(mRewardedDuration)
                 .setShouldRewardOnClick(mShouldRewardOnClick)
+                .setImpressionData(mImpressionData)
                 .setClickTrackingUrl(mClickTrackingUrl)
                 .setImpressionTrackingUrls(mImpressionTrackingUrls)
                 .setFailoverUrl(mFailoverUrl)
@@ -314,6 +322,7 @@ public class AdResponse implements Serializable {
         private Integer rewardedDuration;
         private boolean shouldRewardOnClick;
 
+        private ImpressionData impressionData;
         private String clickTrackingUrl;
         private List<String> impressionTrackingUrls = new ArrayList<>();
         private String failoverUrl;
@@ -387,6 +396,11 @@ public class AdResponse implements Serializable {
 
         public Builder setShouldRewardOnClick(final boolean shouldRewardOnClick) {
             this.shouldRewardOnClick = shouldRewardOnClick;
+            return this;
+        }
+
+        public Builder setImpressionData(@Nullable ImpressionData impressionData) {
+            this.impressionData = impressionData;
             return this;
         }
 

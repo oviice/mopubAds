@@ -37,7 +37,7 @@ The MoPub SDK is available via:
     }
 
     dependencies {
-        implementation('com.mopub:mopub-sdk:5.6.0@aar') {
+        implementation('com.mopub:mopub-sdk:5.7.0@aar') {
             transitive = true
         }
     }
@@ -59,27 +59,27 @@ The MoPub SDK is available via:
         // ... other project dependencies
 
         // For banners
-        implementation('com.mopub:mopub-sdk-banner:5.6.0@aar') {
+        implementation('com.mopub:mopub-sdk-banner:5.7.0@aar') {
             transitive = true
         }
         
         // For interstitials
-        implementation('com.mopub:mopub-sdk-interstitial:5.6.0@aar') {
+        implementation('com.mopub:mopub-sdk-interstitial:5.7.0@aar') {
             transitive = true
         }
 
         // For rewarded videos. This will automatically also include interstitials
-        implementation('com.mopub:mopub-sdk-rewardedvideo:5.6.0@aar') {
+        implementation('com.mopub:mopub-sdk-rewardedvideo:5.7.0@aar') {
             transitive = true
         }
 
         // For native static (images).
-        implementation('com.mopub:mopub-sdk-native-static:5.6.0@aar') {
+        implementation('com.mopub:mopub-sdk-native-static:5.7.0@aar') {
             transitive = true
         }
 
         // For native video. This will automatically also include native static
-        implementation('com.mopub:mopub-sdk-native-video:5.6.0@aar') {
+        implementation('com.mopub:mopub-sdk-native-video:5.7.0@aar') {
             transitive = true
         }
     }
@@ -108,16 +108,16 @@ The MoPub SDK is available via:
 Please view the [changelog](https://github.com/mopub/mopub-android-sdk/blob/master/CHANGELOG.md) for a complete list of additions, fixes, and enhancements in the latest release.
 
 - **Features**
-  - Enabled debug logging when using a debug Google Advertising ID (one that ends with "10ca1ad1abe1").
-  - Upgraded ExoPlayer dependency to 2.9.5.
-  - Upgraded MoPub-Volley dependency to 2.1.0.
+  - Impression Level Revenue Data - a data object that includes revenue information associated with each impression.
+  - Verizon Ads SDK now supported as a mediated network.
+  - Upgraded Gradle dependency to 5.4.1
+  - Upgraded Robolectric dependency to 4.2.1.
+  - Upgraded com.android.tools.build:gradle to 3.4.0.
+  - Sample app improvements.
 
 - **Bug Fixes**
-  - Banners no longer refresh when they are expanded. They will resume refreshing when the expanded view is closed.
-  - Setting orientation on an expanded banner no longer locks the orientation after the expanded view is closed.
-  - Improved click detection.           
-  - Catch `MissingWebViewPackageException` in `ConsentDialogLayoutWebView`.
-  - Reduce ANRs by removing synchronization from `Networking#getUserAgent(Context)`.
+  - Handle empty impression trackers in VAST.
+  - Improved impression handling when MoPubView is reattached to the screen.
 
 ## Requirements
 
@@ -146,7 +146,7 @@ Normally, to add the MoPub SDK to your app via JCenter, your `build.gradle` woul
 
 ```	
 dependencies {
-    implementation('com.mopub:mopub-sdk:5.6.0@aar') {
+    implementation('com.mopub:mopub-sdk:5.7.0@aar') {
         transitive = true
     }
 }
@@ -155,7 +155,7 @@ Update to the following to exclude one or both viewability vendors:
 
 ```
 dependencies {
-    implementation('com.mopub:mopub-sdk:5.6.0@aar') {
+    implementation('com.mopub:mopub-sdk:5.7.0@aar') {
         transitive = true
         exclude module: 'libAvid-mopub' // To exclude AVID
         exclude module: 'moat-mobile-app-kit' // To exclude Moat
@@ -170,7 +170,7 @@ mopub.avidEnabled=false
 mopub.moatEnabled=false
 ```
 ##### Disable via API
-If you would like to opt out of viewability measurement but do not want to modify the MoPub SDK, a function is provided for your convenience. At any point, call `MoPub.disableViewability(vendor);`. This method can can be called with any of the enum values available in `ExternalViewabilitySessionManager.ViewabilityVendor`: `AVID` will disable AVID but leave Moat enabled, `MOAT` will disable Moat but leave AVID enabled, and `ALL` will disable all viewability measurement.
+If you would like to opt out of viewability measurement but do not want to modify the MoPub SDK, a function is provided for your convenience. At any point, call `MoPub.disableViewability(vendor);`. This method can be called with any of the enum values available in `ExternalViewabilitySessionManager.ViewabilityVendor`: `AVID` will disable AVID but leave Moat enabled, `MOAT` will disable Moat but leave AVID enabled, and `ALL` will disable all viewability measurement.
 
 ## Working with Android 6.0 Runtime Permissions
 If your app's target SDK is 23 or higher _**and**_ the user's device is running Android 6.0 or higher, you are responsible for supporting [runtime permissions](http://developer.android.com/training/permissions/requesting.html), one of the [changes](http://developer.android.com/about/versions/marshmallow/android-6.0-changes.html) introduced in Android 6.0 (API level 23). In addition to listing any dangerous permissions your app needs in the manifest, your app also has to explicitly request the dangerous permission(s) during runtime by calling method `requestPermissions()` in the [`ActivityCompat`](http://developer.android.com/reference/android/support/v4/app/ActivityCompat.html) class.
