@@ -22,7 +22,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.WebView;
 
-import com.facebook.ads.AdSettings;
 import com.mopub.common.Constants;
 import com.mopub.common.MoPub;
 import com.mopub.common.SdkConfiguration;
@@ -35,10 +34,7 @@ import com.mopub.common.privacy.ConsentStatusChangeListener;
 import com.mopub.common.privacy.PersonalInfoManager;
 import com.mopub.common.util.DeviceUtils;
 import com.mopub.common.util.Reflection;
-import com.mopub.mobileads.FlurryAdapterConfiguration;
 import com.mopub.mobileads.MoPubErrorCode;
-import com.mopub.mobileads.TapjoyAdapterConfiguration;
-import com.mopub.mobileads.TapjoyInterstitial;
 import com.mopub.network.ImpressionData;
 import com.mopub.network.ImpressionListener;
 import com.mopub.network.ImpressionsEmitter;
@@ -47,9 +43,7 @@ import org.json.JSONException;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
@@ -133,16 +127,7 @@ public class MoPubSampleActivity extends AppCompatActivity
             configBuilder.withLogLevel(INFO);
         }
 
-        final Map<String, String> flurryConfig = new HashMap<>();
-        flurryConfig.put("apiKey", "VX85BD4YBFNW629NN2SP");
-        configBuilder.withMediatedNetworkConfiguration(FlurryAdapterConfiguration.class.getName(),
-                flurryConfig);
-
-        final Map<String, String> tapjoyConfig = new HashMap<>();
-        tapjoyConfig.put(TapjoyInterstitial.SDK_KEY,
-                "cSOY1BYrRsSyJljkFWPdsgECRpZaaWDkWwXH1N1hIUbz1-c0o-DKATsLtckr");
-        configBuilder.withMediatedNetworkConfiguration(TapjoyAdapterConfiguration.class.getName(),
-                tapjoyConfig);
+        SampleActivityUtils.addDefaultNetworkConfiguration(configBuilder);
 
         MoPub.initializeSdk(this, configBuilder.build(), initSdkListener());
 
@@ -155,8 +140,7 @@ public class MoPubSampleActivity extends AppCompatActivity
         // Intercepts all logs including Level.FINEST so we can show a toast
         // that is not normally user-facing. This is only used for native ads.
         LoggingUtils.enableCanaryLogging(this);
-        // For Facebook, request for test ads
-        AdSettings.setTestMode(true);
+
 
         mImpressionListener = createImpressionsListener();
         ImpressionsEmitter.addListener(mImpressionListener);

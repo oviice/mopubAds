@@ -1,3 +1,7 @@
+## Version 5.7.1 (June 3, 2019)
+- **Bug Fixes**
+  - Handle `WebViewClient#onRenderProcessGone` for API 26+ devices so WebView crashes do not take the entire process with it. This only affects MoPub WebViews, and all WebViews in the application must handle this call in order for the process to not be killed.
+
 ## Version 5.7.0 (May 20, 2019)
 - **Features**
   - Impression Level Revenue Data - a data object that includes revenue information associated with each impression.

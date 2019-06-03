@@ -24,7 +24,7 @@ apply plugin: 'com.android.application'
 
 project.group = 'com.mopub'
 project.description = '''MoPub Sample App'''
-project.version = '5.7.0'
+project.version = '5.7.1'
 
 android {
     compileSdkVersion 28
@@ -36,7 +36,7 @@ android {
     }
 
     defaultConfig {
-        versionCode 68
+        versionCode 69
         versionName version
         minSdkVersion 16
         targetSdkVersion 28
@@ -75,6 +75,7 @@ android {
             res.srcDirs = ['res/main']
             assets.srcDirs = ['assets']
         }
+
     }
 
     // Note: You will also need a local.properties file to set the location of the SDK in the same 
@@ -88,6 +89,7 @@ dependencies {
     implementation 'com.adcolony:sdk:3.3.10'
     implementation 'com.google.android.gms:play-services-ads:17.2.0'
     implementation "com.applovin:applovin-sdk:9.4.2"
+    // Commented out since we cannot distribute 3rd party libraries
 //    implementation name: 'chartboost-7.3.1'
     implementation 'com.facebook.android:audience-network-sdk:5.3.0'
     implementation 'com.flurry.android:ads:11.6.0'
@@ -103,6 +105,7 @@ dependencies {
     implementation 'com.mopub.mediation:adcolony:3.3.10.0'
     implementation 'com.mopub.mediation:admob:17.2.0.1'
     implementation 'com.mopub.mediation:applovin:9.4.2.0'
+    // Commented out since we do not include the corresponding library
 //    implementation 'com.mopub.mediation:chartboost:7.3.1.4'
     implementation 'com.mopub.mediation:facebookaudiencenetwork:5.3.0.0'
     implementation 'com.mopub.mediation:flurry:11.6.0.0'

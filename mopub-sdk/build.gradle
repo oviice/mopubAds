@@ -38,6 +38,17 @@ android {
         unitTests {
             includeAndroidResources = true
         }
+
+        // separate block is necessary for Robolectric properties.
+        unitTests.all {
+            def sdkVersionsToTest = "${System.env.ROBOELECTRIC_TEST_API_VERSIONS}"
+
+            if (sdkVersionsToTest
+                    && !sdkVersionsToTest.allWhitespace
+                    && sdkVersionsToTest != "null") {
+                systemProperty 'robolectric.enabledSdks', sdkVersionsToTest
+            }
+        }
     }
 }
 
