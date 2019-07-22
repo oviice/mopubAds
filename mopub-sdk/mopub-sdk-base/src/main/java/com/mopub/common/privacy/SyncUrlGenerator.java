@@ -141,6 +141,7 @@ public class SyncUrlGenerator extends BaseUrlGenerator {
 
         addParam(AD_UNIT_ID_KEY, mAdUnitId);
         addParam(SDK_VERSION_KEY, MoPub.SDK_VERSION);
+        appendAppEngineInfo();
         addParam(LAST_CHANGED_MS_KEY, mLastChangedMs);
         addParam(LAST_CONSENT_STATUS_KEY, mLastConsentStatus);
         addParam(CURRENT_CONSENT_STATUS_KEY, mCurrentConsentStatus);
@@ -155,6 +156,7 @@ public class SyncUrlGenerator extends BaseUrlGenerator {
         addParam(FORCED_GDPR_APPLIES_CHANGED, mForceGdprAppliesChanged);
         addParam(BUNDLE_ID_KEY, ClientMetadata.getInstance(mContext).getAppPackageName());
         addParam(DNT_KEY, PlayServicesUrlRewriter.DO_NOT_TRACK_TEMPLATE);
+        addParam(MOPUB_ID_KEY, PlayServicesUrlRewriter.MOPUB_ID_TEMPLATE);
 
         return getFinalUrlString();
     }

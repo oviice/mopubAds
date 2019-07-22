@@ -48,7 +48,7 @@ public class VastManager implements VastXmlManagerAggregator.VastXmlManagerAggre
     @Nullable private VastXmlManagerAggregator mVastXmlManagerAggregator;
     @Nullable private String mDspCreativeId;
     private double mScreenAspectRatio;
-    private int mScreenAreaDp;
+    private int mScreenWidthDp;
 
     private final boolean mShouldPreCacheVideo;
 
@@ -73,8 +73,10 @@ public class VastManager implements VastXmlManagerAggregator.VastXmlManagerAggre
 
         if (mVastXmlManagerAggregator == null) {
             mVastManagerListener = vastManagerListener;
-            mVastXmlManagerAggregator = new VastXmlManagerAggregator(this, mScreenAspectRatio,
-                    mScreenAreaDp, context.getApplicationContext());
+            mVastXmlManagerAggregator = new VastXmlManagerAggregator(this,
+                    mScreenAspectRatio,
+                    mScreenWidthDp,
+                    context.getApplicationContext());
             mDspCreativeId = dspCreativeId;
 
             try {
@@ -157,10 +159,9 @@ public class VastManager implements VastXmlManagerAggregator.VastXmlManagerAggre
 
     private void initializeScreenDimensions(@NonNull final Context context) {
         Preconditions.checkNotNull(context, "context cannot be null");
-        // This currently assumes that all vast videos will be played in landscape
         final Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-        final int xPx = display.getWidth();
-        final int yPx = display.getHeight();
+        final int screenWidth = display.getWidth();
+        final int screenHeight = display.getHeight();
         // Use the screen density to convert x and y (in pixels) to DP. Also, check the density to
         // make sure that this is a valid density and that this is not going to divide by 0.
         float density = context.getResources().getDisplayMetrics().density;
@@ -168,17 +169,14 @@ public class VastManager implements VastXmlManagerAggregator.VastXmlManagerAggre
             density = 1;
         }
 
-        // For landscape, width is always greater than height
-        int screenWidth = Math.max(xPx, yPx);
-        int screenHeight = Math.min(xPx, yPx);
         mScreenAspectRatio = (double) screenWidth / screenHeight;
-        mScreenAreaDp = (int) ((screenWidth / density) * (screenHeight / density));
+        mScreenWidthDp = (int) (screenWidth / density);
     }
 
     @VisibleForTesting
     @Deprecated
-    int getScreenAreaDp() {
-        return mScreenAreaDp;
+    int getScreenWidthDp() {
+        return mScreenWidthDp;
     }
 
     @VisibleForTesting

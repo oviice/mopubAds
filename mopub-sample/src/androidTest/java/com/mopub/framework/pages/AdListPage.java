@@ -25,9 +25,7 @@ public class AdListPage extends BasePage {
 
     public enum AdUnitType {
         BANNER("Banner"),
-        MRECT("Mrect"),
-        LEADERBOARD("Leaderboard"),
-        SKYSCRAPER("Skyscraper"),
+        MEDIUM_RECTANGLE("Medium Rectangle"),
         INTERSTITIAL("Interstitial"),
         REWARDED_VIDEO("Rewarded Video"),
         NATIVE_LIST_VIEW("Native List View"),

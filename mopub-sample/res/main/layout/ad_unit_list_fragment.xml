@@ -63,8 +63,9 @@
     <Button
         android:id="@+id/add_ad_unit_button"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/button_height"
         android:layout_above="@id/version_code"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:text="@string/add_ad_unit_button" />
 
@@ -73,6 +74,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:textSize="@dimen/detail_text_size" />
+        android:layout_margin="10dp"
+        android:textSize="@dimen/small_text_size" />
 </RelativeLayout>

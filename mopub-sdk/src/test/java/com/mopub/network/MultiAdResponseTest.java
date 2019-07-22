@@ -240,6 +240,20 @@ public class MultiAdResponseTest {
         verify(mockOverrideListener).onReacquireConsent("change_reason");
     }
 
+    @Test
+    public void constructor_withServerOverrideListener_shouldCallOnRequestSuccess() throws Exception {
+        final ServerOverrideListener mockOverrideListener = mock(ServerOverrideListener.class);
+        MultiAdResponse.setServerOverrideListener(mockOverrideListener);
+
+        final JSONObject jsonObject = createJsonBody(FAIL_URL, singleAdResponse);
+
+        final byte[] body = jsonObject.toString().getBytes();
+        final NetworkResponse testResponse = new NetworkResponse(body);
+        new MultiAdResponse(activity, testResponse, AdFormat.BANNER, adUnitId);
+
+        verify(mockOverrideListener).onRequestSuccess(adUnitId);
+    }
+
     @Test(expected = JSONException.class)
     public void constructor_NonJsonBodyShouldThrowException() throws Exception {
         NetworkResponse testResponse = new NetworkResponse("abc".getBytes());

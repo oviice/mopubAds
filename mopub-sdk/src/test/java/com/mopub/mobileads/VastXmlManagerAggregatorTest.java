@@ -364,12 +364,11 @@ public class VastXmlManagerAggregatorTest {
         }).when(vastXmlManagerAggregatorListener).onAggregationComplete(any(VastVideoConfig.class));
 
         // Always assume landscape (where width > height) since videos will always be played in this orientation
-        int screenWidth = DIM_LONG;
-        int screenHeight = DIM_SHORT;
+        final int screenWidth = DIM_LONG;
+        final int screenHeight = DIM_SHORT;
         double screenAspectRatio = (double) screenWidth / screenHeight;
-        int screenArea = screenWidth * screenHeight;
         subject = new VastXmlManagerAggregator(vastXmlManagerAggregatorListener, screenAspectRatio,
-                screenArea, context);
+                screenWidth, context);
     }
 
     // NOTE most of the functionality of this class is tested through VastManagerTest

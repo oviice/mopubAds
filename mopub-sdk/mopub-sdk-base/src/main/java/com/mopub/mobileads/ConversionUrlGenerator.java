@@ -80,6 +80,7 @@ class ConversionUrlGenerator extends BaseUrlGenerator {
             addParam(SESSION_TRACKER_KEY, true);
         }
         addParam(SDK_VERSION_KEY, MoPub.SDK_VERSION);
+        appendAppEngineInfo();
         addParam(CURRENT_CONSENT_STATUS_KEY, mCurrentConsentStatus);
         addParam(CONSENTED_VENDOR_LIST_VERSION_KEY, mConsentedVendorListVersion);
         addParam(CONSENTED_PRIVACY_POLICY_VERSION_KEY, mConsentedPrivacyPolicyVersion);

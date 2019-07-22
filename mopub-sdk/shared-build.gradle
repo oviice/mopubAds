@@ -14,14 +14,14 @@ repositories {
 }
 
 project.group = 'com.mopub'
-project.version = '5.7.1'
+project.version = '5.8.0'
 
 android {
     compileSdkVersion 28
     lintOptions { abortOnError false }
 
     defaultConfig {
-        versionCode 69
+        versionCode 71
         versionName version
         minSdkVersion 16
         targetSdkVersion 28
@@ -54,6 +54,7 @@ android {
             all {
                 jvmArgs '-XX:MaxPermSize=4096m', '-Xmx8192m', '-noverify'
                 forkEvery 200
+                maxParallelForks Runtime.runtime.availableProcessors().intdiv(2) ?: 1
             }
         }
     }

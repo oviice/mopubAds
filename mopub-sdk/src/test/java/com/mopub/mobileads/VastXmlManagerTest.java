@@ -482,13 +482,6 @@ public class VastXmlManagerTest {
                 ".com/exchange-media/images/v4/star_icon_3x.png");
     }
 
-    @Test
-    public void getCustomForceOrientation_shouldReturnTheCorrectValue() {
-        ForceOrientation customForceOrientation = mXmlManager.getCustomForceOrientation();
-
-        assertThat(customForceOrientation).isEqualTo(ForceOrientation.DEVICE_ORIENTATION);
-    }
-
     /**
      * INTEGRATION TESTS
      */

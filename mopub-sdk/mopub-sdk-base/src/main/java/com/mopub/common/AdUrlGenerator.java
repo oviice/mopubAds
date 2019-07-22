@@ -5,14 +5,17 @@
 package com.mopub.common;
 
 import android.content.Context;
+import android.graphics.Point;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.view.WindowInsets;
 
 import com.mopub.common.privacy.ConsentData;
 import com.mopub.common.privacy.PersonalInfoManager;
 import com.mopub.common.util.DateAndTime;
+import com.mopub.mobileads.MoPubView;
 import com.mopub.network.RequestRateTracker;
 
 import static com.mopub.common.ClientMetadata.MoPubNetworkType;
@@ -130,6 +133,8 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
     protected String mKeywords;
     protected String mUserDataKeywords;
     protected Location mLocation;
+    protected Point mRequestedAdSize;
+    protected WindowInsets mWindowInsets;
     @Nullable private final PersonalInfoManager mPersonalInfoManager;
     @Nullable private final ConsentData mConsentData;
     protected Boolean mForceGdprApplies;
@@ -161,6 +166,16 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
 
     public AdUrlGenerator withLocation(Location location) {
         mLocation = location;
+        return this;
+    }
+
+    public AdUrlGenerator withRequestedAdSize(final Point adSize) {
+        mRequestedAdSize = adSize;
+        return this;
+    }
+
+    public AdUrlGenerator withWindowInsets(final WindowInsets windowInsets) {
+        mWindowInsets = windowInsets;
         return this;
     }
 
@@ -308,6 +323,7 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
         setAdUnitId(mAdUnitId);
 
         setSdkVersion(clientMetadata.getSdkVersion());
+        appendAppEngineInfo();
         setDeviceInfo(clientMetadata.getDeviceManufacturer(),
                 clientMetadata.getDeviceModel(),
                 clientMetadata.getDeviceProduct());
@@ -323,7 +339,7 @@ public abstract class AdUrlGenerator extends BaseUrlGenerator {
         setTimezone(DateAndTime.getTimeZoneOffsetString());
 
         setOrientation(clientMetadata.getOrientationString());
-        setDeviceDimensions(clientMetadata.getDeviceDimensions());
+        setDeviceDimensions(clientMetadata.getDeviceDimensions(), mRequestedAdSize, mWindowInsets);
         setDensity(clientMetadata.getDensity());
 
         final String networkOperator = clientMetadata.getNetworkOperatorForUrl();

@@ -23,9 +23,7 @@ class MoPubSampleAdUnit implements Comparable<MoPubSampleAdUnit> {
     // Note that entries are also sorted in this order
     enum AdType {
         BANNER("Banner", BannerDetailFragment.class),
-        MRECT("Mrect", MrectDetailFragment.class),
-        LEADERBOARD("Leaderboard", LeaderboardDetailFragment.class),
-        SKYSCRAPER("Skyscraper", SkyscraperDetailFragment.class),
+        MEDIUM_RECTANGLE("Medium Rectangle", MediumRectangleDetailFragment.class),
         INTERSTITIAL("Interstitial", InterstitialDetailFragment.class),
         REWARDED_VIDEO("Rewarded Video", RewardedVideoDetailFragment.class),
         LIST_VIEW("Native List View", NativeListViewFragment.class),
@@ -68,12 +66,8 @@ class MoPubSampleAdUnit implements Comparable<MoPubSampleAdUnit> {
                     return BANNER;
                 case "interstitial":
                     return INTERSTITIAL;
-                case "mrect":
-                    return MRECT;
-                case "leaderboard":
-                    return LEADERBOARD;
-                case "skyscraper":
-                    return SKYSCRAPER;
+                case "mediumrectangle":
+                    return MEDIUM_RECTANGLE;
                 case "rewarded":
                     return REWARDED_VIDEO;
                 case "native":

@@ -4,14 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/networksFragmentId"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:paddingBottom="8dp">
 
     <TextView
         android:id="@+id/text_no_adapters"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/no_network_adapters_found"
-        android:textSize="@dimen/sample_text_size"
         app:layout_constraintBottom_toTopOf="@id/networks_close_btn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -28,7 +28,7 @@
     <Button
         android:id="@+id/networks_close_btn"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/button_height"
         android:text="@string/close"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/networks_recycler_view"

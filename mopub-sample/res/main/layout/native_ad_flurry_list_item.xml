@@ -99,7 +99,7 @@
     <Button
         android:id="@+id/flurry_native_cta"
         android:layout_width="wrap_content"
-        android:layout_height="35dp"
+        android:layout_height="@dimen/button_height"
         android:layout_below="@+id/flurry_native_main_image"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
@@ -108,10 +108,7 @@
         android:layout_marginRight="10dp"
         android:clickable="true"
         android:focusable="true"
-        android:paddingBottom="10dp"
         android:text="@string/learn_more"
-        android:textColor="@android:color/black"
-        android:textSize="12sp"
         android:textStyle="bold" />
 
 </RelativeLayout>

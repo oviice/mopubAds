@@ -76,17 +76,19 @@ public class VastXmlManagerAggregator extends AsyncTask<String, Void, VastVideoC
 
     // More than reasonable number of nested VAST urls to follow
     static final int MAX_TIMES_TO_FOLLOW_VAST_REDIRECT = 10;
-    private static final double ASPECT_RATIO_WEIGHT = 70;
-    private static final double AREA_WEIGHT = 30;
+    private static final String MIME_TYPE_MP4 = "video/mp4";
+    private static final String MIME_TYPE_3GPP = "video/3gpp";
     private static final List<String> VIDEO_MIME_TYPES =
-            Arrays.asList("video/mp4", "video/3gpp");
+            Arrays.asList(MIME_TYPE_MP4, MIME_TYPE_3GPP);
     private static final int MINIMUM_COMPANION_AD_WIDTH = 300;
     private static final int MINIMUM_COMPANION_AD_HEIGHT = 250;
+    private static final int BITRATE_THRESHOLD_HIGH = 1500;
+    private static final int BITRATE_THRESHOLD_LOW = 700;
 
     @NonNull private final WeakReference<VastXmlManagerAggregatorListener> mVastXmlManagerAggregatorListener;
     private final double mScreenAspectRatio;
-    private final int mScreenAreaDp;
     @NonNull private final Context mContext;
+    private final int mScreenWidthDp;
 
     /**
      * Number of times this has followed a redirect. This value is only
@@ -95,9 +97,9 @@ public class VastXmlManagerAggregator extends AsyncTask<String, Void, VastVideoC
     private int mTimesFollowedVastRedirect;
 
     VastXmlManagerAggregator(@NonNull final VastXmlManagerAggregatorListener vastXmlManagerAggregatorListener,
-            final double screenAspectRatio,
-            final int screenAreaDp,
-            @NonNull final Context context) {
+                             final double screenAspectRatio,
+                             final int screenWidthDp,
+                             @NonNull final Context context) {
         super();
 
         Preconditions.checkNotNull(vastXmlManagerAggregatorListener);
@@ -105,7 +107,7 @@ public class VastXmlManagerAggregator extends AsyncTask<String, Void, VastVideoC
         mVastXmlManagerAggregatorListener =
                 new WeakReference<VastXmlManagerAggregatorListener>(vastXmlManagerAggregatorListener);
         mScreenAspectRatio = screenAspectRatio;
-        mScreenAreaDp = screenAreaDp;
+        mScreenWidthDp = screenWidthDp;
         mContext = context.getApplicationContext();
     }
 
@@ -477,9 +479,6 @@ public class VastXmlManagerAggregator extends AsyncTask<String, Void, VastVideoC
         if (vastVideoConfig.getCustomCloseIconUrl() == null) {
             vastVideoConfig.setCustomCloseIconUrl(xmlManager.getCustomCloseIconUrl());
         }
-        if (!vastVideoConfig.isCustomForceOrientationSet()) {
-            vastVideoConfig.setCustomForceOrientation(xmlManager.getCustomForceOrientation());
-        }
     }
 
     /**
@@ -517,7 +516,7 @@ public class VastXmlManagerAggregator extends AsyncTask<String, Void, VastVideoC
     String getBestMediaFileUrl(@NonNull final List<VastMediaXmlManager> managers) {
         Preconditions.checkNotNull(managers, "managers cannot be null");
         final List<VastMediaXmlManager> mediaXmlManagers = new ArrayList<VastMediaXmlManager>(managers);
-        double bestMediaFitness = Double.POSITIVE_INFINITY;
+        double bestMediaFitness = Double.NEGATIVE_INFINITY;
         String bestMediaFileUrl = null;
 
         final Iterator<VastMediaXmlManager> xmlManagerIterator = mediaXmlManagers.iterator();
@@ -533,12 +532,16 @@ public class VastXmlManagerAggregator extends AsyncTask<String, Void, VastVideoC
 
             final Integer mediaWidth = mediaXmlManager.getWidth();
             final Integer mediaHeight = mediaXmlManager.getHeight();
+            final Integer mediaBitrate = mediaXmlManager.getBitrate();
             if (mediaWidth == null || mediaWidth <= 0 || mediaHeight == null || mediaHeight <= 0) {
                 continue;
             }
 
-            final double mediaFitness = calculateFitness(mediaWidth, mediaHeight);
-            if (mediaFitness < bestMediaFitness) {
+            final double mediaFitness = calculateFitness(mediaWidth,
+                    mediaHeight,
+                    mediaBitrate,
+                    mediaType);
+            if (mediaFitness > bestMediaFitness) {
                 bestMediaFitness = mediaFitness;
                 bestMediaFileUrl = mediaUrl;
             }
@@ -557,7 +560,7 @@ public class VastXmlManagerAggregator extends AsyncTask<String, Void, VastVideoC
 
         final List<VastCompanionAdXmlManager> companionXmlManagers =
                 new ArrayList<VastCompanionAdXmlManager>(managers);
-        double bestCompanionFitness = Double.POSITIVE_INFINITY;
+        double bestCompanionFitness = Double.NEGATIVE_INFINITY;
         VastCompanionAdXmlManager bestCompanionXmlManager = null;
         VastResource bestVastResource = null;
         Point bestVastScaledDimensions = null;
@@ -585,12 +588,14 @@ public class VastXmlManagerAggregator extends AsyncTask<String, Void, VastVideoC
                 }
 
                 final double companionFitness;
-                if (CompanionOrientation.PORTRAIT == orientation) {
-                    companionFitness = calculateFitness(height, width);
+                // pass null for companion fitness because images don't have bitrates.
+                if ((CompanionOrientation.LANDSCAPE == orientation) && (mScreenAspectRatio < 1)
+                        || (CompanionOrientation.PORTRAIT == orientation) && (mScreenAspectRatio > 1)) {
+                    companionFitness = calculateFitness(height, width, null, null);
                 } else {
-                    companionFitness = calculateFitness(width, height);
+                    companionFitness = calculateFitness(width, height, null, null);
                 }
-                if (companionFitness < bestCompanionFitness) {
+                if (companionFitness > bestCompanionFitness) {
                     bestCompanionFitness = companionFitness;
                     bestCompanionXmlManager = companionXmlManager;
                     bestVastResource = vastResource;
@@ -782,21 +787,86 @@ public class VastXmlManagerAggregator extends AsyncTask<String, Void, VastVideoC
     }
 
     /**
-     * Calculates the fitness of the media file or companion by comparing its aspect ratio and
-     * area to those of the device. The closer to 0 the score, the better. The fitness function
-     * weighs aspect ratios and areas differently.
+     * Calculates the fitness of the media file or companion using the aspect ratio, width, and
+     * bitrate and of the device. The closer to 0 the score, the better.
      *
-     * @param widthDp the width of the media file or companion ad
-     * @param heightDp the height of th media file or companion ad
-     * @return the fitness score. The closer to 0, the better.
+     * @param widthDp  the width of the media file or companion ad
+     * @param heightDp the height of the media file or companion ad
+     * @param bitrate  the bitrate of the media file - null if none provided or needed
+     * @param format   the MIME format fo the media file - null if none provided or needed
+     * @return the overall fitness score. The closer to 0, the better.
      */
-    private double calculateFitness(final int widthDp, final int heightDp) {
+    private double calculateFitness(final int widthDp,
+                                    final int heightDp,
+                                    @Nullable final Integer bitrate,
+                                    @Nullable final String format) {
+
+        final double screenFitness = calculateScreenFitnessFactor(widthDp, heightDp);
+        final double bitrateFitness = calculateBitrateFitnessFactor(bitrate);
+        final double formatFitness = calculateFormatFitnessFactor(format);
+
+        return formatFitness * (1.0 / (1.0 + screenFitness + bitrateFitness));
+    }
+
+    /**
+     * Calculates the fitness value of the media file's bitrate (by determining whether it is low,
+     * medium, or high). The closer to 0 the score, the better. This is used by the overall fitness
+     * function to choose an appropriate MediaFile.
+     *
+     * @param bitrate the bitrate of the media file - null if none provided or needed
+     * @return the fitness factor based on the bitrate. The closer to 0, the better.
+     */
+    private double calculateBitrateFitnessFactor(@Nullable final Integer bitrate) {
+        // Default bitrate to 0 if one was not provided for the MediaFile.
+        final int usableBitrate = (bitrate == null || bitrate < 0) ? 0 : bitrate;
+
+        if (BITRATE_THRESHOLD_LOW <= usableBitrate && usableBitrate <= BITRATE_THRESHOLD_HIGH) {
+            return 0;
+        } else {
+            final double lowDistance = Math.abs(BITRATE_THRESHOLD_LOW - usableBitrate)
+                    / (float) BITRATE_THRESHOLD_LOW;
+            final double highDistance = Math.abs(BITRATE_THRESHOLD_HIGH - usableBitrate)
+                    / (float) BITRATE_THRESHOLD_HIGH;
+            return Math.min(lowDistance, highDistance);
+        }
+    }
+
+    /**
+     * Calculates the fitness of the media file or companion by comparing its aspect ratio and
+     * width to those of the device. Scores cannot be negative and the closer the score is to 0, the
+     * better. This is used by the overall fitness function to choose an appropriate MediaFile.
+     *
+     * @param widthDp  the width of the media file or companion ad
+     * @param heightDp the height of the media file or companion ad
+     * @return the fitness factor based on the screen size. The closer to 0, the better.
+     */
+    private double calculateScreenFitnessFactor(final int widthDp, final int heightDp) {
+        // mScreenAspectRatio calculated as `(double) screenWidth / screenHeight`, so we'll do the
+        // same here.
         final double mediaAspectRatio = (double) widthDp / heightDp;
-        final int mediaAreaDp = widthDp * heightDp;
-        final double aspectRatioRatio = mediaAspectRatio / mScreenAspectRatio;
-        final double areaRatio = (double) mediaAreaDp / mScreenAreaDp;
-        return ASPECT_RATIO_WEIGHT * Math.abs(Math.log(aspectRatioRatio))
-                + AREA_WEIGHT * Math.abs(Math.log(areaRatio));
+        final double aspectRatioScore = Math.abs(mScreenAspectRatio - mediaAspectRatio);
+        final double widthScore = Math.abs((mScreenWidthDp - widthDp) / mScreenWidthDp);
+
+        return aspectRatioScore + widthScore;
+    }
+
+    /**
+     * Calculates the fitness of the media file or companion based on the MIME type. This currently
+     * gives preference to MP4 files.
+     *
+     * @param format the MIME format fo the media file - null if none provided or needed
+     * @return the factor to be using in calculating the fitness score. Higher scores are better.
+     */
+    private double calculateFormatFitnessFactor(final String format) {
+        final String safeFormat = (format == null) ? "" : format;
+
+        switch (safeFormat) {
+            case MIME_TYPE_MP4:
+                return 1.5f;
+            case MIME_TYPE_3GPP:
+            default:
+                return 1.0f;
+        }
     }
 
     /**

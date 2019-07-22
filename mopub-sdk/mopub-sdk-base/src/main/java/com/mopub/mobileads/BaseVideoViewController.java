@@ -50,7 +50,7 @@ public abstract class BaseVideoViewController {
 
      protected void onCreate() {
         final RelativeLayout.LayoutParams adViewLayout = new RelativeLayout.LayoutParams(
-                RelativeLayout.LayoutParams.FILL_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+                RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
         adViewLayout.addRule(RelativeLayout.CENTER_IN_PARENT);
         mLayout.addView(getVideoView(), 0, adViewLayout);
         mBaseVideoViewControllerListener.onSetContentView(mLayout);

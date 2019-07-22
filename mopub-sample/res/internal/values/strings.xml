@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">MoPub INTERNAL</string>
+    <string name="app_title">MoPub Sample App - INTERNAL</string>
     <!--Macaw - Exchange test ad units-->
     <string name="ad_unit_id_macaw_interstitial_portrait">2971114e05df4bb6bfeb83aefd2cb13f</string>
     <string name="ad_unit_id_macaw_banner">1901a8606d8a45c9bf2358be5dc220e9</string>
-    <string name="ad_unit_id_macaw_mrect">7dfc45083ef04ea6b7533f1b2b8f5f6b</string>
-    <string name="ad_unit_id_macaw_leaderboard">ad21b1b40cfb45d38ca27e996e538005</string>
+    <string name="ad_unit_id_macaw_medium_rectangle">7dfc45083ef04ea6b7533f1b2b8f5f6b</string>
     <string name="ad_unit_id_macaw_interstitial_landscape">181294542e6b4b33bd80cf1563dc4724</string>
     <string name="ad_unit_id_macaw_tablet_interstitial_portrait">c6380a094a444657836884e12b86e013</string>
     <string name="ad_unit_id_macaw_tablet_interstitial_landscape">d9f040c7f29a4da6b9262a1d504dc057</string>
-    <string name="ad_unit_id_macaw_skyscraper">f12e1691e6614496a1530b530bde85cc</string>
     <string name="ad_unit_id_macaw_native">5d73b139cd3f402f8a6767670c4cf6fb</string>
 
     <!--Release Testing ad units-->
@@ -19,21 +19,13 @@
     <string name="ad_unit_id_rt_banner_mraid_expanding_portrait">5b1917e405a34e238f0816371124590d</string>
     <string name="ad_unit_id_rt_banner_resizing">26c38be32221456e9b5bdfba15211afe</string>
 
-    <string name="ad_unit_id_rt_mrect_image">560b3ba10bbe485ebc9e37a2e1cbbe4b</string>
-    <string name="ad_unit_id_rt_mrect_html">a0d719ae192748c2959f32235db68daf</string>
-    <string name="ad_unit_id_rt_mrect_expanding_device">4badb91a5c344cbda602a0a83d8937f2</string>
-    <string name="ad_unit_id_rt_mrect_expanding_landscape">01b88873d7c74dff9531ea744c4431e3</string>
-    <string name="ad_unit_id_rt_mrect_expanding_portrait">7b3189920ec646acb8f61d4d5013d7e3</string>
-    <string name="ad_unit_id_rt_mrect_resizing">53373b5f681a42438d9df71aa74165c4</string>
-    <string name="ad_unit_id_rt_mrect_html_video">5a85ad2677c34bffb2ae0b45eb18efdd</string>
-
-    <string name="ad_unit_id_rt_leaderboard_image">ab496e83496243e7b27c6b0636d9e9a2</string>
-    <string name="ad_unit_id_rt_leaderboard_html">37309343b1cc46b6ae5f2f4b0728f4f4</string>
-    <string name="ad_unit_id_rt_leaderboard_mraid_expanding_device">cc630d7fe5bf4f918e98d4f3ab6e0e51</string>
-    <string name="ad_unit_id_rt_leaderboard_mraid_expanding_landscape">cda9d79b0d704407ad1f0a1b6c3b837e</string>
-    <string name="ad_unit_id_rt_leaderboard_mraid_expanding_portrait">4f8a48f1ed4346408e793c3e1b83b2fe</string>
-    <string name="ad_unit_id_rt_leaderboard_mraid_resizing_offscreen">a652687cc74c41e19f4999bac37b854d</string>
-    <string name="ad_unit_id_rt_leaderboard_mraid_resizing_no_offscreen">2ff3c7b2d6234798a01ead84a6afda21</string>
+    <string name="ad_unit_id_rt_medium_rectangle_image">560b3ba10bbe485ebc9e37a2e1cbbe4b</string>
+    <string name="ad_unit_id_rt_medium_rectangle_html">a0d719ae192748c2959f32235db68daf</string>
+    <string name="ad_unit_id_rt_medium_rectangle_expanding_device">4badb91a5c344cbda602a0a83d8937f2</string>
+    <string name="ad_unit_id_rt_medium_rectangle_expanding_landscape">01b88873d7c74dff9531ea744c4431e3</string>
+    <string name="ad_unit_id_rt_medium_rectangle_expanding_portrait">7b3189920ec646acb8f61d4d5013d7e3</string>
+    <string name="ad_unit_id_rt_medium_rectangle_resizing">53373b5f681a42438d9df71aa74165c4</string>
+    <string name="ad_unit_id_rt_medium_rectangle_html_video">5a85ad2677c34bffb2ae0b45eb18efdd</string>
 
     <string name="ad_unit_id_rt_interstitial_vast_no_ext_companion_landscape">eab0db43a021431c9ae43e6ff1dd8fac</string>
     <string name="ad_unit_id_rt_interstitial_vast_no_ext_no_companion_landscape">3d752afaad8f41f2a32de0c9e83a6b49</string>
@@ -130,14 +122,13 @@
 
     <!--Top Grossing-->
     <string name="ad_unit_id_top_grossing_banner_phone">321da3e82353435cac072116cab84b23</string>
-    <string name="ad_unit_id_top_grossing_mrect_phone">e4ec5b5d8b224ef895d6d93094dc6949</string>
+    <string name="ad_unit_id_top_grossing_medium_rectangle_phone">e4ec5b5d8b224ef895d6d93094dc6949</string>
     <string name="ad_unit_id_top_grossing_interstitial_phone">ebe9132e1ec748ddbc1e333089e95113</string>
     <string name="ad_unit_id_top_grossing_rewarded_phone">23ba06fc2a9a4b6383812bd7003b3fd9</string>
     <string name="ad_unit_id_top_grossing_native_phone">554e7a6c341242228f122b653e12417e</string>
 
     <string name="ad_unit_id_top_grossing_banner_tablet">b87326a1a64746c88b996f0234efd7e3</string>
-    <string name="ad_unit_id_top_grossing_mrect_tablet">be678056f327430b91d62a861cbebd0f</string>
-    <string name="ad_unit_id_top_grossing_leaderboard_tablet">dd85ff2a8dd64318b8fb0a17e35c8f0a</string>
+    <string name="ad_unit_id_top_grossing_medium_rectangle_tablet">be678056f327430b91d62a861cbebd0f</string>
     <string name="ad_unit_id_top_grossing_interstitial_tablet">1baf215709034ef19ad4cd80e6396e00</string>
     <string name="ad_unit_id_top_grossing_rewarded_tablet">a83d73f6b65848eb98529a1b168a3708</string>
     <string name="ad_unit_id_top_grossing_native_tablet">eecebc103df84c0aa0acfb4ea6b93237</string>
@@ -159,9 +150,8 @@
     <string name="ad_unit_id_tap_video_interstitial_landscape_tablet">f7eb5bf595964bcc8e047b4a1e7e7817</string>
     <string name="ad_unit_id_tap_video_interstitial_portrait">28f0dad82c984c5995592f7802b059d7</string>
     <string name="ad_unit_id_tap_video_interstitial_portrait_tablet">9adfcc1aeb1749dfa90a725d63e6d8b4</string>
-    <string name="ad_unit_id_tap_leaderboard">6a763eac135a446594c530a50c35e5d4</string>
-    <string name="ad_unit_id_tap_mrect">f36e9fdc947d4b4faaeb15aa3e29a2ec</string>
-    <string name="ad_unit_id_tap_mrect_tablet">0f56c33f03754018842aaa794abbe719</string>
+    <string name="ad_unit_id_tap_medium_rectangle">f36e9fdc947d4b4faaeb15aa3e29a2ec</string>
+    <string name="ad_unit_id_tap_medium_rectangle_tablet">0f56c33f03754018842aaa794abbe719</string>
     <string name="ad_unit_id_tap_native_static">09d4e470ca534795b71041c6ca79bac4</string>
     <string name="ad_unit_id_tap_native_static_tablet">68c0539952f0451093a76c5359d4eecc</string>
     <string name="ad_unit_id_tap_rewarded_video_device">2cbbe2727b1f43a48abe702fd5900412</string>

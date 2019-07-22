@@ -173,16 +173,4 @@ class VastXmlManager {
     String getCustomCloseIconUrl() {
         return XmlUtils.getFirstMatchingStringData(mVastDoc, CUSTOM_CLOSE_ICON);
     }
-
-    /**
-     * Gets the orientation that this ad should be forced in. This returns DEVICE if not
-     * specified.
-     *
-     * @return {@code ForceOrientation} orientation or {@code DEVICE}
-     */
-    @NonNull
-    ForceOrientation getCustomForceOrientation() {
-        return ForceOrientation.getForceOrientation(
-                XmlUtils.getFirstMatchingStringData(mVastDoc, CUSTOM_FORCE_ORIENTATION));
-    }
 }

@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebViewClient;
@@ -29,11 +30,9 @@ import org.robolectric.android.controller.ActivityController;
 import org.robolectric.shadow.api.Shadow;
 import org.robolectric.shadows.ShadowActivity;
 import org.robolectric.shadows.ShadowApplication;
-import org.robolectric.shadows.support.v4.ShadowLocalBroadcastManager;
 
 import static com.mopub.common.DataKeys.CLICKTHROUGH_URL_KEY;
 import static com.mopub.common.DataKeys.CREATIVE_ORIENTATION_KEY;
-import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
 import static com.mopub.common.IntentActions.ACTION_INTERSTITIAL_CLICK;
 import static com.mopub.common.IntentActions.ACTION_INTERSTITIAL_DISMISS;
 import static com.mopub.common.IntentActions.ACTION_INTERSTITIAL_FAIL;
@@ -81,7 +80,7 @@ public class MoPubActivityTest {
         final ActivityController<MoPubActivity> subjectController = Robolectric.buildActivity(
                 MoPubActivity.class, moPubActivityIntent);
         subject = subjectController.get();
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver,
+        LocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver,
                 new EventForwardingBroadcastReceiver(customEventInterstitialListener,
                         testBroadcastIdentifier).getIntentFilter());
         subjectController.create();
@@ -211,7 +210,7 @@ public class MoPubActivityTest {
     public void getAdView_shouldSetUpForBroadcastingClicks() throws Exception {
         subject.getAdView();
         BroadcastReceiver broadcastReceiver = mock(BroadcastReceiver.class);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver,
+        LocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver,
                 new EventForwardingBroadcastReceiver(customEventInterstitialListener,
                         testBroadcastIdentifier).getIntentFilter());
 
@@ -227,7 +226,7 @@ public class MoPubActivityTest {
     public void getAdView_shouldSetUpForBroadcastingFail() throws Exception {
         subject.getAdView();
         BroadcastReceiver broadcastReceiver = mock(BroadcastReceiver.class);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver,
+        LocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver,
                 new EventForwardingBroadcastReceiver(customEventInterstitialListener,
                         testBroadcastIdentifier).getIntentFilter());
 

@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -17,7 +18,6 @@ import android.widget.FrameLayout;
 
 import com.mopub.common.AdReport;
 import com.mopub.common.Constants;
-import com.mopub.common.CreativeOrientation;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.mraid.MraidBridge;
 import com.mopub.mraid.MraidBridge.MraidWebView;
@@ -34,7 +34,6 @@ import org.mockito.Mock;
 import org.robolectric.Robolectric;
 import org.robolectric.Shadows;
 import org.robolectric.android.controller.ActivityController;
-import org.robolectric.shadows.support.v4.ShadowLocalBroadcastManager;
 
 import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
 import static com.mopub.common.DataKeys.HTML_RESPONSE_BODY_KEY;
@@ -42,7 +41,6 @@ import static com.mopub.common.IntentActions.ACTION_INTERSTITIAL_CLICK;
 import static com.mopub.common.IntentActions.ACTION_INTERSTITIAL_DISMISS;
 import static com.mopub.common.IntentActions.ACTION_INTERSTITIAL_SHOW;
 import static com.mopub.mobileads.EventForwardingBroadcastReceiverTest.getIntentForActionAndIdentifier;
-import static com.mopub.mobileads.MoPubErrorCode.RENDER_PROCESS_GONE_WITH_CRASH;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -232,7 +230,7 @@ public class MraidActivityTest {
     @Test
     public void onDestroy_DestroyMraidView() throws Exception {
         Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_DISMISS, subject.getBroadcastIdentifier());
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver,
+        LocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver,
                 new EventForwardingBroadcastReceiver(customEventInterstitialListener,
                         testBroadcastIdentifier).getIntentFilter());
 
@@ -293,7 +291,7 @@ public class MraidActivityTest {
     @Test
     public void baseMraidListenerOnOpen_shouldBroadcastClickEvent() throws Exception {
         Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_CLICK, testBroadcastIdentifier);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver,
+        LocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver,
                 new EventForwardingBroadcastReceiver(customEventInterstitialListener,
                         testBroadcastIdentifier).getIntentFilter());
 
@@ -358,7 +356,7 @@ public class MraidActivityTest {
     @Test
     public void onCreate_shouldBroadcastInterstitialShow() throws Exception {
         Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_SHOW, testBroadcastIdentifier);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver,
+        LocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver,
                 new EventForwardingBroadcastReceiver(customEventInterstitialListener,
                         testBroadcastIdentifier).getIntentFilter());
 
@@ -369,7 +367,7 @@ public class MraidActivityTest {
     @Test
     public void onDestroy_shouldBroadcastInterstitialDismiss() throws Exception {
         Intent expectedIntent = getIntentForActionAndIdentifier(ACTION_INTERSTITIAL_DISMISS, testBroadcastIdentifier);
-        ShadowLocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver,
+        LocalBroadcastManager.getInstance(subject).registerReceiver(broadcastReceiver,
                 new EventForwardingBroadcastReceiver(customEventInterstitialListener,
                         testBroadcastIdentifier).getIntentFilter());
 

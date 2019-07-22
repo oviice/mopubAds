@@ -740,6 +740,24 @@ public class PersonalInfoManagerTest {
     }
 
     @Test
+    public void serverOverrideListener_onRequestSuccess_withNoCachedAdUnit_shouldSetAdUnit() {
+        personalInfoData.setAdUnit("");
+
+        subject.getServerOverrideListener().onRequestSuccess("newAdUnit");
+
+        assertThat(personalInfoData.getAdUnitId()).isEqualTo("newAdUnit");
+    }
+
+    @Test
+    public void serverOverrideListener_onRequestSuccess_withCachedAdUnit_shouldDoNothing() {
+        personalInfoData.setAdUnit("oldAdUnit");
+
+        subject.getServerOverrideListener().onRequestSuccess("newAdUnit");
+
+        assertThat(personalInfoData.getAdUnitId()).isEqualTo("oldAdUnit");
+    }
+
+    @Test
     public void attemptStateTransition_withSameConsentStatus_shouldDoNothing() {
         subject.attemptStateTransition(ConsentStatus.UNKNOWN, "no reason");
 

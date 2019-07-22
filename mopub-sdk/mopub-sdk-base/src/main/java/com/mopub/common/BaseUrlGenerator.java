@@ -6,8 +6,12 @@ package com.mopub.common;
 
 import android.graphics.Point;
 import android.net.Uri;
+import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.view.DisplayCutout;
+import android.view.WindowInsets;
 
 import com.mopub.network.Networking;
 import com.mopub.network.PlayServicesUrlRewriter;
@@ -33,6 +37,11 @@ public abstract class BaseUrlGenerator {
      * "Do not track." Equal to 1 when limit ad tracking is turned on. Equal to 0 otherwise.
      */
     protected static final String DNT_KEY = "dnt";
+
+    /**
+     * Always the mopub-generated identifier.
+     */
+    protected static final String MOPUB_ID_KEY = "mid";
 
     /**
      * Bundle ID, as in package name.
@@ -68,8 +77,33 @@ public abstract class BaseUrlGenerator {
     private static final String WIDTH_KEY = "w";
     private static final String HEIGHT_KEY = "h";
 
+    /**
+     * The width of the screen's safe area. See
+     * https://developer.android.com/guide/topics/display-cutout
+     * for details on how this is calculated.
+     */
+    private static final String SAFE_WIDTH_KEY = "cw";
+
+    /**
+     * The height of the screen's safe area. See
+     * https://developer.android.com/guide/topics/display-cutout
+     * for details on how this is calculated.
+     */
+    private static final String SAFE_HEIGHT_KEY = "ch";
+
+    /**
+     * Optional parameter to pass application engine name
+     */
+    private static final String APP_ENGINE_NAME = "e_name";
+
+    /**
+     * Optional, version of the application engine
+     */
+    private static final String APP_ENGINE_VERSION = "e_ver";
+
     private StringBuilder mStringBuilder;
     private boolean mFirstParam;
+    private static AppEngineInfo mAppEngineInfo = null;
 
     public abstract String generateUrlString(String serverHostname);
 
@@ -146,14 +180,55 @@ public abstract class BaseUrlGenerator {
     protected void appendAdvertisingInfoTemplates() {
         addParam(UDID_KEY, PlayServicesUrlRewriter.UDID_TEMPLATE);
         addParam(DNT_KEY, PlayServicesUrlRewriter.DO_NOT_TRACK_TEMPLATE);
+        addParam(MOPUB_ID_KEY, PlayServicesUrlRewriter.MOPUB_ID_TEMPLATE);
+    }
+
+    /**
+     *
+     * @param engineInfo {@link com.mopub.common.AppEngineInfo}
+     */
+    public static void setAppEngineInfo(@NonNull final AppEngineInfo engineInfo) {
+        mAppEngineInfo = engineInfo;
+    }
+
+    /**
+     * Add parameters 'e_name' and 'e_ver' to the URL
+     */
+    protected void appendAppEngineInfo() {
+        final AppEngineInfo info = mAppEngineInfo;
+        if (info != null) {
+            addParam(APP_ENGINE_NAME, info.mName);
+            addParam(APP_ENGINE_VERSION, info.mVersion);
+        }
     }
 
     /**
      * Adds the width and height.
      *
      * @param dimensions The width and height of the screen
+     * @param requestedAdSize The requested width and height for the ad.
+     * @param windowInsets The WindowInsets for the current window.
      */
-    protected void setDeviceDimensions(@NonNull final Point dimensions) {
+    protected void setDeviceDimensions(@NonNull final Point dimensions, 
+                                       @Nullable final Point requestedAdSize,
+                                       @Nullable final WindowInsets windowInsets) {
+        final int requestedWidth = ((requestedAdSize != null) ? requestedAdSize.x : 0);
+        final int requestedHeight = ((requestedAdSize != null) ? requestedAdSize.y : 0);
+      
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+                && windowInsets != null
+                && windowInsets.getDisplayCutout() != null) {
+            final DisplayCutout displayCutout = windowInsets.getDisplayCutout();
+            final int safeWidth = dimensions.x - displayCutout.getSafeInsetLeft() - displayCutout.getSafeInsetRight();
+            final int safeHeight = dimensions.y - displayCutout.getSafeInsetTop() - displayCutout.getSafeInsetBottom();
+          
+            addParam(SAFE_WIDTH_KEY, "" + Math.min(safeWidth, requestedWidth));
+            addParam(SAFE_HEIGHT_KEY, "" + Math.min(safeHeight, requestedHeight));
+        } else {
+            addParam(SAFE_WIDTH_KEY, "" + requestedWidth);
+            addParam(SAFE_HEIGHT_KEY, "" + requestedHeight);
+        }
+      
         addParam(WIDTH_KEY, "" + dimensions.x);
         addParam(HEIGHT_KEY, "" + dimensions.y);
     }

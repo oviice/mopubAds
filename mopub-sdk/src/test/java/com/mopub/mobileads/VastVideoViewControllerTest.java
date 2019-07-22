@@ -17,6 +17,7 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.ImageView;
@@ -25,7 +26,6 @@ import android.widget.VideoView;
 import com.mopub.common.ExternalViewabilitySession;
 import com.mopub.common.MoPubBrowser;
 import com.mopub.common.test.support.SdkTestRunner;
-import com.mopub.common.util.DeviceUtils.ForceOrientation;
 import com.mopub.mobileads.resource.CloseButtonDrawable;
 import com.mopub.mobileads.test.support.GestureUtils;
 import com.mopub.mobileads.test.support.ShadowVastVideoView;
@@ -52,7 +52,6 @@ import org.robolectric.shadows.ShadowView;
 import org.robolectric.shadows.httpclient.FakeHttp;
 import org.robolectric.shadows.httpclient.RequestMatcher;
 import org.robolectric.shadows.httpclient.TestHttpResponse;
-import org.robolectric.shadows.support.v4.ShadowLocalBroadcastManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,8 +59,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
-import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
 import static com.mopub.common.IntentActions.ACTION_INTERSTITIAL_DISMISS;
 import static com.mopub.common.IntentActions.ACTION_INTERSTITIAL_FAIL;
 import static com.mopub.common.IntentActions.ACTION_INTERSTITIAL_SHOW;
@@ -234,7 +231,7 @@ public class VastVideoViewControllerTest {
             }
         }, new TestHttpResponse(200, "body"));
 
-        ShadowLocalBroadcastManager.getInstance(context).registerReceiver(broadcastReceiver,
+        LocalBroadcastManager.getInstance(context).registerReceiver(broadcastReceiver,
                 new EventForwardingBroadcastReceiver(null,
                 testBroadcastIdentifier).getIntentFilter());
 
@@ -246,7 +243,7 @@ public class VastVideoViewControllerTest {
         Robolectric.getForegroundThreadScheduler().reset();
         Robolectric.getBackgroundThreadScheduler().reset();
 
-        ShadowLocalBroadcastManager.getInstance(context).unregisterReceiver(broadcastReceiver);
+        LocalBroadcastManager.getInstance(context).unregisterReceiver(broadcastReceiver);
     }
 
     @Test
@@ -557,60 +554,6 @@ public class VastVideoViewControllerTest {
         subject.onCreate();
         verify(broadcastReceiver).onReceive(any(Context.class),
                 argThat(new IntentIsEqual(expectedIntent)));
-    }
-
-    @Test
-    public void onCreate_whenCustomForceOrientationNotSpecified_shouldForceLandscapeOrientation() throws Exception {
-        VastVideoConfig vastVideoConfig = new VastVideoConfig();
-        vastVideoConfig.setDiskMediaFileUrl("disk_video_path");
-        bundle.putSerializable(VAST_VIDEO_CONFIG, vastVideoConfig);
-
-        initializeSubject();
-        subject.onCreate();
-
-        verify(baseVideoViewControllerListener).onSetRequestedOrientation(
-                SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-    }
-
-    @Test
-    public void onCreate_whenCustomForceOrientationIsDeviceOrientation_shouldNotForceLandscapeOrientation() throws Exception {
-        VastVideoConfig vastVideoConfig = new VastVideoConfig();
-        vastVideoConfig.setDiskMediaFileUrl("disk_video_path");
-        vastVideoConfig.setCustomForceOrientation(ForceOrientation.DEVICE_ORIENTATION);
-        bundle.putSerializable(VAST_VIDEO_CONFIG, vastVideoConfig);
-
-        initializeSubject();
-        subject.onCreate();
-
-        verify(baseVideoViewControllerListener, never()).onSetRequestedOrientation(anyInt());
-    }
-
-    @Test
-    public void onCreate_whenCustomForceOrientationIsPortraitOrientation_shouldForcePortraitOrientation() throws Exception {
-        VastVideoConfig vastVideoConfig = new VastVideoConfig();
-        vastVideoConfig.setDiskMediaFileUrl("disk_video_path");
-        vastVideoConfig.setCustomForceOrientation(ForceOrientation.FORCE_PORTRAIT);
-        bundle.putSerializable(VAST_VIDEO_CONFIG, vastVideoConfig);
-
-        initializeSubject();
-        subject.onCreate();
-
-        verify(baseVideoViewControllerListener).onSetRequestedOrientation(
-                SCREEN_ORIENTATION_PORTRAIT);
-    }
-
-    @Test
-    public void onCreate_whenCustomForceOrientationIsLandscapeOrientation_shouldForceLandscapeOrientation() throws Exception {
-        VastVideoConfig vastVideoConfig = new VastVideoConfig();
-        vastVideoConfig.setDiskMediaFileUrl("disk_video_path");
-        vastVideoConfig.setCustomForceOrientation(ForceOrientation.FORCE_LANDSCAPE);
-        bundle.putSerializable(VAST_VIDEO_CONFIG, vastVideoConfig);
-
-        initializeSubject();
-        subject.onCreate();
-
-        verify(baseVideoViewControllerListener).onSetRequestedOrientation(
-                SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
     }
 
     @Test

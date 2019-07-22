@@ -7,10 +7,13 @@ package com.mopub.common.privacy;
 import android.app.Activity;
 import android.content.Context;
 
+import com.mopub.common.AppEngineInfo;
+import com.mopub.common.BaseUrlGenerator;
 import com.mopub.common.ClientMetadata;
 import com.mopub.common.Constants;
 import com.mopub.common.MoPub;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -65,6 +68,11 @@ public class ConsentDialogUrlGeneratorTest {
                 mockClientMetadata);
     }
 
+    @After
+    public void tearDown() {
+        BaseUrlGenerator.setAppEngineInfo(null);
+    }
+
     @Test(expected = NullPointerException.class)
     public void constructor_withContextNull_shouldThrowException() {
         subject = new ConsentDialogUrlGenerator(null, AD_UNIT_ID, UNKNOWN.getValue());
@@ -113,6 +121,35 @@ public class ConsentDialogUrlGeneratorTest {
         assertThat(map.get("consented_privacy_policy_version")).isEqualTo(POLICY_VERSION);
         assertThat(map.get("bundle")).isEqualTo(BUNDLE);
         assertThat(map.size()).isEqualTo(12);
+    }
+
+    @Test
+    public void generateUrlString_withAllParameters_withAppEngine_shouldGenerateValidUrl() {
+        MoPub.setEngineInformation(new AppEngineInfo("unity", "123"));
+        subject = new ConsentDialogUrlGenerator(context, AD_UNIT_ID, EXPLICIT_YES.getValue());
+        subject.withConsentedPrivacyPolicyVersion(POLICY_VERSION)
+                .withConsentedVendorListVersion(VENDOR_LIST_VERSION)
+                .withForceGdprApplies(true)
+                .withGdprApplies(true);
+
+        String url = subject.generateUrlString(Constants.HOST);
+        Map<String, String> map = urlToMap(url);
+
+        assertThat(map.get(HOST_KEY)).isEqualTo(Constants.HOST);
+        assertThat(map.get(SCHEME_KEY)).isEqualTo(Constants.HTTPS);
+        assertThat(map.get(PATH_KEY)).isEqualTo(Constants.GDPR_CONSENT_HANDLER);
+        assertThat(map.get("id")).isEqualTo(AD_UNIT_ID);
+        assertThat(map.get("current_consent_status")).isEqualTo(EXPLICIT_YES.getValue());
+        assertThat(map.get("nv")).isEqualTo(MoPub.SDK_VERSION);
+        assertThat(map.get("e_name")).isEqualTo("unity");
+        assertThat(map.get("e_ver")).isEqualTo("123");
+        assertThat(map.get("language")).isEqualTo(CURRENT_LANGUAGE);
+        assertThat(map.get("gdpr_applies")).isEqualTo("1");
+        assertThat(map.get("force_gdpr_applies")).isEqualTo("1");
+        assertThat(map.get("consented_vendor_list_version")).isEqualTo(VENDOR_LIST_VERSION);
+        assertThat(map.get("consented_privacy_policy_version")).isEqualTo(POLICY_VERSION);
+        assertThat(map.get("bundle")).isEqualTo(BUNDLE);
+        assertThat(map.size()).isEqualTo(14);
     }
 
     @Test

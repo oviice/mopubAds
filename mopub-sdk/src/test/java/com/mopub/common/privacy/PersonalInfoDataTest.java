@@ -24,7 +24,7 @@ public class PersonalInfoDataTest {
     @Before
     public void setUp() {
         activity = Robolectric.buildActivity(Activity.class).get();
-        subject = new PersonalInfoData(activity, "adUnit");
+        subject = new PersonalInfoData(activity);
     }
 
     @Test
@@ -42,5 +42,20 @@ public class PersonalInfoDataTest {
                 activity, null);
 
         assertThat(result).isEqualTo("someurl://en/somepath");
+    }
+
+    @Test
+    public void chooseAdUnit_withEmptyAdUnit_shouldChooseCachedLastAdUnitIdUsedForInit() {
+        subject.setCachedLastAdUnitIdUsedForInit("cached");
+
+        assertThat(subject.chooseAdUnit()).isEqualTo("cached");
+    }
+
+    @Test
+    public void chooseAdUnit_withAdUnit_shouldChooseAdUnit() {
+        subject.setAdUnit("adunit");
+        subject.setCachedLastAdUnitIdUsedForInit("cached");
+
+        assertThat(subject.chooseAdUnit()).isEqualTo("adunit");
     }
 }

@@ -4,15 +4,12 @@
 
 package com.mopub.simpleadsdemo;
 
+import com.mopub.mobileads.MoPubView;
+
 public class BannerDetailFragment extends AbstractBannerDetailFragment {
 
     @Override
-    public int getWidth() {
-        return (int) getResources().getDimension(R.dimen.banner_width);
-    }
-
-    @Override
-    public int getHeight() {
-        return (int) getResources().getDimension(R.dimen.banner_height);
+    public MoPubView.MoPubAdSize getAdSize() {
+        return MoPubView.MoPubAdSize.HEIGHT_250;
     }
 }

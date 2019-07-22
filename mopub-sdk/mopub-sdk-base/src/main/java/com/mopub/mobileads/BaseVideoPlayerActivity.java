@@ -9,12 +9,15 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.support.annotation.Nullable;
 
 import com.mopub.common.Constants;
+import com.mopub.common.CreativeOrientation;
 import com.mopub.common.logging.MoPubLog;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
+import static com.mopub.common.DataKeys.CREATIVE_ORIENTATION_KEY;
 import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 import static com.mopub.mobileads.VastVideoViewController.VAST_VIDEO_CONFIG;
 
@@ -42,9 +45,10 @@ public class BaseVideoPlayerActivity extends Activity {
 
     static void startVast(final Context context,
             final VastVideoConfig vastVideoConfig,
-            final long broadcastIdentifier) {
+            final long broadcastIdentifier,
+            @Nullable final CreativeOrientation orientation) {
         final Intent intentVideoPlayerActivity = createIntentVast(context, vastVideoConfig,
-                broadcastIdentifier);
+                broadcastIdentifier, orientation);
         try {
             context.startActivity(intentVideoPlayerActivity);
         } catch (ActivityNotFoundException e) {
@@ -54,12 +58,14 @@ public class BaseVideoPlayerActivity extends Activity {
 
     static Intent createIntentVast(final Context context,
             final VastVideoConfig vastVideoConfig,
-            final long broadcastIdentifier) {
+            final long broadcastIdentifier,
+            @Nullable final CreativeOrientation orientation) {
         final Intent intentVideoPlayerActivity = new Intent(context, MraidVideoPlayerActivity.class);
         intentVideoPlayerActivity.setFlags(FLAG_ACTIVITY_NEW_TASK);
         intentVideoPlayerActivity.putExtra(VIDEO_CLASS_EXTRAS_KEY, "vast");
         intentVideoPlayerActivity.putExtra(VAST_VIDEO_CONFIG, vastVideoConfig);
         intentVideoPlayerActivity.putExtra(BROADCAST_IDENTIFIER_KEY, broadcastIdentifier);
+        intentVideoPlayerActivity.putExtra(CREATIVE_ORIENTATION_KEY, orientation);
         return intentVideoPlayerActivity;
     }
 

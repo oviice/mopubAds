@@ -7,6 +7,7 @@ package com.mopub.mraid;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.widget.ImageButton;
 
 import com.mopub.common.test.support.SdkTestRunner;
@@ -23,7 +24,6 @@ import org.robolectric.shadows.ShadowVideoView;
 import org.robolectric.shadows.httpclient.FakeHttp;
 import org.robolectric.shadows.httpclient.RequestMatcher;
 import org.robolectric.shadows.httpclient.TestHttpResponse;
-import org.robolectric.shadows.support.v4.ShadowLocalBroadcastManager;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
@@ -60,7 +60,7 @@ public class MraidVideoViewControllerTest {
             }
         }, new TestHttpResponse(200, "body"));
 
-        ShadowLocalBroadcastManager.getInstance(context).registerReceiver(broadcastReceiver,
+        LocalBroadcastManager.getInstance(context).registerReceiver(broadcastReceiver,
                 new EventForwardingBroadcastReceiver(null, 0).getIntentFilter());
     }
 
@@ -70,7 +70,7 @@ public class MraidVideoViewControllerTest {
         Robolectric.getBackgroundThreadScheduler().reset();
         FakeHttp.clearPendingHttpResponses();
 
-        ShadowLocalBroadcastManager.getInstance(context).unregisterReceiver(broadcastReceiver);
+        LocalBroadcastManager.getInstance(context).unregisterReceiver(broadcastReceiver);
     }
 
     @Test

@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.privacy.PersonalInfoManager;
@@ -27,7 +28,7 @@ import static com.mopub.common.logging.MoPubLog.SdkLogEvent.INIT_STARTED;
 import static com.mopub.common.logging.MoPubLog.SdkLogEvent.INIT_FINISHED;
 
 public class MoPub {
-    public static final String SDK_VERSION = "5.7.1";
+    public static final String SDK_VERSION = "5.8.0";
 
     public enum LocationAwareness { NORMAL, TRUNCATED, DISABLED }
 
@@ -139,6 +140,19 @@ public class MoPub {
         Preconditions.checkNotNull(sBrowserAgent);
 
         return sBrowserAgent;
+    }
+
+    /**
+     * Set optional application engine information, for example {'unity', "123"}
+     *
+     * @param engineInfo {@link com.mopub.common.AppEngineInfo}
+     */
+    public static void setEngineInformation(@NonNull final AppEngineInfo engineInfo) {
+        Preconditions.checkNotNull(engineInfo);
+
+        if (!TextUtils.isEmpty(engineInfo.mName) && !TextUtils.isEmpty(engineInfo.mVersion)) {
+            BaseUrlGenerator.setAppEngineInfo(engineInfo);
+        }
     }
 
     /**

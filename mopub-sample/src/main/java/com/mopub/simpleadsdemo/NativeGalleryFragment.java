@@ -154,11 +154,14 @@ public class NativeGalleryFragment extends Fragment implements MoPubNativeAdLoad
 
         // This ad placer is used to automatically insert ads into the ViewPager.
         mStreamAdPlacer = new MoPubStreamAdPlacer(getActivity());
+
+        // The first renderer that can handle a particular native ad gets used.
+        // We are prioritizing network renderers.
         mStreamAdPlacer.registerAdRenderer(googlePlayServicesAdRenderer);
         mStreamAdPlacer.registerAdRenderer(flurryRenderer);
+        mStreamAdPlacer.registerAdRenderer(facebookAdRenderer);
         mStreamAdPlacer.registerAdRenderer(moPubStaticNativeAdRenderer);
         mStreamAdPlacer.registerAdRenderer(moPubVideoNativeAdRenderer);
-        mStreamAdPlacer.registerAdRenderer(facebookAdRenderer);
         mStreamAdPlacer.setAdLoadedListener(this);
 
         mPagerAdapter = new CustomPagerAdapter(getChildFragmentManager(), mStreamAdPlacer);

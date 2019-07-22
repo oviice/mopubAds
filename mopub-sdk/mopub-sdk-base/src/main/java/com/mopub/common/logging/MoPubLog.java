@@ -550,6 +550,8 @@ public class MoPubLog {
         // Comma delimited string of advanced bidder that were initialized, or "No bidders initialized."
         INIT_FINISHED(LogLevel.INFO, "SDK initialized and ready to display ads.\nInitialized adapters:\n{0}"),
 
+        INIT_FAILED(LogLevel.INFO, "SDK initialization failed - {0}\n{1}"),
+
         // Params:
         // Custom message string
         CUSTOM(LogLevel.DEBUG, "SDK Log - {0}"),

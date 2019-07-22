@@ -88,7 +88,7 @@ public class VastManagerTest {
         semaphore.acquire();
         verify(vastManagerListener).onVastVideoConfigurationPrepared(any(VastVideoConfig.class));
 
-        assertThat(mVastVideoConfig.getNetworkMediaFileUrl()).isEqualTo("https://s3.amazonaws.com/mopub-vast/tapad-video.mp4");
+        assertThat(mVastVideoConfig.getNetworkMediaFileUrl()).isEqualTo("https://s3.amazonaws.com/mopub-vast/tapad-video1.mp4");
 
         final String expectedFilePathDiskCache = CacheService.getFilePathDiskCache(mVastVideoConfig.getNetworkMediaFileUrl());
         assertThat(mVastVideoConfig.getDiskMediaFileUrl()).isEqualTo(expectedFilePathDiskCache);
@@ -151,7 +151,7 @@ public class VastManagerTest {
                 .class));
 
         // at this point it should have 3 sets of data from TEST_VAST_XML_STRING and one set from TEST_NESTED_VAST_XML_STRING
-        assertThat(mVastVideoConfig.getNetworkMediaFileUrl()).isEqualTo("https://s3.amazonaws.com/mopub-vast/tapad-video.mp4");
+        assertThat(mVastVideoConfig.getNetworkMediaFileUrl()).isEqualTo("https://s3.amazonaws.com/mopub-vast/tapad-video1.mp4");
         final String expectedFilePathDiskCache = CacheService.getFilePathDiskCache(mVastVideoConfig.getNetworkMediaFileUrl());
         assertThat(mVastVideoConfig.getDiskMediaFileUrl()).isEqualTo(expectedFilePathDiskCache);
 
@@ -231,7 +231,6 @@ public class VastManagerTest {
         assertThat(mVastVideoConfig.getCustomCtaText()).isNull();
         assertThat(mVastVideoConfig.getCustomSkipText()).isNull();
         assertThat(mVastVideoConfig.getCustomCloseIconUrl()).isNull();
-        assertThat(mVastVideoConfig.getCustomForceOrientation()).isEqualTo(DeviceUtils.ForceOrientation.FORCE_LANDSCAPE);
     }
 
     @Test
@@ -249,7 +248,6 @@ public class VastManagerTest {
                                 "<MoPubCtaText>custom CTA text</MoPubCtaText>" +
                                 "<MoPubSkipText>skip</MoPubSkipText>" +
                                 "<MoPubCloseIcon>https://ton.twitter.com/exchange-media/images/v4/star_icon_3x.png</MoPubCloseIcon>" +
-                                "<MoPubForceOrientation>device</MoPubForceOrientation>" +
                             "</Extension>" +
                         "</Extensions>"),
                 vastManagerListener,
@@ -265,7 +263,6 @@ public class VastManagerTest {
         assertThat(mVastVideoConfig.getCustomCtaText()).isEqualTo("custom CTA text");
         assertThat(mVastVideoConfig.getCustomSkipText()).isEqualTo("skip");
         assertThat(mVastVideoConfig.getCustomCloseIconUrl()).isEqualTo("https://ton.twitter.com/exchange-media/images/v4/star_icon_3x.png");
-        assertThat(mVastVideoConfig.getCustomForceOrientation()).isEqualTo(DeviceUtils.ForceOrientation.DEVICE_ORIENTATION);
     }
 
     @Test
@@ -278,7 +275,6 @@ public class VastManagerTest {
                                 "<MoPubCtaText>custom CTA text</MoPubCtaText>" +
                                 "<MoPubSkipText>skip</MoPubSkipText>" +
                                 "<MoPubCloseIcon>https://ton.twitter.com/exchange-media/images/v4/star_icon_3x.png</MoPubCloseIcon>" +
-                                "<MoPubForceOrientation>device</MoPubForceOrientation>" +
                                 "</Extension>" +
                                 "</Extensions>"));
         // Video download response
@@ -293,7 +289,6 @@ public class VastManagerTest {
         assertThat(mVastVideoConfig.getCustomCtaText()).isEqualTo("custom CTA text");
         assertThat(mVastVideoConfig.getCustomSkipText()).isEqualTo("skip");
         assertThat(mVastVideoConfig.getCustomCloseIconUrl()).isEqualTo("https://ton.twitter.com/exchange-media/images/v4/star_icon_3x.png");
-        assertThat(mVastVideoConfig.getCustomForceOrientation()).isEqualTo(DeviceUtils.ForceOrientation.DEVICE_ORIENTATION);
     }
 
     @Test
@@ -306,7 +301,6 @@ public class VastManagerTest {
                                 "<MoPubCtaText>CTA 2</MoPubCtaText>" +
                                 "<MoPubSkipText>skip 2</MoPubSkipText>" +
                                 "<MoPubCloseIcon>https://ton.twitter.com/exchange-media/images/v4/star_icon_3x_2.png</MoPubCloseIcon>" +
-                                "<MoPubForceOrientation>landscape</MoPubForceOrientation>" +
                                 "</Extension>" +
                                 "</Extensions>"));
         // Video download response
@@ -320,7 +314,6 @@ public class VastManagerTest {
                                 "<MoPubCtaText>CTA 1</MoPubCtaText>" +
                                 "<MoPubSkipText>skip 1</MoPubSkipText>" +
                                 "<MoPubCloseIcon>https://ton.twitter.com/exchange-media/images/v4/star_icon_3x_1.png</MoPubCloseIcon>" +
-                                "<MoPubForceOrientation>device orientation</MoPubForceOrientation>" +
                             "</Extension>" +
                         "</Extensions>"),
                 vastManagerListener,
@@ -337,7 +330,6 @@ public class VastManagerTest {
         assertThat(mVastVideoConfig.getCustomCtaText()).isEqualTo("CTA 2");
         assertThat(mVastVideoConfig.getCustomSkipText()).isEqualTo("skip 2");
         assertThat(mVastVideoConfig.getCustomCloseIconUrl()).isEqualTo("https://ton.twitter.com/exchange-media/images/v4/star_icon_3x_2.png");
-        assertThat(mVastVideoConfig.getCustomForceOrientation()).isEqualTo(DeviceUtils.ForceOrientation.FORCE_LANDSCAPE);
     }
 
     @Test
@@ -398,46 +390,6 @@ public class VastManagerTest {
 
         verify(vastManagerListener).onVastVideoConfigurationPrepared(any(VastVideoConfig.class));
         assertThat(mVastVideoConfig.getCustomSkipText()).isNull();
-    }
-
-    @Test
-    public void prepareVastVideoConfiguration_withInvalidCustomForceOrientation_shouldReturnDefaultForceLandscapeOrientation() throws Exception {
-        // Vast redirect response
-        ShadowMoPubHttpUrlConnection.addPendingResponse(200,
-                TEST_NESTED_VAST_XML_STRING.replace(EXTENSIONS_SNIPPET_PLACEHOLDER,
-                        "<Extensions>" +
-                                "<Extension type=\"MoPub\">" +
-                                "<MoPubForceOrientation>abcd</MoPubForceOrientation>" +   // invalid value
-                                "</Extension>" +
-                                "</Extensions>"));
-        // Video download response
-        ShadowMoPubHttpUrlConnection.addPendingResponse(200, "video_data");
-
-        prepareVastVideoConfiguration();
-        semaphore.acquire();
-
-        verify(vastManagerListener).onVastVideoConfigurationPrepared(any(VastVideoConfig.class));
-        assertThat(mVastVideoConfig.getCustomForceOrientation()).isEqualTo(DeviceUtils.ForceOrientation.FORCE_LANDSCAPE);
-    }
-
-    @Test
-    public void prepareVastVideoConfiguration_withCustomForceOrientationInMixedCaseAndUntrimmed_shouldReturnCustomForceOrientation() throws Exception {
-        // Vast redirect response
-        ShadowMoPubHttpUrlConnection.addPendingResponse(200,
-                TEST_NESTED_VAST_XML_STRING.replace(EXTENSIONS_SNIPPET_PLACEHOLDER,
-                        "<Extensions>" +
-                                "<Extension type=\"MoPub\">" +
-                                "<MoPubForceOrientation> PortRAIT  </MoPubForceOrientation>" +
-                                "</Extension>" +
-                                "</Extensions>"));
-        // Video download response
-        ShadowMoPubHttpUrlConnection.addPendingResponse(200, "video_data");
-
-        prepareVastVideoConfiguration();
-        semaphore.acquire();
-
-        verify(vastManagerListener).onVastVideoConfigurationPrepared(any(VastVideoConfig.class));
-        assertThat(mVastVideoConfig.getCustomForceOrientation()).isEqualTo(DeviceUtils.ForceOrientation.FORCE_PORTRAIT);
     }
 
     @Test
@@ -566,7 +518,7 @@ public class VastManagerTest {
     public void prepareVastVideoConfiguration_withVideoInDiskCache_shouldNotDownloadVideo() throws Exception {
         ShadowMoPubHttpUrlConnection.addPendingResponse(200, TEST_NESTED_VAST_XML_STRING);
 
-        CacheService.putToDiskCache("https://s3.amazonaws.com/mopub-vast/tapad-video.mp4", "video_data".getBytes());
+        CacheService.putToDiskCache("https://s3.amazonaws.com/mopub-vast/tapad-video1.mp4", "video_data".getBytes());
 
         prepareVastVideoConfiguration();
         semaphore.acquire();
@@ -574,7 +526,7 @@ public class VastManagerTest {
         assertThat(ShadowMoPubHttpUrlConnection.getLatestRequestUrl()).isNotNull();
         verify(vastManagerListener).onVastVideoConfigurationPrepared(any(VastVideoConfig.class));
         assertThat(mVastVideoConfig.getDiskMediaFileUrl())
-                .isEqualTo(CacheService.getFilePathDiskCache("https://s3.amazonaws.com/mopub-vast/tapad-video.mp4"));
+                .isEqualTo(CacheService.getFilePathDiskCache("https://s3.amazonaws.com/mopub-vast/tapad-video1.mp4"));
     }
 
     @Test

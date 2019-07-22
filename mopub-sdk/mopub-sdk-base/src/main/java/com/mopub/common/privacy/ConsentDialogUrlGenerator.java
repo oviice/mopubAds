@@ -76,6 +76,7 @@ public class ConsentDialogUrlGenerator extends BaseUrlGenerator {
         addParam(AD_UNIT_ID_KEY, mAdUnitId);
         addParam(CURRENT_CONSENT_STATUS_KEY, mCurrentConsentStatus);
         addParam(SDK_VERSION_KEY, MoPub.SDK_VERSION);
+        appendAppEngineInfo();
         addParam(LANGUAGE_KEY, ClientMetadata.getCurrentLanguage(mContext));
         addParam(GDPR_APPLIES, mGdprApplies);
         addParam(FORCE_GDPR_APPLIES, mForceGdprApplies);

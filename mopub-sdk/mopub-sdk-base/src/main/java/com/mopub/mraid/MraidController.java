@@ -13,6 +13,7 @@ import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -126,6 +127,12 @@ public class MraidController {
     // itself requires an orientation lock.
     @Nullable private Integer mOriginalActivityOrientation;
 
+    // UI flags for hiding the status bar when expanded
+    private final int mExpandedUiFlags;
+
+    // UI flags before expanding for restoration when not expanded
+    private int mOriginalUiFlags;
+
     @NonNull private UrlHandler.MoPubSchemeListener mDebugSchemeListener
             = new UrlHandler.MoPubSchemeListener() {
         @Override
@@ -208,6 +215,18 @@ public class MraidController {
         mMraidBridge.setMraidBridgeListener(mMraidBridgeListener);
         mTwoPartBridge.setMraidBridgeListener(mTwoPartBridgeListener);
         mMraidNativeCommandHandler = new MraidNativeCommandHandler();
+
+        int flags = View.SYSTEM_UI_FLAG_LOW_PROFILE
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            flags |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+        }
+
+        mExpandedUiFlags = flags;
     }
 
     @SuppressWarnings("FieldCanBeLocal")
@@ -863,6 +882,10 @@ public class MraidController {
         LayoutParams layoutParams = new LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         if (mViewState == ViewState.DEFAULT) {
+
+            mOriginalUiFlags = getAndMemoizeRootView().getSystemUiVisibility();
+            getAndMemoizeRootView().setSystemUiVisibility(mExpandedUiFlags);
+
             if (isTwoPart) {
                 mCloseableAdContainer.addView(mTwoPartWebView, layoutParams);
             } else {
@@ -1010,6 +1033,8 @@ public class MraidController {
 
     @VisibleForTesting
     void unApplyOrientation() {
+        getAndMemoizeRootView().setSystemUiVisibility(mOriginalUiFlags);
+
         final Activity activity = mWeakActivity.get();
         if (activity != null && mOriginalActivityOrientation != null) {
             activity.setRequestedOrientation(mOriginalActivityOrientation);

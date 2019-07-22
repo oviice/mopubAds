@@ -65,7 +65,8 @@ public class ConsentDialogControllerTest {
         mockRequestQueue = Mockito.mock(MoPubRequestQueueTest.TestMoPubRequestQueue.class);
         mockDialogListener = Mockito.mock(ConsentDialogListener.class);
         dialogResponse = new ConsentDialogResponse(HTML_TEXT);
-        personalInfoData = new PersonalInfoData(context, AD_UNIT_ID);
+        personalInfoData = new PersonalInfoData(context);
+        personalInfoData.setAdUnit(AD_UNIT_ID);
 
         PowerMockito.mockStatic(Networking.class);
         when(Networking.getRequestQueue(context)).thenReturn(mockRequestQueue);

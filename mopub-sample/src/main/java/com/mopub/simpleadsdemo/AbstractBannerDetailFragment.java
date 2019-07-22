@@ -4,8 +4,13 @@
 
 package com.mopub.simpleadsdemo;
 
+import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,10 +33,36 @@ import static com.mopub.simpleadsdemo.Utils.logToast;
 public abstract class AbstractBannerDetailFragment extends Fragment implements BannerAdListener {
     private MoPubView mMoPubView;
     private MoPubSampleAdUnit mMoPubSampleAdUnit;
+    @Nullable private CallbacksAdapter mCallbacksAdapter;
 
-    public abstract int getWidth();
+    public abstract MoPubView.MoPubAdSize getAdSize();
 
-    public abstract int getHeight();
+    private enum BannerCallbacks {
+        LOADED("onBannerLoaded"),
+        FAILED("onBannerFailed"),
+        CLICKED("onBannerClicked"),
+        EXPANDED("onBannerExpanded"),
+        COLLAPSED("onBannerCollapsed");
+
+        BannerCallbacks(@NonNull final String name) {
+            this.name = name;
+        }
+
+        @NonNull
+        private final String name;
+
+        @Override
+        @NonNull
+        public String toString() {
+            return name;
+        }
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        mMoPubView.loadAd();
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -44,9 +75,8 @@ public abstract class AbstractBannerDetailFragment extends Fragment implements B
         mMoPubView = (MoPubView) view.findViewById(R.id.banner_mopubview);
         LinearLayout.LayoutParams layoutParams =
                 (LinearLayout.LayoutParams) mMoPubView.getLayoutParams();
-        layoutParams.width = getWidth();
-        layoutParams.height = getHeight();
         mMoPubView.setLayoutParams(layoutParams);
+        mMoPubView.setAdSize(getAdSize());
 
         views.mKeywordsField.setText(getArguments().getString(MoPubListFragment.KEYWORDS_KEY, ""));
         views.mUserDataKeywordsField.setText(getArguments().getString(MoPubListFragment.USER_DATA_KEYWORDS_KEY, ""));
@@ -60,11 +90,22 @@ public abstract class AbstractBannerDetailFragment extends Fragment implements B
             public void onClick(View view) {
                 final String keywords = views.mKeywordsField.getText().toString();
                 final String userDataKeywords = views.mUserDataKeywordsField.getText().toString();
-                loadMoPubView(adUnitId, keywords, userDataKeywords);
+                setupMoPubView(adUnitId, keywords, userDataKeywords);
+                mMoPubView.loadAd();
             }
         });
+
+        final RecyclerView callbacksView = view.findViewById(R.id.callbacks_recycler_view);
+        final Context context = getContext();
+        if (callbacksView != null && context != null) {
+            callbacksView.setLayoutManager(new LinearLayoutManager(context));
+            mCallbacksAdapter = new CallbacksAdapter(context);
+            mCallbacksAdapter.generateCallbackList(BannerCallbacks.class);
+            callbacksView.setAdapter(mCallbacksAdapter);
+        }
+
         mMoPubView.setBannerAdListener(this);
-        loadMoPubView(adUnitId, null, null);
+        setupMoPubView(adUnitId, null, null);
 
         return view;
     }
@@ -79,11 +120,13 @@ public abstract class AbstractBannerDetailFragment extends Fragment implements B
         }
     }
 
-    private void loadMoPubView(final String adUnitId, final String keywords, final String userDataKeywords) {
+    private void setupMoPubView(final String adUnitId, final String keywords, final String userDataKeywords) {
         mMoPubView.setAdUnitId(adUnitId);
         mMoPubView.setKeywords(keywords);
         mMoPubView.setUserDataKeywords(userDataKeywords);
-        mMoPubView.loadAd();
+        if (mCallbacksAdapter != null) {
+            mCallbacksAdapter.generateCallbackList(BannerCallbacks.class);
+        }
     }
 
     private String getName() {
@@ -96,27 +139,47 @@ public abstract class AbstractBannerDetailFragment extends Fragment implements B
     // BannerAdListener
     @Override
     public void onBannerLoaded(MoPubView banner) {
-        logToast(getActivity(), getName() + " loaded.");
+        if (mCallbacksAdapter == null) {
+            logToast(getActivity(), getName() + " loaded.");
+            return;
+        }
+        mCallbacksAdapter.notifyCallbackCalled(BannerCallbacks.LOADED.toString());
     }
 
     @Override
     public void onBannerFailed(MoPubView banner, MoPubErrorCode errorCode) {
         final String errorMessage = (errorCode != null) ? errorCode.toString() : "";
-        logToast(getActivity(), getName() + " failed to load: " + errorMessage);
+        if (mCallbacksAdapter == null) {
+            logToast(getActivity(), getName() + " failed to load: " + errorMessage);
+            return;
+        }
+        mCallbacksAdapter.notifyCallbackCalled(BannerCallbacks.FAILED.toString(), errorMessage);
     }
 
     @Override
     public void onBannerClicked(MoPubView banner) {
-        logToast(getActivity(), getName() + " clicked.");
+        if (mCallbacksAdapter == null) {
+            logToast(getActivity(), getName() + " clicked.");
+            return;
+        }
+        mCallbacksAdapter.notifyCallbackCalled(BannerCallbacks.CLICKED.toString());
     }
 
     @Override
     public void onBannerExpanded(MoPubView banner) {
-        logToast(getActivity(), getName() + " expanded.");
+        if (mCallbacksAdapter == null) {
+            logToast(getActivity(), getName() + " expanded.");
+            return;
+        }
+        mCallbacksAdapter.notifyCallbackCalled(BannerCallbacks.EXPANDED.toString());
     }
 
     @Override
     public void onBannerCollapsed(MoPubView banner) {
-        logToast(getActivity(), getName() + " collapsed.");
+        if (mCallbacksAdapter == null) {
+            logToast(getActivity(), getName() + " collapsed.");
+            return;
+        }
+        mCallbacksAdapter.notifyCallbackCalled(BannerCallbacks.COLLAPSED.toString());
     }
 }

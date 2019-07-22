@@ -11,16 +11,14 @@ import java.util.List;
 import static com.mopub.simpleadsdemo.MoPubSampleAdUnit.AdType.BANNER;
 import static com.mopub.simpleadsdemo.MoPubSampleAdUnit.AdType.CUSTOM_NATIVE;
 import static com.mopub.simpleadsdemo.MoPubSampleAdUnit.AdType.INTERSTITIAL;
-import static com.mopub.simpleadsdemo.MoPubSampleAdUnit.AdType.LEADERBOARD;
 import static com.mopub.simpleadsdemo.MoPubSampleAdUnit.AdType.LIST_VIEW;
-import static com.mopub.simpleadsdemo.MoPubSampleAdUnit.AdType.MRECT;
+import static com.mopub.simpleadsdemo.MoPubSampleAdUnit.AdType.MEDIUM_RECTANGLE;
 import static com.mopub.simpleadsdemo.MoPubSampleAdUnit.AdType.RECYCLER_VIEW;
 import static com.mopub.simpleadsdemo.MoPubSampleAdUnit.AdType.REWARDED_VIDEO;
 
 enum SampleAppDefaultAdUnits {
     SAMPLE_BANNER(R.string.ad_unit_id_banner, BANNER, "MoPub Banner Sample"),
-    SAMPLE_MRECT(R.string.ad_unit_id_mrect, MRECT, "MoPub Mrect Sample"),
-    SAMPLE_LEADERBOARD(R.string.ad_unit_id_leaderboard, LEADERBOARD, "MoPub Leaderboard Sample"),
+    SAMPLE_MEDIUM_RECTANGLE(R.string.ad_unit_id_medium_rectangle, MEDIUM_RECTANGLE, "MoPub Medium Rectangle Sample"),
     SAMPLE_INTERSTITIAL(R.string.ad_unit_id_interstitial, INTERSTITIAL,
             "MoPub Interstitial Sample"),
     SAMPLE_REWARDED_VIDEO(R.string.ad_unit_id_rewarded_video, REWARDED_VIDEO,

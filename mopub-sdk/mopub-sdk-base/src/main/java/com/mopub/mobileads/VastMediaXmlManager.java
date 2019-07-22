@@ -22,6 +22,9 @@ class VastMediaXmlManager {
     private static final String HEIGHT = "height";
     private static final String DELIVERY = "delivery";
     private static final String VIDEO_TYPE  = "type";
+    private static final String BITRATE = "bitrate";
+    private static final String BITRATE_MIN = "minBitrate";
+    private static final String BITRATE_MAX = "maxBitrate";
 
     @NonNull private final Node mMediaNode;
 
@@ -83,5 +86,38 @@ class VastMediaXmlManager {
     @Nullable
     String getMediaUrl() {
         return XmlUtils.getNodeValue(mMediaNode);
+    }
+
+    /**
+     * The Bitrate of the video or {@code null} if not specified.
+     *
+     * @return Integer representation of the video in kbps or {@code null}
+     */
+    @Nullable
+    Integer getBitrate() {
+        // the "bitrate" attribute is the average across the entire video:
+        final Integer bitrate = XmlUtils.getAttributeValueAsInt(mMediaNode, BITRATE);
+
+        if (bitrate != null) {
+            return bitrate;
+        }
+
+        // If an average bitrate isn't provided:
+        final Integer minBitrate = XmlUtils.getAttributeValueAsInt(mMediaNode, BITRATE_MIN);
+        final Integer maxBitrate = XmlUtils.getAttributeValueAsInt(mMediaNode, BITRATE_MAX);
+
+        // Use the min and max to calculate the average, if both are non-null:
+        if (minBitrate != null && maxBitrate != null) {
+            return (minBitrate + maxBitrate) / 2;
+        }
+
+        // If only minBitrate is non-null:
+        if (minBitrate != null) {
+            return minBitrate;
+        }
+
+        // Return maxBitrate since at this point we would return null anyway if it's null:
+        return maxBitrate;
+
     }
 }

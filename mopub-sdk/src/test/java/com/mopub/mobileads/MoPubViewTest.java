@@ -7,6 +7,7 @@ package com.mopub.mobileads;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Point;
 import android.view.View;
 
 import com.mopub.common.test.support.SdkTestRunner;
@@ -246,6 +247,20 @@ public class MoPubViewTest {
     public void invalidateAdapter_withReflection_shouldExist() throws Exception {
         assertThat(Reflection.getDeclaredMethodWithTraversal(CustomEventBannerAdapter.class,
                 "invalidate")).isNotNull();
+    }
+
+    @Test
+    public void loadAd_withoutRequestedAdSize_shouldSetRequestedAdSizeToZeroZero() throws Exception {
+        subject.loadAd();
+        final Point point = new Point(0, 0);
+        verify(adViewController).setRequestedAdSize(point);
+    }
+
+    @Test
+    public void loadAd_withRequestedAdSize_shouldSetRequestedAdSize() throws Exception {
+        final Point point = new Point(0, MoPubView.MoPubAdSize.HEIGHT_50.toInt());
+        subject.loadAd(MoPubView.MoPubAdSize.HEIGHT_50);
+        verify(adViewController).setRequestedAdSize(point);
     }
 
     private void broadcastIntent(final Intent intent) {

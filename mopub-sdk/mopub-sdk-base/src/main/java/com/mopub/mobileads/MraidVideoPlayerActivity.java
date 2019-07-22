@@ -16,13 +16,18 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.mopub.common.CreativeOrientation;
 import com.mopub.common.IntentActions;
 import com.mopub.common.logging.MoPubLog;
+import com.mopub.common.util.DeviceUtils;
 import com.mopub.common.util.Intents;
 import com.mopub.common.util.Reflection;
 import com.mopub.mraid.MraidVideoViewController;
 
+import java.io.Serializable;
+
 import static com.mopub.common.DataKeys.BROADCAST_IDENTIFIER_KEY;
+import static com.mopub.common.DataKeys.CREATIVE_ORIENTATION_KEY;
 import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 import static com.mopub.mobileads.BaseBroadcastReceiver.broadcastAction;
 
@@ -52,6 +57,14 @@ public class MraidVideoPlayerActivity extends BaseVideoPlayerActivity implements
             finish();
             return;
         }
+
+        final Serializable orientationExtra = getIntent().getSerializableExtra(
+                CREATIVE_ORIENTATION_KEY);
+        CreativeOrientation requestedOrientation = CreativeOrientation.DEVICE;
+        if (orientationExtra instanceof CreativeOrientation) {
+            requestedOrientation = (CreativeOrientation) orientationExtra;
+        }
+        DeviceUtils.lockOrientation(this, requestedOrientation);
 
         mBaseVideoController.onCreate();
     }

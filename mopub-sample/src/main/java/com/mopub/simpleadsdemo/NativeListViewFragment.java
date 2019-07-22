@@ -156,11 +156,13 @@ public class NativeListViewFragment extends Fragment {
                         .build());
 
         // Register the renderers with the MoPubAdAdapter and then set the adapter on the ListView.
+        // The first renderer that can handle a particular native ad gets used.
+        // We are prioritizing network renderers.
         mAdAdapter.registerAdRenderer(googlePlayServicesAdRenderer);
         mAdAdapter.registerAdRenderer(flurryRenderer);
-        mAdAdapter.registerAdRenderer(videoAdRenderer);
-        mAdAdapter.registerAdRenderer(staticAdRender);
         mAdAdapter.registerAdRenderer(facebookAdRenderer);
+        mAdAdapter.registerAdRenderer(staticAdRender);
+        mAdAdapter.registerAdRenderer(videoAdRenderer);
         listView.setAdapter(mAdAdapter);
 
         mAdAdapter.loadAds(mAdConfiguration.getAdUnitId(), mRequestParameters);

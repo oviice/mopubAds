@@ -7,6 +7,7 @@ package com.mopub.mobileads;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Point;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.Uri;
@@ -202,6 +203,33 @@ public class AdViewControllerTest {
         final String adUrl = subject.generateAdUrl();
         assertThat(getParameterFromRequestUrl(adUrl, "q")).isEqualTo("keywords");
         assertThat(getParameterFromRequestUrl(adUrl, "user_data_q")).isEqualTo("user_data_keywords");
+    }
+
+    @Test
+    public void generateAdUrl_withoutSetRequestedAdSize_shouldSetRequestedAdSizeToZeroZero() {
+        subject.setAdUnitId("abc123");
+        subject.setKeywords("keywords");
+        subject.setUserDataKeywords("user_data_keywords");
+        subject.setLocation(new Location(""));
+        WebViewAdUrlGenerator mUrlGenerator = new WebViewAdUrlGenerator(mockMoPubView.getContext(), false);
+
+        final String adUrl = subject.generateAdUrl();
+        assertThat(getParameterFromRequestUrl(adUrl, "cw")).isEqualTo("0");
+        assertThat(getParameterFromRequestUrl(adUrl, "ch")).isEqualTo("0");
+    }
+
+    @Test
+    public void generateAdUrl_withSetRequestedAdSize_shouldSetRequestedAdSize() {
+        subject.setAdUnitId("abc123");
+        subject.setKeywords("keywords");
+        subject.setUserDataKeywords("user_data_keywords");
+        subject.setLocation(new Location(""));
+        subject.setRequestedAdSize(new Point(120, 240));
+        WebViewAdUrlGenerator mUrlGenerator = new WebViewAdUrlGenerator(mockMoPubView.getContext(), false);
+
+        final String adUrl = subject.generateAdUrl();
+        assertThat(getParameterFromRequestUrl(adUrl, "cw")).isEqualTo("120");
+        assertThat(getParameterFromRequestUrl(adUrl, "ch")).isEqualTo("240");
     }
 
     @Test

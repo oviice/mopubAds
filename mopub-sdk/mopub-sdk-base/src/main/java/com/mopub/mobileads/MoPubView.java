@@ -9,12 +9,18 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Resources;
+import android.content.res.TypedArray;
+import android.graphics.Point;
 import android.location.Location;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowInsets;
 import android.widget.FrameLayout;
 
 import com.mopub.common.AdFormat;
@@ -24,6 +30,7 @@ import com.mopub.common.logging.MoPubLog;
 import com.mopub.common.util.ManifestUtils;
 import com.mopub.common.util.Reflection;
 import com.mopub.common.util.Visibility;
+import com.mopub.mobileads.base.R;
 import com.mopub.mobileads.factories.AdViewControllerFactory;
 
 import java.util.Map;
@@ -38,6 +45,7 @@ import static com.mopub.common.logging.MoPubLog.AdLogEvent.LOAD_SUCCESS;
 import static com.mopub.common.logging.MoPubLog.AdLogEvent.SHOW_ATTEMPTED;
 import static com.mopub.common.logging.MoPubLog.AdLogEvent.SHOW_FAILED;
 import static com.mopub.common.logging.MoPubLog.AdLogEvent.SHOW_SUCCESS;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM_WITH_THROWABLE;
 import static com.mopub.common.logging.MoPubLog.SdkLogEvent.ERROR;
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_NOT_FOUND;
 
@@ -48,6 +56,67 @@ public class MoPubView extends FrameLayout {
         public void onBannerClicked(MoPubView banner);
         public void onBannerExpanded(MoPubView banner);
         public void onBannerCollapsed(MoPubView banner);
+    }
+
+    /**
+     * MoPubAdSizeInt
+     *
+     * Integer values that represent the possible predefined ad heights in dp.
+     */
+    interface MoPubAdSizeInt {
+        int MATCH_VIEW_INT = -1;
+        int HEIGHT_50_INT = 50;
+        int HEIGHT_90_INT = 90;
+        int HEIGHT_250_INT = 250;
+        int HEIGHT_280_INT = 280;
+    }
+
+    /**
+     * MoPubAdSize
+     *
+     * These predefined constants are used to specify the desired height for an ad.
+     */
+    public enum MoPubAdSize implements MoPubAdSizeInt {
+
+        MATCH_VIEW(MATCH_VIEW_INT),
+        HEIGHT_50(HEIGHT_50_INT),
+        HEIGHT_90(HEIGHT_90_INT),
+        HEIGHT_250(HEIGHT_250_INT),
+        HEIGHT_280(HEIGHT_280_INT);
+
+        final private int mSizeInt;
+
+        MoPubAdSize(final int sizeInt) {
+            this.mSizeInt = sizeInt;
+        }
+
+        /**
+         * This valueOf overload is used to get the associated the MoPubAdSize enum from an int (likely
+         * from XML layout).
+         *
+         * @param adSizeInt The int value for which the MoPubAdSize is needed.
+         * @return The MoPubAdSize associated with the level. Will return CUSTOM by default.
+         */
+        @NonNull
+        public static MoPubAdSize valueOf(final int adSizeInt) {
+            switch (adSizeInt) {
+                case HEIGHT_50_INT:
+                    return HEIGHT_50;
+                case HEIGHT_90_INT:
+                    return HEIGHT_90;
+                case HEIGHT_250_INT:
+                    return HEIGHT_250;
+                case HEIGHT_280_INT:
+                    return HEIGHT_280;
+                case MATCH_VIEW_INT:
+                default:
+                    return MATCH_VIEW;
+            }
+        }
+
+        public int toInt() {
+            return mSizeInt;
+        }
     }
 
     private static final String CUSTOM_EVENT_BANNER_ADAPTER_FACTORY =
@@ -61,7 +130,7 @@ public class MoPubView extends FrameLayout {
     private Context mContext;
     private int mScreenVisibility;
     private BroadcastReceiver mScreenStateReceiver;
-
+    private MoPubView.MoPubAdSize mMoPubAdSize;
     private BannerAdListener mBannerAdListener;
 
     public MoPubView(Context context) {
@@ -70,6 +139,9 @@ public class MoPubView extends FrameLayout {
 
     public MoPubView(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+        mMoPubAdSize = getMoPubAdSizeFromAttributeSet(context, attrs,
+                MoPubAdSize.MATCH_VIEW);
 
         ManifestUtils.checkWebViewActivitiesDeclared(context);
 
@@ -81,6 +153,22 @@ public class MoPubView extends FrameLayout {
 
         mAdViewController = AdViewControllerFactory.create(context, this);
         registerScreenStateBroadcastReceiver();
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            setWindowInsets(getRootWindowInsets());
+        }
+    }
+
+    @Override
+    public WindowInsets onApplyWindowInsets(WindowInsets insets) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            setWindowInsets(insets);
+        }
+        return super.onApplyWindowInsets(insets);
     }
 
     private void registerScreenStateBroadcastReceiver() {
@@ -113,9 +201,15 @@ public class MoPubView extends FrameLayout {
         }
     }
 
+    public void loadAd(final MoPubAdSize moPubAdSize) {
+        setAdSize(moPubAdSize);
+        loadAd();
+    }
+
     public void loadAd() {
         if (mAdViewController != null) {
             MoPubLog.log(LOAD_ATTEMPTED);
+            mAdViewController.setRequestedAdSize(resolveAdSize());
             mAdViewController.loadAd();
         }
     }
@@ -281,6 +375,51 @@ public class MoPubView extends FrameLayout {
         adLoaded();
     }
 
+    private MoPubAdSize getMoPubAdSizeFromAttributeSet(
+            final Context context,
+            final AttributeSet attrs,
+            MoPubAdSize defaultMoPubAdSize) {
+        TypedArray a = context.getTheme().obtainStyledAttributes(
+                attrs,
+                R.styleable.MoPubView,
+                0, 0);
+
+        MoPubAdSize returnValue = defaultMoPubAdSize;
+
+        try {
+            final int moPubAdSizeInt = a.getInteger(R.styleable.MoPubView_moPubAdSize,
+                    defaultMoPubAdSize.toInt());
+            returnValue = MoPubAdSize.valueOf(moPubAdSizeInt);
+        } catch(Resources.NotFoundException rnfe) {
+            MoPubLog.log(CUSTOM_WITH_THROWABLE,
+                    "Encountered a problem while setting the MoPubAdSize", 
+                    rnfe);
+        } finally {
+            a.recycle();
+        }
+
+        return returnValue;
+    }
+
+    protected Point resolveAdSize() {
+        final Point resolvedAdSize = new Point(getWidth(), getHeight());
+        final ViewGroup.LayoutParams layoutParams = getLayoutParams();
+
+        // If WRAP_CONTENT or MATCH_PARENT
+        if (layoutParams != null && layoutParams.width < 0) {
+            resolvedAdSize.x = ((View) getParent()).getWidth();
+        }
+
+        // MoPubAdSize only applies to height
+        if (mMoPubAdSize != MoPubAdSize.MATCH_VIEW) {
+            resolvedAdSize.y = mMoPubAdSize.toInt();
+        } else if (layoutParams != null && layoutParams.height < 0) {
+            resolvedAdSize.y = ((View) getParent()).getHeight();
+        }
+
+        return resolvedAdSize;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void setAdUnitId(String adUnitId) {
@@ -420,6 +559,20 @@ public class MoPubView extends FrameLayout {
 
         if (mAdViewController != null) {
             mAdViewController.forceRefresh();
+        }
+    }
+
+    public void setAdSize(final MoPubAdSize moPubAdSize) {
+        mMoPubAdSize = moPubAdSize;
+    }
+
+    public MoPubAdSize getAdSize() {
+        return mMoPubAdSize;
+    }
+
+    void setWindowInsets(@NonNull final WindowInsets windowInsets) {
+        if (mAdViewController != null) {
+            mAdViewController.setWindowInsets(windowInsets);
         }
     }
 

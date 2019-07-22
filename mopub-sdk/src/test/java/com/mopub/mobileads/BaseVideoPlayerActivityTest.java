@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 
+import com.mopub.common.CreativeOrientation;
 import com.mopub.common.test.support.SdkTestRunner;
 import com.mopub.common.util.Utils;
 
@@ -36,11 +37,13 @@ public class BaseVideoPlayerActivityTest {
 
     private long testBroadcastIdentifier;
     private VastVideoConfig mVastVideoConfig;
+    private CreativeOrientation mOrientation;
 
     @Before
     public void setup() throws Exception {
         mVastVideoConfig = mock(VastVideoConfig.class, withSettings().serializable());
         testBroadcastIdentifier = 1234;
+        mOrientation = CreativeOrientation.DEVICE;
     }
 
     @Test
@@ -52,7 +55,7 @@ public class BaseVideoPlayerActivityTest {
     @Test
     public void startVast_shouldStartMraidVideoPlayerActivity() throws Exception {
         startVast(Robolectric.buildActivity(Activity.class).create().get(), mVastVideoConfig,
-                testBroadcastIdentifier);
+                testBroadcastIdentifier, mOrientation);
         assertVastVideoPlayerActivityStarted(MraidVideoPlayerActivity.class, mVastVideoConfig,
                 testBroadcastIdentifier);
     }

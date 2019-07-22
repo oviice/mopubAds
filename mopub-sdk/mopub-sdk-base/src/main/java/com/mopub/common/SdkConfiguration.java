@@ -5,6 +5,10 @@
 package com.mopub.common;
 
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
+
+import com.mopub.common.logging.MoPubLog;
+import com.mopub.mobileads.base.BuildConfig;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.mopub.common.logging.MoPubLog.LogLevel;
+import static com.mopub.common.logging.MoPubLog.SdkLogEvent.INIT_FAILED;
 
 /**
  * Data object holding any SDK initialization parameters.
@@ -126,9 +131,19 @@ public class SdkConfiguration {
          * Use this builder instead of creating a new SdkConfiguration. This Builder needs any ad
          * unit that is used by this app.
          *
-         * @param adUnitId Any ad unit id used by this app. This cannot be null.
+         * @param adUnitId Any ad unit id used by this app. This cannot be empty.
          */
         public Builder(@NonNull final String adUnitId) {
+            if (TextUtils.isEmpty(adUnitId)) {
+                final IllegalArgumentException iae = new
+                        IllegalArgumentException("Ad unit cannot be empty at initialization");
+                MoPubLog.setLogLevel(MoPubLog.getLogLevel());
+                MoPubLog.log(INIT_FAILED, "Pass in an ad unit used by this app", iae);
+                if (BuildConfig.DEBUG) {
+                    throw iae;
+                }
+            }
+
             this.adUnitId = adUnitId;
             adapterConfigurations = DefaultAdapterClasses.getClassNamesSet();
             mediationSettings = new MediationSettings[0];

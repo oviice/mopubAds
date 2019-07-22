@@ -20,19 +20,16 @@ import com.mopub.mobileads.resource.DrawableConstants;
 import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 
 public class VastVideoGradientStripWidget extends ImageView {
-    @NonNull DeviceUtils.ForceOrientation mForceOrientation;
     private int mVisibilityForCompanionAd;
     private boolean mHasCompanionAd;
     private boolean mIsVideoComplete;
 
     public VastVideoGradientStripWidget(@NonNull final Context context,
             @NonNull final GradientDrawable.Orientation gradientOrientation,
-            @NonNull final DeviceUtils.ForceOrientation forceOrientation,
             final boolean hasCompanionAd, final int visibilityForCompanionAd, final int layoutVerb,
             final int layoutAnchor) {
         super(context);
 
-        mForceOrientation = forceOrientation;
         mVisibilityForCompanionAd = visibilityForCompanionAd;
         mHasCompanionAd = hasCompanionAd;
 
@@ -74,33 +71,27 @@ public class VastVideoGradientStripWidget extends ImageView {
             return;
         }
 
-        if (mForceOrientation == DeviceUtils.ForceOrientation.FORCE_PORTRAIT) {
-            setVisibility(View.INVISIBLE);
-        } else if (mForceOrientation == DeviceUtils.ForceOrientation.FORCE_LANDSCAPE) {
-            setVisibility(View.VISIBLE);
-        } else  {
-            final int currentOrientation = getResources().getConfiguration().orientation;
+        final int currentOrientation = getResources().getConfiguration().orientation;
 
-            switch (currentOrientation) {
-                case Configuration.ORIENTATION_LANDSCAPE:
-                    setVisibility(View.VISIBLE);
-                    break;
-                case Configuration.ORIENTATION_PORTRAIT:
-                    setVisibility(View.INVISIBLE);
-                    break;
-                case Configuration.ORIENTATION_UNDEFINED:
-                    MoPubLog.log(CUSTOM, "Screen orientation undefined: do not show gradient strip widget");
-                    setVisibility(View.INVISIBLE);
-                    break;
-                case Configuration.ORIENTATION_SQUARE:
-                    MoPubLog.log(CUSTOM, "Screen orientation is deprecated ORIENTATION_SQUARE: do not show gradient strip widget");
-                    setVisibility(View.INVISIBLE);
-                    break;
-                default:
-                    MoPubLog.log(CUSTOM, "Unrecognized screen orientation: do not show gradient strip widget");
-                    setVisibility(View.INVISIBLE);
-                    break;
-            }
+        switch (currentOrientation) {
+            case Configuration.ORIENTATION_LANDSCAPE:
+                setVisibility(View.VISIBLE);
+                break;
+            case Configuration.ORIENTATION_PORTRAIT:
+                setVisibility(View.INVISIBLE);
+                break;
+            case Configuration.ORIENTATION_UNDEFINED:
+                MoPubLog.log(CUSTOM, "Screen orientation undefined: do not show gradient strip widget");
+                setVisibility(View.INVISIBLE);
+                break;
+            case Configuration.ORIENTATION_SQUARE:
+                MoPubLog.log(CUSTOM, "Screen orientation is deprecated ORIENTATION_SQUARE: do not show gradient strip widget");
+                setVisibility(View.INVISIBLE);
+                break;
+            default:
+                MoPubLog.log(CUSTOM, "Unrecognized screen orientation: do not show gradient strip widget");
+                setVisibility(View.INVISIBLE);
+                break;
         }
     }
 }

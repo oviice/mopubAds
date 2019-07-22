@@ -62,7 +62,7 @@
     <Button
         android:id="@+id/native_cta"
         android:layout_width="wrap_content"
-        android:layout_height="35dp"
+        android:layout_height="@dimen/button_height"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/native_media_layout"
@@ -73,8 +73,6 @@
         android:focusable="true"
         android:paddingBottom="10dp"
         android:text="@string/learn_more"
-        android:textColor="@android:color/black"
-        android:textSize="12sp"
         android:textStyle="bold" />
 
     <ImageView

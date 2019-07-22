@@ -57,6 +57,7 @@ import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM_WITH_THROWABL
 public class MoPubSampleActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private static final List<String> REQUIRED_DANGEROUS_PERMISSIONS = new ArrayList<>();
+    private static final String SHOWING_CONSENT_DIALOG_KEY = "ShowingConsentDialog";
 
     static {
         REQUIRED_DANGEROUS_PERMISSIONS.add(ACCESS_COARSE_LOCATION);
@@ -77,6 +78,7 @@ public class MoPubSampleActivity extends AppCompatActivity
 
     private MoPubListFragment mMoPubListFragment;
     private Intent mDeeplinkIntent;
+    private boolean mShowingConsentDialog;
     @Nullable
     PersonalInfoManager mPersonalInfoManager;
 
@@ -95,6 +97,7 @@ public class MoPubSampleActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle(getString(R.string.app_title));
 
         setupNavigationDrawer(toolbar);
 
@@ -117,6 +120,8 @@ public class MoPubSampleActivity extends AppCompatActivity
 
         if (savedInstanceState == null) {
             createMoPubListFragment(getIntent());
+        } else {
+            mShowingConsentDialog = savedInstanceState.getBoolean(SHOWING_CONSENT_DIALOG_KEY);
         }
 
         final SdkConfiguration.Builder configBuilder = new SdkConfiguration.Builder(
@@ -219,6 +224,7 @@ public class MoPubSampleActivity extends AppCompatActivity
             public void onConsentDialogLoaded() {
                 if (mPersonalInfoManager != null) {
                     mPersonalInfoManager.showConsentDialog();
+                    mShowingConsentDialog = true;
                 }
             }
 
@@ -336,6 +342,21 @@ public class MoPubSampleActivity extends AppCompatActivity
         }
 
         return false;
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull final Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putBoolean(SHOWING_CONSENT_DIALOG_KEY, mShowingConsentDialog);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mShowingConsentDialog) {
+            mShowingConsentDialog = false;
+            Utils.logToast(MoPubSampleActivity.this, "Consent dialog dismissed");
+        }
     }
 
     private void onImpressionsMenu() {

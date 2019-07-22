@@ -166,11 +166,13 @@ public class NativeRecyclerViewFragment extends Fragment {
                         .privacyInformationIconImageId(R.id.native_privacy_information_icon_image)
                         .build());
 
+        // The first renderer that can handle a particular native ad gets used.
+        // We are prioritizing network renderers.
         mRecyclerAdapter.registerAdRenderer(googlePlayServicesAdRenderer);
         mRecyclerAdapter.registerAdRenderer(flurryRenderer);
+        mRecyclerAdapter.registerAdRenderer(facebookAdRenderer);
         mRecyclerAdapter.registerAdRenderer(moPubStaticNativeAdRenderer);
         mRecyclerAdapter.registerAdRenderer(moPubVideoNativeAdRenderer);
-        mRecyclerAdapter.registerAdRenderer(facebookAdRenderer);
 
         mRecyclerView.setAdapter(mRecyclerAdapter);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
